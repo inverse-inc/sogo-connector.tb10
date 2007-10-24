@@ -1,0 +1,8 @@
+#include "nsIEnumerator.idl"
+#include "nsISupports.idl"
+#include "nsISupportsArray.idl"
+
+[scriptable, uuid(03db270b-262d-4fa4-802e-829d8b6bc708)]
+interface inverseIJSEnumerator : nsIEnumerator {
+  void init(in nsICollection array, in PRInt32 size);
+};

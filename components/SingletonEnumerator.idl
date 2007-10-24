@@ -1,0 +1,7 @@
+#include "nsISimpleEnumerator.idl"
+#include "nsISupports.idl"
+
+[scriptable, uuid(df1c5034-24fe-4bed-8639-e8bdfe6c31e9)]
+interface inverseIJSSingletonEnumerator : nsISimpleEnumerator {
+  void init(in nsISupports obj);
+};
