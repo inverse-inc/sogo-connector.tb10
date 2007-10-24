@@ -62,8 +62,8 @@ AbDAVDirFactory.prototype = {
 			var resource = rdf.GetResource(uri);
 			var directory = resource.QueryInterface(Components.interfaces.nsIAbDirectory);
 			directory.dirName = description;
-    		directory.dirPrefId = prefName;	
-			var sinletonEnum = Components.classes["@inverse.ca/jssingletonenumerator;1"].createInstance(Components.interfaces.inverseIJSSingletonEnumerator);	
+			directory.dirPrefId = prefName;	
+			var singletonEnum = Components.classes["@inverse.ca/jssingletonenumerator;1"].createInstance(Components.interfaces.inverseIJSSingletonEnumerator);
 			singletonEnum.init(directory.QueryInterface(nsISupports));
 
 			return singletonEnum;
@@ -75,7 +75,7 @@ AbDAVDirFactory.prototype = {
 
 	//void deleteDirectory ( nsIAbDirectory directory )
 	deleteDirectory: function(directory) {
-	// No actual deletion, since you cannot create the address books from Mozilla.
+		dump("TODO: deletion of preferences of the directory!!!\n");
 	},
 
   QueryInterface: function(aIID)
