@@ -146,7 +146,7 @@ function onAcceptWebDAV(){
 		if (gCurrentDirectory == null || gCurrentDirectory.dirPrefId == ""){
 		// adding a new Addressbook		
 			properties = Components.classes["@mozilla.org/addressbook/properties;1"].createInstance(Components.interfaces.nsIAbDirectoryProperties);
-			properties.dirType = 4;// ???don't know which values should go in there but 2 seems to get the job done
+			properties.dirType = 2;// ???don't know which values should go in there but 2 seems to get the job done
 			properties.description = document.getElementById("description").value;
 			
 			addNewDirectory(addressbook, properties);
