@@ -1,8 +1,9 @@
 content sogo-connector             chrome/content/sogo-connector/
 skin    sogo-connector classic/1.0 chrome/skin/classic/sogo-connector/
 
-locale  sogo-connector en-US	   chrome/locale/en-US/sogo-connector/
+locale	sogo-connector en-US	   chrome/locale/en-US/sogo-connector/
 locale	sogo-connector fr-FR	   chrome/locale/fr-FR/sogo-connector/
+locale	sogo-connector de-DE 	chrome/locale/de-DE/
 
 overlay chrome://calendar/content/sun-calendar-event-dialog.xul chrome://sogo-connector/content/calendar/calendar-event-dialog.xul
 overlay chrome://calendar/content/sun-calendar-event-dialog-attendees.xul chrome://sogo-connector/content/calendar/calendar-event-dialog-attendees.xul

@@ -20,8 +20,8 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  ********************************************************************************/
 
-Components.classes["@mozilla.org/moz/jssubscript-loader;1"].getService(Components.interfaces.mozIJSSubScriptLoader).loadSubScript("chrome://groupdav-addressbook/content/vcards.utils.js");
-Components.classes["@mozilla.org/moz/jssubscript-loader;1"].getService(Components.interfaces.mozIJSSubScriptLoader).loadSubScript("chrome://groupdav-addressbook/content/webdav.inverse.ca.js");
+Components.classes["@mozilla.org/moz/jssubscript-loader;1"].getService(Components.interfaces.mozIJSSubScriptLoader).loadSubScript("chrome://sogo-connector/content/addressbook/vcards.utils.js");
+Components.classes["@mozilla.org/moz/jssubscript-loader;1"].getService(Components.interfaces.mozIJSSubScriptLoader).loadSubScript("chrome://sogo-connector/content/addressbook/webdav.inverse.ca.js");
 
 //DAV Directory Preferences settings
 
@@ -70,6 +70,7 @@ function AbDAVDirectory(){
    this.setChildEnumerator = function(val) { childEnumerator = val; }
    
    this.cardDavReportResponse = null;
+//   dump("================== AbDAVDirectory constructed ==================");
 	
 //	return true;
 }
@@ -169,16 +170,15 @@ AbDAVDirectory.prototype.__defineSetter__("addressLists", function(val) { this.p
 
 //	readonly nsIEnumerator childCards
 AbDAVDirectory.prototype.__defineGetter__("childCards", function() { 
-	//var result = this.getChildCards(); 	
 	var result = this.getChildCards(); 	
-	dump("this.getChildEnumerator() = result = " + result + "\n"); 
+//	dump("this.getChildEnumerator() = result = " + result + "\n"); 
 	return result;  
 	});
 
 // AbDAVDirectory.prototype.__defineSetter__("childCards", function(val) { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; });
 
 AbDAVDirectory.prototype.getChildCards = function(){
-	dump("getChildCards() called\n");
+//	dump("getChildCards() called\n");
 	
 //	this.Value contains the following pattern
 // moz-abdavdirectory://http://sogo.inverse.ca/SOGo/dav/rbolduc/Contacts/public/?(or(PrimaryEmail,c,kkk)(DisplayName,c,kkk)(FirstName,c,kkk)(LastName,c,kkk)))
@@ -187,8 +187,6 @@ AbDAVDirectory.prototype.getChildCards = function(){
 	var reg = new RegExp(/moz-abdavdirectory:\/\/(.*)\?/);
 	if ( !reg.test(this.Value)){
 		return null;
-	}else{
-		dump("success url \n");
 	}	
 	var url = RegExp.$1;
 	
@@ -196,13 +194,11 @@ AbDAVDirectory.prototype.getChildCards = function(){
 	reg = new RegExp(/\?\(.*\(.*,.*,(.*)\).*\)\)/);
 	if ( !reg.test(this.Value)){
 		return null;
-	}else{
-		dump("success criteria \n");
 	}
 	var criteria = RegExp.$1;
 
-	dump("url: " + url +"\n");
-	dump("crit: " + criteria + "\n");
+//	dump("url: " + url +"\n");
+//	dump("crit: " + criteria + "\n");
 	
 	var doc = cardDavReport(url, criteria);
 	var nodeList = doc.getElementsByTagName("addressbook-data");
@@ -403,7 +399,6 @@ AbDAVDirectory.prototype.QueryInterface = function(aIID){
 			!aIID.equals(nsISupports) 
 		)
 	{
-		//dump("WTF: It is supposde to throw NS_ERROR_NO_INTERFACE [QueryInterface aIID]: " + aIID + "\n");
 		throw Components.results.NS_ERROR_NO_INTERFACE;
 	}
 	return this;

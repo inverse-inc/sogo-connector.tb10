@@ -51,7 +51,7 @@ AbDAVDirFactory.prototype = {
     		var prefName = properties.prefName;
 			
 			var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
-/*			dump("AbDAVDirFactory values \n");
+/*			dump("\nAbDAVDirFactory values \n");
 			dump("\t properties.uri: " + properties.URI + "\n");
 			dump("\t properties.dirType: " + properties.dirType + "\n");
 			dump("\t properties.fileName: " + properties.fileName + "\n");
@@ -63,13 +63,12 @@ AbDAVDirFactory.prototype = {
 			var directory = resource.QueryInterface(Components.interfaces.nsIAbDirectory);
 			directory.dirName = description;
     		directory.dirPrefId = prefName;	
-    		
-			var singletonEnum = Components.classes["@inverse.ca/jssingletonenumerator;1"].createInstance(Components.interfaces.inverseIJSSingletonEnumerator);	
+			var sinletonEnum = Components.classes["@inverse.ca/jssingletonenumerator;1"].createInstance(Components.interfaces.inverseIJSSingletonEnumerator);	
 			singletonEnum.init(directory.QueryInterface(nsISupports));
 
 			return singletonEnum;
 		}catch(ex){
-			dump (ex + "\n File: "+  ex.fileName + "\n Line: " + ex.lineNumber + "\n\n Stack:\n\n" + ex.stack);
+			dump (ex + "\n File: "+  ex.fileName + "\n Line: " + ex.lineNumber + "\n\n Stack:\n\t" + ex.stack + "\n\n");
 			throw ex;
 		}
 	},
@@ -82,8 +81,10 @@ AbDAVDirFactory.prototype = {
   QueryInterface: function(aIID)
   {
     if (!aIID.equals(nsIAbDirFactory) &&    
-        !aIID.equals(nsISupports))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
+        !aIID.equals(nsISupports)){
+    	throw Components.results.NS_ERROR_NO_INTERFACE;
+    }
+      
     return this;
   }
 };
