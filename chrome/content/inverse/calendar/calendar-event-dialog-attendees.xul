@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet
+  href="chrome://inverse/content/calendar/calendar-event-dialog.css" ?>
+
+<overlay id="inverseCalendarEventDialogFreebusyOverlay"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+</overlay>

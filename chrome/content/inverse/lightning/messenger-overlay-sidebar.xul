@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<!DOCTYPE overlay>
+<overlay id="inverseMessengerOverlaySidebar"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/x-javascript" src="chrome://inverse/content/lightning/messenger-overlay-sidebar.js"/>
+
+  <splitter id="folderpaneCalendarSplitter">
+    <grippy/>
+  </splitter>
+</overlay>

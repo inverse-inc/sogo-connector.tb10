@@ -1,0 +1,178 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE bindings>
+
+<bindings xmlns="http://www.mozilla.org/xbl"
+  xmlns:xbl="http://www.mozilla.org/xbl"
+  xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <binding id="inverse-attendees-list"
+    extends="chrome://calendar/content/sun-calendar-event-dialog-attendees.xml#attendees-list">
+    <implementation>
+      <field name="inverseParentOnInitialize">null</field>
+      <field name="inverseParentAppendAttendee">null</field>
+
+      <constructor>
+        <![CDATA[
+              this.inverseParentOnInitialize = this.onInitialize;
+              this.inverseParentAppendAttendee = this.appendAttendee;
+
+              this.onInitialize = this.inverseOnInitialize;
+              this.appendAttendee = this.inverseAppendAttendee;
+        ]]>
+      </constructor>
+
+      <method name="inverseOnInitialize">
+        <body>
+          <![CDATA[
+                var args = window.arguments[0];
+                var organizer = args.organizer;
+                var attendees = args.attendees;
+                var calendar = args.calendar;
+
+                // set 'mIsReadOnly' if the calendar is read-only
+                if (calendar && calendar.readOnly)
+                  this.mIsReadOnly = true;
+
+                // assume we're the organizer [in case that the calendar
+                // does not support the concept of identities]. '
+                this.mIsInvitation = false;
+
+                if (organizer) {
+                  var tmpId = organizer.id;
+                  if (tmpId.substring(0, 6) == "MAILTO")
+                    tmpId = tmpId.replace("MAILTO:", "mailto:");
+                  this.mOrganizerID = tmpId;
+                }
+                else
+                  this.mOrganizerID = "";
+                var listbox = document.getAnonymousElementByAttribute(this, "anonid", "listbox");
+                var template = document.getAnonymousElementByAttribute(this, "anonid", "item");
+                template.focus();
+
+                if(this.mIsReadOnly || this.mIsInvitation)
+                  listbox.setAttribute("disabled","true");
+            
+                if(this.mOrganizerID && this.mOrganizerID != "") {
+                   if(!organizer) {
+                      organizer = this.createAttendee();
+                      organizer.id = this.mOrganizerID;
+                      organizer.role = "CHAIR";
+                      organizer.participationStatus = "ACCEPTED";
+                   } else {
+                      if(!organizer.id)
+                         organizer.id = this.mOrganizerID;
+                      if(!organizer.role)
+                         organizer.role = "CHAIR";
+                      if(!organizer.participationStatus)
+                         organizer.participationStatus = "ACCEPTED";
+                   }
+                   try {
+                      var provider = calendar.QueryInterface(Components.interfaces.calIWcapCalendar);
+                      var props = provider.getCalendarProperties("X-S1CS-CALPROPS-COMMON-NAME",{});
+                      if(props.length > 0)
+                         organizer.commonName = props[0];
+                   }
+                   catch(e) {}
+                }
+
+                var numRowsAdded = 0;
+                if(attendees.length > 0) {
+                   for each(var attendee in attendees) {
+                      this.appendAttendee(attendee,listbox,template,false);
+                      numRowsAdded++;
+                   }
+                }
+                if(numRowsAdded == 0) {
+                   this.appendAttendee(null,listbox,template,false);
+                }
+
+                // detach the template item from the listbox, but hold the reference.
+                // until this function returns we add at least a single copy of this template back again.
+                listbox.removeChild(template);
+
+                this.addDirectoryServerObserver();
+                
+                this.setFocus(this.mMaxAttendees);
+          ]]>
+        </body>
+      </method>
+
+      <method name="inverseAppendAttendee">
+        <parameter name="aAttendee"/>
+        <parameter name="aParentNode"/>
+        <parameter name="aTemplateNode"/>
+        <parameter name="aDisableIfOrganizer"/>
+        <body>
+          <![CDATA[
+                if (aAttendee && aAttendee.id.substring(0, 6) == "MAILTO") {
+                  aAttendee = aAttendee.clone();
+                  var tmpId = aAttendee.id;
+                  aAttendee.id = tmpId.replace("MAILTO:", "mailto:");
+                }
+                return this.inverseParentAppendAttendee(aAttendee, aParentNode, aTemplateNode, aDisableIfOrganizer);
+          ]]>
+        </body>
+      </method>
+
+<!--
+      <property name="attendees">
+        <getter>
+          <![CDATA[
+          ]]>
+        </getter>
+      </property>
+
+      <property name="organizer">
+        <getter>
+          <![CDATA[
+          ]]>
+        </getter>
+      </property>
+
+      <method name="onModify">
+        <body>
+          <![CDATA[
+            var list = [];
+            for (var i=1; i<=this.mMaxAttendees; i++)
+            {
+              // retrieve the string from the appropriate row
+              var input = this.getInputElement(i);
+              var fieldValue = input.value;
+
+              // parse the string to break this down to individual names and addresses
+              var email = "";
+              var emailAddresses = {};
+              var names = {};
+              var fullNames = {};
+              var numAddresses = this.mHeaderParser.parseHeadersWithArray(fieldValue,emailAddresses,names,fullNames);
+
+              if(emailAddresses.value.length > 0) {
+
+                // if the new address has no 'mailto'-prefix but seems
+                // to look like an email-address, we prepend the prefix.
+                // this also allows for non-email-addresses.
+                email = emailAddresses.value[0];
+                if (email.indexOf("mailto:") != 0)
+                  if (email.indexOf("@") >= 0)
+                    email = "mailto:" + email;
+              }
+
+              var isdirty = false;
+              if(input.hasAttribute("dirty"))
+                isdirty = input.getAttribute("dirty");
+              input.removeAttribute("dirty");
+              var entry = { dirty: isdirty, calid: email };
+              list.push(entry);
+            }
+
+            var event = document.createEvent('Events'); 
+            event.initEvent('modify', true, false);
+            event.details = list;
+            this.dispatchEvent(event);
+          ]]>
+        </body>
+      </method>
+-->
+    </implementation>
+  </binding>
+</bindings>

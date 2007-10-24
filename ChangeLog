@@ -1,0 +1,11 @@
+2007-10-15  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* js/calDAVFBRequest.js:
+	- fixed support for Lightning 0.7 and up
+	- added support for duration-based notation of freebusy entries
+
+2007-02-28  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* initial import (version 0.1)
+
+

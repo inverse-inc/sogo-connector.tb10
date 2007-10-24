@@ -1,0 +1,11 @@
+content inverse       chrome/content/inverse/
+skin    inverse classic/1.0 chrome/skin/classic/inverse/
+
+locale  inverse en-US chrome/locale/en-US/inverse/
+
+overlay chrome://messenger/content/addressbook/abEditCardDialog.xul chrome://inverse/content/addressbook/inverse-calendar-card-edit-overlay.xul
+
+overlay chrome://calendar/content/sun-calendar-event-dialog.xul chrome://inverse/content/calendar/calendar-event-dialog.xul
+overlay chrome://calendar/content/sun-calendar-event-dialog-attendees.xul chrome://inverse/content/calendar/calendar-event-dialog-attendees.xul
+
+overlay chrome://lightning/content/messenger-overlay-sidebar.xul chrome://inverse/content/lightning/messenger-overlay-sidebar.xul
