@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 
-<!DOCTYPE overlay SYSTEM "chrome://inverse/locale/calendar/calendar-event-dialog.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://sogo-connector/locale/calendar/calendar-event-dialog.dtd">
 
 <overlay id="inverseCalendarEventOverlay"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/x-javascript"
-    src="chrome://inverse/content/calendar/calendar-event-dialog.js"/>
+    src="chrome://sogo-connector/content/calendar/calendar-event-dialog.js"/>
 
   <row id="attendee-row" position="1">
     <label id="fixedConfidentialLabel" collapsed="true"

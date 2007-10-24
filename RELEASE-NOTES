@@ -1,0 +1,138 @@
+Features
+========
+Working on for 0.7
+	Added Deleted on server feature.
+	
+	
+0.60
+	German Local dialog
+	Patch for "N;CHARSET=" bug for vcard 2.1 (eGroupware)
+0.59
+ 	Fix to the conversion into UTF-8 charset when uploading cards
+	Fixed support for Lightning 0.7 and up
+	Added support for duration-based notation of freebusy entries
+0.58
+	Fix for card duplication during creation and synchronization of cards in thunderbird 2.0 (492)
+	Better error message on upload errors (883)
+	Now support text/vcard as the content-type of the response (864)
+	Fix bug (869)	
+	Now support HTTP Response 200 as a successful response code (for OGo)
+	Overhaul of vcard 3.0 support: UTF-8 is now fully supported(non ascii-characters), Note on multi-lines is properly parsed and sent (852-866-867-900)
+	
+0.56
+	fix error message on synchronize cancel
+	handlings of vcards fields that are not part of Thunderbird card schema
+0.55
+	drag & drop automatically uploads card to server
+	function getServerVcardHrefList(doc) now accepts charset specification in "getcontenttype" which is now specified by OGo
+
+0.54.1
+	Removed user and password from Preference dialog, Now Thunderbird HTTPConnection and password manager handle that.
+
+0.53
+	bug corrections that were created in 0.51 at merging
+
+0.51
+  Fields custom3 and custom4 are not used as synchronization fields anymore.  To avoid synchronization problems, it is better to create a new addressbook and synchronize the data.
+  Now supports 2.0b2!
+
+0.50
+	removed host from preferences
+	fixed updated/added totals	
+	fix delete and edit (Overwrite local card: there must be a cleaner way to delete)
+	0000445: fixed "ENCODING=QUOTED-PRINTABLE" 
+  	0000491 & 0000513 & 0000487 : Creation of new cards outside the addressbook now works
+  	french version of the GUI,  messages are still in english
+
+0.47	 
+	 ameliorations in implementors.addressbook.groupdav.js
+
+0.46
+	 bug fix for port support	  in URL
+
+0.41
+  added logging for upload errors
+
+0.4
+ Compatible with 2.0
+
+0.37
+ bug fixes delete folder error message		
+
+0.36
+ icon added
+
+0.35
+	auto update test
+
+0.34
+	auto update support
+
+0.33
+	Bug Fixes,:
+		preference dialog (throws error)
+		url accesskey
+		delete non-groupdav throwing exception
+0.32
+	compatible with 2.0a1 (max version)
+
+0.31
+	Bug fix for Conflicts
+
+0.3
+	Delete Card (local)
+	optional 
+
+0.26
+	button enable disable work on Windows and linux and Mac.
+
+0.24
+	More info dumped into the log file
+
+0.23
+	Logging in log file	
+
+0.22
+	Bug fixes
+
+0.21
+	Automatic upload of card addition when online
+
+0.2
+	Automatic upload of card modification  when online
+	Synchronization completed dialog
+	Disable Groupdav menu (not Groupdav directory)
+	GroupDAV menu by server
+
+0.1
+	Other server Preferences (Ogo) DONE (BUG)
+
+
+====  PLANNED =======================================
+	Work Ofline, Online triggers a synchronize
+	Public folder contacts???
+	catch the directory delete and delete preferences
+	Editing one card online or offline  and editing another one before the transaction is completed is not supported yet
+
+	0000492: creation et mise a jour de cartes ne fonctionne pas avec thunderbird 2
+	0000490: Ajouter support pour les contacts Read-Only	
+	0000418: validation des champs d'entree 
+	
+	Conflicts dialog (	Currently conflicts are simply overwritten by the server version)
+	Delete server = conflicts
+
+
+	Propfind rewrite [charset in the content-type,
+
+	BUG: OGO does not accept put
+Todos in code
+=============
+	fix Get  accept Header (GET should list the text/x-vcard )
+	function 	uploadEditCard(): TODO verify if there is a conflict whith the server's version
+	isWebdavConnectionUp	 //TODO:optimize the propfind to return a smaller response
+	PUT: refetch the card as recommended by Helge
+	complete vCardDownloadObserver
+	complete uploadListener 
+
+	
+

@@ -7,13 +7,13 @@
  URL:		http://inverse.ca
   -->
 
-<!DOCTYPE overlay SYSTEM "chrome://inverse/locale/addressbook/inverse-calendar-card-edit-overlay.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://sogo-connector/locale/addressbook/inverse-calendar-card-edit-overlay.dtd">
 
 <overlay id="inverseCalendarEditcardOverlay"
 	 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script
      type="application/x-javascript"
-     src="chrome://inverse/content/addressbook/inverse-calendar-card-edit-overlay.js"/>
+     src="chrome://sogo-connector/content/addressbook/inverse-calendar-card-edit-overlay.js"/>
     
   <tabs id="abTabs">
     <tab label="&inverse.CalDAV.tab;"/>

@@ -1,5 +1,5 @@
-PACKAGE = inverse-lightning-enhancer
-VERSION = 0.59
+PACKAGE = sogo-connector
+VERSION = 0.60
 
 XPI_ARCHIVE = $(PACKAGE)-$(VERSION).xpi
 
@@ -47,3 +47,4 @@ clean:
 
 distclean: clean
 	rm -f MANIFEST
+

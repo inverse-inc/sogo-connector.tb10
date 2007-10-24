@@ -7,14 +7,12 @@
                    em:minVersion="1.5"
                    em:maxVersion="2.0.*" />
   <RDF:Description RDF:about="urn:mozilla:install-manifest"
-                   em:name="Lightning Enhancer"
-                   em:id="lightning-enhancer@inverse.ca"
-                   em:version="0.59"
-                   em:description="A feature enhancer for Lightning"
+                   em:name="Inverse SOGo Connector"
+                   em:id="sogo-connector@inverse.ca"
+                   em:version="0.60"
+                   em:description="A DAV plugin for keeping addressbooks and events in sync"
                    em:creator="Inverse/Keyrus Canada"
-                   em:developer="Wolfgang Sourdeau &lt;wsourdeau@inverse.ca&gt;"
-                   em:iconURL="chrome://inverse/skin/cal-icon32-enhancer.png"
-                   em:homepageURL="http://www.inverse.ca/contributions/lightning_enhancer_plugin.html"
+                   em:homepageURL="http://www.inverse.ca/contributions/sogo_connector.html"
                    em:updateURL="http://www.inverse.ca/groupware/plugins/updates.php?plugin=%ITEM_ID%&amp;version=%ITEM_VERSION%">
     <em:targetApplication RDF:resource="rdf:#$Iwquq2"/>
     <em:targetApplication RDF:resource="rdf:#$Nwquq2"/>
@@ -24,3 +22,4 @@
                    em:minVersion="1.5"
                    em:maxVersion="2.0.*" />
 </RDF:RDF>
+
