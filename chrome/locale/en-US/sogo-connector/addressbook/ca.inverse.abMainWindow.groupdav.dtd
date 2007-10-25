@@ -20,13 +20,12 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA	
 -->
 
-<!ENTITY newGroupDavCmd.label                      		"Remote Address Book">
-<!ENTITY newGroupDavCmd.accesskey                  		"R">
+<!ENTITY newGroupDavCmd.label                      	"Remote Address Book">
+<!ENTITY newGroupDavCmd.accesskey                  	"R">
 
-<!ENTITY GroupDavMenu.label                      		"Remote">
-<!ENTITY GroupDavMenu.accesskey                  		"R">
 <!ENTITY GroupDavSynch.label                      		"Synchronize Remote Addressbook">
 <!ENTITY GroupDavSynch.accesskey                  		"S">
 <!ENTITY GroupDavSynch.tooltip                      	"Synchronize the cards with the server">
+
 <!ENTITY GroupDavConf.label                      		"Configure">
 <!ENTITY GroupDavConf.accesskey                  		"C">

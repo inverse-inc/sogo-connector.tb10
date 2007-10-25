@@ -73,8 +73,8 @@ function CreateCardsFromVcf(uri,lines, outParameters) {
 	// Regexp to test the lines of the vcard
 	var version = new RegExp(/^VERSION/);
 
-//	var names = new RegExp(/^N/); // changed RalfBecker@outdoor-training.de to recognise
-	var names = new RegExp(/^N(:|;)/);
+//	var names = new RegExp(/^N/); 
+	var names = new RegExp(/^N(;.*|)$/);// changed RalfBecker@outdoor-training.de to recognize N;CHARSET=...
 	
 	var fname = new RegExp(/^FN/);
 	var nickname = new RegExp(/^NICKNAME/);
@@ -134,7 +134,7 @@ function CreateCardsFromVcf(uri,lines, outParameters) {
 	 
 	 
 
-//    if ( mylineinit[0] == "N" ) {        // changed RalfBecker@outdoor-training.de to recognise
+//    if ( mylineinit[0] == "N" ) { // changed RalfBecker@outdoor-training.de to recognize N;CHARSET=...
       if ( names.test(mylineinit[0] ) ) {
 	   	
 	      // Split the value of N: to have the lastname and the firstname

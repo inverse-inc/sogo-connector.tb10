@@ -95,7 +95,7 @@ Modifications by
       </tabs>
    
       <tabpanels id="groupdavTabPanels" flex="1">
-			<tabpanel id="generalPanel">
+<!--			<tabpanel id="generalPanel" flex="1"> -->
           <vbox>
              <grid flex="1">
                  <columns>
@@ -104,15 +104,15 @@ Modifications by
                      <column/>
                  </columns>
 
-                 <rows>
+                 <rows >
                      <row align="center">
                          <label value="&groupdavName.label;" accesskey="&groupdavName.accesskey;" control="description"/>
-                         <textbox id="description" flex="1"/>
+                         <textbox id="description"/>
                          <spacer flex="1"/>
                      </row>
-                     <row align="center">
+                     <row align="center" flex="1">
                          <label value="&groupdavURL.label;" accesskey="&groupdavURL.accesskey;" control="groupdavURL"/>
-                         <textbox id="groupdavURL" flex="100" disableiflocked="true" class="uri-element"/>
+                         <textbox id="groupdavURL" flex="1" disableiflocked="true" class="uri-element"/>							
                          <spacer flex="1"/>
                      </row>						  
 						</rows>
@@ -122,7 +122,7 @@ Modifications by
 					 <checkbox id="displaySynchCompleted" label="&DisplaySynchCompleted.label;" accesskey="&DisplaySynchCompleted.accesskey;"/>
 <!--				 <checkbox id="autoDeleteFromServer" label="&AutoDeleteFromServer.label;" accesskey="&AutoDeleteFromServer.accesskey;"/>-->				 
           </vbox>
-			</tabpanel>
+<!--			</tabpanel>
 		<tabpanel id="downloadPanel">
           <vbox>
               <description>&offlineText.label;</description>
@@ -137,6 +137,7 @@ Modifications by
               <progressmeter id="replicationProgressMeter" mode="normal" value="0" hidden="true"/>
           </vbox>
 			 </tabpanel>		
+-->	
       </tabpanels>
     </tabbox>
   </vbox>

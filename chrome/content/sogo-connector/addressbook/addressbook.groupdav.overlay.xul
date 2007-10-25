@@ -46,7 +46,7 @@
   <script type="application/x-javascript" src="chrome://sogo-connector/content/addressbook/addressbook.groupdav.overlay.js"/>
   <!--======================================================================================
   Override the window onunload event. 
-  It is not possible to override onload but OnLoadAddressBookOverlay() is called 
+  It is not possible to override onunload but onloadDAV() is called 
   at the beginning of addressbook.groupdav.overlay.js (see the comment before the call). 
   ===========================================================================================-->
   <!--	<window  id="addressbookWindow" onunload="OnUnloadAddressBookOverlay()"/> -->
@@ -88,13 +88,6 @@
           </menu>
         </menupopup>
       </menu>
-      <!--		<menu id="menu_Groupdav" label="&GroupDavMenu.label;">
-      <menupopup id="menu_GroupdavPopup">
-      <menuitem id="groupdavSynchronize" label="&GroupDavSynch.label;" oncommand="SynchronizeGroupdavAddressbook()"/>	
-      <menuitem id="groupdavConfigure" label="&GroupDavConf.label;" oncommand="EditGroupDavDirectory()"/>
-    </menupopup>
-    </menu>
-      -->		
     </menubar>
   </toolbaritem>
 </overlay>

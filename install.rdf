@@ -11,9 +11,26 @@
                    em:id="sogo-connector@inverse.ca"
                    em:version="0.60"
                    em:description="A DAV plugin for keeping addressbooks and events in sync"
-                   em:creator="Inverse/Keyrus Canada"
+						 em:iconURL="chrome://sogo-connector/skin/addressbook/lori.png"
+						 em:creator="Inverse/Keyrus Canada"
                    em:homepageURL="http://www.inverse.ca/contributions/sogo_connector.html"
                    em:updateURL="http://www.inverse.ca/groupware/plugins/updates.php?plugin=%ITEM_ID%&amp;version=%ITEM_VERSION%">
+	
+	<em:developper>Wolfgang Sourdeau</em:developper>
+	<em:developper>Robert Bolduc</em:developper>	  
+	<em:contributor>Mark Banner for the inputs on the Adressbook architecture http://www.standard8.demon.co.uk/</em:contributor>
+	<em:contributor>Ludovic Marcotte</em:contributor>
+	<em:contributor>Dominik Gehl</em:contributor>
+	<em:contributor>Helge Hess</em:contributor>	  
+	<em:contributor>Raffael Luthiger for the German translation</em:contributor>	  
+	<em:contributor>Ralf Becker for eGroupware integration</em:contributor>
+	<em:contributor>Regis Balzard (for the chocolate)</em:contributor>
+	<em:contributor>Wilfried Goesgens</em:contributor>
+	<em:contributor>Damon Hart</em:contributor>
+	<em:contributor>Chris Bryant</em:contributor>
+	<em:contributor>Paolo Kaosmos</em:contributor>	  
+	<em:contributor>Neil Deakin</em:contributor>
+	  
     <em:targetApplication RDF:resource="rdf:#$Iwquq2"/>
     <em:targetApplication RDF:resource="rdf:#$Nwquq2"/>
   </RDF:Description>

@@ -222,11 +222,12 @@ function onCancel(){
 function onReadOnlyUpdate(){
 	if (document.getElementById("readOnly").checked == true){			
 		//document.getElementById("offlineTabId").disabled = null;
-		document.getElementById("downloadButton").disabled = false;
+//		document.getElementById("downloadButton").disabled = false;
 		document.getElementById("displaySynchCompleted").disabled = true;
+		dump("checked\n");
 	}else{
 		//document.getElementById("offlineTabId").disabled = true;
-		document.getElementById("downloadButton").disabled = true;		
+//		document.getElementById("downloadButton").disabled = true;		
 		document.getElementById("displaySynchCompleted").disabled = false;		
 	}
 }

@@ -188,30 +188,10 @@ function SetupAbCommandUpdateHandlers(){
 }
 
 //Override of AbDelete in chrome://messenger/content/addressbook/abCommon.js
-// Addition to delete the card on the groupdav server
-var  AbDeleteOriginal = AbDelete;
-var  AbDelete = function(){
-	var cards = GetSelectedAbCards();
-	if (cards && cards.length > 0){
-		for (var i = 0; i < cards.length; i++){ 	
-			if ( (cards[i] instanceof Components.interfaces.nsIAbMDBCard) && isGroupdavDirectory(gSelectedDir)){				
-				var card = cards[i].QueryInterface(Components.interfaces.nsIAbMDBCard);
-				if (card){
-					var key = card.getStringAttribute("groupDavKey");
-		    		if (key){
-						var groupdavPrefService = new GroupdavPreferenceService(GetDirectoryFromURI(gSelectedDir).dirPrefId);
-						var url = groupdavPrefService.getURL();
-					   var href =  url + key;
-						var webdavOb = webdav_delete(href,null,null);
-												alert("webdav_delete sent for vcard: " + href);  
-						logDebug("webdav_delete sent for vcard: " + href);  
-		    		}
-				}
-			}
-		}
-	}
-	AbDeleteOriginal.apply();
-};
+// Addition to delete the card on the groupdav server 
+// Definitions are done in onloadDAV since on Windows it was loaded before the abCommon.js version
+var  AbDeleteOriginal;
+var  AbDelete;
 
 // DirTreeObserver that synchronized with the GroupDAV server on card delete
 var abGoupDavDirTreeObserver = { 			
@@ -253,8 +233,32 @@ function abGroupdavUnload(){
 	treeBuilder.removeObserver(abGoupDavDirTreeObserver);
 }
 
-function addAbGroupdavListeners(){
+function onloadDAV(){
 	this.addEventListener("unload", abGroupdavUnload, true);
+	
+AbDeleteOriginal = AbDelete;
+AbDelete = function(){
+	var cards = GetSelectedAbCards();
+	if (cards && cards.length > 0){
+		for (var i = 0; i < cards.length; i++){ 	
+			if ( (cards[i] instanceof Components.interfaces.nsIAbMDBCard) && isGroupdavDirectory(gSelectedDir)){				
+				var card = cards[i].QueryInterface(Components.interfaces.nsIAbMDBCard);
+				if (card){
+					var key = card.getStringAttribute("groupDavKey");
+		    		if (key){
+						var groupdavPrefService = new GroupdavPreferenceService(GetDirectoryFromURI(gSelectedDir).dirPrefId);
+						var url = groupdavPrefService.getURL();
+					   var href =  url + key;
+						var webdavOb = webdav_delete(href,null,null);
+						logDebug("webdav_delete sent for vcard: " + href);  
+		    		}
+				}
+			}
+		}
+	}
+	AbDeleteOriginal.apply();
+};
+	
 }
 
-addAbGroupdavListeners();
+ onloadDAV();

@@ -3,8 +3,10 @@
  Author: 	Robert Bolduc
  Email:		support@inverse.ca 
  URL:			http://inverse.ca
-  
- This file is part of "Addressbook GroupDAV Connector" a Thunderbird extension.
+
+ Contributor: Ralf Becker 
+
+ *  This file is part of "Addressbook GroupDAV Connector" a Thunderbird extension.
 
     "Addressbook GroupDAV Connector" is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License version 2 as published by
@@ -246,9 +248,14 @@ SynchProgressMeter.prototype ={
 					var etag = stateDoc.getElementsByTagName("etag")[0].textContent;
 					var key =  stateDoc.getElementsByTagName("key")[0].textContent;
 					var isNewCard = stateDoc.getElementsByTagName("newCard")[0].textContent == "true";
-	
+					var location;
+					try {
+						location =  stateDoc.getElementsByTagName("location")[0].textContent;
+					}
+					catch(e){ }
 					logDebug("case SynchProgressMeter.UPLOAD_STOP_REQUEST_EVENT:" +				
 								"\n		key					= " + key + 
+								"\n		new key (location)	= " + location + 
 								"\n		etag				= " + etag + 
 								"\n		isNewCard =  " + isNewCard);					
 	
@@ -256,6 +263,11 @@ SynchProgressMeter.prototype ={
 					var cardExt = card.QueryInterface(Components.interfaces.nsIAbMDBCard);
 	
 					if (etag != ""){
+						if (location) {
+							cardExt.setStringAttribute("groupDavKey", location);
+							this.cardIndex[location] = this.cardIndex[key];
+							delete this.cardIndex[key];
+						}
 						cardExt.setStringAttribute("groupDavVersion", etag);
 						card.editCardToDatabase(this.uri);
 					}

@@ -22,13 +22,11 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA	
 -->
 
-<!ENTITY newGroupDavCmd.label                      		"GroupDAV Adressbuch">
-<!ENTITY newGroupDavCmd.accesskey                  		"G">
+<!ENTITY newGroupDavCmd.label                      	"Remote-Adressbuch">
+<!ENTITY newGroupDavCmd.accesskey                  	"R">
 
-<!ENTITY GroupDavMenu.label                      		"GroupDAV">
-<!ENTITY GroupDavMenu.accesskey                  		"G">
-<!ENTITY GroupDavSynch.label                      		"GroupDAV Synchronisierung">
+<!ENTITY GroupDavSynch.label                      		"Remote-Adressbuch synchronisieren">
 <!ENTITY GroupDavSynch.accesskey                  		"S">
-<!ENTITY GroupDavSynch.tooltip                      		"Synchronisierung der Karten mit dem Server">
+<!ENTITY GroupDavSynch.tooltip                      	"Karten mit dem Server synchronisieren">
 <!ENTITY GroupDavConf.label                      		"Konfigurieren">
-<!ENTITY GroupDavConf.accesskey                  		"C">
+<!ENTITY GroupDavConf.accesskey                  		"K">

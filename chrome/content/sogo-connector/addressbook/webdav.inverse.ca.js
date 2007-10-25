@@ -4,6 +4,8 @@ Copyright:	Inverse groupe conseil, 2006-2007
    Email:		support@inverse.ca 
    URL:			http://inverse.ca
    
+   Contributor: Ralf Becker
+   
    This file is part of "Addressbook GroupDAV Connector" a Thunderbird extension.
 
    "Addressbook GroupDAV Connector" is free software; you can redistribute it and/or modify
@@ -72,6 +74,16 @@ function webdavPutString(webdavURL ,dataString, key, contentType, observerObj, o
 					logWarn("Upload failure, the server could not process the card (google the HTTP status code for more information).\n\n\n"  + "Server HTTP Status Code:"+ httpChannel.responseStatus );
 					if(observerService!=null){
 						state = "<state><status>" + httpChannel.responseStatus + "</status><url>" + webdavURL + "</url></state>";
+//							+ httpChannel.getResponseHeader("etag") + "</etag><key>" + key + "</key></state>";
+							+ httpChannel.getResponseHeader("etag") + "</etag><key>" + key + "</key>";
+
+						if (isNew) {	// for new cards check if we got a location header
+							var location = httpChannel.getResponseHeader("location");
+							if (location && location.lastIndexOf('/') >= 0) {	// new url/key via location header
+								state += "<location>" + location.substr(location.lastIndexOf('/')+1) + "</location>";
+							}
+						}
+						state += "</state>";						
 						observerService.notifyObservers(window, SynchProgressMeter.UPLOAD_ERROR_EVENT, state);
 						return;
 					}
@@ -127,34 +139,18 @@ function webdavPutString(webdavURL ,dataString, key, contentType, observerObj, o
 }
 
 function buildCardDavReportXML(filter){
-//	var parser = Components.classes["@mozilla.org/xmlextras/domparser;1"].createInstance(Components.interfaces.nsIDOMParser);
-/*	var xml = 	'<?xml version="1.0" encoding="utf-8" ?>' +
-					'<C:addressbook-query xmlns:D="DAV:"xmlns:C="urn:ietf:params:xml:ns:carddav">' +
-						'<D:prop><D:getetag/>' + 
-							' <C:addressbook-data>' +
-								'<C:prop name="VERSION"/>' +
-								'<C:prop name="UID"/>' +
-								'<C:prop name="NICKNAME"/>' +
-								'<C:prop name="EMAIL"/>' +
-								'<C:prop name="FN"/>' +
-							'</C:addressbook-data>' +
-						'</D:prop>' +
-						'<C:filter>' +
-							'<C:prop-filter name="NICKNAME">' +
-								'<C:text-match collation="i;unicasemap" match-type="equality">' + filter + '</C:text-match>' +
-							'</C:prop-filter>' +
-						'</C:filter>' +
-					'</C:addressbook-query>';
-	//return parser.parseFromString( xml, "text/xml");
-*/
+
 	var xml = '<?xml version="1.0" encoding="UTF-8"?>' +
 				'<addressbook-query xmlns:D="DAV:" xmlns="urn:ietf:params:xml:ns:carddav">' +
 					'<D:prop><D:getetag/><addressbook-data/></D:prop>' +
 					'<filter>' +
 						'<prop-filter name="mail">' +
-							'<text-match collation="i;unicasemap" match-type="substring">' + filter + '</text-match>' +						
+							'<text-match collation="i;unicasemap" match-type="substring">' + filter + '</text-match>' +
 						'</prop-filter>' +
 					'</filter>' +
+       			'<prop-filter name="FN">' +
+         			'<text-match collation="i;unicasemap" match-type="substring">' + filter + '</text-match>' +
+       			'</prop-filter>' +
 				'</addressbook-query>';
 	return xml;
 }
@@ -191,13 +187,14 @@ function sendXMLRequestXPCOM(webdavURL,HTTPmethod,HTTPheaders,XMLreq) {
 }
 
 function cardDavReport(webdavURL,filter) {
-  //putting together the request XML
-  var xmlReq=buildCardDavReportXML(filter);
+
+  var xmlReq = buildCardDavReportXML(filter);
+
   //var HTTPheaders=[["Connection","TE"],["TE","trailers, deflate, gzip, compress"],["Depth","1"],["Translate","f"],["Content-type","text/xml"]];
   var HTTPheaders=[["Connection","TE"],["TE","trailers"],["Content-type","text/xml"]];
   try {
     // send out the XML request
-    var responseObj=sendXMLRequestXPCOM(webdavURL,"REPORT",HTTPheaders,xmlReq,null,null);
+    var responseObj = sendXMLRequestXPCOM(webdavURL, "REPORT", HTTPheaders, xmlReq, null, null);
   } catch(e) {
     throw e;
   }

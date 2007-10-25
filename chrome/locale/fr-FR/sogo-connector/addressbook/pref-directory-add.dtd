@@ -93,4 +93,4 @@ Modifications to original file pref-directory-add.xul by:
 <!ENTITY AutoDeleteFromServer.accesskey   "E">
 
 <!ENTITY ReadOnly.label                   "en lecture seulement">
-<!ENTITY ReadOnly.accesskey               "C">
+<!ENTITY ReadOnly.accesskey               "L">
