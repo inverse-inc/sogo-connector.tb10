@@ -23,7 +23,7 @@
 <!ENTITY newGroupDavCmd.label                      	"Carnet d'adresses distant">
 <!ENTITY newGroupDavCmd.accesskey                  	"C">
 
-<!ENTITY GroupDavSynch.label                          "Synchronisation du carnet d'adresse distant">
+<!ENTITY GroupDavSynch.label                          "Synchroniser">
 <!ENTITY GroupDavSynch.accesskey                  		"S">
 <!ENTITY GroupDavSynch.tooltip                      	"Synchronise les fiches locales avec celles du serveur">
 <!ENTITY GroupDavConf.label                      		"Configurer">
