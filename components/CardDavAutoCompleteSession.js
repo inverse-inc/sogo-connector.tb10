@@ -26,9 +26,9 @@ function CardDavAutoCompleteSession() {
 
 // void onAutoComplete ( PRUnichar* searchString , nsIAutoCompleteResults previousSearchResult , nsIAutoCompleteListener listener )
 CardDavAutoCompleteSession.prototype.onAutoComplete = function(searchString, previousSearchResult, listener ){
-	dump("**************************************************************/n");
+	dump("**************************************************************\n");
 	dump("CardDavAutoCompleteSession.prototype.onAutoComplete\n");	
-	dump("**************************************************************/n");	
+	dump("**************************************************************\n");	
 }
 // void onStartLookup ( PRUnichar* searchString , nsIAutoCompleteResults previousSearchResult , nsIAutoCompleteListener listener )
 CardDavAutoCompleteSession.prototype.onStartLookup = function( searchString, previousSearchResult, listener ){

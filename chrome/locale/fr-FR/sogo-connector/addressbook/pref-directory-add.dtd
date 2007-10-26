@@ -92,5 +92,5 @@ Modifications to original file pref-directory-add.xul by:
 <!ENTITY AutoDeleteFromServer.label       "Effacer les cartes qui ont été effacées du serveur automatiquement">
 <!ENTITY AutoDeleteFromServer.accesskey   "E">
 
-<!ENTITY ReadOnly.label                   "en lecture seulement">
+<!ENTITY ReadOnly.label                   "En lecture seulement">
 <!ENTITY ReadOnly.accesskey               "L">
