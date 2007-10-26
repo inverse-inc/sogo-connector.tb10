@@ -1,5 +1,5 @@
 PACKAGE = sogo-connector
-VERSION = 0.60
+VERSION = 0.61
 
 XPI_ARCHIVE = $(PACKAGE)-$(VERSION).xpi
 

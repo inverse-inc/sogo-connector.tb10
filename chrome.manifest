@@ -1,23 +1,23 @@
-content sogo-connector       		chrome/content/sogo-connector/
-skin    sogo-connector  			classic/1.0 chrome/skin/classic/sogo-connector/
+content 	sogo-connector       	chrome/content/sogo-connector/
+skin    	sogo-connector  			classic/1.0 chrome/skin/classic/sogo-connector/
 locale	sogo-connector en-US	   chrome/locale/en-US/sogo-connector/
 locale	sogo-connector fr-FR	   chrome/locale/fr-FR/sogo-connector/
-locale	sogo-connector de-DE 	chrome/locale/de-DE/
+locale	sogo-connector de-DE 	chrome/locale/de-DE/sogo-connector/
 
-overlay chrome://calendar/content/sun-calendar-event-dialog.xul chrome://sogo-connector/content/calendar/calendar-event-dialog.xul
-overlay chrome://calendar/content/sun-calendar-event-dialog-attendees.xul chrome://sogo-connector/content/calendar/calendar-event-dialog-attendees.xul
+overlay	chrome://calendar/content/sun-calendar-event-dialog.xul chrome://sogo-connector/content/calendar/calendar-event-dialog.xul
+overlay	chrome://calendar/content/sun-calendar-event-dialog-attendees.xul chrome://sogo-connector/content/calendar/calendar-event-dialog-attendees.xul
 
-overlay chrome://lightning/content/messenger-overlay-sidebar.xul chrome://sogo-connector/content/lightning/messenger-overlay-sidebar.xul
+overlay	chrome://lightning/content/messenger-overlay-sidebar.xul chrome://sogo-connector/content/lightning/messenger-overlay-sidebar.xul
 
-overlay chrome://messenger/content/messenger.xul chrome://sogo-connector/content/addressbook/messenger.groupdav.overlay.xul
+overlay	chrome://messenger/content/messenger.xul chrome://sogo-connector/content/addressbook/messenger.groupdav.overlay.xul
 overlay	chrome://messenger/content/addressbook/addressbook.xul chrome://sogo-connector/content/addressbook/addressbook.groupdav.overlay.xul
-overlay chrome://messenger/content/addressbook/abEditCardDialog.xul chrome://sogo-connector/content/addressbook/inverse-calendar-card-edit-overlay.xul
+overlay	chrome://messenger/content/addressbook/abEditCardDialog.xul chrome://sogo-connector/content/addressbook/inverse-calendar-card-edit-overlay.xul
 overlay	chrome://messenger/content/addressbook/abEditCardDialog.xul chrome://sogo-connector/content/addressbook/abEditCardDialog.groupdav.overlay.xul
 overlay	chrome://messenger/content/addressbook/abNewCardDialog.xul chrome://sogo-connector/content/addressbook/abNewCardDialog.groupdav.overlay.xul
 overlay  chrome://messenger/content/messengercompose/messengercompose.xul chrome://sogo-connector/content/addressbook/messenger.compose.carddav.overlay.xul
 
-overlay chrome://sogo-connector/content/addressbook/abNewCardDialog.groupdav.overlay.xul chrome://sogo-connector/content/addressbook/abCommonCardDialog.groupdav.overlay.xul
-overlay chrome://sogo-connector/content/addressbook/abEditCardDialog.groupdav.overlay.xul chrome://sogo-connector/content/addressbook/abCommonCardDialog.groupdav.overlay.xul
+overlay	chrome://sogo-connector/content/addressbook/abNewCardDialog.groupdav.overlay.xul chrome://sogo-connector/content/addressbook/abCommonCardDialog.groupdav.overlay.xul
+overlay	chrome://sogo-connector/content/addressbook/abEditCardDialog.groupdav.overlay.xul chrome://sogo-connector/content/addressbook/abCommonCardDialog.groupdav.overlay.xul
 
-style chrome://sogo-connector/content/addressbook/addressbook.groupdav.overlay.xul chrome://sogo-connector/skin/addressbook/addressbook.groupdav.overlay.css
+style 	chrome://sogo-connector/content/addressbook/addressbook.groupdav.overlay.xul chrome://sogo-connector/skin/addressbook/addressbook.groupdav.overlay.css
 
