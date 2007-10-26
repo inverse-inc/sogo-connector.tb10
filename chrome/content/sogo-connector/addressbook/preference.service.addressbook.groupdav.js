@@ -38,6 +38,18 @@ function isGroupdavDirectory(abURI){
 		throw "abURI is undefined";
    }
 }
+function isCardDavDirectory(abURI){
+	if (abURI){
+		if (abURI.search("moz-abdavdirectory") != -1){
+			return true;
+		}else{
+			return false;
+		}
+	}else{
+		throw "abURI is undefined for in fonction isCardDavDirectory()";
+   }
+}
+
 
 function GroupdavPreferenceService(uniqueId){
 	if (uniqueId == null || uniqueId == ""){

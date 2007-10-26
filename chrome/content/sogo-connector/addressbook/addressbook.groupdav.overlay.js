@@ -144,7 +144,7 @@ var dirPaneControllerOverlay = {
 		try{
 			switch (command){
 				case "cmd_synchGroupdav":
-					if (gSelectedDir && gSelectedDir != "" && isGroupdavDirectory(gSelectedDir) && !gSynchIsRunning)
+					if (gSelectedDir && gSelectedDir != "" && isGroupdavDirectory(gSelectedDir) && !isCardDavDirectory(gSelectedDir) && !gSynchIsRunning)
 						return true;
 					else
 						return false;
