@@ -196,32 +196,28 @@ AbDAVDirectory.prototype.getChildCards = function(){
 		return null;
 	}
 	var criteria = RegExp.$1;
-
-//	dump("url: " + url +"\n");
-//	dump("crit: " + criteria + "\n");
 	
 	var doc = cardDavReport(url, criteria);
 	var nodeList = doc.getElementsByTagName("addressbook-data");
 	
-// TODO: To support customs fields introduced in importFromVcard for FreeBuzy
-// an overhaul of the vcard parsing is in order, this will have to be handle differently!!!	
-	var customFieldsArray;
+	// To support customs fields introduced in importFromVcard for FreeBuzy
+	var customFieldsArray;// // TODO: when the overhaul of the vcard parsing is done, this will have to be handle differently!!!	
 	var array = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsICollection);
 	
 	//Adding cards to array
 	for (var i = 0; i < nodeList.length; i++){
 		customFieldsArray = new Array();
 		array.AppendElement(importFromVcard(nodeList.item(i).textContent.toString(), null, customFieldsArray));
-	}	
+	}
 	var result = Components.classes["@inverse.ca/jsenumerator;1"].createInstance(Components.interfaces.inverseIJSEnumerator);
 	result.init(array, nodeList.length);
-	dump("getChildCards: " + result + "  " +  nodeList.length + "\n");
+//	dump("getChildCards: " + result + "  " +  nodeList.length + "\n");
 
 	return result;
 }
 
 //readonly nsISimpleEnumerator childNodes
-AbDAVDirectory.prototype.__defineGetter__("childNodes", function() { dump("this.childNodes called. \n"); return this.parentDirectory.QueryInterface(nsIAbDirectory).childNodes; });
+AbDAVDirectory.prototype.__defineGetter__("childNodes", function() { return this.parentDirectory.QueryInterface(nsIAbDirectory).childNodes; });
 AbDAVDirectory.prototype.__defineSetter__("childNodes", function(val) { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; });
 
 //PRUnichar* description
@@ -357,11 +353,10 @@ AbDAVDirectory.prototype.__defineSetter__("ValueUTF8", function(val) { this.pare
 
 //void Init ( char* uri )   
 AbDAVDirectory.prototype.Init =function( uri ){
-	dump("AbDAVDirectory.Init(" + uri +")\n");
+
 	this.parentDirectory.QueryInterface(nsIRDFResource).Init( uri );
 	
-	dump( "\t this.Value: " + this.Value + "\n");	
-	dump("AbDAVDirectory.Init(" + uri +") completed\n\n");
+//	dump("AbDAVDirectory.Init(" + uri +") completed\n\n");
  }
  	
 // PRBool EqualsString ( char* URI ) 

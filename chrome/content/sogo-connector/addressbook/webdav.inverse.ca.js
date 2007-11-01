@@ -185,7 +185,7 @@ function sendXMLRequestXPCOM(webdavURL,HTTPmethod,HTTPheaders,XMLreq) {
   return retObj;
 }
 
-function cardDavReport(webdavURL,filter) {
+function cardDavReport(webdavURL, filter) {
 
   var xmlReq = buildCardDavReportXML(filter);
 
@@ -209,4 +209,16 @@ function cardDavReport(webdavURL,filter) {
 			throw "cardDavReport(): Error connecting to the Server; response status: " + responseObj.status;      			
 	}  
   return doc;
+}
+
+// Returns a string
+function getABDavURL( abUri ){
+	// Matching the URL
+	var reg = new RegExp(/moz-abdavdirectory:\/\/(.*)/);
+
+	if ( !reg.test(abUri)){
+		return null;
+	}else{
+		return RegExp.$1;	
+	}
 }
