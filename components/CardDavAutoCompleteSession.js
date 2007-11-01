@@ -1,3 +1,9 @@
+Components.classes["@mozilla.org/moz/jssubscript-loader;1"].getService(Components.interfaces.mozIJSSubScriptLoader)
+	.loadSubScript("chrome://sogo-connector/content/addressbook/webdav.inverse.ca.js");
+
+Components.classes["@mozilla.org/moz/jssubscript-loader;1"].getService(Components.interfaces.mozIJSSubScriptLoader)
+	.loadSubScript("chrome://sogo-connector/content/addressbook/vcards.utils.js");
+	
 /***********************************************************
 constants
 ***********************************************************/
@@ -14,14 +20,13 @@ const CONTRACT_ID = "@mozilla.org/autocompleteSession;1?type=cardav";
 const CLASS_ID = Components.ID("{882c2ce0-f7a2-4894-bce7-a119fb6f3c5c}");
 const CLASS_NAME = "Implementation of nsICardDAVAutoCompleteSession";
 
-
 /***********************************************************
 class definition
 ***********************************************************/
 
 //class constructor
 function CardDavAutoCompleteSession() {
-	dump("CardDavAutoCompleteSession constructor!");	
+	dump("CardDavAutoCompleteSession constructor!\n");	
 };
 
 CardDavAutoCompleteSession.prototype.url = null;
@@ -44,14 +49,44 @@ CardDavAutoCompleteSession.prototype.onAutoComplete = function(searchString, pre
 CardDavAutoCompleteSession.prototype.onStartLookup = function( searchString, previousSearchResult, listener ){
 	dump("CardDavAutoCompleteSession.prototype.onStartLookup\n");	
 	dump("searchString: " + searchString + "\n");
-	dump("url: " + this.url.spec + "\n");
-	// Matching the URL
-	var reg = new RegExp(/moz-abdavdirectory:\/\/(.*)\?/);
-	if ( !reg.test(this.Value)){
-		dump("Problem with URL in CardDavAutoCompleteSession.prototype.onStartLookup()")
-	}	
-	var url = RegExp.$1;	
-	var doc = cardDavReport(url, searchString);
+
+	if ( ! listener ){
+		dump("NULL listener in CardDavAutoCompleteSession.prototype.onStartLookup\n");
+		listener.onAutoComplete( null, -1);//nsIAutoCompleteStatus::failed
+		
+	}else{
+		var url = getABDavURL( this.url );
+		if ( url ){			
+			var doc = cardDavReport(url, searchString);
+			var nodeList = doc.getElementsByTagName("addressbook-data");
+			
+			// To support customs fields introduced in importFromVcard for FreeBuzy
+			var customFieldsArray;// // TODO: when the overhaul of the vcard parsing is done, this will have to be handle differently!!!	
+			var resultArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsICollection);
+			
+			//Adding cards to array
+			for (var i = 0; i < nodeList.length; i++){
+				customFieldsArray = new Array();
+				resultArray.AppendElement(importFromVcard(nodeList.item(i).textContent.toString(), null, customFieldsArray));
+			}				
+			dump("resultArray.Count: " + nodeList.length + "\n");
+			if (nodeList.length > 0){
+				var matchFound = 1; //nsIAutoCompleteStatus::matchFound
+				
+				var results = Components.classes["@mozilla.org/autocomplete/results;1"].createInstance(CI.nsIAutoCompleteResults);
+				results.items = resultArray;
+				results.searchString = searchString;
+				
+				listener.onAutoComplete( results,  matchFound);
+			}else{
+				var noMatch = 0; //nsIAutoCompleteStatus::noMatch
+				listener.onAutoComplete( null, noMatch);
+			}			
+		}else{
+			dump("no url in CardDavAutoCompleteSession.prototype.onStartLookup\n");
+			listener.onAutoComplete( null, -1);//nsIAutoCompleteStatus::failed
+		}
+	}
 }
 // void onStopLookup ( ) 
 CardDavAutoCompleteSession.prototype.onStopLookup = function(){

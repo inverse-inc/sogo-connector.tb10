@@ -34,7 +34,7 @@ var logPath;
 
 const maxLogFileSize = 100000;
 const LOG_LEVEL_PREF	= "extensions.ca.inverse.logLevel";
-const LOG_FILE 		= "extensions.ca.inverse.addressbook.groupdav.log";
+const LOG_FILE 		= "extensions.ca.inverse.sogo.connector.log";
 
 initLogFile(LOG_FILE);
 
