@@ -11,8 +11,8 @@
     em:creator="Inverse/Keyrus Canada"
     em:homepageURL="http://www.inverse.ca/contributions/sogo_connector.html"
     em:updateURL="http://www.inverse.ca/groupware/plugins/updates.php?plugin=%ITEM_ID%&amp;version=%ITEM_VERSION%">
-    <em:developper>Robert Bolduc</em:developper>	  
-    <em:developper>Wolfgang Sourdeau</em:developper>
+    <em:developer>Robert Bolduc</em:developper>	  
+    <em:developer>Wolfgang Sourdeau</em:developper>
     <em:contributor>Chris Bryant</em:contributor>
     <em:contributor>Damon Hart</em:contributor>
     <em:contributor>Dominik Gehl</em:contributor>
