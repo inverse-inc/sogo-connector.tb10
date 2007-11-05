@@ -1,0 +1,8 @@
+#include "nsIAutoCompleteSession.idl"
+#include "nsISupports.idl"
+#include "nsIURI.idl"
+
+[scriptable, uuid(882c2ce0-f7a2-4894-bce7-a119fb6f3c5c)]
+interface nsICardDAVAutoCompleteSession : nsIAutoCompleteSession {
+    attribute nsIURI serverURL;
+};

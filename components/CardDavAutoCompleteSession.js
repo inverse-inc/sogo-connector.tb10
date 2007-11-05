@@ -94,6 +94,7 @@ CardDavAutoCompleteSession.prototype.onStopLookup = function(){
 }
 
 CardDavAutoCompleteSession.prototype.QueryInterface = function(aIID){
+	dump("CardDavAutoCompleteSession.prototype.QueryInterface = function(aIID)\n");
 	if (	!aIID.equals(nsICardDAVAutoCompleteSession) && 
 			!aIID.equals(nsISupports))
 		throw Components.results.NS_ERROR_NO_INTERFACE;
