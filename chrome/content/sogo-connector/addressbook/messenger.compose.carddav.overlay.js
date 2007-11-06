@@ -107,7 +107,7 @@ function setupCardDavAutoCompleteSession(){
 		if (prevAutocompleteDirectory) {
 			if (prevAutocompleteDirectory != gCurrentAutocompleteDirectory) { 
 				RemoveDirectorySettingsObserver(prevAutocompleteDirectory);
-				sPrefBranchInternal.addObserver(gCurrentAutocompleteDirectory, cardDAVDirectoryServerObserver, false);
+				sPrefBranchInternal.addObserver(gCurrentAutocompleteDirectory, directoryServerObserver, false);
 			}
 		}else{
 			AddDirectorySettingsObserver();
@@ -149,7 +149,6 @@ function setupCardDavAutoCompleteSession(){
 		try {
 			serverURL.spec = gPrefs.getComplexValue(autocompleteDirectory +".uri",CI.nsISupportsString).data;
 			dump("\n========= uri: " + gPrefs.getComplexValue(autocompleteDirectory +".uri",CI.nsISupportsString).data +"\n");
-			alert("What!");
 			dump("\n========= spec:" + serverURL.spec +"\n");
 		} catch (ex){
 			dump("ERROR: " + ex + "\n");

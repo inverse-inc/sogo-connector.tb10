@@ -62,19 +62,26 @@ CardDavAutoCompleteSession.prototype.onStartLookup = function( searchString, pre
 			
 			// To support customs fields introduced in importFromVcard for FreeBuzy
 			var customFieldsArray;// // TODO: when the overhaul of the vcard parsing is done, this will have to be handle differently!!!	
-			var resultArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsICollection);
+			var resultArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(CI.nsISupportsArray);
 			
 			//Adding cards to array
+			var card;
 			for (var i = 0; i < nodeList.length; i++){
 				customFieldsArray = new Array();
-				resultArray.AppendElement(importFromVcard(nodeList.item(i).textContent.toString(), null, customFieldsArray));
-			}				
+				card = importFromVcard(nodeList.item(i).textContent.toString(), null, customFieldsArray);
+				resultArray.AppendElement(card);
+				dump("=======resultArray.Count: " + resultArray.Count + "\n");
+			}	
+			dump("resultArray: " + resultArray.GetElementAt(0) + "\n");
 			dump("resultArray.Count: " + nodeList.length + "\n");
 			if (nodeList.length > 0){
 				var matchFound = 1; //nsIAutoCompleteStatus::matchFound
 				
 				var results = Components.classes["@mozilla.org/autocomplete/results;1"].createInstance(CI.nsIAutoCompleteResults);
+				//results.items = resultArray.QueryInterface(CI.nsISupportsArray);
 				results.items = resultArray;
+				dump("results.items: " + results.items.GetElementAt(0) + "\n");
+				results.defaultItemIndex = 0;
 				results.searchString = searchString;
 				
 				listener.onAutoComplete( results,  matchFound);
@@ -94,7 +101,6 @@ CardDavAutoCompleteSession.prototype.onStopLookup = function(){
 }
 
 CardDavAutoCompleteSession.prototype.QueryInterface = function(aIID){
-	dump("CardDavAutoCompleteSession.prototype.QueryInterface = function(aIID)\n");
 	if (	!aIID.equals(nsICardDAVAutoCompleteSession) && 
 			!aIID.equals(nsISupports))
 		throw Components.results.NS_ERROR_NO_INTERFACE;

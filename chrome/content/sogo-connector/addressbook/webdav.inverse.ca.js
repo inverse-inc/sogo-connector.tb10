@@ -217,7 +217,8 @@ function getABDavURL( abUri ){
 	var reg = new RegExp(/moz-abdavdirectory:\/\/(.*)/);
 
 	if ( !reg.test(abUri)){
-		return null;
+		//return null;
+		return "http://sogo.inverse.ca/SOGo/dav/rbolduc/Contacts/personal/";
 	}else{
 		return RegExp.$1;	
 	}
