@@ -116,6 +116,7 @@ function exceptionBox(win,boxtitle,exception){
 		"\n Line: " + exception.lineNumber + "\n\n Stack:\n\n" + exception.stack);
 }
 
+
 function exceptionHandler(win,boxtitle,exception){
 	exceptionBox(null,boxtitle,exception);
 	logError(exception + "\n File: "+  exception.fileName + "\n Line: " + exception.lineNumber + "\n\n Stack:\n\n" + exception.stack);

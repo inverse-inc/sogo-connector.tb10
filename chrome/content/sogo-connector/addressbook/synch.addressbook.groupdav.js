@@ -211,7 +211,11 @@ function fillServerHashes(){
 	// TODO replace this call with a new propfind that will be put inside of ca.inverse.webdav.js 
 	// instead of using webdavAPI.js
 	var propsList = new Array("<D:getetag/>");
-	var responseObj=webdav_propfind(gURL, propsList, null, null); //Let Thunderbird Password Manager handle user and password
+	try{
+		var responseObj=webdav_propfind(gURL, propsList, null, null); //Let Thunderbird Password Manager handle user and password
+	}catch (e){
+		throw new Components.Exception("Cannot connect to the server " + gURL + "\nMethod:fillServerHashes()\n\n", Components.results.NS_ERROR_FAILURE);
+	}
 
 	switch(responseObj.status){      
 		case 207:

@@ -72,7 +72,7 @@ CardDavAutoCompleteSession.prototype.onStartLookup = function( searchString, pre
 				resultArray.AppendElement(card);
 				dump("=======resultArray.Count: " + resultArray.Count + "\n");
 			}	
-			dump("resultArray: " + resultArray.GetElementAt(0) + "\n");
+			dump("resultArray(0): " + resultArray.GetElementAt(0) + "\n");
 			dump("resultArray.Count: " + nodeList.length + "\n");
 			if (nodeList.length > 0){
 				var matchFound = 1; //nsIAutoCompleteStatus::matchFound
@@ -80,10 +80,10 @@ CardDavAutoCompleteSession.prototype.onStartLookup = function( searchString, pre
 				var results = Components.classes["@mozilla.org/autocomplete/results;1"].createInstance(CI.nsIAutoCompleteResults);
 				//results.items = resultArray.QueryInterface(CI.nsISupportsArray);
 				results.items = resultArray;
-				dump("results.items: " + results.items.GetElementAt(0) + "\n");
+				dump("results.items(0): " + results.items.GetElementAt(0) + "\n");
 				results.defaultItemIndex = 0;
 				results.searchString = searchString;
-				
+
 				listener.onAutoComplete( results,  matchFound);
 			}else{
 				var noMatch = 0; //nsIAutoCompleteStatus::noMatch
@@ -93,6 +93,8 @@ CardDavAutoCompleteSession.prototype.onStartLookup = function( searchString, pre
 			dump("no url in CardDavAutoCompleteSession.prototype.onStartLookup\n");
 			listener.onAutoComplete( null, -1);//nsIAutoCompleteStatus::failed
 		}
+		dump("EXTRA PICKLE CORP");
+		dump("AGAIN results.items(0): " + results.items.GetElementAt(0) + "\n");
 	}
 }
 // void onStopLookup ( ) 
