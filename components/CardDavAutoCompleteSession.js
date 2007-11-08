@@ -68,8 +68,18 @@ CardDavAutoCompleteSession.prototype.onStartLookup = function( searchString, pre
 			var card;
 			for (var i = 0; i < nodeList.length; i++){
 				customFieldsArray = new Array();
+				dump("CardDavAutoCompleteSession.prototype.onStartLookup\n");
+				dump(nodeList.item(i).textContent.toString());
+				dump("\n===================================================\n");				
 				card = importFromVcard(nodeList.item(i).textContent.toString(), null, customFieldsArray);
-				resultArray.AppendElement(card);
+						cardExt = card.QueryInterface(Components.interfaces.nsIAbMDBCard);
+
+						//cardExt.setStringAttribute("groupDavKey", key);
+						//cardExt.setStringAttribute("groupDavVersion", serverVersionHash[key]);
+						cardExt.setStringAttribute("calFBURL", customFieldsArray["fbURL"]);										            	         										
+						//cardExt.setStringAttribute("groupDavVcardCompatibility", vcardFieldsArray["groupDavVcardCompatibility"]);
+				
+				resultArray.AppendElement(cardExt);
 				dump("=======resultArray.Count: " + resultArray.Count + "\n");
 			}	
 			dump("resultArray(0): " + resultArray.GetElementAt(0) + "\n");
@@ -81,9 +91,9 @@ CardDavAutoCompleteSession.prototype.onStartLookup = function( searchString, pre
 				//results.items = resultArray.QueryInterface(CI.nsISupportsArray);
 				results.items = resultArray;
 				dump("results.items(0): " + results.items.GetElementAt(0) + "\n");
-				results.defaultItemIndex = 0;
+				results.defaultItemIndex = 1;
 				results.searchString = searchString;
-
+				
 				listener.onAutoComplete( results,  matchFound);
 			}else{
 				var noMatch = 0; //nsIAutoCompleteStatus::noMatch
@@ -93,7 +103,6 @@ CardDavAutoCompleteSession.prototype.onStartLookup = function( searchString, pre
 			dump("no url in CardDavAutoCompleteSession.prototype.onStartLookup\n");
 			listener.onAutoComplete( null, -1);//nsIAutoCompleteStatus::failed
 		}
-		dump("EXTRA PICKLE CORP");
 		dump("AGAIN results.items(0): " + results.items.GetElementAt(0) + "\n");
 	}
 }

@@ -417,7 +417,7 @@ function processDeletes(){
 function deleteServerDeleteArrayCards(){
 	var card;
 	var db = Components.classes["@mozilla.org/addressbook;1"].createInstance(Components.interfaces.nsIAddressBook).getAbDatabaseFromURI(gSelectedDirectoryURI);
-	for (i=0; i<serverDeleteArray.length; i++){
+	for (var i=0; i<serverDeleteArray.length; i++){
 		card =localCardPointerHash[serverDeleteArray[i]].QueryInterface(Components.interfaces.nsIAbMDBCard);
 		db.deleteCard(card, true);
 	}
@@ -453,7 +453,6 @@ function initSynchVariables(uri){
 	// Store the gAddressBook that was selected when Synchronize was clicked
 		gSelectedDirectoryURI = GetSelectedDirectory();
 	}
-	
 	gAddressBook = GetDirectoryFromURI(gSelectedDirectoryURI);	
 	gSynchIsRunning = true;
 		
@@ -493,7 +492,7 @@ function initSynchVariables(uri){
 /******************************************************************
  *  MENU functions
  ******************************************************************/
-function SynchronizeGroupdavAddressbook(uri){	
+function SynchronizeDAVAb(uri, isDrop){
 	try{        
 		initSynchVariables(uri);
 		var statusCode = fillServerHashes();
@@ -512,16 +511,31 @@ function SynchronizeGroupdavAddressbook(uri){
 				//return;
 				break;
 			default:
-				fillLocalHashes();
-				compareVersions();//Has to be done first it modifies Local Hashes		
-				initProgressMeter();
-				downloadVcards(); //asynchronuous
-				uploadCards(); //asynchronous
-				processConflicts();  										
+				if (!isDrop){
+					fillLocalHashes();
+					compareVersions();//Has to be done first it modifies Local Hashes		
+					initProgressMeter();
+					downloadVcards(); //asynchronuous
+					uploadCards(); //asynchronous
+					processConflicts();
+				}else{
+					fillLocalHashes();
+					compareVersions()		
+					initProgressMeter();
+					uploadCards();											
+				}										
 		}
     
 	}catch (e){
 		gSynchIsRunning = false; 
 		exceptionHandler(window,"Synchronization Error!",e);
-	}
+	}	
+}
+
+function SynchronizeGroupdavAddressbookDrop(uri){	
+	SynchronizeDAVAb(uri, true);
+}
+
+function SynchronizeGroupdavAddressbook(uri){	
+	SynchronizeDAVAb(uri, false);
 }

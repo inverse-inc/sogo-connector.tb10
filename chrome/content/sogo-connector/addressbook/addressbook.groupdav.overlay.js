@@ -194,8 +194,11 @@ var  AbDeleteOriginal;
 var  AbDelete;
 
 // DirTreeObserver that synchronized with the GroupDAV server on card delete
-var abGoupDavDirTreeObserver = { 			
+var abGoupDavDirTreeObserver = { 
+
+
 	canDrop: function(index, orientation){
+		
 		return abDirTreeObserver.canDrop(index, orientation);
 	},
 	
@@ -208,11 +211,45 @@ var abGoupDavDirTreeObserver = {
 		trans.addDataFlavor("moz/abcard");
 		var targetResource = dirTree.builderView.getResourceAtIndex(row);
 		var targetURI = targetResource.Value;
-		
-		if (isGroupdavDirectory(targetURI)){		  	  	
-			SynchronizeGroupdavAddressbook(targetURI);
+
+		if (isGroupdavDirectory(targetURI)){
+	  	  	
+//		var date = new Date();
+//		var curDate = null;
+
+//		do { curDate = new Date(); }while(curDate-date < 2000);
+			SynchronizeGroupdavAddressbookDrop(targetURI);
+			
 		}
-	}
+	},
+	
+	onToggleOpenState: function()
+	{
+	},
+
+	onCycleHeader: function(colID, elt)
+	{
+	},
+      
+	onCycleCell: function(row, colID)
+	{
+	},
+      
+	onSelectionChanged: function()
+	{
+	},
+
+	onPerformAction: function(action)
+	{
+	},
+
+	onPerformActionOnRow: function(action, row)
+	{
+	},
+
+	onPerformActionOnCell: function(action, row, colID)
+	{
+	}	
 };
 
 //Override of OnLoadDirTree in chrome://messenger/content/addressbook/addresbook..js

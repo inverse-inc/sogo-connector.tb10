@@ -206,8 +206,30 @@ AbDAVDirectory.prototype.getChildCards = function(){
 	
 	//Adding cards to array
 	for (var i = 0; i < nodeList.length; i++){
+		dump("CardDavAutoCompleteSession.prototype.onStartLookup\n");
+		dump(nodeList.item(i).textContent.toString());
+		dump("\n===================================================\n");
 		customFieldsArray = new Array();
-		array.AppendElement(importFromVcard(nodeList.item(i).textContent.toString(), null, customFieldsArray));
+		
+		var directory = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService)
+			.GetResource(this.Value).QueryInterface(Components.interfaces.nsIAbDirectory);
+		card = importFromVcard(nodeList.item(i).textContent.toString(), null, customFieldsArray);
+		//var cartemp = importFromVcard(nodeList.item(i).textContent.toString(), null, customFieldsArray);
+		//var savedCard= directory.addCard(cartemp);
+		//cardExt = card.QueryInterface(Components.interfaces.nsIAbMDBCard);
+
+		//cardExt.setStringAttribute("groupDavKey", key);
+		//cardExt.setStringAttribute("groupDavVersion", serverVersionHash[key]);
+		//cardExt.setStringAttribute("calFBURL", customFieldsArray["fbURL"]);										            	         										
+		//cardExt.setStringAttribute("groupDavVcardCompatibility", vcardFieldsArray["groupDavVcardCompatibility"]);
+		//card = Components.classes["@mozilla.org/addressbook/moz-abmdbcard;1"].createInstance(Components.interfaces.nsIAbMDBCard);
+		//card = savedCard.QueryInterface(Components.interfaces.nsIAbMDBCard);
+		//card.setStringAttribute("calFBURL", customFieldsArray["fbURL"]);
+		//card.displayName = cartemp.displayName;
+		//savedCard.editCardToDatabase(this.Value); 	
+		array.AppendElement(card);		
+		//array.AppendElement(cardExt);	
+		
 	}
 	var result = Components.classes["@inverse.ca/jsenumerator;1"].createInstance(Components.interfaces.inverseIJSEnumerator);
 	result.init(array, nodeList.length);
