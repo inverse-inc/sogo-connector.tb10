@@ -6,8 +6,8 @@ Working on
 	vcard encoding 2.1 and 3.0
 
 0.62	
-
 	fixed bug 1616: Drag and drop from Directories
+	almost fixed 1642: Problem deleting & editing CardDAV Directory	
 0.61
 	fix for an error in chrome/local for de-DE	
 0.60
