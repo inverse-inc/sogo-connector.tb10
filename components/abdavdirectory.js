@@ -303,6 +303,10 @@ AbDAVDirectory.prototype.__defineSetter__("supportsMailingLists", function(val) 
  
 // void deleteCards ( nsISupportsArray cards )   
 // void deleteDirectory ( nsIAbDirectory dierctory )   
+AbDAVDirectory.prototype.deleteDirectory = function ( directory ){
+	dump("============>CALLED AbDAVDirectory.prototype.deleteDirectory!!!\n");
+	//this.parentDirectory.deleteDirectory(directory);
+}
 // void dropCard ( nsIAbCard card , PRBool needToCopyCard )   
 // void editMailListToDatabase ( char* uri , nsIAbCard listCard )   
 // PRUnichar* getValueForCard ( nsIAbCard card , char* name )   

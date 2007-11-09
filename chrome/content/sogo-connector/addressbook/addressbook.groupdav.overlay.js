@@ -193,6 +193,9 @@ function SetupAbCommandUpdateHandlers(){
 var  AbDeleteOriginal;
 var  AbDelete;
 
+var AbDeleteDirectory;
+var AbDeleteDirectoryOriginal;
+
 // DirTreeObserver that synchronized with the GroupDAV server on card delete
 var abGoupDavDirTreeObserver = { 
 
@@ -270,32 +273,51 @@ function abGroupdavUnload(){
 	treeBuilder.removeObserver(abGoupDavDirTreeObserver);
 }
 
+// Override AbDeleteDirectory() to delete DAV preferences
+
 function onloadDAV(){
 	this.addEventListener("unload", abGroupdavUnload, true);
 	
-AbDeleteOriginal = AbDelete;
-AbDelete = function(){
-	var cards = GetSelectedAbCards();
-	if (cards && cards.length > 0){
-		for (var i = 0; i < cards.length; i++){ 	
-			if ( (cards[i] instanceof Components.interfaces.nsIAbMDBCard) && isGroupdavDirectory(gSelectedDir)){				
-				var card = cards[i].QueryInterface(Components.interfaces.nsIAbMDBCard);
-				if (card){
-					var key = card.getStringAttribute("groupDavKey");
-		    		if (key){
-						var groupdavPrefService = new GroupdavPreferenceService(GetDirectoryFromURI(gSelectedDir).dirPrefId);
-						var url = groupdavPrefService.getURL();
-					   var href =  url + key;
-						var webdavOb = webdav_delete(href,null,null);
-						logDebug("webdav_delete sent for vcard: " + href);  
-		    		}
+	AbDeleteOriginal = AbDelete;
+	AbDelete = function(){
+		var cards = GetSelectedAbCards();
+		if (cards && cards.length > 0){
+			for (var i = 0; i < cards.length; i++){ 	
+				if ( (cards[i] instanceof Components.interfaces.nsIAbMDBCard) && isGroupdavDirectory(gSelectedDir)){				
+					var card = cards[i].QueryInterface(Components.interfaces.nsIAbMDBCard);
+					if (card){
+						var key = card.getStringAttribute("groupDavKey");
+			    		if (key){
+							var groupdavPrefService = new GroupdavPreferenceService(GetDirectoryFromURI(gSelectedDir).dirPrefId);
+							var url = groupdavPrefService.getURL();
+						   var href =  url + key;
+							var webdavOb = webdav_delete(href,null,null);
+							logDebug("webdav_delete sent for vcard: " + href);  
+			    		}
+					}
 				}
 			}
 		}
-	}
-	AbDeleteOriginal.apply();
-};
+		AbDeleteOriginal.apply();
+	};
 	
+	AbDeleteDirectoryOriginal = AbDeleteDirectory;
+	AbDeleteDirectory = function(){	
+		var prefBranchPath = GetDirectoryFromURI(gSelectedDir).dirPrefId;
+		try{
+			if (isGroupdavDirectory(gSelectedDir)){
+				var groupdavPrefService = new GroupdavPreferenceService(prefBranchPath);
+				var prefService = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+				prefService.deleteBranch(groupdavPrefService.prefPath);
+			}
+			// Little patch since AbDeleteDirectoryOriginal does not delete position (ldap_2.servers.AA.position)
+	//		alert(prefBranchPath);
+	//		prefService.deleteBranch(prefBranchPath);
+		}catch(e){
+			exceptionHandler(window,"Error Deleting AddressBook",e);
+		}
+		AbDeleteDirectoryOriginal.apply();	
+	};
 }
 
  onloadDAV();

@@ -44,13 +44,20 @@ function onAccept(){
 		var description = document.getElementById("description").value;
 		if(!description && description == ""){
 			alert(prefMsgBundle.getString("missingDescriptionMsg"));
-			return;
+			return false;
 		}
 		var url = document.getElementById("groupdavURL").value;
 		if(!url && url == ""){
 			alert(prefMsgBundle.getString("missingDescriptionURL"));
-			return;
-	}
+			return false;
+		}
+		//Test if the URL already exist!
+		var selectedABURI = "moz-abdavdirectory://" + url;
+		var selectedABDirectory = gRdfService.GetResource(selectedABURI).QueryInterface(Components.interfaces.nsIAbDirectory); 
+		if(selectedABDirectory.dirPrefId && selectedABDirectory.dirPrefId.length > 0){
+			alert(prefMsgBundle.getString("URLAlreadyExist"));
+			return false;			
+		}
 	var readOnly =  document.getElementById("readOnly").getAttribute("checked");
 	if (readOnly){
 		onAcceptReadOnly();
@@ -69,41 +76,20 @@ function onAccept(){
 	
 	// set window.opener.gUpdate to true so that SOGO Directory Servers dialog gets updated
 	window.opener.gUpdate = true;
-		
+	//window.close();	
+	return true;
 	}catch (e){
 		abWindow.exceptionHandler(window,"Preference onLoad()",e);
-	}finally{
-	//window.close();	
 		return true;
 	}
 }
 //function onAcceptReadOnly(){
 function onAcceptReadOnly(){
-	
-//user_pref("ldap_2.servers.dav.description", "DAV");
-//user_pref("ldap_2.servers.dav.dirType", 2);
-//user_pref("ldap_2.servers.dav.uri", "moz-abdavdirectory:///");
-/*
-user_pref("ldap_2.servers.xxx.auth.savePassword", true);
-user_pref("ldap_2.servers.xxx.description", "xxx");
-user_pref("ldap_2.servers.xxx.filename", "abook-25.mab");
-user_pref("ldap_2.servers.xxx.maxHits", 10);
-user_pref("ldap_2.servers.xxx.uri", "moz-abdavdirectory://://inverse.ca/bobino/yo");
 
- */
-	
 	var properties = Components.classes["@mozilla.org/addressbook/properties;1"].createInstance(Components.interfaces.nsIAbDirectoryProperties);
 	var addressbook = Components.classes["@mozilla.org/addressbook;1"].createInstance(Components.interfaces.nsIAddressBook);
 	var url = document.getElementById("groupdavURL").value;
 
-/*		var pos = url.search(/:\/\//);
-		if( pos== -1)
-			pos = 0;
-		else
-			pos += 3;
-		
-      properties.URI = "moz-abdavdirectory://" + url.substr(pos);
-*/ 
 	properties.dirType = 0; //DAV directory, it works with value = 2, go figure why!
 	properties.URI = "moz-abdavdirectory://" + url;
 	properties.maxHits = 10; // TODO
@@ -118,13 +104,17 @@ user_pref("ldap_2.servers.xxx.uri", "moz-abdavdirectory://://inverse.ca/bobino/y
 		// moz-abdirectory:// is the RDF root to get all types of addressbooks.
 		var parentDir = gRdfService.GetResource("moz-abdirectory://").QueryInterface(Components.interfaces.nsIAbDirectory);
 	
-		// the RDF resource URI for LDAPDirectory will be moz-abldapdirectory://<prefName>
-		//var selectedABURI = "moz-abdavdirectory://" + gCurrentDirectoryString;
-		var selectedABURI = properties.URI;
-		var selectedABDirectory = gRdfService.GetResource(selectedABURI).QueryInterface(Components.interfaces.nsIAbDirectory);
-	 
-		// Now do the modification.
-		addressbook.modifyAddressBook(addressbookDS, parentDir, selectedABDirectory, properties);
+		// the RDF resource URI 
+		var selectedABURI = "moz-abdavdirectory://" + gUrl;
+		//var selectedABURI = properties.URI;
+								  
+		try{
+			var selectedABDirectory = gRdfService.GetResource(selectedABURI).QueryInterface(Components.interfaces.nsIAbDirectory); 
+			addressbook.modifyAddressBook(addressbookDS, parentDir, selectedABDirectory, properties);
+		}catch(e){
+			abWindow.exceptionHandler(window,"modifyAddressBook",e);
+			throw e;
+		}
 		window.opener.gNewServerString = url;       
 	}else { 
 	// adding a new directory
@@ -164,6 +154,8 @@ function onAcceptWebDAV(){
 			addressbook.modifyAddressBook(addressbookDS, parentDir, gCurrentDirectory, properties);   		
 		}
 }
+var gDescription;
+var gUrl;
 
 function fillDialog(){						
 	if ( "arguments" in window && window.arguments[0] ){
@@ -171,8 +163,8 @@ function fillDialog(){
 		gCurrentDirectory = gRdfService.GetResource(gCurrentDirectoryURI).QueryInterface(Components.interfaces.nsIAbDirectory);
 
 		var groupdavPrefService = new GroupdavPreferenceService(gCurrentDirectory.dirPrefId);  
-		document.getElementById("description").value = gCurrentDirectory.dirName;
-		document.getElementById("groupdavURL").value = groupdavPrefService.getURL();
+		gDescription = document.getElementById("description").value = gCurrentDirectory.dirName;
+		gUrl =document.getElementById("groupdavURL").value = groupdavPrefService.getURL();
 		var readOnly = groupdavPrefService.getReadOnly();
 		document.getElementById("readOnly").setAttribute("checked", readOnly);
 		document.getElementById("readOnly").disabled = true;
@@ -183,13 +175,13 @@ function fillDialog(){
 		}else{
 			document.getElementById("displaySynchCompleted").setAttribute("checked", groupdavPrefService.getDisplayDialog());
 			//document.getElementById("offlineTabId").disabled = true;
-			document.getElementById("downloadButton").disabled = true;
+//			document.getElementById("downloadButton").disabled = true;
 //			document.getElementById("autoDeleteFromServer").setAttribute("checked", groupdavPrefService.getAutoDeleteFromServer());									
 		}
 	}else{
-			document.getElementById("offlineTabId").disabled = true;
-			document.getElementById("downloadPanel").disabled = true;
-			document.getElementById("downloadButton").disabled = true;
+//			document.getElementById("offlineTabId").disabled = true;
+//			document.getElementById("downloadPanel").disabled = true;
+//			document.getElementById("downloadButton").disabled = true;
 	}	   	
 }
 function onLoad(){

@@ -532,6 +532,10 @@ function SynchronizeDAVAb(uri, isDrop){
 	}	
 }
 
+// This method was added to circumvent the card being deleted locally
+// when doing a drag and drop from a Directory (read only)
+// It does not process downloads from the server.
+// This is not the optimal solution but it will do for now.
 function SynchronizeGroupdavAddressbookDrop(uri){	
 	SynchronizeDAVAb(uri, true);
 }

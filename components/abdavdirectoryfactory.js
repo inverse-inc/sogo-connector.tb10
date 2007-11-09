@@ -75,7 +75,7 @@ AbDAVDirFactory.prototype = {
 
 	//void deleteDirectory ( nsIAbDirectory directory )
 	deleteDirectory: function(directory) {
-		dump("TODO: deletion of preferences of the directory!!!\n");
+		dump("CALLED deleteDirectory: function(directory)\n");
 	},
 
   QueryInterface: function(aIID)
