@@ -48,7 +48,7 @@ this.InverseLoadFBUrl = function() {
 	fbUrlInput.disabled = true;
 	fbUrlInput.disabledforreadonly = true;
 	fbUrlInput.value = "";
-	this.readLdapFbUrl(fbUrlInput);
+	this.InverseReadLdapFbUrl(fbUrlInput);
     }
     else {
 	try {
