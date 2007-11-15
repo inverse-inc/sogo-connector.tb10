@@ -94,12 +94,14 @@ function CreateCardsFromVcf(uri,lines, outParameters) {
 	var bday = new RegExp(/^BDAY/);
 	var notes = new RegExp(/^NOTE/);
 	var fbURL = new RegExp(/^FBURL/);
+	var uid = new RegExp(/^UID/);
 	var begin = new RegExp(/^BEGIN/);
 	var end = new RegExp(/^END/);
 	var aim = new RegExp(/^X-AIM/);
 	var htmlFormat = new RegExp(/^X-MOZILLA-HTML/);
 
 	outParameters["fbURL"] = "";
+	outParameters["uid"] = "";
 	outParameters["groupDavVcardCompatibility"] = "";
 	
 	// Variables needed to fill the email fields
@@ -244,6 +246,8 @@ function CreateCardsFromVcf(uri,lines, outParameters) {
 			myHtmlFormat = mylinevalue == "TRUE"  ? 2:1;
 	   }else if ( fbURL.test(mylineinit[0])){
 			outParameters["fbURL"] = mylinevalue;
+		}else if ( uid.test(mylineinit[0])){
+			outParameters["uid"] = mylinevalue;			
 	   }else if ( begin.test(mylineinit[0]) || end.test(mylineinit[0]) || notes.test(mylineinit[0]) || version.test(mylineinit[0]) || htmlFormat.test(mylineinit[0])) {
 		//Nothing to do
 		}else{

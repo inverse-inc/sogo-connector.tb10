@@ -47,24 +47,30 @@ CardDavAutoCompleteSession.prototype.onAutoComplete = function(searchString, pre
 }
 // void onStartLookup ( PRUnichar* searchString , nsIAutoCompleteResults previousSearchResult , nsIAutoCompleteListener listener )
 CardDavAutoCompleteSession.prototype.onStartLookup = function( searchString, previousSearchResult, listener ){
+	dump("**************************************************************\n");
 	dump("CardDavAutoCompleteSession.prototype.onStartLookup\n");	
 	dump("searchString: " + searchString + "\n");
+	dump("**************************************************************\n");
 
 	if ( ! listener ){
 		dump("NULL listener in CardDavAutoCompleteSession.prototype.onStartLookup\n");
-		listener.onAutoComplete( null, -1);//nsIAutoCompleteStatus::failed
-		
+		listener.onAutoComplete( null, -1);//nsIAutoCompleteStatus::failed	
 	}else{
 		var url = getABDavURL( this.url );
 		if ( url ){			
+			var uri = "moz-abdavdirectory://" + url;
+			
 			var doc = cardDavReport(url, searchString);
 			var nodeList = doc.getElementsByTagName("addressbook-data");
 			
 			// To support customs fields introduced in importFromVcard for FreeBuzy
 			var customFieldsArray;// // TODO: when the overhaul of the vcard parsing is done, this will have to be handle differently!!!	
+			
 			var resultArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(CI.nsISupportsArray);
 			
-			//Adding cards to array
+			var directory = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService).
+				GetResource(uri).QueryInterface(Components.interfaces.nsIAbDirectory);
+				
 			var card;
 			for (var i = 0; i < nodeList.length; i++){
 				customFieldsArray = new Array();
@@ -72,13 +78,12 @@ CardDavAutoCompleteSession.prototype.onStartLookup = function( searchString, pre
 				dump(nodeList.item(i).textContent.toString());
 				dump("\n===================================================\n");				
 				card = importFromVcard(nodeList.item(i).textContent.toString(), null, customFieldsArray);
-						cardExt = card.QueryInterface(Components.interfaces.nsIAbMDBCard);
+				var savedCard= directory.addCard(card);
+				cardExt = savedCard.QueryInterface(Components.interfaces.nsIAbMDBCard);
 
-						//cardExt.setStringAttribute("groupDavKey", key);
-						//cardExt.setStringAttribute("groupDavVersion", serverVersionHash[key]);
-						cardExt.setStringAttribute("calFBURL", customFieldsArray["fbURL"]);										            	         										
-						//cardExt.setStringAttribute("groupDavVcardCompatibility", vcardFieldsArray["groupDavVcardCompatibility"]);
-				
+				cardExt.setStringAttribute("calFBURL", customFieldsArray["fbURL"]);
+				cardExt.setStringAttribute("uid", customFieldsArray["uid"]);
+				savedCard.editCardToDatabase(uri); 	
 				resultArray.AppendElement(cardExt);
 				dump("=======resultArray.Count: " + resultArray.Count + "\n");
 			}	

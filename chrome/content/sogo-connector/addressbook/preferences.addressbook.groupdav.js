@@ -27,7 +27,7 @@ var gCurrentDirectoryURI;
 
 var prefMsgBundle = document.getElementById("preferencesMsgId");
 														   
-// function hasOnlyWhitespaces(string)
+
 // returns true if string contains only whitespaces and/or tabs
 function hasOnlyWhitespaces(string)
 {
@@ -54,31 +54,34 @@ function onAccept(){
 		//Test if the URL already exist!
 		var selectedABURI = "moz-abdavdirectory://" + url;
 		var selectedABDirectory = gRdfService.GetResource(selectedABURI).QueryInterface(Components.interfaces.nsIAbDirectory); 
-		if(selectedABDirectory.dirPrefId && selectedABDirectory.dirPrefId.length > 0){
+		var selectedABURI2 = "moz-abdavdirectory://" + url +"/"; //Ugly hack to test the same url ending with "/"
+		var selectedABDirectory2 = gRdfService.GetResource(selectedABURI2).QueryInterface(Components.interfaces.nsIAbDirectory); 
+		
+		if((selectedABDirectory.dirPrefId && selectedABDirectory.dirPrefId.length > 0) || 
+			(selectedABDirectory2.dirPrefId && selectedABDirectory2.dirPrefId.length > 0)){
 			alert(prefMsgBundle.getString("URLAlreadyExist"));
 			return false;			
 		}
-	var readOnly =  document.getElementById("readOnly").getAttribute("checked");
-	if (readOnly){
-		onAcceptReadOnly();
-	}else{
-		onAcceptWebDAV();
-	}
-	var groupdavPrefService = new GroupdavPreferenceService(gCurrentDirectory.dirPrefId);
-	groupdavPrefService.setURL(document.getElementById("groupdavURL").value);
-	groupdavPrefService.setDirectoryName(description);
-	groupdavPrefService.setDisplayDialog(document.getElementById("displaySynchCompleted").getAttribute("checked"));
-	//groupdavPrefService.setAutoDeleteFromServer(document.getElementById("autoDeleteFromServer").getAttribute("checked"));
-	groupdavPrefService.setReadOnly(readOnly);
-	
-	window.opener.gNewServerString = gCurrentDirectoryURI;
-	window.opener.gNewServer = description;
-	
-	// set window.opener.gUpdate to true so that SOGO Directory Servers dialog gets updated
-	window.opener.gUpdate = true;
-	//window.close();	
-	return true;
-	}catch (e){
+		var readOnly =  document.getElementById("readOnly").getAttribute("checked");
+		if (readOnly){
+			onAcceptReadOnly();
+		}else{
+			onAcceptWebDAV();
+		}
+		var groupdavPrefService = new GroupdavPreferenceService(gCurrentDirectory.dirPrefId);
+		groupdavPrefService.setURL(document.getElementById("groupdavURL").value);
+		groupdavPrefService.setDirectoryName(description);
+		groupdavPrefService.setDisplayDialog(document.getElementById("displaySynchCompleted").getAttribute("checked"));
+		//groupdavPrefService.setAutoDeleteFromServer(document.getElementById("autoDeleteFromServer").getAttribute("checked"));
+		groupdavPrefService.setReadOnly(readOnly);
+
+		window.opener.gNewServerString = gCurrentDirectoryURI;
+		window.opener.gNewServer = description;
+
+		// set window.opener.gUpdate to true so that SOGO Directory Servers dialog gets updated
+		window.opener.gUpdate = true;
+		return true;
+	}catch(e){
 		abWindow.exceptionHandler(window,"Preference onLoad()",e);
 		return true;
 	}
@@ -90,10 +93,11 @@ function onAcceptReadOnly(){
 	var addressbook = Components.classes["@mozilla.org/addressbook;1"].createInstance(Components.interfaces.nsIAddressBook);
 	var url = document.getElementById("groupdavURL").value;
 
+	var description = document.getElementById("description").value;
 	properties.dirType = 0; //DAV directory, it works with value = 2, go figure why!
 	properties.URI = "moz-abdavdirectory://" + url;
 	properties.maxHits = 10; // TODO
-	properties.description = document.getElementById("description").value;
+	properties.description = description;
 
 	if (gCurrentDirectory /*&& gCurrentDirectoryString*/){
 	// we are modifying an existing directory
@@ -115,9 +119,9 @@ function onAcceptReadOnly(){
 			abWindow.exceptionHandler(window,"modifyAddressBook",e);
 			throw e;
 		}
-		window.opener.gNewServerString = url;       
-	}else { 
-	// adding a new directory
+		gCurrentDirectory.dirName = description;
+//		window.opener.gNewServerString = url;       
+	}else{
 		addNewDirectory(addressbook, properties);
 	}
 }
@@ -154,6 +158,7 @@ function onAcceptWebDAV(){
 			addressbook.modifyAddressBook(addressbookDS, parentDir, gCurrentDirectory, properties);   		
 		}
 }
+
 var gDescription;
 var gUrl;
 
@@ -164,7 +169,7 @@ function fillDialog(){
 
 		var groupdavPrefService = new GroupdavPreferenceService(gCurrentDirectory.dirPrefId);  
 		gDescription = document.getElementById("description").value = gCurrentDirectory.dirName;
-		gUrl =document.getElementById("groupdavURL").value = groupdavPrefService.getURL();
+		gUrl = document.getElementById("groupdavURL").value = groupdavPrefService.getURL();
 		var readOnly = groupdavPrefService.getReadOnly();
 		document.getElementById("readOnly").setAttribute("checked", readOnly);
 		document.getElementById("readOnly").disabled = true;

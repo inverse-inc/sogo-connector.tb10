@@ -29,6 +29,8 @@ JSEnumerator.prototype = {
 //================================================================
 //	inverseIJSEnumerator method
 //================================================================
+
+// void init(in nsICollection array, in PRInt32 size);	
 	init: function( array, size) {
 		if (size > 0){
 	  		this.pointer = 0;

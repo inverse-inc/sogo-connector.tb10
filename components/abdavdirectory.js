@@ -57,6 +57,9 @@ const nsIAutoCompleteSession = Components.interfaces.nsIAutoCompleteSession;
 function AbDAVDirectory(){
 
 	this.parentDirectory = Components.classes["@mozilla.org/rdf/resource-factory;1?name=moz-abldapdirectory"].createInstance(nsIRDFResource);
+	this.mPrefId = null;
+	this.mURINoQuery = null;
+	
 //	this.parentDirectory = Components.classes["@mozilla.org/rdf/resource-factory;1?name=moz-abmdbdirectory"].createInstance(nsIAbDirectory);
 	
 	// Inherits from nsIAbDirectory, the other methods and properties will have to be stubbed
@@ -173,13 +176,23 @@ AbDAVDirectory.prototype.__defineGetter__("childCards", function() {
 	var result = this.getChildCards(); 	
 //	dump("this.getChildEnumerator() = result = " + result + "\n"); 
 	return result;  
-	});
+});
 
 // AbDAVDirectory.prototype.__defineSetter__("childCards", function(val) { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; });
 
 AbDAVDirectory.prototype.getChildCards = function(){
 //	dump("getChildCards() called\n");
-	
+
+// TODO: Offline mode
+/*
+ 	 PRBool offline;
+    nsCOMPtr <nsIIOService> ioService = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = ioService->GetOffline(&offline);
+    NS_ENSURE_SUCCESS(rv,rv);
+ 
+*/
+
 //	this.Value contains the following pattern
 // moz-abdavdirectory://http://sogo.inverse.ca/SOGo/dav/rbolduc/Contacts/public/?(or(PrimaryEmail,c,kkk)(DisplayName,c,kkk)(FirstName,c,kkk)(LastName,c,kkk)))
 	
@@ -191,48 +204,43 @@ AbDAVDirectory.prototype.getChildCards = function(){
 	var url = RegExp.$1;
 	
 	// Matching the criteria
+	//var criteria = this.Value.split(/\?/)[1];
+	// Matching the criteria
+	// Return the 3rd member of the first parenthesis after the "or"
 	reg = new RegExp(/\?\(.*\(.*,.*,(.*)\).*\)\)/);
 	if ( !reg.test(this.Value)){
 		return null;
 	}
-	var criteria = RegExp.$1;
+	var criteria = RegExp.$1;	
 	
 	var doc = cardDavReport(url, criteria);
 	var nodeList = doc.getElementsByTagName("addressbook-data");
 	
 	// To support customs fields introduced in importFromVcard for FreeBuzy
 	var customFieldsArray;// // TODO: when the overhaul of the vcard parsing is done, this will have to be handle differently!!!	
-	var array = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsICollection);
-	
-	//Adding cards to array
+	var uri = "moz-abdavdirectory://" + url;
+	var resultArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
+				
+	var card;
 	for (var i = 0; i < nodeList.length; i++){
+		customFieldsArray = new Array();
 		dump("CardDavAutoCompleteSession.prototype.onStartLookup\n");
+		dump("\n===================================================\n");
 		dump(nodeList.item(i).textContent.toString());
 		dump("\n===================================================\n");
-		customFieldsArray = new Array();
-		
-		var directory = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService)
-			.GetResource(this.Value).QueryInterface(Components.interfaces.nsIAbDirectory);
 		card = importFromVcard(nodeList.item(i).textContent.toString(), null, customFieldsArray);
-		//var cartemp = importFromVcard(nodeList.item(i).textContent.toString(), null, customFieldsArray);
-		//var savedCard= directory.addCard(cartemp);
-		//cardExt = card.QueryInterface(Components.interfaces.nsIAbMDBCard);
-
-		//cardExt.setStringAttribute("groupDavKey", key);
-		//cardExt.setStringAttribute("groupDavVersion", serverVersionHash[key]);
-		//cardExt.setStringAttribute("calFBURL", customFieldsArray["fbURL"]);										            	         										
-		//cardExt.setStringAttribute("groupDavVcardCompatibility", vcardFieldsArray["groupDavVcardCompatibility"]);
-		//card = Components.classes["@mozilla.org/addressbook/moz-abmdbcard;1"].createInstance(Components.interfaces.nsIAbMDBCard);
-		//card = savedCard.QueryInterface(Components.interfaces.nsIAbMDBCard);
-		//card.setStringAttribute("calFBURL", customFieldsArray["fbURL"]);
-		//card.displayName = cartemp.displayName;
-		//savedCard.editCardToDatabase(this.Value); 	
-		array.AppendElement(card);		
-		//array.AppendElement(cardExt);	
 		
-	}
+		var savedCard= this.addCard(card);
+		cardExt = savedCard.QueryInterface(Components.interfaces.nsIAbMDBCard);
+
+		cardExt.setStringAttribute("calFBURL", customFieldsArray["fbURL"]);
+		cardExt.setStringAttribute("uid", customFieldsArray["uid"]);
+		savedCard.editCardToDatabase(uri); 	
+		resultArray.AppendElement(cardExt);
+		dump("=======resultArray.Count: " + resultArray.Count + "\n");
+	}	
 	var result = Components.classes["@inverse.ca/jsenumerator;1"].createInstance(Components.interfaces.inverseIJSEnumerator);
-	result.init(array, nodeList.length);
+	result.init(resultArray, nodeList.length);
 //	dump("getChildCards: " + result + "  " +  nodeList.length + "\n");
 
 	return result;
@@ -255,8 +263,16 @@ AbDAVDirectory.prototype.__defineGetter__("dirName", function() { return this.pa
 AbDAVDirectory.prototype.__defineSetter__("dirName", function(val) { this.parentDirectory.QueryInterface(nsIAbDirectory).dirName = val; });
 
 //		ACString dirPrefId
-AbDAVDirectory.prototype.__defineGetter__("dirPrefId", function() { return this.parentDirectory.QueryInterface(nsIAbDirectory).dirPrefId; });
-AbDAVDirectory.prototype.__defineSetter__("dirPrefId", function(val) { this.parentDirectory.QueryInterface(nsIAbDirectory).dirPrefId = val; });
+AbDAVDirectory.prototype.__defineGetter__("dirPrefId", function() { 
+	//return this.parentDirectory.QueryInterface(nsIAbDirectory).dirPrefId;
+	dump(">>>>>>>>>>>> this.mURINoQuery: " + this.mURINoQuery + "\n");
+	return this.mPrefId;
+});
+AbDAVDirectory.prototype.__defineSetter__("dirPrefId", function(val) { 
+	dump("AbDAVDirectory.prototype.__defineSetter__(dirPrefId, function(val: " + val + "\n");
+	//this.parentDirectory.QueryInterface(nsIAbDirectory).dirPrefId = val;
+	this.mPrefId = val;
+});
 
 
 //		PRBool isMailList
@@ -277,7 +293,7 @@ AbDAVDirectory.prototype.__defineGetter__("lastModifiedDate", function() { retur
 AbDAVDirectory.prototype.__defineSetter__("lastModifiedDate", function(val) { this.parentDirectory.lastModifiedDate = val; });
 
 //		PRUnichar* listNickName
-AbDAVDirectory.prototype.__defineGetter__("listNickName", function() { return this.parentDirectory.listNickName; });
+AbDAVDirectory.prototype.__defineGetter__("listNickName", function() { return "Petak" /*this.parentDirectory.listNickName*/; });
 AbDAVDirectory.prototype.__defineSetter__("listNickName", function(val) { this.parentDirectory.listNickName = val; });
 
 //		readonly PRInt32 operations
@@ -294,7 +310,49 @@ AbDAVDirectory.prototype.__defineSetter__("searchDuringLocalAutocomplete", funct
 AbDAVDirectory.prototype.__defineGetter__("supportsMailingLists", function() { return false });
 AbDAVDirectory.prototype.__defineSetter__("supportsMailingLists", function(val) { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; });
 
-// nsIAbCard addCard ( nsIAbCard card )   
+//nsIAbCard addCard ( nsIAbCard card )
+AbDAVDirectory.prototype.addCard = function( card ){
+	dump("============>CALLED AbDAVDirectory.prototype.addCard()!!!\n");
+
+
+   if (!card){
+   	throw Components.Exception("AbDAVDirectory.prototype.addCard().  Parameter card is null");
+   }
+	var newCard = null ;
+
+	// this.Value can contain the query so split at "?" to get the uri.
+	// Pattern is like:moz-abdavdirectory://http://sogo.inverse.ca/SOGo/dav/rbolduc/Contacts/public/?(or(PrimaryEmail,c,ws)(DisplayName,c,ws)(FirstName,c,ws)(LastName,c,ws))
+//	var uri = this.Value.split(/\?/)[0];
+	var uri = this.directoryProperties.URI;
+
+	dump("URI: " + uri + "\n");
+	dump('dirPrefId: ' + this.dirPrefId + "\n");
+	var db = Components.classes["@mozilla.org/addressbook;1"].createInstance(Components.interfaces.nsIAddressBook).getAbDatabaseFromURI(uri);
+	dump("Yahoo\n");
+
+//  if (!mDatabase)
+//    rv = GetAbDatabase();
+//  nsCOMPtr<nsIAbCard> newCard;
+//  nsCOMPtr<nsIAbMDBCard> dbcard;
+//  dbcard = do_QueryInterface(card, &rv);
+//  if (NS_FAILED(rv) || !dbcard) {
+//    dbcard = do_CreateInstance(NS_ABMDBCARD_CONTRACTID, &rv);
+//  NS_ENSURE_SUCCESS(rv, rv);
+
+	var dbCard = Components.classes["@mozilla.org/addressbook/moz-abmdbcard;1"].createInstance(Components.interfaces.nsIAbMDBCard);
+   dbCard.QueryInterface(Components.interfacessIAbCard).copy(card);
+   dbcard.SetAbDatabase(db);
+//  if (mIsMailingList == 1)
+ //   mDatabase->CreateNewListCardAndAddToDB(this, m_dbRowID, newCard, PR_TRUE );
+// else
+   //mDatabase->CreateNewCardAndAddToDB(newCard, PR_TRUE);
+//  mDatabase->Commit(nsAddrDBCommitType::kLargeCommit);
+	
+	db.CreateNewCardAndAddToDB(dbCard, true);
+	db.Commit(0);
+	return dbCard;
+
+}
 // void addMailList ( nsIAbDirectory list )   
 // void addMailListWithKey ( nsIAbDirectory list , out PRUint32 key )   
 // void copyMailList ( nsIAbDirectory srcList )   
@@ -381,7 +439,52 @@ AbDAVDirectory.prototype.__defineSetter__("ValueUTF8", function(val) { this.pare
 AbDAVDirectory.prototype.Init =function( uri ){
 
 	this.parentDirectory.QueryInterface(nsIRDFResource).Init( uri );
-	
+
+	this.mURINoQuery = uri;
+		dump("=============== this.mURINoQuery: " + this.mURINoQuery + "\n");
+/*
+    nsresult rv;
+    rv = nsRDFResource::Init (aURI);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mURINoQuery = aURI;
+
+    nsCOMPtr<nsIURI> uri = do_CreateInstance (NS_STANDARDURL_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = uri->SetSpec(nsDependentCString(aURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mIsValidURI = PR_TRUE;
+
+    nsCOMPtr<nsIURL> url = do_QueryInterface(uri);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCAutoString queryString;
+    rv = url->GetQuery (queryString);
+
+    nsCAutoString path;
+    rv = url->GetPath (path);
+    mPath = path;
+
+    PRUint32 queryStringLength;
+    if (queryString.get () && (queryStringLength = queryString.Length ()))
+    {
+        int pathLength = path.Length () - queryStringLength - 1;
+        mPath.Truncate (pathLength);
+
+        mURINoQuery.Truncate (mURINoQuery.Length () - queryStringLength - 1);
+
+        mQueryString = queryString;
+
+        mIsQueryURI = PR_TRUE;
+    }
+    else 
+      mIsQueryURI = PR_FALSE;
+
+    return rv;
+
+*/	
 //	dump("AbDAVDirectory.Init(" + uri +") completed\n\n");
  }
  	
