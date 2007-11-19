@@ -55,11 +55,9 @@ const nsIAutoCompleteSession = Components.interfaces.nsIAutoCompleteSession;
 //AbDAVDirectory.prototype = Components.classes["@mozilla.org/rdf/resource-factory;1?name=moz-abldapdirectory"].createInstance(nsIRDFResource);
 //AbDAVDirectory.prototype.constructor = AbDAVDirectory;
 function AbDAVDirectory(){
-
 	this.parentDirectory = Components.classes["@mozilla.org/rdf/resource-factory;1?name=moz-abldapdirectory"].createInstance(nsIRDFResource);
 	this.mPrefId = null;
 	this.mURINoQuery = null;
-	
 //	this.parentDirectory = Components.classes["@mozilla.org/rdf/resource-factory;1?name=moz-abmdbdirectory"].createInstance(nsIAbDirectory);
 	
 	// Inherits from nsIAbDirectory, the other methods and properties will have to be stubbed
@@ -181,7 +179,6 @@ AbDAVDirectory.prototype.__defineGetter__("childCards", function() {
 // AbDAVDirectory.prototype.__defineSetter__("childCards", function(val) { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; });
 
 AbDAVDirectory.prototype.getChildCards = function(){
-//	dump("getChildCards() called\n");
 
 // TODO: Offline mode
 /*
@@ -193,20 +190,18 @@ AbDAVDirectory.prototype.getChildCards = function(){
  
 */
 
-//	this.Value contains the following pattern
-// moz-abdavdirectory://http://sogo.inverse.ca/SOGo/dav/rbolduc/Contacts/public/?(or(PrimaryEmail,c,kkk)(DisplayName,c,kkk)(FirstName,c,kkk)(LastName,c,kkk)))
-	
+	//	this.Value contains the following pattern
+	// moz-abdavdirectory://http://sogo.inverse.ca/SOGo/dav/rbolduc/Contacts/public/?(or(PrimaryEmail,c,klm)(DisplayName,c,kkk)(FirstName,c,klm)(LastName,c,k)))
 	// Matching the URL
 	var reg = new RegExp(/moz-abdavdirectory:\/\/(.*)\?/);
 	if ( !reg.test(this.Value)){
 		return null;
 	}	
 	var url = RegExp.$1;
-	
+
 	// Matching the criteria
-	//var criteria = this.Value.split(/\?/)[1];
-	// Matching the criteria
-	// Return the 3rd member of the first parenthesis after the "or"
+	// Return the 3rd member of the first parenthesis after the "or", i.e, 
+	//?(or(PrimaryEmail,c,kkk)(DisplayName,c,klm)(FirstName,c,klm)(LastName,c,klm)))
 	reg = new RegExp(/\?\(.*\(.*,.*,(.*)\).*\)\)/);
 	if ( !reg.test(this.Value)){
 		return null;
@@ -224,24 +219,25 @@ AbDAVDirectory.prototype.getChildCards = function(){
 	var card;
 	for (var i = 0; i < nodeList.length; i++){
 		customFieldsArray = new Array();
-		dump("CardDavAutoCompleteSession.prototype.onStartLookup\n");
 		dump("\n===================================================\n");
 		dump(nodeList.item(i).textContent.toString());
 		dump("\n===================================================\n");
 		card = importFromVcard(nodeList.item(i).textContent.toString(), null, customFieldsArray);
 		
 		var savedCard= this.addCard(card);
+		dump (savedCard.displayName +"\n");
 		cardExt = savedCard.QueryInterface(Components.interfaces.nsIAbMDBCard);
 
 		cardExt.setStringAttribute("calFBURL", customFieldsArray["fbURL"]);
 		cardExt.setStringAttribute("uid", customFieldsArray["uid"]);
 		savedCard.editCardToDatabase(uri); 	
 		resultArray.AppendElement(cardExt);
+		//resultArray.AppendElement(savedCard);
 		dump("=======resultArray.Count: " + resultArray.Count + "\n");
 	}	
 	var result = Components.classes["@inverse.ca/jsenumerator;1"].createInstance(Components.interfaces.inverseIJSEnumerator);
 	result.init(resultArray, nodeList.length);
-//	dump("getChildCards: " + result + "  " +  nodeList.length + "\n");
+	dump("getChildCards: " + result + "  " +  nodeList.length + "\n");
 
 	return result;
 }
@@ -265,11 +261,13 @@ AbDAVDirectory.prototype.__defineSetter__("dirName", function(val) { this.parent
 //		ACString dirPrefId
 AbDAVDirectory.prototype.__defineGetter__("dirPrefId", function() { 
 	//return this.parentDirectory.QueryInterface(nsIAbDirectory).dirPrefId;
-	dump(">>>>>>>>>>>> this.mURINoQuery: " + this.mURINoQuery + "\n");
+	//dump(">>>>>>>>>>>> " + this.parentDirectory.QueryInterface(nsIAbDirectory).dirPrefId + "\n");
 	return this.mPrefId;
 });
 AbDAVDirectory.prototype.__defineSetter__("dirPrefId", function(val) { 
-	dump("AbDAVDirectory.prototype.__defineSetter__(dirPrefId, function(val: " + val + "\n");
+	dump("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
+	dump("===========AbDAVDirectory.prototype.__defineSetter__(dirPrefId, function(val: " + val + "\n");
+	dump("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
 	//this.parentDirectory.QueryInterface(nsIAbDirectory).dirPrefId = val;
 	this.mPrefId = val;
 });
@@ -312,9 +310,6 @@ AbDAVDirectory.prototype.__defineSetter__("supportsMailingLists", function(val) 
 
 //nsIAbCard addCard ( nsIAbCard card )
 AbDAVDirectory.prototype.addCard = function( card ){
-	dump("============>CALLED AbDAVDirectory.prototype.addCard()!!!\n");
-
-
    if (!card){
    	throw Components.Exception("AbDAVDirectory.prototype.addCard().  Parameter card is null");
    }
@@ -322,35 +317,53 @@ AbDAVDirectory.prototype.addCard = function( card ){
 
 	// this.Value can contain the query so split at "?" to get the uri.
 	// Pattern is like:moz-abdavdirectory://http://sogo.inverse.ca/SOGo/dav/rbolduc/Contacts/public/?(or(PrimaryEmail,c,ws)(DisplayName,c,ws)(FirstName,c,ws)(LastName,c,ws))
-//	var uri = this.Value.split(/\?/)[0];
-	var uri = this.directoryProperties.URI;
+	var uri = this.Value.split(/\?/)[0];
 
-	dump("URI: " + uri + "\n");
-	dump('dirPrefId: ' + this.dirPrefId + "\n");
-	var db = Components.classes["@mozilla.org/addressbook;1"].createInstance(Components.interfaces.nsIAddressBook).getAbDatabaseFromURI(uri);
-	dump("Yahoo\n");
+	var resource = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService).GetResource(uri)
+		.QueryInterface(Components.interfaces.nsIAbDirectory);
+	
+	//moz-abmdbdirectory://abook-45.mab
+	var  prefService = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);	
+	var fileName = prefService.getCharPref(resource.dirPrefId + ".filename" );
+	var localUri = "moz-abmdbdirectory://" + fileName;
+	
+	var db = Components.classes["@mozilla.org/addressbook;1"].createInstance(Components.interfaces.nsIAddressBook).getAbDatabaseFromURI(localUri);
+/*
+ nsCOMPtr<nsIAbCard> newCard;
+  nsCOMPtr<nsIAbMDBCard> dbcard;
 
-//  if (!mDatabase)
-//    rv = GetAbDatabase();
-//  nsCOMPtr<nsIAbCard> newCard;
-//  nsCOMPtr<nsIAbMDBCard> dbcard;
-//  dbcard = do_QueryInterface(card, &rv);
-//  if (NS_FAILED(rv) || !dbcard) {
-//    dbcard = do_CreateInstance(NS_ABMDBCARD_CONTRACTID, &rv);
-//  NS_ENSURE_SUCCESS(rv, rv);
+  dbcard = do_QueryInterface(card, &rv);
+  if (NS_FAILED(rv) || !dbcard) {
+    dbcard = do_CreateInstance(NS_ABMDBCARD_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+    newCard = do_QueryInterface(dbcard, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+  
+    rv = newCard->Copy(card);
+  NS_ENSURE_SUCCESS(rv, rv);
+  }
+  else {
+    newCard = card;
+  }
+
+  dbcard->SetAbDatabase (mDatabase);
+
+  mDatabase->CreateNewCardAndAddToDB(newCard, PR_TRUE);
+  mDatabase->Commit(nsAddrDBCommitType::kLargeCommit);
+
+  NS_IF_ADDREF(*addedCard = newCard);
+  return NS_OK;
+*/
 
 	var dbCard = Components.classes["@mozilla.org/addressbook/moz-abmdbcard;1"].createInstance(Components.interfaces.nsIAbMDBCard);
-   dbCard.QueryInterface(Components.interfacessIAbCard).copy(card);
-   dbcard.SetAbDatabase(db);
-//  if (mIsMailingList == 1)
- //   mDatabase->CreateNewListCardAndAddToDB(this, m_dbRowID, newCard, PR_TRUE );
-// else
-   //mDatabase->CreateNewCardAndAddToDB(newCard, PR_TRUE);
-//  mDatabase->Commit(nsAddrDBCommitType::kLargeCommit);
-	
-	db.CreateNewCardAndAddToDB(dbCard, true);
-	db.Commit(0);
-	return dbCard;
+	var newCard = Components.classes["@mozilla.org/addressbook/moz-abmdbcard;1"].createInstance(Components.interfaces.nsIAbCard);
+   newCard.copy(card);
+   newCard.QueryInterface(Components.interfaces.nsIAbMDBCard).setAbDatabase(db);
+
+	db.createNewCardAndAddToDB(newCard, false);
+	db.commit(0);//nsAddrDBCommitType::kLargeCommit
+	return newCard;
 
 }
 // void addMailList ( nsIAbDirectory list )   
@@ -437,11 +450,10 @@ AbDAVDirectory.prototype.__defineSetter__("ValueUTF8", function(val) { this.pare
 
 //void Init ( char* uri )   
 AbDAVDirectory.prototype.Init =function( uri ){
-
 	this.parentDirectory.QueryInterface(nsIRDFResource).Init( uri );
 
 	this.mURINoQuery = uri;
-		dump("=============== this.mURINoQuery: " + this.mURINoQuery + "\n");
+		//dump("=============== this.mURINoQuery: " + this.mURINoQuery + "\n");
 /*
     nsresult rv;
     rv = nsRDFResource::Init (aURI);

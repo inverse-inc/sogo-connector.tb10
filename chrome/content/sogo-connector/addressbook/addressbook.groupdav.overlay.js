@@ -304,19 +304,22 @@ function onloadDAV(){
 	AbDeleteDirectoryOriginal = AbDeleteDirectory;
 	AbDeleteDirectory = function(){	
 		var prefBranchPath = GetDirectoryFromURI(gSelectedDir).dirPrefId;
+		var prefService;
 		try{
 			if (isGroupdavDirectory(gSelectedDir)){
 				var groupdavPrefService = new GroupdavPreferenceService(prefBranchPath);
-				var prefService = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+				prefService = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
 				prefService.deleteBranch(groupdavPrefService.prefPath);
 			}
-			// Little patch since AbDeleteDirectoryOriginal does not delete position (ldap_2.servers.AA.position)
-	//		alert(prefBranchPath);
-	//		prefService.deleteBranch(prefBranchPath);
 		}catch(e){
 			exceptionHandler(window,"Error Deleting AddressBook",e);
 		}
-		AbDeleteDirectoryOriginal.apply();	
+		AbDeleteDirectoryOriginal.apply();
+		if (prefService){
+		// Little patch since AbDeleteDirectoryOriginal does not delete position (ldap_2.servers.AA.position)
+			prefService.deleteBranch(prefBranchPath);
+			prefService.deleteBranch(prefBranchPath + ".position");// strange position is not deleted
+		}
 	};
 }
 

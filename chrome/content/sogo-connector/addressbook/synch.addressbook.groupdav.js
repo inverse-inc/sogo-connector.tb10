@@ -85,6 +85,7 @@ var vCardsDownloadObserver = {
 	  					localCardPointerHash[key].editCardToDatabase(gSelectedDirectoryURI); 		            	         	
 					}else{
 					// add the server card
+						dump("!!!!!!!!!!!!!! :" + gSelectedDirectoryURI + "\n");
 						var savedCard= GetDirectoryFromURI(gSelectedDirectoryURI).addCard(card);
 						cardExt = savedCard.QueryInterface(Components.interfaces.nsIAbMDBCard);
 

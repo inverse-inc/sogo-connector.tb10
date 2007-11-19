@@ -32,7 +32,7 @@ var logFile;
 var logFileName;
 var logPath;
 
-const maxLogFileSize = 100000;
+const maxLogFileSize = 1024 * 1024;
 const LOG_LEVEL_PREF	= "extensions.ca.inverse.logLevel";
 const LOG_FILE 		= "extensions.ca.inverse.sogo.connector.log";
 

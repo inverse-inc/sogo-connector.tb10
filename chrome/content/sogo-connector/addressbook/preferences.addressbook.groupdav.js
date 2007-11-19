@@ -27,6 +27,8 @@ var gCurrentDirectoryURI;
 
 var prefMsgBundle = document.getElementById("preferencesMsgId");
 														   
+var gDescription;
+var gUrl = null;
 
 // returns true if string contains only whitespaces and/or tabs
 function hasOnlyWhitespaces(string)
@@ -51,19 +53,23 @@ function onAccept(){
 			alert(prefMsgBundle.getString("missingDescriptionURL"));
 			return false;
 		}
-		//Test if the URL already exist!
-		var selectedABURI = "moz-abdavdirectory://" + url;
-		var selectedABDirectory = gRdfService.GetResource(selectedABURI).QueryInterface(Components.interfaces.nsIAbDirectory); 
-		var selectedABURI2 = "moz-abdavdirectory://" + url +"/"; //Ugly hack to test the same url ending with "/"
-		var selectedABDirectory2 = gRdfService.GetResource(selectedABURI2).QueryInterface(Components.interfaces.nsIAbDirectory); 
-		
-		if((selectedABDirectory.dirPrefId && selectedABDirectory.dirPrefId.length > 0) || 
-			(selectedABDirectory2.dirPrefId && selectedABDirectory2.dirPrefId.length > 0)){
-			alert(prefMsgBundle.getString("URLAlreadyExist"));
-			return false;			
-		}
+				
 		var readOnly =  document.getElementById("readOnly").getAttribute("checked");
 		if (readOnly){
+			var selectedABURI = "moz-abdavdirectory://" + url;
+			var selectedABDirectory = gRdfService.GetResource(selectedABURI).QueryInterface(Components.interfaces.nsIAbDirectory); 
+			var selectedABURI2 = "moz-abdavdirectory://" + url +"/"; //Ugly hack to test the same url ending with "/"
+			var selectedABDirectory2 = gRdfService.GetResource(selectedABURI2).QueryInterface(Components.interfaces.nsIAbDirectory); 
+			var urlHasChanged = gUrl && gUrl.search(url) != 0;
+
+			// Test if the URL already exist!
+			// It is not possible to use the same URL
+			if ( ( !gUrl || urlHasChanged ) &&
+				(	(selectedABDirectory.dirPrefId && selectedABDirectory.dirPrefId.length > 0) || 
+					(selectedABDirectory2.dirPrefId && selectedABDirectory2.dirPrefId.length > 0)  ) ){
+				alert(prefMsgBundle.getString("URLAlreadyExist"));
+				return false;			
+			}			
 			onAcceptReadOnly();
 		}else{
 			onAcceptWebDAV();
@@ -95,6 +101,7 @@ function onAcceptReadOnly(){
 
 	var description = document.getElementById("description").value;
 	properties.dirType = 0; //DAV directory, it works with value = 2, go figure why!
+	//properties.URI = "moz-abdavdirectory://" + url + gCurrentDirectory.dirPrefId;
 	properties.URI = "moz-abdavdirectory://" + url;
 	properties.maxHits = 10; // TODO
 	properties.description = description;
@@ -158,9 +165,6 @@ function onAcceptWebDAV(){
 			addressbook.modifyAddressBook(addressbookDS, parentDir, gCurrentDirectory, properties);   		
 		}
 }
-
-var gDescription;
-var gUrl;
 
 function fillDialog(){						
 	if ( "arguments" in window && window.arguments[0] ){

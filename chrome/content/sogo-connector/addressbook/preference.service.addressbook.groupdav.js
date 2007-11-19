@@ -27,15 +27,24 @@ function isGroupdavDirectory(abURI){
       
 		if (abURI.search("mab/MailList") != -1){
 			return false;
-		}      	
-		var groupdavPrefService = new GroupdavPreferenceService(uri.dirPrefId);
+		} 
+		try{
+			var groupdavPrefService = new GroupdavPreferenceService(uri.dirPrefId);			
+		}catch (e){
+			//var xpcConnect =Components.classes["DEB1D48E-7469-4B01-B186-D9854C7D3F2D"].getService(Components.interfaces.nsIXPConnect);	
+			logError("abURI '" +  abURI + " is invalid in call isGroupdavDirectory(abURI) \n\n STACK:\n");
+			// TODO this needs to be handle better
+			// Currently if for any reason someone messed up prefs.js this could create havoc
+			throw e;
+		}
+
 		if ( groupdavPrefService.getDirectoryName() !=""){
 			return true;	
 		}else{ 
 			return false;
 		}
 	}else{
-		throw "abURI is undefined";
+		return false;
    }
 }
 function isCardDavDirectory(abURI){
@@ -53,9 +62,9 @@ function isCardDavDirectory(abURI){
 
 function GroupdavPreferenceService(uniqueId){
 	if (uniqueId == null || uniqueId == ""){
-		debugger;
-		throw "GroupdavPreferenceService exception: Missing uniqueId";
+		throw new Components.Exception("GroupdavPreferenceService exception: Missing uniqueId");
 	}
+	
 	this.mPreferencesService = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
 
 	this.prefPath = this.prefPathPref + uniqueId + ".";

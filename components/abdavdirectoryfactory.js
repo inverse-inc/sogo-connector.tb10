@@ -58,13 +58,23 @@ AbDAVDirFactory.prototype = {
 			dump("\t description: " + properties.description + "\n");
 			dump("\t uri: " + uri + "\n");
 			dump("\t properties.prefName: " + properties.prefName + "\n");
-*/			
+*/		
 			var resource = rdf.GetResource(uri);
 			var directory = resource.QueryInterface(Components.interfaces.nsIAbDirectory);
 			directory.dirName = description;
 			directory.dirPrefId = prefName;	
 			var singletonEnum = Components.classes["@inverse.ca/jssingletonenumerator;1"].createInstance(Components.interfaces.inverseIJSSingletonEnumerator);
 			singletonEnum.init(directory.QueryInterface(nsISupports));
+
+			var abSession =  Components.classes["@mozilla.org/addressbook/services/session;1"].getService(Components.interfaces.nsIAddrBookSession);
+			var dbPath; // nsCOMPtr<nsILocalFile> dbPath;
+			dbPath = abSession.userProfileDirectory;
+			var  listDatabase; // nsCOMPtr<nsIAddrDatabase>  listDatabase;
+			if (dbPath){
+      		dbPath.appendRelativePath(properties.fileName);
+	    		var addrDBFactory = Components.classes["@mozilla.org/addressbook/carddatabase;1"].getService(Components.interfaces.nsIAddrDatabase); //nsCOMPtr<nsIAddrDatabase> addrDBFactory = do_GetService(NS_ADDRDATABASE_CONTRACTID, &rv);
+      		listDatabase = addrDBFactory.open(dbPath, true, true);				
+			}
 
 			return singletonEnum;
 		}catch(ex){
