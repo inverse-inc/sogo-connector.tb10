@@ -226,17 +226,20 @@ AbDAVDirectory.prototype.getChildCards = function(){
 		
 		var savedCard= this.addCard(card);
 		dump (savedCard.displayName +"\n");
-		cardExt = savedCard.QueryInterface(Components.interfaces.nsIAbMDBCard);
+		var cardExt = savedCard.QueryInterface(Components.interfaces.nsIAbMDBCard);
 
 		cardExt.setStringAttribute("calFBURL", customFieldsArray["fbURL"]);
 		cardExt.setStringAttribute("uid", customFieldsArray["uid"]);
+		dump("fbURL: " + cardExt.getStringAttribute("calFBURL") + "\n") ;
 		savedCard.editCardToDatabase(uri); 	
 		resultArray.AppendElement(cardExt);
-		//resultArray.AppendElement(savedCard);
-		dump("=======resultArray.Count: " + resultArray.Count + "\n");
 	}	
 	var result = Components.classes["@inverse.ca/jsenumerator;1"].createInstance(Components.interfaces.inverseIJSEnumerator);
-	result.init(resultArray, nodeList.length);
+	if (nodeList.length > 0){
+		result.init(resultArray, nodeList.length);		
+	}else{
+		result = null;
+	}
 	dump("getChildCards: " + result + "  " +  nodeList.length + "\n");
 
 	return result;

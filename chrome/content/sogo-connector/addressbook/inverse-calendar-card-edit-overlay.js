@@ -1,3 +1,5 @@
+Components.classes["@mozilla.org/moz/jssubscript-loader;1"].getService(Components.interfaces.mozIJSSubScriptLoader).loadSubScript("chrome://sogo-connector/content/addressbook/preference.service.addressbook.groupdav.js");
+
 this.InverseGetCardAb = function() {
   var uri;
   if (gEditCard.abURI)
@@ -12,7 +14,8 @@ this.InverseGetCardAb = function() {
 
 this.InverseUpdateFBUrl = function() {
   var addressBook = this.InverseGetCardAb();
-  if (!addressBook.isRemote) {
+  if (!addressBook.isRemote && !isCardDavDirectory(gEditCard.abURI)) {
+  // LDAP Directories
     try {
       var card = gEditCard.card.QueryInterface(Components.interfaces.nsIAbMDBCard);
       var fbUrlInput = document.getElementById("FbUrl");
@@ -44,11 +47,12 @@ this.InverseLoadFBUrl = function() {
     var fbUrlInput = document.getElementById("FbUrl");
     
     var addressBook = this.InverseGetCardAb();
-    if (addressBook.isRemote) {
-	fbUrlInput.disabled = true;
-	fbUrlInput.disabledforreadonly = true;
-	fbUrlInput.value = "";
-	this.InverseReadLdapFbUrl(fbUrlInput);
+    if (addressBook.isRemote && !isCardDavDirectory(gEditCard.abURI)) {
+    // LDAP Directories
+		fbUrlInput.disabled = true;
+		fbUrlInput.disabledforreadonly = true;
+		fbUrlInput.value = "";
+		this.InverseReadLdapFbUrl(fbUrlInput);
     }
     else {
 	try {

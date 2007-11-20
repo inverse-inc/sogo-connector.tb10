@@ -74,21 +74,21 @@ CardDavAutoCompleteSession.prototype.onStartLookup = function( searchString, pre
 			var card;
 			for (var i = 0; i < nodeList.length; i++){
 				customFieldsArray = new Array();
-				dump("CardDavAutoCompleteSession.prototype.onStartLookup\n");
+				dump("\n===================================================\n");
 				dump(nodeList.item(i).textContent.toString());
-				dump("\n===================================================\n");				
+				dump("\n===================================================\n");
 				card = importFromVcard(nodeList.item(i).textContent.toString(), null, customFieldsArray);
-				var savedCard= directory.addCard(card);
-				cardExt = savedCard.QueryInterface(Components.interfaces.nsIAbMDBCard);
-
+				
+				var savedCard= this.addCard(card);
+				dump (savedCard.displayName +"\n");
+				var cardExt = savedCard.QueryInterface(Components.interfaces.nsIAbMDBCard);
+		
 				cardExt.setStringAttribute("calFBURL", customFieldsArray["fbURL"]);
 				cardExt.setStringAttribute("uid", customFieldsArray["uid"]);
+				dump("fbURL: " + cardExt.getStringAttribute("calFBURL") + "\n") ;
 				savedCard.editCardToDatabase(uri); 	
 				resultArray.AppendElement(cardExt);
-				dump("=======resultArray.Count: " + resultArray.Count + "\n");
-			}	
-			dump("resultArray(0): " + resultArray.GetElementAt(0) + "\n");
-			dump("resultArray.Count: " + nodeList.length + "\n");
+			}
 			if (nodeList.length > 0){
 				var matchFound = 1; //nsIAutoCompleteStatus::matchFound
 				
