@@ -186,7 +186,7 @@ function sendXMLRequestXPCOM(webdavURL,HTTPmethod,HTTPheaders,XMLreq) {
 }
 
 function cardDavReport(webdavURL, filter) {
-
+  dump("cardDavReport(webdavURL, filter): " + webdavURL + "\n");
   var xmlReq = buildCardDavReportXML(filter);
 
   //var HTTPheaders=[["Connection","TE"],["TE","trailers, deflate, gzip, compress"],["Depth","1"],["Translate","f"],["Content-type","text/xml"]];
@@ -214,12 +214,22 @@ function cardDavReport(webdavURL, filter) {
 // Returns a string
 function getABDavURL( abUri ){
 	// Matching the URL
+	
+	abUri = abUri.replace(/http\/\//,"http://");// UGLY patch
+	abUri = abUri.replace(/https\/\//,"https://"); // I am fed up!
+	
+	dump("getABDavURL: ");	
+	dump(abUri);
+	dump("\n");
 	var reg = new RegExp(/moz-abdavdirectory:\/\/(.*)/);
-
+	
 	if ( !reg.test(abUri)){
-		//return null;
-		return "http://sogo.inverse.ca/SOGo/dav/rbolduc/Contacts/personal/";
+		dump("WTFFFFFFFFFFFFFFFFFFFFFFFFFFff\n");
+		return null;
 	}else{
+		dump("getABDavURL: ");
+		dump(RegExp.$1);
+		dump("\n");
 		return RegExp.$1;	
 	}
 }

@@ -47,22 +47,12 @@ function isGroupdavDirectory(abURI){
 		return false;
    }
 }
-function isCardDavDirectory(abURI){
-	if (abURI){
-		if (abURI.search("moz-abdavdirectory") != -1){
-			return true;
-		}else{
-			return false;
-		}
-	}else{
-		throw "abURI is undefined for in fonction isCardDavDirectory()";
-   }
-}
-
 
 function GroupdavPreferenceService(uniqueId){
 	if (uniqueId == null || uniqueId == ""){
-		throw new Components.Exception("GroupdavPreferenceService exception: Missing uniqueId");
+		//throw new Components.Exception("GroupdavPreferenceService exception: Missing uniqueId");
+		logError("GroupdavPreferenceService exception: Missing uniqueId");
+		return null;
 	}
 	
 	this.mPreferencesService = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);

@@ -1,5 +1,5 @@
 PACKAGE = sogo-connector
-VERSION = 0.62b
+VERSION = 0.62
 
 XPI_ARCHIVE = $(PACKAGE)-$(VERSION).xpi
 
@@ -32,6 +32,7 @@ MANIFEST-pre:
 	@find -type f -name "*.gif" >> $@
 	@find -type f -name "*.jpg" >> $@
 	@find -type f -name "*.xpt" >> $@
+	@find -type f -name "*.properties" >> $@	
 
 rest:
 	@make $(XPI_ARCHIVE)

@@ -84,9 +84,11 @@ function setupCardDavAutoCompleteSession(){
 	if (autocompleteLdap)
 		autocompleteDirectory = sPrefs.getCharPref("ldap_2.autoComplete.directoryServer");
 		
-		if(gCurrentIdentity.overrideGlobalPref) {
-			autocompleteDirectory = gCurrentIdentity.directoryServer;
-		}
+	if(gCurrentIdentity.overrideGlobalPref) {
+		autocompleteDirectory = gCurrentIdentity.directoryServer;
+	}
+
+	dump("+++++++++++++++++++++  " + autocompleteDirectory + "\n")	;
 	// use a temporary to do the setup so that we don't overwrite the
 	// global, then have some problem and throw an exception, and leave the
 	// global with a partially setup session.	we'll assign the temp
@@ -147,9 +149,12 @@ function setupCardDavAutoCompleteSession(){
 		}
 		var serverURL = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(CI.nsIURL);
 		try {
-			serverURL.spec = gPrefs.getComplexValue(autocompleteDirectory +".uri",CI.nsISupportsString).data;
-			dump("\n========= uri: " + gPrefs.getComplexValue(autocompleteDirectory +".uri",CI.nsISupportsString).data +"\n");
-			dump("\n========= spec:" + serverURL.spec +"\n");
+
+			dump("******** autocompleteDirectory: " + autocompleteDirectory + "\n");
+			dump(gPrefs.getCharPref(autocompleteDirectory +".uri"));
+			dump("\n")
+			serverURL.spec = gPrefs.getCharPref(autocompleteDirectory +".uri");
+			dump("serverURL.spec: " + serverURL.spec +"\n");
 		} catch (ex){
 			dump("ERROR: " + ex + "\n");
 		}

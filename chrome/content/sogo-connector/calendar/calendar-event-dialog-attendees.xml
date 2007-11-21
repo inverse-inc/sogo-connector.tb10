@@ -11,17 +11,47 @@
       <field name="inverseParentOnInitialize">null</field>
       <field name="inverseParentAppendAttendee">null</field>
 
+<!--		 
       <constructor>
         <![CDATA[
+			  	Components.classes["@mozilla.org/moz/jssubscript-loader;1"].getService(Components.interfaces.mozIJSSubScriptLoader).loadSubScript("chrome://sogo-connector/content/common/common-dav.js");
               this.inverseParentOnInitialize = this.onInitialize;
               this.inverseParentAppendAttendee = this.appendAttendee;
 
               this.onInitialize = this.inverseOnInitialize;
               this.appendAttendee = this.inverseAppendAttendee;
+			  
+          var observer = {
+            observe: function(subject, topic, value) {
+                // catch the exception and ignore it, so that if LDAP setup 
+                // fails, the entire window doesn't get horked
+                try {
+			  				if (isAutoCompleteDirectoryServerCardDAV()){
+			  					dump("You are a pickle");
+			  				}else{
+			  					dump("You are doomed");
+                    		self.setupAutocomplete();
+			  				}
+                }
+                catch (ex) {}
+            }
+          }
+			  
         ]]>
       </constructor>
+-->
+		 
+		 
+		 
+      <method name="setupAutocomplete">
+        <body>
+          <![CDATA[
+				setupAutocompleteOverride(this);
+			]]>
+        </body>
+      </method>		 
 
-      <method name="inverseOnInitialize">
+		<method name="inverseOnInitialize">
         <body>
           <![CDATA[
                 var args = window.arguments[0];

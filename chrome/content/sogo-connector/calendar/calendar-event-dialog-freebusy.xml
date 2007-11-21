@@ -131,9 +131,8 @@
               results = new Array();
 
             if (this.mPrefsService.GetBoolPref(prefsPrefix + "useDirectory")){
-					if (true){// TODO CardDAV
-						 alert(mail);
-						GetCalDAVFBInCardDAVAddressBook();
+					if (isAutoCompleteDirectoryServerCardDAV()){
+						results = results.concat(GetCalDAVFBInCardDAVAddressBook(mail));
 					 }else{ //LDAP
 					  results = results.concat(this.GetCalDAVFBInLDAPAddressBook(mail, prefsPrefix));
 					 }

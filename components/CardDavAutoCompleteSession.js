@@ -47,56 +47,43 @@ CardDavAutoCompleteSession.prototype.onAutoComplete = function(searchString, pre
 }
 // void onStartLookup ( PRUnichar* searchString , nsIAutoCompleteResults previousSearchResult , nsIAutoCompleteListener listener )
 CardDavAutoCompleteSession.prototype.onStartLookup = function( searchString, previousSearchResult, listener ){
-	dump("**************************************************************\n");
-	dump("CardDavAutoCompleteSession.prototype.onStartLookup\n");	
-	dump("searchString: " + searchString + "\n");
-	dump("**************************************************************\n");
 
 	if ( ! listener ){
 		dump("NULL listener in CardDavAutoCompleteSession.prototype.onStartLookup\n");
-		listener.onAutoComplete( null, -1);//nsIAutoCompleteStatus::failed	
+		listener.onAutoComplete( null, -1);//nsIAutoCompleteStatus::failed
+		
 	}else{
-		var url = getABDavURL( this.url );
+		var url = getABDavURL( this.url.spec );
 		if ( url ){			
-			var uri = "moz-abdavdirectory://" + url;
-			
 			var doc = cardDavReport(url, searchString);
 			var nodeList = doc.getElementsByTagName("addressbook-data");
 			
 			// To support customs fields introduced in importFromVcard for FreeBuzy
 			var customFieldsArray;// // TODO: when the overhaul of the vcard parsing is done, this will have to be handle differently!!!	
-			
 			var resultArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(CI.nsISupportsArray);
 			
-			var directory = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService).
-				GetResource(uri).QueryInterface(Components.interfaces.nsIAbDirectory);
-				
+			//Adding cards to array
 			var card;
 			for (var i = 0; i < nodeList.length; i++){
 				customFieldsArray = new Array();
-				dump("\n===================================================\n");
+				dump("\n===================================================\n");					
 				dump(nodeList.item(i).textContent.toString());
-				dump("\n===================================================\n");
+				dump("\n===================================================\n");				
+				
 				card = importFromVcard(nodeList.item(i).textContent.toString(), null, customFieldsArray);
 				
-				var savedCard= this.addCard(card);
-				dump (savedCard.displayName +"\n");
-				var cardExt = savedCard.QueryInterface(Components.interfaces.nsIAbMDBCard);
-		
-				cardExt.setStringAttribute("calFBURL", customFieldsArray["fbURL"]);
-				cardExt.setStringAttribute("uid", customFieldsArray["uid"]);
-				dump("fbURL: " + cardExt.getStringAttribute("calFBURL") + "\n") ;
-				savedCard.editCardToDatabase(uri); 	
-				resultArray.AppendElement(cardExt);
-			}
+				resultArray.AppendElement(formatAutoCompleteItem(card));
+			}	
+			dump("=======> resultArray.Count: " + resultArray.Count() + "\n");
+
 			if (nodeList.length > 0){
 				var matchFound = 1; //nsIAutoCompleteStatus::matchFound
 				
 				var results = Components.classes["@mozilla.org/autocomplete/results;1"].createInstance(CI.nsIAutoCompleteResults);
-				//results.items = resultArray.QueryInterface(CI.nsISupportsArray);
+				//results.items = resultArray.QueryInterface(CI.nsICollection);
 				results.items = resultArray;
-				dump("results.items(0): " + results.items.GetElementAt(0) + "\n");
-				results.defaultItemIndex = 1;
+
+				results.defaultItemIndex = 0;
 				results.searchString = searchString;
 				
 				listener.onAutoComplete( results,  matchFound);
@@ -108,8 +95,22 @@ CardDavAutoCompleteSession.prototype.onStartLookup = function( searchString, pre
 			dump("no url in CardDavAutoCompleteSession.prototype.onStartLookup\n");
 			listener.onAutoComplete( null, -1);//nsIAutoCompleteStatus::failed
 		}
-		dump("AGAIN results.items(0): " + results.items.GetElementAt(0) + "\n");
 	}
+}
+
+function formatAutoCompleteItem( card, searchString ){
+	var item = Components.classes["@mozilla.org/autocomplete/item;1"].createInstance(CI.nsIAutoCompleteItem);
+	item.className = "remote-abook";
+	item.comment = card.displayName;
+	dump("***********************************\n");
+	dump(card.displayName + "\n");
+	dump(card.defaultEmail + "\n");
+	dump(card.primaryEmail + "\n");
+	dump(card.secondEmail + "\n");
+	item.param = searchString;
+	item.value = card.primaryEmail;
+	dump("***********************************\n");	
+	return item;
 }
 // void onStopLookup ( ) 
 CardDavAutoCompleteSession.prototype.onStopLookup = function(){

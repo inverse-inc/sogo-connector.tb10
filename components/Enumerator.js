@@ -53,17 +53,15 @@ JSEnumerator.prototype = {
 	},
 // nsISupports next ( )
 	next : function( ){
-		dump("JSEnumerator.next()\n");
 		if (this.pointer < this.size - 1){
 			this.pointer++;	
 		}else{
-			throw Components.results.NS_ERROR_FAILURE;
+			throw Components.results.NS_ERROR_FAILURE; 
 		}
 	},
 
 // nsISupports first ( )
 	first : function( ){
-		dump("JSEnumerator.first()\n")
 		if (this.size > 0){
 			return this.array.GetElementAt(0);
 		}else{
@@ -73,8 +71,7 @@ JSEnumerator.prototype = {
 
 // void isDone ( )
 //Return if the collection is at the end. that is the beginning following a call to Prev and it is the end of the list following a call to next 
-	isDone: function(){	
-		dump("JSEnumerator.isDone()\n")		
+	isDone: function(){			
 		return (this.pointer < this.size);
 },
 

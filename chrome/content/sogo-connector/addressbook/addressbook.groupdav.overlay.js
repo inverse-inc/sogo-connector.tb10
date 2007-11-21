@@ -21,6 +21,8 @@
    02110-1301  USA
 ********************************************************************************/
 
+Components.classes["@mozilla.org/moz/jssubscript-loader;1"].getService(Components.interfaces.mozIJSSubScriptLoader).loadSubScript("chrome://sogo-connector/content/common/common-dav.js");
+
 /*
  * This overlay adds GroupDAV functionalities to Addressbooks
  */

@@ -51,18 +51,19 @@ AbDAVDirFactory.prototype = {
     		var prefName = properties.prefName;
 			
 			var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
-/*			dump("\nAbDAVDirFactory values \n");
+			dump("\nAbDAVDirFactory values \n");
 			dump("\t properties.uri: " + properties.URI + "\n");
 			dump("\t properties.dirType: " + properties.dirType + "\n");
 			dump("\t properties.fileName: " + properties.fileName + "\n");
 			dump("\t description: " + properties.description + "\n");
 			dump("\t uri: " + uri + "\n");
 			dump("\t properties.prefName: " + properties.prefName + "\n");
-*/		
+	
 			var resource = rdf.GetResource(uri);
 			var directory = resource.QueryInterface(Components.interfaces.nsIAbDirectory);
 			directory.dirName = description;
 			directory.dirPrefId = prefName;	
+			dump("\t directory.dirPrefId: " + directory.dirPrefId + "\n");
 			var singletonEnum = Components.classes["@inverse.ca/jssingletonenumerator;1"].createInstance(Components.interfaces.inverseIJSSingletonEnumerator);
 			singletonEnum.init(directory.QueryInterface(nsISupports));
 

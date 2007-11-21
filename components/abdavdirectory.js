@@ -189,7 +189,8 @@ AbDAVDirectory.prototype.getChildCards = function(){
     NS_ENSURE_SUCCESS(rv,rv);
  
 */
-
+	var result = null;
+try{
 	//	this.Value contains the following pattern
 	// moz-abdavdirectory://http://sogo.inverse.ca/SOGo/dav/rbolduc/Contacts/public/?(or(PrimaryEmail,c,klm)(DisplayName,c,kkk)(FirstName,c,klm)(LastName,c,k)))
 	// Matching the URL
@@ -234,14 +235,17 @@ AbDAVDirectory.prototype.getChildCards = function(){
 		savedCard.editCardToDatabase(uri); 	
 		resultArray.AppendElement(cardExt);
 	}	
-	var result = Components.classes["@inverse.ca/jsenumerator;1"].createInstance(Components.interfaces.inverseIJSEnumerator);
+	result = Components.classes["@inverse.ca/jsenumerator;1"].createInstance(Components.interfaces.inverseIJSEnumerator);
 	if (nodeList.length > 0){
 		result.init(resultArray, nodeList.length);		
 	}else{
 		result = null;
 	}
 	dump("getChildCards: " + result + "  " +  nodeList.length + "\n");
-
+}catch(e){
+	dump("Exception in getChildCards:\n" + e + "/n");
+	throw e;
+}
 	return result;
 }
 
