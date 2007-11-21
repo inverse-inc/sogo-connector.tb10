@@ -33,6 +33,7 @@ MANIFEST-pre:
 	@find -type f -name "*.jpg" >> $@
 	@find -type f -name "*.xpt" >> $@
 	@find -type f -name "*.properties" >> $@	
+	@find -type f -name "RELEASE-NOTES" >> $@	
 
 rest:
 	@make $(XPI_ARCHIVE)
