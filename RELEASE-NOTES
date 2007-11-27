@@ -3,7 +3,8 @@ Features
 Working on 
 	Added Deleted on server feature. (low priority)
 	vcard encoding 2.1 and 3.0
-
+0.62.1
+	added missing German translations for calendar
 0.62	
 	CardDAV Autocomplete	now works. fbURL is available in the mail composition window and in the meeting attendees window
 	fixed bug 1616: Drag and drop from Directories
