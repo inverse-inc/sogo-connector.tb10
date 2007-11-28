@@ -1,9 +1,0 @@
-#include "nsISupports.idl"
-
-[scriptable, uuid(9c2b2f47-efcb-48e3-8f09-1f559f335c6e)]
-interface calDAVFBRequest : nsISupports
-{
-  attribute wstring url;
-  attribute nsISupports target;
-  void load();
-};
