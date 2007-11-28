@@ -12,9 +12,14 @@
       <field name="mPrefsService">null</field>
 
       <constructor>
-        this.inverseParentUpdateFreeBusy = this.updateFreeBusy;
-        this.updateFreeBusy = this.inverseUpdateFreeBusy;
-        this.mPrefsService = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
+	  var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+	                 .getService(Components.interfaces.mozIJSSubScriptLoader);
+	  loader.loadSubScript("chrome://inverse-library/content/simpleLdapQuery.js");
+	  loader.loadSubScript("chrome://sogo-connector/content/calendar/sogoFBRequest.js");
+	  dump("constructed...\n");
+	  this.inverseParentUpdateFreeBusy = this.updateFreeBusy;
+	  this.updateFreeBusy = this.inverseUpdateFreeBusy;
+	  this.mPrefsService = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
       </constructor>
 
       <method name="GetCalDAVFBInLocalAddressBook">
@@ -99,12 +104,14 @@
             var filter = "(mail=" + mail + ")";
             uri.filter = filter;
             uri.setAttributes(3, ["cn", "mail", "calFBURL"]);
-            var ldapQuery = Components.classes["@mozilla.org/ldapsyncquery;1"]
-                            .createInstance(Components.interfaces.nsILDAPSyncQuery);
+            //var ldapQuery = Components.classes["@mozilla.org/ldapsyncquery;1"]
+            //                .createInstance(Components.interfaces.nsILDAPSyncQuery);
+            var ldapQuery = new simpleLdapQuery();
             var queryResults = ldapQuery.getQueryResults(uri, 3);
             if (queryResults && queryResults.length > 0) {
               var activeResult = this.parseLDAPQueryResults(queryResults);
-              if (activeResult["calFBURL"].length > 0)
+              if (activeResult["calFBURL"]
+	          && activeResult["calFBURL"].length > 0)
                 results.push(activeResult);
             }
 
@@ -131,23 +138,23 @@
               results = new Array();
 
             if (this.mPrefsService.GetBoolPref(prefsPrefix + "useDirectory")){
-					if (isAutoCompleteDirectoryServerCardDAV()){
-						results = results.concat(GetCalDAVFBInCardDAVAddressBook(mail));
-					 }else{ //LDAP
-					  results = results.concat(this.GetCalDAVFBInLDAPAddressBook(mail, prefsPrefix));
-					 }
-				 }
+	      if (isAutoCompleteDirectoryServerCardDAV())
+		results = results.concat(GetCalDAVFBInCardDAVAddressBook(mail));
+	      else //LDAP
+		results = results.concat(this.GetCalDAVFBInLDAPAddressBook(mail, prefsPrefix));
+	    }
 
             var fbUrl = null;
 //             this.mConsoleService.logStringMessage("tes cn: " + cn);
 //             this.mConsoleService.logStringMessage("test mail: " + mail);
             if (results.length > 0) {
               var i = 0;
-              while (!fbUrl && i < results.length) {
+              while (!(fbUrl && fbUrl.length > 0)
+	             && i < results.length) {
                 var result = results[i];
 //                 this.mConsoleService.logStringMessage("cn: " + result["cn"]);
 //                 this.mConsoleService.logStringMessage("mail: " + result["mail"]);
-                if (result["cn"] == cn && result["mail"] == mail)
+                if (result["mail"] == mail)
                   fbUrl = result["calFBURL"];
                 else
                   i++;
@@ -177,12 +184,8 @@
 
                 var fbUrl = this.GetCalDAVFB(freebusy, calid, freebusy.getAttribute("cn"));
                 if (fbUrl) {
-//                  this.mConsoleService.logStringMessage("fbUrl: " + fbUrl);
 	          freebusy.removeAttribute("dirty");
-                  var request = Components.classes["@inverse.ca/calendar/caldavfb-request;1"]
-                                  .createInstance(Components.interfaces.calDAVFBRequest);
-                  request.url = fbUrl;
-                  request.target = freebusy;
+	          var request = new sogoFBRequest(fbUrl, freebusy);
                   request.load();
                 }
               }

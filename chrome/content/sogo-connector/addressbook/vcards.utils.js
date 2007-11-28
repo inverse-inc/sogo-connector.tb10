@@ -1,3 +1,4 @@
+/* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 4 -*- */
 /*    Orginal code from morescols extension vcardTools.js
  
   		<em:id>{3e17310d-82e8-4a43-bd2f-7c3055bfe589}</em:id>

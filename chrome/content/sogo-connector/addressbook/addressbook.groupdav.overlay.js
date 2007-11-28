@@ -1,3 +1,4 @@
+/* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 4 -*- */
 /*********************************************************************************
    Copyright:	Inverse groupe conseil, 2006-2007
    Author: 		Robert Bolduc

@@ -1,3 +1,4 @@
+/* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 4 -*- */
 /*********************************************************************************
    Copyright:	Inverse groupe conseil, 2006-2007
    Author: 		Wolfgang Sourdeau
@@ -21,81 +22,84 @@
    02110-1301  USA
 ********************************************************************************/
 
-Components.classes["@mozilla.org/moz/jssubscript-loader;1"].getService(Components.interfaces.mozIJSSubScriptLoader).loadSubScript("chrome://sogo-connector/content/common/common-dav.js");
-
-this.InverseGetCardAb = function() {
-  var uri;
-  if (gEditCard.abURI)
-    uri = gEditCard.abURI;
-  else {
-    var popup = document.getElementById('abPopup');
-    uri = popup.getAttribute('value');
-  }
-
-  return GetDirectoryFromURI(uri);
+function jsInclude(files, target) {
+	var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+		.getService(Components.interfaces.mozIJSSubScriptLoader);
+	for (var i = 0; i < files.length; i++)
+		loader.loadSubScript(files[i], target);
 }
 
-this.InverseUpdateFBUrl = function() {
-  var addressBook = this.InverseGetCardAb();
-  if (!addressBook.isRemote && !isCardDavDirectory(gEditCard.abURI)) {
-  // LDAP Directories
-    try {
-      var card = gEditCard.card.QueryInterface(Components.interfaces.nsIAbMDBCard);
-      var fbUrlInput = document.getElementById("FbUrl");
-      card.setStringAttribute("calFBURL", fbUrlInput.value);
-    }
-    catch (e) {
-//       cardproperty.setCardValue("calFBURL", fbUrlInput.value);
-    }
-  }
-}
+jsInclude(["chrome://sogo-connector/content/common/common-dav.js",
+		   "chrome://inverse-library/content/simpleLdapQuery.js"]);
 
-this.InverseReadLdapFbUrl = function(input) {
-  var prefs = Components.classes["@mozilla.org/preferences;1"]
-                .getService(Components.interfaces.nsIPref);
-  var branch = gEditCard.abURI.split("://")[1];
-  var uriSpec = prefs.GetCharPref(branch + ".uri");
-  var uri = Components.classes["@mozilla.org/network/ldap-url;1"].createInstance(Components.interfaces.nsILDAPURL);
-  uri.spec = uriSpec;
-  uri.filter = "(cn=" + gEditCard.card.displayName + ")";
-  uri.setAttributes(1, ["calFBURL"]);
-  var ldapQuery = Components.classes["@mozilla.org/ldapsyncquery;1"]
-                    .createInstance(Components.interfaces.nsILDAPSyncQuery);
-  var result = ldapQuery.getQueryResults(uri, 3);
-  if (result)
-    input.value = result.split("=")[1];
-}
+function UpdateFBUrl() {
+	if (!isLDAPDirectory(getUri())) {
+		// LDAP Directories
+		try {
+			var card = gEditCard.card.QueryInterface(Components.interfaces.nsIAbMDBCard);
+			var fbUrlInput = document.getElementById("FbUrl");
+			card.setStringAttribute("calFBURL", fbUrlInput.value);
+		}
+		catch (e) {
+			//	   cardproperty.setCardValue("calFBURL", fbUrlInput.value);
+		}
+	}
+};
 
-this.InverseLoadFBUrl = function() {
-    var fbUrlInput = document.getElementById("FbUrl");
-    
-    var addressBook = this.InverseGetCardAb();
-    if (addressBook.isRemote && !isCardDavDirectory(gEditCard.abURI)) {
-    // LDAP Directories
+function ReadLdapFbUrl() {
+	var url = "";
+
+	var prefs = Components.classes["@mozilla.org/preferences;1"]
+	.getService(Components.interfaces.nsIPref);
+	var branch = gEditCard.abURI.split("://")[1];
+	var uriSpec = prefs.GetCharPref(branch + ".uri");
+	var uri = Components.classes["@mozilla.org/network/ldap-url;1"].createInstance(Components.interfaces.nsILDAPURL);
+	uri.spec = uriSpec;
+	uri.filter = "(cn=" + gEditCard.card.displayName + ")";
+	uri.setAttributes(1, ["calFBURL"]);
+	try {
+		var ldapQuery = new simpleLdapQuery();
+		var result = ldapQuery.getQueryResults(uri, 3);
+		if (result)
+			url = result.split("=")[1];
+	}
+	catch(e) {
+		dump("exception:" + e + "\n");
+		throw(e);
+	}
+
+	return url;
+};
+
+function LoadFBUrl() {
+	var fbUrlInput = document.getElementById("FbUrl");
+
+	if (isLDAPDirectory(getUri())) {
+		// LDAP Directories
 		fbUrlInput.disabled = true;
 		fbUrlInput.disabledforreadonly = true;
-		fbUrlInput.value = "";
-		this.InverseReadLdapFbUrl(fbUrlInput);
-    }
-    else {
-	try {
-	    var card = gEditCard.card.QueryInterface(Components.interfaces.nsIAbMDBCard);
-	    fbUrlInput.value = card.getStringAttribute("calFBURL");
+		fbUrlInput.value = ReadLdapFbUrl();
 	}
-	catch (e) {};
-    }
-}
+	else {
+		try {
+			var card = gEditCard.card.QueryInterface(Components.interfaces.nsIAbMDBCard);
+			fbUrlInput.value = card.getStringAttribute("calFBURL");
+		}
+		catch (e) {};
+	}
+};
 
 /* event handlers */
-this.InverseOnLoadHandler = function() {
-    this.InverseLoadFBUrl();
-    this.addEventListener("dialogaccept", this.InverseOnDialogAcceptHandler, false);
-}
+function OnLoadHandler() {
+	LoadFBUrl();
+	this.addEventListener("dialogaccept", OnDialogAcceptHandler, false);
+};
 
-this.InverseOnDialogAcceptHandler = function() {
-    this.InverseUpdateFBUrl();    
-}
+function OnDialogAcceptHandler() {
+	UpdateFBUrl();
+	EditCardOKButtonOverlay();
+};
 
 /* starting... */
 
-window.addEventListener("load", this.InverseOnLoadHandler, false);
+window.addEventListener("load", OnLoadHandler, false);

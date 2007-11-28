@@ -1,3 +1,4 @@
+/* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 4 -*- */
 /********************************************************************************
  Copyright:	Inverse groupe conseil, 2006-2007
  Author: 		Robert Bolduc
@@ -64,7 +65,7 @@ function setDocumentDirty(boolValue){
 }
 
 function setGroupDavFields(){
-	var card =gEditCard.card.QueryInterface(Components.interfaces.nsIAbMDBCard);
+	var card = gEditCard.card.QueryInterface(Components.interfaces.nsIAbMDBCard);
 	var version = card.getStringAttribute("groupDavVersion");
 	if (version){
 		var localUpdatePos = version.indexOf(LOCAL_UPDATE_FLAG);
@@ -89,8 +90,9 @@ function saveCard(isNewCard){
 		}else{
 			result = EditCardOKButton();
 		}
-		if ( result && documentDirty && messengerWindow.isGroupdavDirectory(getUri()) ){
-			uploadCard(gEditCard.card.QueryInterface(Components.interfaces.nsIAbMDBCard), getUri(), isNewCard);
+		if (result && documentDirty && isGroupdavDirectory(getUri())) {
+			uploadCard(gEditCard.card.QueryInterface(Components.interfaces.nsIAbMDBCard),
+					   getUri(), isNewCard);
 			setDocumentDirty(false);
 		}
 		if (abWindow){
@@ -161,9 +163,15 @@ function inverseSetupFieldsEventHandlers(){
 }
 
 function inverseInitEventHandlers(){
-	RegisterSaveListener(setGroupDavFields);
+	if (isGroupdavDirectory(getUri()))
+		RegisterSaveListener(setGroupDavFields);
 	inverseSetupFieldsEventHandlers();
 }
 
-window.addEventListener("load", inverseInitEventHandlers, false);	
+function isLDAPDirectory(uri) {
+	var ab = GetDirectoryFromURI(uri);
 
+	return (ab.isRemote && !isCardDavDirectory(uri));
+}
+
+window.addEventListener("load", inverseInitEventHandlers, false);	

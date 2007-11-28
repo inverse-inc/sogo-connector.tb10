@@ -13,7 +13,6 @@ overlay	chrome://lightning/content/messenger-overlay-sidebar.xul chrome://sogo-c
 
 overlay	chrome://messenger/content/messenger.xul chrome://sogo-connector/content/addressbook/messenger.groupdav.overlay.xul
 overlay	chrome://messenger/content/addressbook/addressbook.xul chrome://sogo-connector/content/addressbook/addressbook.groupdav.overlay.xul
-overlay	chrome://messenger/content/addressbook/abEditCardDialog.xul chrome://sogo-connector/content/addressbook/inverse-calendar-card-edit-overlay.xul
 overlay	chrome://messenger/content/addressbook/abEditCardDialog.xul chrome://sogo-connector/content/addressbook/abEditCardDialog.groupdav.overlay.xul
 overlay	chrome://messenger/content/addressbook/abNewCardDialog.xul chrome://sogo-connector/content/addressbook/abNewCardDialog.groupdav.overlay.xul
 overlay  chrome://messenger/content/messengercompose/messengercompose.xul chrome://sogo-connector/content/addressbook/messenger.compose.carddav.overlay.xul
@@ -22,4 +21,3 @@ overlay	chrome://sogo-connector/content/addressbook/abNewCardDialog.groupdav.ove
 overlay	chrome://sogo-connector/content/addressbook/abEditCardDialog.groupdav.overlay.xul chrome://sogo-connector/content/addressbook/abCommonCardDialog.groupdav.overlay.xul
 
 style 	chrome://sogo-connector/content/addressbook/addressbook.groupdav.overlay.xul chrome://sogo-connector/skin/addressbook/addressbook.groupdav.overlay.css
-
