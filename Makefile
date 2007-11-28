@@ -1,5 +1,5 @@
 PACKAGE = sogo-connector
-VERSION = 0.62.1
+VERSION = $(shell grep em:version install.rdf | sed -e 's@\(em:version=\|\"\|\ \)@@g')
 
 XPI_ARCHIVE = $(PACKAGE)-$(VERSION).xpi
 
