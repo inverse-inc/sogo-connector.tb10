@@ -21,8 +21,8 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  ********************************************************************************/
 
-const LOCAL_UPDATE_FLAG = ".local"; // append to version number when the update is done offline
-const LOCAL_DELETE_FLAG = ".deleted";
+var LOCAL_UPDATE_FLAG = ".local"; // append to version number when the update is done offline
+var LOCAL_DELETE_FLAG = ".deleted";
 
 var groupdavTypes ={
 	GroupDAV_Generic : 0

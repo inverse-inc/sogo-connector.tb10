@@ -20,7 +20,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  ********************************************************************************/
 
-const autoCompleteDirectoryPreferencesPrefix = "ldap_2.autoComplete.";
+var autoCompleteDirectoryPreferencesPrefix = "ldap_2.autoComplete.";
 
 var prefsService = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
 
