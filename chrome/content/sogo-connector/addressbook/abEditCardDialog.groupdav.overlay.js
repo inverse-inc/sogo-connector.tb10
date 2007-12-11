@@ -1,4 +1,4 @@
-/* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 4 -*- */
+/* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 2 -*- */
 /*********************************************************************************
    Copyright:	Inverse groupe conseil, 2006-2007
    Author: 		Wolfgang Sourdeau
@@ -25,12 +25,14 @@
 function jsInclude(files, target) {
 	var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
 		.getService(Components.interfaces.mozIJSSubScriptLoader);
-	for (var i = 0; i < files.length; i++)
+	for (var i = 0; i < files.length; i++) {
+		dump("jsInclude: " + files[i] + "\n");
 		loader.loadSubScript(files[i], target);
+	}
 }
 
 jsInclude(["chrome://sogo-connector/content/common/common-dav.js",
-		   "chrome://inverse-library/content/simpleLdapQuery.js"]);
+					 "chrome://inverse-library/content/simpleLdapQuery.js"]);
 
 function UpdateFBUrl() {
 	if (!isLDAPDirectory(getUri())) {

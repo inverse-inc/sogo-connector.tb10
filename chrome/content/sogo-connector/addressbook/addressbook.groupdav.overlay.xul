@@ -31,17 +31,11 @@
 <!DOCTYPE overlay SYSTEM "chrome://sogo-connector/locale/addressbook/ca.inverse.abMainWindow.groupdav.dtd">
 
 <overlay id="ca.inverse.addressbook.groupdav" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script type="application/x-javascript" src="chrome://sogo-connector/content/addressbook/mozilla.utils.inverse.ca.js"/>
-  <script type="application/x-javascript" src="chrome://sogo-connector/content/addressbook/preference.service.addressbook.groupdav.js"/>
-  <script type="application/x-javascript" src="chrome://sogo-connector/content/addressbook/webdav.inverse.ca.js"/>
-  <script type="application/x-javascript" src="chrome://sogo-connector/content/addressbook/webdav_lib/webdavAPI.js"/>
-  <script type="application/x-javascript" src="chrome://sogo-connector/content/addressbook/vcard.observers.addressbook.groupdav.js"/>	
-
   <!--The order of loading is important!-->
   
-  <script type="application/x-javascript" src="chrome://sogo-connector/content/addressbook/implementors.addressbook.groupdav.js"/>
-  <script type="application/x-javascript" src="chrome://sogo-connector/content/addressbook/synch.addressbook.groupdav.js"/>	
-  <script type="application/x-javascript" src="chrome://sogo-connector/content/addressbook/vcards.utils.js"/>
+<!--  <script type="application/x-javascript" src="chrome://sogo-connector/content/addressbook/implementors.addressbook.groupdav.js"/>
+  <script type="application/x-javascript" src="chrome://sogo-connector/content/addressbook/sync.addressbook.groupdav.js"/>	
+  <script type="application/x-javascript" src="chrome://sogo-connector/content/addressbook/vcards.utils.js"/> -->
   
   <script type="application/x-javascript" src="chrome://sogo-connector/content/addressbook/addressbook.groupdav.overlay.js"/>
   <!--======================================================================================

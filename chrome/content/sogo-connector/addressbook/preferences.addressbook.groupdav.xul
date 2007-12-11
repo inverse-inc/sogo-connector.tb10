@@ -77,9 +77,9 @@ Modifications by
         ondialoghelp="return doHelpButton();">
   
   	<script type="application/x-javascript" src="chrome://sogo-connector/content/addressbook/preferences.addressbook.groupdav.js"/>
-	<script type="application/x-javascript" src="chrome://sogo-connector/content/addressbook/preference.service.addressbook.groupdav.js"/>
+<!--	<script type="application/x-javascript" src="chrome://sogo-connector/content/addressbook/preference.service.addressbook.groupdav.js"/>
 	<script type="application/x-javascript" src="chrome://sogo-connector/content/addressbook/mozilla.utils.inverse.ca.js"/> 
-	<script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
+	<script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/> -->
   
 	<stringbundleset id="stringbundleset">
 		<stringbundle id="preferencesMsgId" src="chrome://sogo-connector/locale/addressbook/preferences.messages.properties"/>

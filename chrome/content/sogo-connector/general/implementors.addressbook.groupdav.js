@@ -1,4 +1,4 @@
-/* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 4 -*- */
+/* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 2 -*- */
 /*************************************************************************************************************   
  Copyright:	Inverse groupe conseil, 2006-2007 
  Author: 	Robert Bolduc
@@ -85,11 +85,23 @@ SogoImpl.pseudoGUID = function(){
 /*********************************************
  * function getServerVcardHrefList(doc)
  * 
- * doc: nsIDOMDocument 
+ * response: hash
  * returns an Array
  * *******************************************/
-SogoImpl.prototype.getServerVcardHrefList = function(doc){
-	
+SogoImpl.prototype.getServerVcardHrefList = function(response) {
+	var cardHrefs = new Array();
+
+	for (var href in response) {
+		var davObject = response[href];
+		var cNameArray = href.split("/");
+		var cName = cNameArray[cNameArray.length - 1];
+		var contentType = davObject["DAV: getcontenttype"];
+		if (contentType == "text/x-vcard"
+				|| contentType == "text/vcard")
+			cardHrefs.push(href);
+	}
+
+	return cardHrefs;
 	var nodeList = doc.getElementsByTagName("getcontenttype");
 	logDebug("\tgetServerVcardHrefList size :" + nodeList.length);
 	var cleanedNodes = new Array();
@@ -118,7 +130,7 @@ SogoImpl.prototype.getServerVcardHrefList = function(doc){
 }
 
 SogoImpl.prototype.getKey = function(href){
-	var elems = href.textContent.split("/");
+	var elems = href.split("/");
 	return elems[elems.length - 1];
 }
 

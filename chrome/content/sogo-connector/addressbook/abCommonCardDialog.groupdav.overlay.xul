@@ -25,9 +25,9 @@
 <!DOCTYPE overlay SYSTEM "chrome://sogo-connector/locale/addressbook/ca.inverse.abMainWindow.groupdav.dtd">
 <overlay id="ca.inverse.common-card-dialog.groupdav"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script type="application/x-javascript"
+<!--  <script type="application/x-javascript"
     src="chrome://sogo-connector/content/addressbook/mozilla.utils.inverse.ca.js"/>
- <!-- <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abCardOverlay.js"/>	-->
+ <!== <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abCardOverlay.js"/> ==>
   <script type="application/x-javascript"
     src="chrome://sogo-connector/content/addressbook/preference.service.addressbook.groupdav.js"/>
   <script type="application/x-javascript"
@@ -37,7 +37,7 @@
   <script type="application/x-javascript"
     src="chrome://sogo-connector/content/addressbook/vcards.utils.js"/>
   <script type="application/x-javascript"
-    src="chrome://sogo-connector/content/addressbook/webdav_lib/webdavAPI.js"/>
+  src="chrome://sogo-connector/content/addressbook/webdav_lib/webdavAPI.js"/> -->
   <script type="application/x-javascript"
     src="chrome://sogo-connector/content/addressbook/abCommonCardDialog.groupdav.overlay.js"/>
 </overlay>

@@ -1,4 +1,4 @@
-/* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 4 -*- */
+/* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 2 -*- */
 /********************************************************************************
  Copyright:	Inverse groupe conseil, 2006-2007
  Author: 		Robert Bolduc
@@ -21,6 +21,30 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  ********************************************************************************/
 
+/* <!--  <script type="application/x-javascript"
+    src="chrome://sogo-connector/content/general/mozilla.utils.inverse.ca.js"/>
+ <!== <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abCardOverlay.js"/> ==>
+  <script type="application/x-javascript"
+    src="chrome://sogo-connector/content/general/implementors.addressbook.groupdav.js"/>
+  <script type="application/x-javascript"
+    src="chrome://sogo-connector/content/general/constants.addressbook.groupdav.js"/>
+  <script type="application/x-javascript"
+  src="chrome://sogo-connector/content/general/webdav_lib/webdavAPI.js"/> --> */
+
+function jsInclude(files, target) {
+  var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+    .getService(Components.interfaces.mozIJSSubScriptLoader);
+  for (var i = 0; i < files.length; i++) {
+		dump("jsInclude: " + files[i] + "\n");
+    loader.loadSubScript(files[i], target);
+	}
+}
+
+jsInclude(["chrome://sogo-connector/content/general/sync.progress-meter.js",
+					 "chrome://sogo-connector/content/general/preference.service.addressbook.groupdav.js",
+					 "chrome://sogo-connector/content/general/implementors.addressbook.groupdav.js",
+					 "chrome://sogo-connector/content/general/webdav.inverse.ca.js",
+					 "chrome://sogo-connector/content/general/vcards.utils.js"]);
 
 /**********************************************************************************************
  *
@@ -130,17 +154,17 @@ function uploadCard(card, uri, isNewCard){
 	
 		if (isNewCard) {
 			messengerWindow.gGroupDAVProgressMeter.initUpload(cardPointerHash, uri, 0, 1);
-			messengerWindow.gAbWinObserverService.notifyObservers(null, messengerWindow.SynchProgressMeter.INITIALIZATION_EVENT, null);	
+			messengerWindow.gAbWinObserverService.notifyObservers(null, messengerWindow.SyncProgressMeter.INITIALIZATION_EVENT, null);	
 			messengerWindow.webdavAddVcard(url + key , card2vcard(card), key, 
 			messengerWindow.gGroupDAVProgressMeter, messengerWindow.gAbWinObserverService);
 		}else{
 			messengerWindow.gGroupDAVProgressMeter.initUpload(cardPointerHash, uri, 1, 0);
-			messengerWindow.gAbWinObserverService.notifyObservers(null, messengerWindow.SynchProgressMeter.INITIALIZATION_EVENT, null);	
+			messengerWindow.gAbWinObserverService.notifyObservers(null, messengerWindow.SyncProgressMeter.INITIALIZATION_EVENT, null);	
 	
 			//TODO verify if there is a conflict whith the server's version
 			messengerWindow.logWarn("abCommonCardDialog.groupdav.overlay.js: TODO verify if there is a conflict with the server's version");
 	
-			messengerWindow.webdavUpdateVcard(url + key , card2vcard(card), key, messengerWindow.gProgressMeter, messengerWindow.gAbWinObserverService);
+			webdavUpdateVcard(url + key , card2vcard(card), key, messengerWindow.gProgressMeter, messengerWindow.gAbWinObserverService);
 		}		
 	}
 }

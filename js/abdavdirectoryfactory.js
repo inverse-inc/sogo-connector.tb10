@@ -1,3 +1,5 @@
+/* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 2 -*- */
+
 /********************************************************************************
  Copyright:	Inverse groupe conseil, 2007-2008
  Author: 		Robert Bolduc
@@ -29,11 +31,11 @@
  **********************************************************************************************/
 
 // constants
-const nsIAbDirFactory = Components.interfaces.nsIAbDirFactory;
-const nsISupports = Components.interfaces.nsISupports;
-const CLASS_ID = Components.ID("{868e510b-d758-4f6f-8cba-c223347ab644}");
-const CLASS_NAME = "DAV Addressbook Factory";
-const CONTRACT_ID = "@mozilla.org/addressbook/directory-factory;1?name=moz-abdavdirectory";
+// const nsIAbDirFactory = Components.interfaces.nsIAbDirFactory;
+// const nsISupports = Components.interfaces.nsISupports;
+// const CLASS_ID = Components.ID("{868e510b-d758-4f6f-8cba-c223347ab644}");
+// const CLASS_NAME = "DAV Addressbook Factory";
+// const CONTRACT_ID = "@mozilla.org/addressbook/directory-factory;1?name=moz-abdavdirectory";
 
 //class constructor
 function AbDAVDirFactory() {
@@ -41,14 +43,13 @@ function AbDAVDirFactory() {
 
 //class definition
 AbDAVDirFactory.prototype = {
-
 	// nsISimpleEnumerator createDirectory ( nsIAbDirectoryProperties properties )
 	createDirectory: function(properties){
 		try{
 			//TODO: validate properties
 			var description = properties.description;
 			var uri = properties.URI;
-    		var prefName = properties.prefName;
+			var prefName = properties.prefName;
 			
 			var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
 			dump("\nAbDAVDirFactory values \n");
@@ -64,8 +65,9 @@ AbDAVDirFactory.prototype = {
 			directory.dirName = description;
 			directory.dirPrefId = prefName;	
 			dump("\t directory.dirPrefId: " + directory.dirPrefId + "\n");
-			var singletonEnum = Components.classes["@inverse.ca/jssingletonenumerator;1"].createInstance(Components.interfaces.inverseIJSSingletonEnumerator);
-			singletonEnum.init(directory.QueryInterface(nsISupports));
+			var singletonEnum = Components.classes["@inverse.ca/jssingletonenumerator;1"]
+			.createInstance(Components.interfaces.inverseIJSSingletonEnumerator);
+			singletonEnum.init(directory.QueryInterface(Components.interfaces.nsISupports));
 
 			var abSession =  Components.classes["@mozilla.org/addressbook/services/session;1"].getService(Components.interfaces.nsIAddrBookSession);
 			var dbPath; // nsCOMPtr<nsILocalFile> dbPath;
@@ -91,57 +93,11 @@ AbDAVDirFactory.prototype = {
 
   QueryInterface: function(aIID)
   {
-    if (!aIID.equals(nsIAbDirFactory) &&    
-        !aIID.equals(nsISupports)){
+    if (!aIID.equals(Components.interfaces.nsIAbDirFactory)
+				&& !aIID.equals(Components.interfaces.nsISupports)) {
     	throw Components.results.NS_ERROR_NO_INTERFACE;
     }
       
     return this;
   }
 };
-
-//class factory
-var AbDAVDirFactoryFactory = {
-  createInstance: function (aOuter, aIID)
-  {
-    if (aOuter != null)
-      throw Components.results.NS_ERROR_NO_AGGREGATION;
-    return (new AbDAVDirFactory()).QueryInterface(aIID);
-  }
-};
-
-//module definition (xpcom registration)
-var AbDAVDirFactoryModule = {
-  _firstTime: true,
-  registerSelf: function(aCompMgr, aFileSpec, aLocation, aType)
-  {
-    if (this._firstTime) {
-      this._firstTime = false;
-      throw Components.results.NS_ERROR_FACTORY_REGISTER_AGAIN;
-    };
-    aCompMgr = aCompMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
-    aCompMgr.registerFactoryLocation(CLASS_ID, CLASS_NAME, CONTRACT_ID, aFileSpec, aLocation, aType);
-  },
-
-  unregisterSelf: function(aCompMgr, aLocation, aType)
-  {
-    aCompMgr = aCompMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
-    aCompMgr.unregisterFactoryLocation(CLASS_ID, aLocation);        
-  },
-  
-  getClassObject: function(aCompMgr, aCID, aIID)
-  {
-    if (!aIID.equals(Components.interfaces.nsIFactory))
-      throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-
-    if (aCID.equals(CLASS_ID))
-      return AbDAVDirFactoryFactory;
-
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-  },
-
-  canUnload: function(aCompMgr) { return true; }
-};
-
-//module initialization
-function NSGetModule(aCompMgr, aFileSpec) { return AbDAVDirFactoryModule; }

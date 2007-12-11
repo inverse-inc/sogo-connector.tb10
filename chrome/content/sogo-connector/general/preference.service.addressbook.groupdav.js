@@ -1,4 +1,4 @@
-/* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 4 -*- */
+/* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 2 -*- */
 /*************************************************************************************************************   
  Copyright:	Inverse groupe conseil, 2006-2007
  Author: 	Robert Bolduc
@@ -21,17 +21,20 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  ********************************************************************************/
 
-function isGroupdavDirectory(abURI){
-	if (abURI){
-		var uri = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService)
-			.GetResource(abURI).QueryInterface(Components.interfaces.nsIAbDirectory);
-      
-		if (abURI.search("mab/MailList") != -1){
+function isGroupdavDirectory(abURI) {
+	if (abURI) {
+		var uri = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+			.getService(Components.interfaces.nsIRDFService)
+			.GetResource(abURI)
+			.QueryInterface(Components.interfaces.nsIAbDirectory);
+
+		if (abURI.search("mab/MailList") != -1)
 			return false;
-		} 
-		try{
+
+		try {
 			var groupdavPrefService = new GroupdavPreferenceService(uri.dirPrefId);			
-		}catch (e){
+		}
+		catch(e) {
 			//var xpcConnect =Components.classes["DEB1D48E-7469-4B01-B186-D9854C7D3F2D"].getService(Components.interfaces.nsIXPConnect);	
 			logError("abURI '" +  abURI + " is invalid in call isGroupdavDirectory(abURI) \n\n STACK:\n");
 			// TODO this needs to be handle better
@@ -39,17 +42,16 @@ function isGroupdavDirectory(abURI){
 			throw e;
 		}
 
-		if ( groupdavPrefService.getDirectoryName() !=""){
-			return true;	
-		}else{ 
+		if (groupdavPrefService.getDirectoryName() !="")
+			return true;
+		else
 			return false;
-		}
-	}else{
+	}
+	else
 		return false;
-   }
 }
 
-function GroupdavPreferenceService(uniqueId){
+function GroupdavPreferenceService(uniqueId) {
 	if (uniqueId == null || uniqueId == ""){
 		//throw new Components.Exception("GroupdavPreferenceService exception: Missing uniqueId");
 		logError("GroupdavPreferenceService exception: Missing uniqueId");
@@ -59,11 +61,9 @@ function GroupdavPreferenceService(uniqueId){
 	this.mPreferencesService = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
 
 	this.prefPath = this.prefPathPref + uniqueId + ".";
-
-	return this;
 }
 
-GroupdavPreferenceService.prototype ={
+GroupdavPreferenceService.prototype = {
 	prefPathPref : "extensions.ca.inverse.addressbook.groupdav.",
 	prefPath : "",
 	mPreferencesService : null,
@@ -79,46 +79,52 @@ GroupdavPreferenceService.prototype ={
 	getReadOnly : function(){
 		try {
 			this.mAutoReadOnly = this.mPreferencesService.getCharPref(this.prefPath + "readOnly" );
-		} catch(e) {}
+		}
+		catch(e) {}
 		return this.mAutoReadOnly;		
 	},
 	setReadOnly : function(val){
 		this.mAutoReadOnly = val;
-		try{
+		try {
 			this.mPreferencesService.setCharPref( this.prefPath + "readOnly", this.mAutoReadOnly);
-		}catch(e){}
+		}
+		catch(e) {}
 	},
 
 	getAutoDeleteFromServer : function(){
 		try {
 			this.mAutoDeleteFromServer = this.mPreferencesService.getCharPref(this.prefPath + "autoDeleteFromServer" );
-		} catch(e) {}
+		}
+		catch(e) {}
 		return this.mAutoDeleteFromServer;		
 	},
 	
 	setAutoDeleteFromServer : function(val){
 		this.mAutoDeleteFromServer = val;
-		try{
+		try {
 			this.mPreferencesService.setCharPref( this.prefPath + "autoDeleteFromServer", this.mAutoDeleteFromServer);
-		}catch(e){}
+		}
+		catch(e) {}
 	},
 
 	getURL : function(){
-		if (this.mURL == ""){
+		if (this.mURL == "") {
 			try {
 				this.mURL = this.mPreferencesService.getCharPref(this.prefPath + "url" );
 				if (this.mURL[this.mURL.length - 1] != '/')
 					this.mURL += '/';
-			} catch(e) {}
+			}
+			catch(e) {}
 		}
 		return this.mURL;
 	},
 	
 	getDirectoryName : function(){
 		if ( this.mDirectoryName == "")
-			try{ 
+			try { 
 				this.mDirectoryName = this.mPreferencesService.getCharPref( this.prefPath + "name" );
-			}catch(e){}
+			}
+			catch(e) {}
 			
 		return this.mDirectoryName;
 	},
@@ -137,62 +143,70 @@ GroupdavPreferenceService.prototype ={
 	
 	getServerType : function(){
 		if ( this.mServerType == "")
-			try{ 
+			try { 
 				this.mServerType = this.mPreferencesService.getCharPref( this.prefPath + "serverType" );
-			}catch(e){}
+			}
+			catch(e) {}
 
 		return parseInt(this.mServerType);
 	},
 	
 	getDisplayDialog : function(){
-		try{ 
+		try { 
 			this.mDisplayDialog = this.mPreferencesService.getCharPref( this.prefPath + "displaySyncCompletedDialog");
-		}catch(e){}
+		}
+		catch(e) {}
 		
 		return this.mDisplayDialog;
 	},
 	
 	getMigrationDone : function(){
 		if (this.mMigrationDone)
-			try{ 
+			try {
 				this.mMigrationDone = this.mPreferencesService.getCharPref( this.prefPath + "migrationDone" );
-			}catch(e){}
+			}
+			catch(e){}
 		
 		return this.mMigrationDone;
 	},
 
-	setURL : function(url){
+	setURL : function(url) {
 		this.mURL = url;
-		try{
+		try {
 			this.mPreferencesService.setCharPref( this.prefPath + "url", this.mURL);
-		}catch(e){}
+		}
+		catch(e) {}
 	},
 	
-	setDirectoryName : function(dName){
+	setDirectoryName : function(dName) {
 		this.mDirectoryName = dName;
-		try{
+		try {
 			this.mPreferencesService.setCharPref( this.prefPath + "name", this.mDirectoryName);
-		}catch(e){}
+		}
+		catch(e) {}
 	},
 	
-	setServerType : function(type){
+	setServerType : function(type) {
 		this.mServerType = type;
-		try{
+		try {
 			this.mPreferencesService.setCharPref( this.prefPath + "serverType", this.mServerType);
-		}catch(e){}
+		}
+		catch(e) {}
 	},	
 	
-	setDisplayDialog : function(value){
+	setDisplayDialog : function(value) {
 		this.mDisplayDialog = value;
-		try{
+		try {
 			this.mPreferencesService.setCharPref( this.prefPath + "displaySyncCompletedDialog", this.mDisplayDialog);
-		}catch(e){}
+		}
+		catch(e) {}
 	},
 	
-	setMigrationDone: function(done){
+	setMigrationDone: function(done) {
 		this.mMigrationDone = done;
-		try{
+		try {
 			this.mPreferencesService.setCharPref( this.prefPath + "u", this.mUser);
-		}catch(e){}
+		}
+		catch(e) {}
 	}
 };

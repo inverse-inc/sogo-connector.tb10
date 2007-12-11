@@ -1,3 +1,5 @@
+/* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 2 -*- */
+
 /********************************************************************************
  Copyright:	Inverse groupe conseil, 2006-2007
  Author: 		Robert Bolduc
@@ -20,8 +22,18 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  ********************************************************************************/
 
-Components.classes["@mozilla.org/moz/jssubscript-loader;1"].getService(Components.interfaces.mozIJSSubScriptLoader).loadSubScript("chrome://sogo-connector/content/addressbook/vcards.utils.js");
-Components.classes["@mozilla.org/moz/jssubscript-loader;1"].getService(Components.interfaces.mozIJSSubScriptLoader).loadSubScript("chrome://sogo-connector/content/addressbook/webdav.inverse.ca.js");
+
+function jsInclude(files, target) {
+	var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+		.getService(Components.interfaces.mozIJSSubScriptLoader);
+	for (var i = 0; i < files.length; i++) {
+		dump("jsInclude: " + files[i] + "\n");
+		loader.loadSubScript(files[i], target);
+	}
+}
+
+jsInclude(["chrome://sogo-connector/content/general/vcards.utils.js",
+					 "chrome://sogo-connector/content/general/webdav.inverse.ca.js"]);
 
 //DAV Directory Preferences settings
 
@@ -29,18 +41,18 @@ Components.classes["@mozilla.org/moz/jssubscript-loader;1"].getService(Component
 //user_pref("ldap_2.servers.dav.dirType", 2);
 //user_pref("ldap_2.servers.dav.uri", "moz-abdavdirectory:///");
 
-const CLASS_ID = Components.ID("{2e3aa298-a1f9-4aef-9f80-ca430ce6e55b}");
-const CLASS_NAME = "DAV Addressbook Directory";
-const CONTRACT_ID = "@mozilla.org/rdf/resource-factory;1?name=moz-abdavdirectory";
+// const CLASS_ID = Components.ID("{2e3aa298-a1f9-4aef-9f80-ca430ce6e55b}");
+// const CLASS_NAME = "DAV Addressbook Directory";
+// const CONTRACT_ID = "@mozilla.org/rdf/resource-factory;1?name=moz-abdavdirectory";
 
 
-// constants
-const nsISupports = Components.interfaces.nsISupports;
-const nsIClassInfo = Components.interfaces.nsIClassInfo;
-const nsIRDFResource = Components.interfaces.nsIRDFResource;
-const nsIAbDirectory = Components.interfaces.nsIAbDirectory;
-const nsIAbDirectorySearch = Components.interfaces.nsIAbDirectorySearch;
-const nsIAutoCompleteSession = Components.interfaces.nsIAutoCompleteSession;
+// // constants
+// const nsISupports = Components.interfaces.nsISupports;
+// const nsIClassInfo = Components.interfaces.nsIClassInfo;
+// const nsIRDFResource = Components.interfaces.nsIRDFResource;
+// const nsIAbDirectory = Components.interfaces.nsIAbDirectory;
+// const nsIAbDirectorySearch = Components.interfaces.nsIAbDirectorySearch;
+// const nsIAutoCompleteSession = Components.interfaces.nsIAutoCompleteSession;
 //    nsIAbDAVDirectory ???
 
 
@@ -52,13 +64,15 @@ const nsIAutoCompleteSession = Components.interfaces.nsIAutoCompleteSession;
 
 // class constructor
 // AbDAVDirectory  inherits from @mozilla.org/rdf/resource-factory;1?name=moz-abmdbdirectory
-//AbDAVDirectory.prototype = Components.classes["@mozilla.org/rdf/resource-factory;1?name=moz-abldapdirectory"].createInstance(nsIRDFResource);
+//AbDAVDirectory.prototype = Components.classes["@mozilla.org/rdf/resource-factory;1?name=moz-abldapdirectory"].createInstance(Components.interfaces.nsIRDFResource);
 //AbDAVDirectory.prototype.constructor = AbDAVDirectory;
 function AbDAVDirectory(){
-	this.parentDirectory = Components.classes["@mozilla.org/rdf/resource-factory;1?name=moz-abldapdirectory"].createInstance(nsIRDFResource);
+	this.parentDirectory =
+	Components.classes["@mozilla.org/rdf/resource-factory;1?name=moz-abldapdirectory"]
+		.createInstance(Components.interfaces.nsIRDFResource);
 	this.mPrefId = null;
 	this.mURINoQuery = null;
-//	this.parentDirectory = Components.classes["@mozilla.org/rdf/resource-factory;1?name=moz-abmdbdirectory"].createInstance(nsIAbDirectory);
+//	this.parentDirectory = Components.classes["@mozilla.org/rdf/resource-factory;1?name=moz-abmdbdirectory"].createInstance(Components.interfaces.nsIAbDirectory);
 	
 	// Inherits from nsIAbDirectory, the other methods and properties will have to be stubbed
 	// DOES NOT WORK
@@ -76,7 +90,7 @@ function AbDAVDirectory(){
 //	return true;
 }
 
-//AbDAVDirectory.inheritsFrom( Components.classes["@mozilla.org/rdf/resource-factory;1?name=moz-abldapdirectory"].createInstance(nsIRDFResource) );
+//AbDAVDirectory.inheritsFrom( Components.classes["@mozilla.org/rdf/resource-factory;1?name=moz-abldapdirectory"].createInstance(Components.interfaces.nsIRDFResource) );
 
 
 
@@ -147,7 +161,7 @@ AbDAVDirectory.prototype.startSearch = function(){
 // void stopSearch ()
 AbDAVDirectory.prototype.stopSearch = function(){
 	dump("stopSearch called\n");
-	this.parentDirectory.QueryInterface(nsIAbDirectorySearch).stopSearch();	
+	this.parentDirectory.QueryInterface(Components.interfaces.nsIAbDirectorySearch).stopSearch();	
 }
 
 //========================================================================================================================
@@ -166,8 +180,8 @@ const opSearch = 4;
 //Properties
 
 //		nsISupportsArray addressLists
-AbDAVDirectory.prototype.__defineGetter__("addressLists", function() { return this.parentDirectory.QueryInterface(nsIAbDirectory).addressLists;});
-AbDAVDirectory.prototype.__defineSetter__("addressLists", function(val) { this.parentDirectory.QueryInterface(nsIAbDirectory).addressLists = val; });
+AbDAVDirectory.prototype.__defineGetter__("addressLists", function() { return this.parentDirectory.QueryInterface(Components.interfaces.nsIAbDirectory).addressLists;});
+AbDAVDirectory.prototype.__defineSetter__("addressLists", function(val) { this.parentDirectory.QueryInterface(Components.interfaces.nsIAbDirectory).addressLists = val; });
 
 //	readonly nsIEnumerator childCards
 AbDAVDirectory.prototype.__defineGetter__("childCards", function() { 
@@ -250,32 +264,32 @@ try{
 }
 
 //readonly nsISimpleEnumerator childNodes
-AbDAVDirectory.prototype.__defineGetter__("childNodes", function() { return this.parentDirectory.QueryInterface(nsIAbDirectory).childNodes; });
+AbDAVDirectory.prototype.__defineGetter__("childNodes", function() { return this.parentDirectory.QueryInterface(Components.interfaces.nsIAbDirectory).childNodes; });
 AbDAVDirectory.prototype.__defineSetter__("childNodes", function(val) { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; });
 
 //PRUnichar* description
-AbDAVDirectory.prototype.__defineGetter__("description", function() { return this.parentDirectory.QueryInterface(nsIAbDirectory).description; });
-AbDAVDirectory.prototype.__defineSetter__("description", function(val) { this.parentDirectory.QueryInterface(nsIAbDirectory).description = val; });
+AbDAVDirectory.prototype.__defineGetter__("description", function() { return this.parentDirectory.QueryInterface(Components.interfaces.nsIAbDirectory).description; });
+AbDAVDirectory.prototype.__defineSetter__("description", function(val) { this.parentDirectory.QueryInterface(Components.interfaces.nsIAbDirectory).description = val; });
 
 //readonly nsIAbDirectoryProperties directoryProperties
-AbDAVDirectory.prototype.__defineGetter__("directoryProperties", function() { return this.parentDirectory.QueryInterface(nsIAbDirectory).directoryProperties; });
+AbDAVDirectory.prototype.__defineGetter__("directoryProperties", function() { return this.parentDirectory.QueryInterface(Components.interfaces.nsIAbDirectory).directoryProperties; });
 AbDAVDirectory.prototype.__defineSetter__("directoryProperties", function(val) { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; });
 
 //		PRUnichar* dirName
-AbDAVDirectory.prototype.__defineGetter__("dirName", function() { return this.parentDirectory.QueryInterface(nsIAbDirectory).dirName; });
-AbDAVDirectory.prototype.__defineSetter__("dirName", function(val) { this.parentDirectory.QueryInterface(nsIAbDirectory).dirName = val; });
+AbDAVDirectory.prototype.__defineGetter__("dirName", function() { return this.parentDirectory.QueryInterface(Components.interfaces.nsIAbDirectory).dirName; });
+AbDAVDirectory.prototype.__defineSetter__("dirName", function(val) { this.parentDirectory.QueryInterface(Components.interfaces.nsIAbDirectory).dirName = val; });
 
 //		ACString dirPrefId
 AbDAVDirectory.prototype.__defineGetter__("dirPrefId", function() { 
-	//return this.parentDirectory.QueryInterface(nsIAbDirectory).dirPrefId;
-	//dump(">>>>>>>>>>>> " + this.parentDirectory.QueryInterface(nsIAbDirectory).dirPrefId + "\n");
+	//return this.parentDirectory.QueryInterface(Components.interfaces.nsIAbDirectory).dirPrefId;
+	//dump(">>>>>>>>>>>> " + this.parentDirectory.QueryInterface(Components.interfaces.nsIAbDirectory).dirPrefId + "\n");
 	return this.mPrefId;
 });
 AbDAVDirectory.prototype.__defineSetter__("dirPrefId", function(val) { 
 	dump("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
 	dump("===========AbDAVDirectory.prototype.__defineSetter__(dirPrefId, function(val: " + val + "\n");
 	dump("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
-	//this.parentDirectory.QueryInterface(nsIAbDirectory).dirPrefId = val;
+	//this.parentDirectory.QueryInterface(Components.interfaces.nsIAbDirectory).dirPrefId = val;
 	this.mPrefId = val;
 });
 
@@ -400,7 +414,7 @@ AbDAVDirectory.prototype.deleteDirectory = function ( directory ){
 
 // readonly char* contractID
 // A contract ID through which an instance of this class can be created (or accessed as a service, if flags & SINGLETON), or null.
-AbDAVDirectory.prototype.contractID = CONTRACT_ID;
+AbDAVDirectory.prototype.contractID = "@mozilla.org/rdf/resource-factory;1?name=moz-abdavdirectory";
 //readonly PRUint32 flags
 
 // readonly PRUint32 implementationLanguage 
@@ -416,14 +430,16 @@ AbDAVDirectory.prototype.getHelperForLanguage = function( language ){
 			dump (ex + "\n File: "+  ex.fileName + "\n Line: " + ex.lineNumber + "\n\n Stack:\n\n" + ex.stack);
 			throw ex;		
 	}
-}
+};
+
 //void getInterfaces ( out PRUint32 count , out nsIIDPtr array )
-AbDAVDirectory.prototype.getInterfaces = function( count, array ){
+AbDAVDirectory.prototype.getInterfaces = function( count ){
+	var array;
 	try{
 //		var ci = this.parentDirectory.QueryInterface(Components.interfaces.nsIClassInfo);
 //		ci.getInterfaces(count, array);
 		count = 6;
-		var array = Components.classes["@mozilla.org/array;1"].createInstance(Components.interfaces.nsIMutableArray);
+ 		array = Components.classes["@mozilla.org/array;1"].createInstance(Components.interfaces.nsIMutableArray);
 		array.appendElement(Components.interfaces.nsIClassInfo, false);
 		array.appendElement(Components.interfaces.nsIRDFResource, false);
 		array.appendElement(Components.interfaces.nsIAbDirectory, false);
@@ -438,7 +454,9 @@ AbDAVDirectory.prototype.getInterfaces = function( count, array ){
 			dump (ex + "\n File: "+  ex.fileName + "\n Line: " + ex.lineNumber + "\n\n Stack:\n\n" + ex.stack);
 			throw ex;		
 	}
-}
+
+	return array;
+};
  
 //========================================================================================================================
 // Components.interfaces.nsIRDFResource;
@@ -447,17 +465,17 @@ AbDAVDirectory.prototype.getInterfaces = function( count, array ){
 // readonly char* Value	
 // The single-byte string value of the resource.
 
-AbDAVDirectory.prototype.__defineGetter__("Value", function() { return this.parentDirectory.QueryInterface(nsIRDFResource).Value; });
-AbDAVDirectory.prototype.__defineSetter__("Value", function(val) { this.parentDirectory.QueryInterface(nsIRDFResource).Value = val; });
+AbDAVDirectory.prototype.__defineGetter__("Value", function() { return this.parentDirectory.QueryInterface(Components.interfaces.nsIRDFResource).Value; });
+AbDAVDirectory.prototype.__defineSetter__("Value", function(val) { this.parentDirectory.QueryInterface(Components.interfaces.nsIRDFResource).Value = val; });
 
 // readonly AUTF8String ValueUTF8
 // The UTF-8 URI of the resource.
-AbDAVDirectory.prototype.__defineGetter__("ValueUTF8", function() { return this.parentDirectory.QueryInterface(nsIRDFResource).ValueUTF8; });
-AbDAVDirectory.prototype.__defineSetter__("ValueUTF8", function(val) { this.parentDirectory.QueryInterface(nsIRDFResource).ValueUTF8 = val; });
+AbDAVDirectory.prototype.__defineGetter__("ValueUTF8", function() { return this.parentDirectory.QueryInterface(Components.interfaces.nsIRDFResource).ValueUTF8; });
+AbDAVDirectory.prototype.__defineSetter__("ValueUTF8", function(val) { this.parentDirectory.QueryInterface(Components.interfaces.nsIRDFResource).ValueUTF8 = val; });
 
 //void Init ( char* uri )   
 AbDAVDirectory.prototype.Init =function( uri ){
-	this.parentDirectory.QueryInterface(nsIRDFResource).Init( uri );
+	this.parentDirectory.QueryInterface(Components.interfaces.nsIRDFResource).Init( uri );
 
 	this.mURINoQuery = uri;
 		//dump("=============== this.mURINoQuery: " + this.mURINoQuery + "\n");
@@ -505,97 +523,45 @@ AbDAVDirectory.prototype.Init =function( uri ){
 
 */	
 //	dump("AbDAVDirectory.Init(" + uri +") completed\n\n");
- }
+};
  	
 // PRBool EqualsString ( char* URI ) 
 AbDAVDirectory.prototype.EqualsString = function(uri){
 	dump("\t AbDAVDirectory.EqualsString(" + uri +") called\n");
 	return this.parentDirectory.QueryInterface(Components.interfaces.nsIRDFResource).EqualsString( uri );
-}
+};
 
 // void GetDelegate ( char* key , nsIIDRef IID , out nsQIResult* result )  
 AbDAVDirectory.prototype.GetDelegate = function( key , IID ,  result ){
 	this.parentDirectory.QueryInterface(Components.interfaces.nsIRDFResource).GetDelegate( key , IID ,  result );
 	dump("\t AbDAVDirectory.GetDelegate() completed\n");
-}
+};
 // [noscript] void GetValueConst ( out char* constValue )   
 AbDAVDirectory.prototype.GetValueConst  = function( constValue ) {
 	this.parentDirectory.QueryInterface(Components.interfaces.nsIRDFResource).GetValueConst( constValue );
 	dump("\t AbDAVDirectory.GetValueConst() completed\n");
-}	
+};
 // void ReleaseDelegate ( char* key )
 AbDAVDirectory.prototype.ReleaseDelegate  = function( key ) {
 	this.parentDirectory.QueryInterface(Components.interfaces.nsIRDFResource).ReleaseDelegate( key );
 	dump("\t AbDAVDirectory.ReleaseDelegate() completed\n");	
-}	
+};
 
 //========================================================================================================================
 // Components.interfaces.nsIRDFResource
 //========================================================================================================================
 
 AbDAVDirectory.prototype.QueryInterface = function(aIID){
-	if	( 	!aIID.equals(nsIRDFResource) &&
-	    	!aIID.equals(nsIAbDirectory) &&
-	    	!aIID.equals(nsIAbDirectorySearch) &&	
-	    	!aIID.equals(nsIClassInfo) &&
-	    	!aIID.equals(nsIAutoCompleteSession) &&
-			!aIID.equals(nsISupports) 
-		)
-	{
-		throw Components.results.NS_ERROR_NO_INTERFACE;
-	}
+	if (!aIID.equals(Components.interfaces.nsIRDFResource)
+			&& !aIID.equals(Components.interfaces.nsIAbDirectory)
+			&& !aIID.equals(Components.interfaces.nsIAbDirectorySearch)
+			&& !aIID.equals(Components.interfaces.nsIClassInfo)
+			&& !aIID.equals(Components.interfaces.nsIAutoCompleteSession)
+			&& !aIID.equals(Components.interfaces.nsISupports))
+		{
+			throw Components.results.NS_ERROR_NO_INTERFACE;
+		}
+
 	return this;
-}
-
-//========================================================================================================================
-//	Class factory
-//========================================================================================================================
-var AbDAVDirectoryFactory = {
-  createInstance: function (aOuter, aIID)
-  {
-    if (aOuter != null)
-      throw Components.results.NS_ERROR_NO_AGGREGATION;
-      
-    return (new AbDAVDirectory()).QueryInterface(aIID);
-  }
 };
 
-//========================================================================================================================
-//	Module definition (xpcom registration)
-//========================================================================================================================
-var AbDAVDirectoryModule = {
-  _firstTime: true,
-  registerSelf: function(aCompMgr, aFileSpec, aLocation, aType)
-  {
-    if (this._firstTime) {
-      this._firstTime = false;
-      throw Components.results.NS_ERROR_FACTORY_REGISTER_AGAIN;
-    };
-    aCompMgr = aCompMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
-    aCompMgr.registerFactoryLocation(CLASS_ID, CLASS_NAME, CONTRACT_ID, aFileSpec, aLocation, aType);
-  },
-
-  unregisterSelf: function(aCompMgr, aLocation, aType)
-  {
-    aCompMgr = aCompMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
-    aCompMgr.unregisterFactoryLocation(CLASS_ID, aLocation);        
-  },
-  
-  getClassObject: function(aCompMgr, aCID, aIID)
-  {
-    if (!aIID.equals(Components.interfaces.nsIFactory))
-      throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-
-    if (aCID.equals(CLASS_ID))
-      return AbDAVDirectoryFactory;
-
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-  },
-
-  canUnload: function(aCompMgr) { return true; }
-};
-
-//========================================================================================================================
-//	Module initialization
-//========================================================================================================================
-function NSGetModule(aCompMgr, aFileSpec) { return AbDAVDirectoryModule; }

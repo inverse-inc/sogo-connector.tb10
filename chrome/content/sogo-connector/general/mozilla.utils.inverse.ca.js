@@ -1,4 +1,4 @@
-/* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 4 -*- */
+/* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 2 -*- */
 /*************************************************************************************************************   
  Copyright:	Inverse groupe conseil, 2006-2007
  Author: 	Robert Bolduc
@@ -33,9 +33,9 @@ var logFile;
 var logFileName;
 var logPath;
 
-const maxLogFileSize = 1024 * 1024;
-const LOG_LEVEL_PREF	= "extensions.ca.inverse.logLevel";
-const LOG_FILE 		= "extensions.ca.inverse.sogo.connector.log";
+var maxLogFileSize = 1024 * 1024;
+var LOG_LEVEL_PREF	= "extensions.ca.inverse.logLevel";
+var LOG_FILE 		= "extensions.ca.inverse.sogo.connector.log";
 
 initLogFile(LOG_FILE);
 
@@ -47,9 +47,15 @@ function initLogFile(fileName){
 		prefService.setIntPref(LOG_LEVEL_PREF, gLogLevel);
 	}
 	try{
-		netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-	}catch (e){
-		messageBox(window,"Message","Permissions do not allow to log events in a file");
+		if (typeof netscape != "undefined")
+			netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+	}
+	catch (e) {
+		if (typeof window == "undefined")
+			dump("Permissions do not allow to log events in a	file\n");
+		else
+			messageBox(window, "Message",
+								 "Permissions do not allow to log events in a	file");
 		throw e;
 	}
 	// get the path to the user's home (profile) directory
@@ -83,6 +89,10 @@ function initLogFile(fileName){
 }
 
 function logDebug(message){
+	if (message[message.length-1] != "\n")
+		message += "\n";
+	dump ("DEBUG: " + message)
+	return;
 	if (gLogLevel >= logLevelVal.debug){
 		xulFileWrite(logFileName, new Date().toString() + " [DEBUG] " + message + "\n");
 	}
@@ -147,7 +157,8 @@ function xulReadFile(path, charset){
 
 function xulFileWrite(filePath, content){
 	try{
-		netscape.security.PrivilegeManager.enablePrivilege ("UniversalXPConnect");
+		if (typeof netscape != "undefined")
+			netscape.security.PrivilegeManager.enablePrivilege ("UniversalXPConnect");
 		var file = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
 		file.initWithPath(filePath);
 		if (!file.exists()) {

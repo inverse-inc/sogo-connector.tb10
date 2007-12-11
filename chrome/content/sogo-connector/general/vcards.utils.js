@@ -1,4 +1,4 @@
-/* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 4 -*- */
+/* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 2 -*- */
 /*    Orginal code from morescols extension vcardTools.js
  
   		<em:id>{3e17310d-82e8-4a43-bd2f-7c3055bfe589}</em:id>
@@ -11,25 +11,25 @@
 	Contributors: Ralf Becker, RalfBecker@outdoor-training.de
  */
 
-function escapedForCards(theString){
-
-  theString = theString.replace(/\\/g, "\\\\");
-  theString = theString.replace(/,/g, "\\,");
-  theString = theString.replace(/;/g, "\\;");  
-  theString = theString.replace(/,/g, "\\,");
+function escapedForCards(theString) {
+	theString = theString.replace(/\\/g, "\\\\");
+	theString = theString.replace(/,/g, "\\,");
+	theString = theString.replace(/;/g, "\\;");  
+	theString = theString.replace(/,/g, "\\,");
 //  theString.replace(/\n/g, "\\n,");
 //  theString.replace(/\r/g, "\\r,");
 
-  return theString;
+	return theString;
 }
-function unescapedFromCard(theString ){
 
-  theString = theString.replace(/\\/g, "\\");
-  theString = theString.replace(/\,/g, ",");
-  theString = theString.replace(/\;/g, ";");  
-  theString = theString.replace(/\,/g, ",");
+function unescapedFromCard(theString) {
+	theString = theString.replace(/\\/g, "\\");
+	theString = theString.replace(/\,/g, ",");
+	theString = theString.replace(/\;/g, ";");  
+	theString = theString.replace(/\,/g, ",");
 //  theString.replace(/\\n/g, "\n,");
 //  theString.replace(/\\r/g, "\r,");
+
 	return theString;
 }
 
@@ -40,7 +40,7 @@ function unescapedFromCard(theString ){
  * of custom fields that are not part of a Thunderbird card.
  *  
  **************************************************************************/ 
-function importFromVcard(vCardString, addressBook, customFieldsArray){
+function importFromVcard(vCardString, addressBook, customFieldsArray) {
 	var vcardLines = new Array;
 	var end = new RegExp(/^END/);
 	

@@ -2,6 +2,29 @@
 var sogoWebDAVPendingRequests = new Array();
 var sogoWebDAVPending = false;
 
+function _processPending() {
+	sogoWebDAVPending = false;
+	if (sogoWebDAVPendingRequests.length) {
+		dump("processing next query...\n");
+		var request = sogoWebDAVPendingRequests.shift();
+		var newWebDAV = new sogoWebDAV(request.url, request.target,
+																	 request.data, request.asynchronous);
+		newWebDAV.load(request.operation, request.parameters);
+	}
+	else
+		dump("dav queue empty\n");
+}
+
+function onXmlRequestReadyStateChange(request) {
+	dump("xmlreadystatechange: " + request.readyState + "\n");
+	if (request.readyState == 4) {
+		request.target.onDAVQueryComplete(request.status,
+																			request.responseText,
+																			request.cbData);
+		_processPending();
+	};
+}
+
 function sogoWebDAV(url, target, data, asynchronous) {
   this.url = url;
   this.target = target;
@@ -11,6 +34,7 @@ function sogoWebDAV(url, target, data, asynchronous) {
 
 sogoWebDAV.prototype = {
  realLoad: function(operation, parameters) {
+		dump("dav operation: " + operation + "\n");
     sogoWebDAVPending = true;
     var webdavSvc = Components.classes['@mozilla.org/webdav/service;1']
     .getService(Components.interfaces.nsIWebDAVService);
@@ -21,6 +45,7 @@ sogoWebDAV.prototype = {
     url.spec = this.url;
 
     var listener = new WebDAVListener(this.target);
+		listener.cbData = this.cbData;
 
     var resource = new WebDAVResource(url.QueryInterface(Components.interfaces.nsIURL));
     if (operation == "GET")
@@ -35,24 +60,11 @@ sogoWebDAV.prototype = {
 			var xmlRequest = new XMLHttpRequest();
 			xmlRequest.open("POST", this.url, this.asynchronous);
 			xmlRequest.url = this.url;
-			var rqTarget = this.target;
 			xmlRequest.onreadystatechange = function() {
-				try {
-					if (xmlRequest.readyState == 4) {
-						rqTarget.onDAVQueryComplete(xmlRequest.status,
-																				xmlRequest.responseText, this.cbData);
-						sogoWebDAVPending = false;
-						if (sogoWebDAVPendingRequests.length) {
-							var request = sogoWebDAVPendingRequests.shift();
-							var newWebDAV = new sogoWebDAV(request.url, request.target,
-																						 request.data, request.asynchronous);
-							newWebDAV.load(request.operation, request.parameters);
-						}
-					}
-				}
-				catch(e) {
-				};
+				onXmlRequestReadyStateChange(xmlRequest);
 			};
+			xmlRequest.target = this.target;
+			xmlRequest.cbData = this.cbData;
 			xmlRequest.send(parameters);
 		}
     else
@@ -131,13 +143,7 @@ WebDAVListener.prototype = {
 // 		dump("complete status: " + aStatusCode + "; operation: " + aOperation + "\n");
     this.target.onDAVQueryComplete(aStatusCode, this.result, this.cbData);
     this.result = null;
-    sogoWebDAVPending = false;
-    if (sogoWebDAVPendingRequests.length) {
-      var request = sogoWebDAVPendingRequests.shift();
-      var newWebDAV = new sogoWebDAV(request.url, request.target,
-																		 request.data, request.asynchronous);
-      newWebDAV.load(request.operation, request.parameters);
-    }
+		_processPending();
   },
  onOperationDetail: function(aStatusCode, aResource, aOperation, aDetail,
 														 aClosure) {
