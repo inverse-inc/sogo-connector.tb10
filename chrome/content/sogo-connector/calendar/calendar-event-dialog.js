@@ -1,4 +1,4 @@
-/* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 4 -*- */
+/* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 2 -*- */
 
 var inverseEventDialog = {
  onLoadHandler: function (event) {
@@ -11,8 +11,8 @@ var inverseEventDialog = {
 
 		inverseEventDialog.updateOrganizers(organizers);
 		organizers.addEventListener("command",
-									inverseEventDialog.updateExistingOrganizer,
-									false);
+																inverseEventDialog.updateExistingOrganizer,
+																false);
 
 		var fixedLabel = document.getElementById("fixedConfidentialLabel");
 		var buttonPrivacy = document.getElementById("button-privacy");
@@ -24,7 +24,7 @@ var inverseEventDialog = {
 
 		var composeService = Components.classes["@mozilla.org/messengercompose;1"]
 		.getService(Components.interfaces.nsIMsgComposeService);
-      
+
 		var manager = 
 		Components.classes["@mozilla.org/messenger/account-manager;1"]
 		.getService(Components.interfaces.nsIMsgAccountManager);
@@ -34,8 +34,8 @@ var inverseEventDialog = {
 			var server = manager.GetServersForIdentity(currentIdentity).GetElementAt(0).QueryInterface(Components.interfaces.nsIMsgIncomingServer);
 			var currentOrganizer
 				= { "name": currentIdentity.fullName,
-					"email": ( server.realUsername + "@"
-							   + currentIdentity.email.split("@")[1]) };
+						"email": ( server.realUsername + "@"
+											 + currentIdentity.email.split("@")[1]) };
 			if (composeService.defaultIdentity == currentIdentity)
 				currentOrganizer["default"] = true;
 			organizers.push(currentOrganizer);
@@ -60,12 +60,12 @@ var inverseEventDialog = {
 	},
  updateOrganizers: function (organizers) {
 		var existingOrganizer
-        = document.getElementById("item-existing-organizer");
+		= document.getElementById("item-existing-organizer");
 		var organizer = window.calendarItem.organizer;
 		if (organizer) {
 			organizers.parentNode.removeChild(organizers);
 			var organizerName = (organizer.commonName
-								 + " <" + organizer.id.split(":")[1] + ">");
+													 + " <" + organizer.id.split(":")[1] + ">");
 			existingOrganizer.setAttribute('value', organizerName);
 			window.organizer = organizer;
 		}
