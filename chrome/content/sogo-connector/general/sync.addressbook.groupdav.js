@@ -26,11 +26,15 @@
 		********************************************************************************/
 
 function jsInclude(files, target) {
-  var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
-    .getService(Components.interfaces.mozIJSSubScriptLoader);
-  for (var i = 0; i < files.length; i++) {
-		dump("jsInclude: " + files[i] + "\n");
-    loader.loadSubScript(files[i], target);
+	var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+		.getService(Components.interfaces.mozIJSSubScriptLoader);
+	for (var i = 0; i < files.length; i++) {
+		try {
+			loader.loadSubScript(files[i], target);
+		}
+		catch(e) {
+			dump("sync.addressbook.groupdav.js: failed to include '" + files[i] + "'\n" + e + "\n");
+		}
 	}
 }
 
@@ -58,8 +62,10 @@ GroupDavSynchronizer.prototype = {
  mIsDrop: false,
  messengerWindow: null,
  serverVersionHash: null,
+//  serverDateHash: null,
  serverDataHash: null,
  localVersionHash: null,    // stores the version no of the local cards
+ localDateHash: null,
  localUpdateHash: null,     // stores keys (the value is set to true)
  localAdditionHash: null,  	// stores vcards 
  serverDeleteArray: null,		// store keys
@@ -93,7 +99,9 @@ GroupDavSynchronizer.prototype = {
 						 + "] \n\t\t\thost:[" + groupdavPrefService.getHostName() +"]");
 
 		this.serverVersionHash = {};
+// 		this.serverDateHash = {};
 		this.localVersionHash = {};
+// 		this.localDateHash = {};
 
 		this.serverDataHash = {};
 		this.serverDataHash.size = 0;
@@ -124,25 +132,26 @@ GroupDavSynchronizer.prototype = {
 			cards.first();
 			hasCards = true;
 		}catch (ex){}// nsIEnumerator doesn't seem to provide any clean way to test for existence of elements
-   
 
-		while(hasCards){   
+		while (hasCards) {
 			var card = cards.currentItem().QueryInterface(Components.interfaces.nsIAbCard);
 			var cardExt = card.QueryInterface(Components.interfaces.nsIAbMDBCard);
 			var key = cardExt.getStringAttribute("groupDavKey");
-			if (key && key != ""){
+			if (key && key != "") {
 				// Cards that exist locally and on the server
 				// Later, the function compareVersions() will use this information to determine 
 				// if the cards needs to be uploaded or if there is a conflict
 				this.localCardPointerHash[key] = card;
 				this.localVersionHash[key] = cardExt.getStringAttribute("groupDavVersion");
-			}else{
+// 				this.localDateHash[key] = cardExt.getStringAttribute("groupDavDate");
+			}
+			else {
 				// Generate the key and save the modified card locally.
 				var cardKey = this.gGroupDavServerInterface.getNewCardKey();
 				cardExt.setStringAttribute("groupDavKey",cardKey);
 				card.editCardToDatabase(this.gSelectedDirectoryURI);
 				this.localCardPointerHash[cardKey] = card;
-	     		
+
 				// New card to export to the server      		
 				this.localAdditionHash[cardKey] = card2vcard(card);
 				this.localAdditionHash.size++;
@@ -173,7 +182,7 @@ GroupDavSynchronizer.prototype = {
 
 		var data = {query: "server-propfind"};
 		var request = new sogoWebDAV(this.gURL, this, data);
-		request.propfind(["DAV: getetag", "DAV: getcontenttype"]);
+		request.propfind(["DAV: getetag", "DAV: getcontenttype", "DAV: getlastmodified"]);
 // 		try {
 // 			var responseObj = webdav_propfind(this.gURL, propsList, null, null); //Let Thunderbird Password Manager handle user and password
 // 		}
@@ -186,14 +195,22 @@ GroupDavSynchronizer.prototype = {
  compareVersions: function() {
 		dump("compareVersion\n");
 		for (var key in this.serverVersionHash) {
+			dump("comparing key '" + key + "', local: " + this.localVersionHash[key]
+					 + "; server: " + this.serverVersionHash[key] + "\n");
 			var serverVersion = this.serverVersionHash[key];
+// 			var serverDate = this.serverDateHash[key];
 			var localVersion = 0;
+// 			var localDate = null;
 			if (typeof(this.localVersionHash[key]) != "undefined")
 				localVersion = this.localVersionHash[key];
-			if (localVersion == 0) {
+// 			if (typeof(this.localDateHash[key]) != "undefined")
+// 				localDate = this.localDateHash[key];
+			dump(key + ": localVersion: " + localVersion + "; serverVersion: " +
+					 serverVersion + "\n");
+			if (localVersion != serverVersion) {
 				// No Local version, the vcard has to be downloaded
 				this.serverDataHash[key] = "";
-				this.serverDataHash.size++;         
+				this.serverDataHash.size++;
 			}
 			else {
 				var localVersionPrefix = getModifiedLocalVersion(localVersion);
@@ -229,7 +246,10 @@ GroupDavSynchronizer.prototype = {
 		if (this.serverDataHash.size
 				+ this.localUpdateHash.size
 				+ this.localAdditionHash.size == 0) {
-			this.messengerWindow.gAbWinObserverService.notifyObservers(null, SyncProgressMeter.NOTHING_TO_DO, null);	
+			this.messengerWindow
+				.gAbWinObserverService.notifyObservers(null,
+																							 SyncProgressMeter.NOTHING_TO_DO,
+																							 null);	
 		}else{
 			this.messengerWindow.gGroupDAVProgressMeter.initDownload(this.serverDataHash.size);
 			this.messengerWindow.gGroupDAVProgressMeter.initUpload(this.localCardPointerHash,
@@ -274,6 +294,7 @@ GroupDavSynchronizer.prototype = {
  },
  onVCardDownloadComplete: function(status, data, key) {
 		if (Components.isSuccessCode(status)) {
+			logInfo("download data: " + data);
 			this.serverDataHash[key] = data;
 			this._importCard(key, data);
 			this.messengerWindow.gAbWinObserverService.notifyObservers(null,
@@ -294,8 +315,8 @@ GroupDavSynchronizer.prototype = {
 			var string = ("Missing key '" + key + "' from hash"
 										+ " 'this.serverVersionHash'.\n"
 										+ "Valid keys are:\n");
-			for (var key in this.serverVersionHash)
-				string += "  " + key;
+			for (var validKey in this.serverVersionHash)
+				string += "  " + validKey;
 			throw string;
 		}
 
@@ -310,8 +331,10 @@ GroupDavSynchronizer.prototype = {
 			cardExt = this.localCardPointerHash[key].QueryInterface(Components.interfaces.nsIAbMDBCard);
 
 			cardExt.setStringAttribute("groupDavKey", key);
-			cardExt.setStringAttribute("groupDavVersion", this.serverVersionHash[key]);
-			cardExt.setStringAttribute("calFBURL", vcardFieldsArray["fbURL"]);
+			cardExt.setStringAttribute("groupDavVersion",
+																 this.serverVersionHash[key]);
+			logInfo("vcardFieldsArray: " + dumpObject(vcardFieldsArray));
+			cardExt.setStringAttribute("calFBURL", vcardFieldsArray["fburl"]);
 			cardExt.setStringAttribute("groupDavVcardCompatibility",
 																 vcardFieldsArray["groupDavVcardCompatibility"]);
 			
@@ -327,7 +350,7 @@ GroupDavSynchronizer.prototype = {
 			dump("key: " + key + "\n");
 			dump("serverVersionHash[key]: " + this.serverVersionHash[key] + "\n");
 			cardExt.setStringAttribute("groupDavVersion", this.serverVersionHash[key]);
-			cardExt.setStringAttribute("calFBURL", vcardFieldsArray["fbURL"]);
+			cardExt.setStringAttribute("calFBURL", vcardFieldsArray["fburl"]);
 			cardExt.setStringAttribute("groupDavVcardCompatibility",
 																 vcardFieldsArray["groupDavVcardCompatibility"]);
 
@@ -352,6 +375,7 @@ GroupDavSynchronizer.prototype = {
 				var cNameArray = href.split("/");
 				var cName = cNameArray[cNameArray.length - 1];
 				this.serverVersionHash[cName] = version;
+// 				this.serverDateHash[cName] = new Date(davObject["DAV: getlastmodified"]);
 				logDebug("\tServer Card key = " + cName + "\tversion = " + version);
 			}
 		}
@@ -403,7 +427,7 @@ GroupDavSynchronizer.prototype = {
 	},
  upLoadLocalAdditions: function() {
 		dump("uploadLocalAdditions\n");
-		if (this.localAdditionHash.size > 0) {		
+		if (this.localAdditionHash.size > 0) {
 			for (var key in this.localAdditionHash) {
 				if (key != "size") {
 					webdavAddVcard(this.gURL + key, this.localAdditionHash[key], key,
@@ -460,7 +484,7 @@ GroupDavSynchronizer.prototype = {
  deleteServerDeleteArrayCards: function() {
 		var card;
 		var db = Components.classes["@mozilla.org/addressbook;1"].createInstance(Components.interfaces.nsIAddressBook).getAbDatabaseFromURI(this.gSelectedDirectoryURI);
-		for (var i=0; i<this.serverDeleteArray.length; i++){
+		for (var i = 0; i < this.serverDeleteArray.length; i++) {
 			card =this.localCardPointerHash[this.serverDeleteArray[i]].QueryInterface(Components.interfaces.nsIAbMDBCard);
 			db.deleteCard(card, true);
 		}

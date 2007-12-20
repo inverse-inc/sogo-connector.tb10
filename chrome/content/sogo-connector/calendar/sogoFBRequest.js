@@ -18,6 +18,7 @@ sogoFBRequest.prototype = {
 		if (aStatusCode > 199 && aStatusCode < 300) {
 			var ics = Components.classes["@mozilla.org/calendar/ics-service;1"]
 			.getService(Components.interfaces.calIICSService);
+			dump("fbText:" + fbText + "\n");
 			var cal = ics.parseICS(fbText);
 			var vfb = cal.getFirstSubcomponent("VFREEBUSY");
 

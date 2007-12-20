@@ -26,8 +26,12 @@ function jsInclude(files, target) {
 	var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
 		.getService(Components.interfaces.mozIJSSubScriptLoader);
 	for (var i = 0; i < files.length; i++) {
-		dump("jsInclude: " + files[i] + "\n");
-		loader.loadSubScript(files[i], target);
+		try {
+			loader.loadSubScript(files[i], target);
+		}
+		catch(e) {
+			dump("abEditCardDialog.groupdav.overlay.js: failed to include '" + files[i] + "'\n" + e + "\n");
+		}
 	}
 }
 

@@ -1,15 +1,115 @@
 <?xml version="1.0"?>
-
 <!DOCTYPE bindings>
-
 <bindings xmlns="http://www.mozilla.org/xbl"
   xmlns:xbl="http://www.mozilla.org/xbl"
   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <binding id="inverse-attendees-list"
     extends="chrome://calendar/content/sun-calendar-event-dialog-attendees.xml#attendees-list">
+
     <implementation>
-      <field name="inverseParentOnInitialize">null</field>
-      <field name="inverseParentAppendAttendee">null</field>
+      <field name="inverseParentAutocompleteOverride">null</field>
+
+      <constructor>
+        <![CDATA[
+				this.inverseParentSetupAutocomplete = this.setupAutocomplete;
+				this.setupAutocomplete = this.inverseSetupAutocomplete;
+
+				var template = document.getAnonymousElementByAttribute(
+				               this, "anonid", "input");
+				template.setAttribute("searchSessions", "sogo-connector");
+				]]>
+      </constructor>
+
+      <method name="inverseSetupAutocomplete">
+				<body>
+					<![CDATA[
+					if (isAutoCompleteDirectoryServerCardDAV()) {
+	          this.setupAutocompleteCardDAV();
+					}
+					else {
+	          this.inverseParentAutocompleteOverride();
+					}
+					]]>
+				</body>
+      </method>
+
+      <method name="setupAutocompleteCardDAV">
+				<body>
+					<![CDATA[
+					dump("setupAutocompleteCardDAV\n");
+	var autocompleteLdap = false;
+	var autocompleteDirectory = null;	
+	var prevAutocompleteDirectory = this.mCurrentAutocompleteDirectory;
+	var i;
+
+	autocompleteLdap = this.mPrefs.getBoolPref("ldap_2.autoComplete.useDirectory");
+	if (autocompleteLdap)
+		autocompleteDirectory = this.mPrefs.getCharPref("ldap_2.autoComplete.directoryServer");
+
+	// use a temporary to do the setup so that we don't overwrite the
+	// global, then have some problem and throw an exception, and leave the
+	// global with a partially setup session.	we'll assign the temp
+	// into the global after we're done setting up the session
+	//
+	var cardDAVSession;
+	if (this.mLDAPSession) {
+		cardDAVSession = this.mLDAPSession;
+	} else {
+		cardDAVSession = Components.classes["@mozilla.org/autocompleteSession;1?type=sogo-connector"]
+					.createInstance(Components.interfaces.nsISOGoConnectorACSessionWrapper);
+	}
+
+	if (autocompleteDirectory && ! this.mIsOffline) { 
+		// Add observer on the directory server we are autocompleting against
+		// only if current server is different from previous.
+		// Remove observer if current server is different from previous			 
+		this.mCurrentAutocompleteDirectory = autocompleteDirectory;
+		if (prevAutocompleteDirectory) {
+			if (prevAutocompleteDirectory != this.mCurrentAutocompleteDirectory) { 
+				this.removeDirectorySettingsObserver(prevAutocompleteDirectory);
+				this.addDirectorySettingsObserver();
+			}
+		}else{
+			this.addDirectorySettingsObserver();
+		}
+		// fill in the session params if there is a session
+		if (cardDAVSession) {
+			if (!this.mSessionAdded) {
+				// if we make it here, we know that session initialization has
+				// succeeded; add the session for all recipients, and 
+				// remember that we've done so
+				var autoCompleteWidget;
+				for (i=1; i <= this.mMaxAttendees; i++) {
+					autoCompleteWidget = this.getInputElement(i);
+					dump("xxxxxxxxxxxxxxxxxxxxxx: " + autoCompleteWidget.searchSessions + "\n");
+					if (autoCompleteWidget) {
+					  // ldap searches don't insert a default entry with the default domain appended to it
+					  // so reduce the minimum results for a popup to 2 in this case. 
+						autoCompleteWidget.minResultsForPopup = 2;
+					}
+				}
+				this.mSessionAdded = true;
+			}
+		}
+	}else {
+		if (this.mCurrentAutocompleteDirectory) {
+			// Remove observer on the directory server since we are not doing Ldap autocompletion.
+			this.removeDirectorySettingsObserver(this.mCurrentAutocompleteDirectory);
+			this.mCurrentAutocompleteDirectory = null;
+		}
+		if (this.mLDAPSession && this.mSessionAdded) {
+			for (i=1; i <= awGetMaxRecipients(); i++) {
+				document.getElementById("addressCol2#" + i).removeSession(this.mLDAPSession);
+			}
+			this.mSessionAdded = false;
+		}
+	}
+
+	this.mLDAPSession = cardDAVSession;
+	this.mSetupLdapAutocomplete = true;
+	  ]]>
+	</body>
+      </method>
 
 <!--		 
       <constructor>
@@ -40,18 +140,8 @@
         ]]>
       </constructor>
 -->
-		 
-		 
-		 
-      <method name="setupAutocomplete">
-        <body>
-          <![CDATA[
-				setupAutocompleteOverride(this);
-			]]>
-        </body>
-      </method>		 
 
-		<method name="inverseOnInitialize">
+      <method name="inverseOnInitialize">
         <body>
           <![CDATA[
                 var args = window.arguments[0];
@@ -206,3 +296,11 @@
     </implementation>
   </binding>
 </bindings>
+<!--
+Local variables:
+tab-width: 2
+c-tab-always-indent: t
+indent-tabs-mode: t
+c-basic-offset: 2
+End:
+-->

@@ -58,7 +58,7 @@ function GetCalDAVFBInCardDAVAddressBook(criteria){
 					var protoCard = cards.getNext();
 					var card = protoCard.QueryInterface(Components.interfaces.nsIAbCard);
 					var matchMail = "";
-						
+
 					if (card.defaultEmail.toLowerCase() == criteria)
 						matchMail = card.defaultEmail;
 					else if (card.primaryEmail.toLowerCase() == criteria)

@@ -243,9 +243,9 @@ try{
 		dump (savedCard.displayName +"\n");
 		var cardExt = savedCard.QueryInterface(Components.interfaces.nsIAbMDBCard);
 
-		cardExt.setStringAttribute("calFBURL", customFieldsArray["fbURL"]);
+		cardExt.setStringAttribute("calFBURL", customFieldsArray["fburl"]);
 		cardExt.setStringAttribute("uid", customFieldsArray["uid"]);
-		dump("fbURL: " + cardExt.getStringAttribute("calFBURL") + "\n") ;
+		dump("fburl: " + cardExt.getStringAttribute("calFBURL") + "\n") ;
 		savedCard.editCardToDatabase(uri); 	
 		resultArray.AppendElement(cardExt);
 	}	

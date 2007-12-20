@@ -3,6 +3,10 @@ Features
 Working on 
 	Added Deleted on server feature. (low priority)
 	vcard encoding 2.1 and 3.0
+0.63
+	rewrite of the vcard parsing to accept more variations and encodings
+	enhancements to the autocompletion algorithm to avoid doubles
+	rewrite of some algorithms to use Mozilla's webdav library
 0.62.1
 	added missing German translations for calendar
 0.62	

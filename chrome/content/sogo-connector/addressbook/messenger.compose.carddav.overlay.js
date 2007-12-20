@@ -99,7 +99,7 @@ function setupCardDavAutoCompleteSession(){
 	if (gLDAPSession) {
 		cardDAVSession = gLDAPSession;
 	} else {
-		cardDAVSession = Components.classes["@mozilla.org/autocompleteSession;1?type=cardav"].createInstance(CI.nsICardDAVAutoCompleteSession);
+		cardDAVSession = Components.classes["@mozilla.org/autocompleteSession;1?type=carddav"].createInstance(CI.nsICardDAVAutoCompleteSession);
 	}
 						
 	if (autocompleteDirectory && !gIsOffline) { 

@@ -154,7 +154,12 @@ WebDAVListener.prototype = {
       case Components.interfaces.nsIWebDAVOperationListener.GET_TO_STRING:
 				if (!this.result)
 					this.result = "";
-        this.result += aDetail.QueryInterface(Components.interfaces.nsISupportsCString).data;
+				var utf8String = "";
+				var converter = Components.classes["@mozilla.org/intl/utf8converterservice;1"]
+					.getService(Components.interfaces.nsIUTF8ConverterService);
+				utf8String = converter.convertStringToUTF8(aDetail.QueryInterface(Components.interfaces.nsISupportsCString).toString(),
+																									 "iso-8859-1", false);
+        this.result += utf8String;
 				break;
       case Components.interfaces.nsIWebDAVOperationListener.GET_PROPERTIES:
 // 				dump("GET_PROPERTIES\n");

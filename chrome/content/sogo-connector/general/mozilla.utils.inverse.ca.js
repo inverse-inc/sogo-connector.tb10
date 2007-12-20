@@ -222,3 +222,89 @@ function getThunderbirdMajorVersionNumber(){
  
  return fullThunderbirdVersion.substr(0,3);
 }
+
+String.repeat = function(pattern, times) {
+	var newString = "";
+
+	for (var i = 0; i < times; i++) {
+		newString += pattern;
+	}
+
+	return newString;
+};
+
+/* object dumper */
+function objectDumper() {
+}
+
+objectDumper.prototype = {
+ indent: 0,
+ dump: function(object) {
+		var text = "";
+
+		var oType = typeof object;
+		if (oType == "function")
+			text += this._dumpFunction(object);
+		else if (oType == "string"
+						 || oType == "number")
+			text += this._dumpString(object);
+		else if (oType == "object")
+			text += this._dumpObject(object);
+		else if (oType == "undefined")
+			text += "<undefined>";
+
+		return text;
+	},
+ _dumpFunction: function(object) {
+		return "<function: " + object.name + ">";
+	},
+ _dumpString: function(object) {
+		return "" + object;
+	},
+ _dumpObject: function(object) {
+		var text = "";
+
+		if (object instanceof Array)
+			text += this._dumpArray(object);
+		else if (object instanceof Object)
+			text += this._dumpCustomObject(object);
+		else
+			text += "<object: " + object + ">";
+
+		return text;
+	},
+ _dumpArray: function(object) {
+		var text = "[";
+
+		if (object.length > 0) {
+			text += this.dump(object[0]);
+			for (var i = 1; i < object.length; i++) {
+				text += ", " + this.dump(object[i]);
+			}
+		}
+		else {
+			text += "<empty array>";
+		}
+		text += "]";
+
+		return text;
+	},
+ _dumpCustomObject: function(object) {
+		var braceIndentation = String.repeat(" ", this.indent);
+		var text = "{";
+
+		this.indent += 2;
+		indentation = String.repeat(" ", this.indent);
+		for (var key in object)
+			text += indentation + key + ": " + this.dump(object[key]) + "\n";
+		this.indent -= 2;
+		text += braceIndentation + "}";
+
+		return text;
+	}
+};
+
+function dumpObject(object) {
+	var dumper = new objectDumper();
+	return dumper.dump(object);
+}
