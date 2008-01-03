@@ -1,7 +1,7 @@
 /* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 2 -*- */
 
 var inverseEventDialog = {
- onLoadHandler: function (event) {
+ onLoadHandler: function(event) {
 		var attendees = document.getElementById("attendee-row");
 		var row = document.getElementById("inverse-organizer-row");
 		attendees.removeChild(row);
@@ -19,7 +19,7 @@ var inverseEventDialog = {
 		var nodes = buttonPrivacy.getElementsByTagName("menuitem");
 		nodes[1].label = fixedLabel.value;
 	},
- loadOrganizers: function () {
+ loadOrganizers: function() {
 		var organizers = new Array();
 
 		var composeService = Components.classes["@mozilla.org/messengercompose;1"]
@@ -43,7 +43,7 @@ var inverseEventDialog = {
 
 		return organizers;
 	},
- fillOrganizers: function () {
+ fillOrganizers: function() {
 		// add organizers to the organizer menulist
 		var organizerList = document.getElementById("item-organizer");
 		var organizers = this.loadOrganizers();
@@ -58,7 +58,7 @@ var inverseEventDialog = {
 		}
 		organizerList.selectedIndex = selectIndex;
 	},
- updateOrganizers: function (organizers) {
+ updateOrganizers: function(organizers) {
 		var existingOrganizer
 		= document.getElementById("item-existing-organizer");
 		var organizer = window.calendarItem.organizer;
@@ -75,7 +75,7 @@ var inverseEventDialog = {
 			this.updateExistingOrganizer();
 		}
 	},
- updateExistingOrganizer: function (event) {
+ updateExistingOrganizer: function(event) {
 		var menuItem = document.getElementById("item-organizer").selectedItem;
 		var organizer = Components.classes["@mozilla.org/calendar/attendee;1"]
 		.createInstance(Components.interfaces.calIAttendee);

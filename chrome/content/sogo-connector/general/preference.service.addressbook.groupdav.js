@@ -55,7 +55,6 @@ function GroupdavPreferenceService(uniqueId) {
 	if (uniqueId == null || uniqueId == ""){
 		//throw new Components.Exception("GroupdavPreferenceService exception: Missing uniqueId");
 		logError("GroupdavPreferenceService exception: Missing uniqueId");
-		return null;
 	}
 	
 	this.mPreferencesService = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);

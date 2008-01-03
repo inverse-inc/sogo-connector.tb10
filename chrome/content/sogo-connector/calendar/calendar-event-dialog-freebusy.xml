@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<!DOCTYPE dialog>
+<!DOCTYPE bindings>
 
 <bindings xmlns="http://www.mozilla.org/xbl"
   xmlns:xbl="http://www.mozilla.org/xbl"
@@ -10,12 +10,15 @@
     <implementation>
       <field name="inverseParentUpdateFreeBusy">null</field>
       <field name="mPrefsService">null</field>
+      <field name="gCachedCriteria">null</field>
+      <field name="gCachedResults">null</field>
 
       <constructor>
 	  var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
 	                 .getService(Components.interfaces.mozIJSSubScriptLoader);
 	  loader.loadSubScript("chrome://inverse-library/content/simpleLdapQuery.js");
 	  loader.loadSubScript("chrome://sogo-connector/content/calendar/sogoFBRequest.js");
+	  loader.loadSubScript("chrome://sogo-connector/content/common/common-dav.js");
 	  dump("constructed...\n");
 	  this.inverseParentUpdateFreeBusy = this.updateFreeBusy;
 	  this.updateFreeBusy = this.inverseUpdateFreeBusy;
@@ -120,6 +123,64 @@
         </body>
       </method>
  
+      <method name="GetCalDAVFBInCardDAVAddressBook">
+        <parameter name="criteria"/>
+        <body>
+          <![CDATA[
+	    var results = new Array();
+
+	    // Patch to prevent 2 searches since autocompletion modifies the criteria when it matches the email!!!
+	    if ( criteria.search("@") == -1)
+	      return results;
+
+	    if (this.gCachedCriteria == criteria)
+	      return this.gCachedResults;
+	    else
+	      this.gCachedCriteria = criteria;
+	    
+	    // moz-abdavdirectory://http://sogo.inverse.ca/SOGo/dav/rbolduc/Contacts/public/?(or(PrimaryEmail,c,klm)(DisplayName,c,kkk)(FirstName,c,klm)(LastName,c,k)))
+	    var uri = getAutoCompleteCardDAVUri();
+	    if ( criteria && criteria.length > 0 && uri ){
+	      uri += "?(or(PrimaryEmail,c," + criteria + ")(DisplayName,c," + criteria + ")(FirstName,c," + criteria + ")(LastName,c," + criteria + "))";
+	    
+	    var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
+	    var ds = Components.classes["@mozilla.org/rdf/datasource;1?name=addressdirectory"].getService(Components.interfaces.nsIRDFDataSource);
+	    var resource = rdf.GetResource(uri);
+	    
+	    var directory = resource.QueryInterface(Components.interfaces.nsIAbDirectory);	
+	    
+	    if (directory) {
+			var childSrc = rdf.GetResource("http://home.netscape.com/NC-rdf#CardChild");
+			var cards = ds.GetTargets(resource,childSrc,  false);
+			while (cards.hasMoreElements()) {
+					var protoCard = cards.getNext();
+					var card = protoCard.QueryInterface(Components.interfaces.nsIAbCard);
+					var matchMail = "";
+
+					if (card.defaultEmail.toLowerCase() == criteria)
+						matchMail = card.defaultEmail;
+					else if (card.primaryEmail.toLowerCase() == criteria)
+						matchMail = card.primaryEmail;
+					else if (card.secondEmail.toLowerCase() == criteria)
+						matchMail = card.secondEmail;
+						
+					if (matchMail.length > 0) {
+						var mdbCard = protoCard.QueryInterface(Components.interfaces.nsIAbMDBCard);
+						var fbUrl = mdbCard.getStringAttribute("calFBURL");
+						if (fbUrl && fbUrl.length > 0)
+							results.push( { cn: card.displayName, mail: matchMail, calFBURL: fbUrl } );
+						dump("var fbUrl = mdbCard.getStringAttribute('calFBURL'): " + fbUrl + "\n");
+					}
+			}
+		}
+	}
+	dump("Results'size: " + results.length + "\n");
+	this.gCachedResults = results;
+	return results;
+          ]]>
+        </body>
+      </method>
+
       <method name="GetCalDAVFB">
         <parameter name="freebusy"/>
         <parameter name="calid"/>
@@ -139,7 +200,7 @@
 
             if (this.mPrefsService.GetBoolPref(prefsPrefix + "useDirectory")){
 	      if (isAutoCompleteDirectoryServerCardDAV())
-		results = results.concat(GetCalDAVFBInCardDAVAddressBook(mail));
+		results = results.concat(this.GetCalDAVFBInCardDAVAddressBook(mail));
 	      else //LDAP
 		results = results.concat(this.GetCalDAVFBInLDAPAddressBook(mail, prefsPrefix));
 	    }

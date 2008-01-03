@@ -32,11 +32,15 @@
   src="chrome://sogo-connector/content/general/webdav_lib/webdavAPI.js"/> --> */
 
 function jsInclude(files, target) {
-  var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
-    .getService(Components.interfaces.mozIJSSubScriptLoader);
-  for (var i = 0; i < files.length; i++) {
-		dump("jsInclude: " + files[i] + "\n");
-    loader.loadSubScript(files[i], target);
+	var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+		.getService(Components.interfaces.mozIJSSubScriptLoader);
+	for (var i = 0; i < files.length; i++) {
+		try {
+			loader.loadSubScript(files[i], target);
+		}
+		catch(e) {
+			dump("abCommonCardDialog.groupdav.overlay.js: failed to include '" + files[i] + "'\n" + e + "\n");
+		}
 	}
 }
 
@@ -116,7 +120,7 @@ function saveCard(isNewCard){
 		}
 		if (result && documentDirty && isGroupdavDirectory(getUri())) {
 			uploadCard(gEditCard.card.QueryInterface(Components.interfaces.nsIAbMDBCard),
-					   getUri(), isNewCard);
+								 getUri(), isNewCard);
 			setDocumentDirty(false);
 		}
 		if (abWindow){
@@ -155,17 +159,23 @@ function uploadCard(card, uri, isNewCard){
 		if (isNewCard) {
 			messengerWindow.gGroupDAVProgressMeter.initUpload(cardPointerHash, uri, 0, 1);
 			messengerWindow.gAbWinObserverService.notifyObservers(null, messengerWindow.SyncProgressMeter.INITIALIZATION_EVENT, null);	
-			messengerWindow.webdavAddVcard(url + key , card2vcard(card), key, 
-			messengerWindow.gGroupDAVProgressMeter, messengerWindow.gAbWinObserverService);
-		}else{
+			webdavAddVcard(url + key , card2vcard(card), key,
+										 messengerWindow.gGroupDAVProgressMeter,
+										 messengerWindow.gAbWinObserverService);
+		}
+		else {
 			messengerWindow.gGroupDAVProgressMeter.initUpload(cardPointerHash, uri, 1, 0);
-			messengerWindow.gAbWinObserverService.notifyObservers(null, messengerWindow.SyncProgressMeter.INITIALIZATION_EVENT, null);	
+			messengerWindow.gAbWinObserverService.notifyObservers(null,
+																														messengerWindow.SyncProgressMeter.INITIALIZATION_EVENT,
+																														null);
 	
 			//TODO verify if there is a conflict whith the server's version
 			messengerWindow.logWarn("abCommonCardDialog.groupdav.overlay.js: TODO verify if there is a conflict with the server's version");
 	
-			webdavUpdateVcard(url + key , card2vcard(card), key, messengerWindow.gProgressMeter, messengerWindow.gAbWinObserverService);
-		}		
+			webdavUpdateVcard(url + key , card2vcard(card), key,
+												messengerWindow.gProgressMeter,
+												messengerWindow.gAbWinObserverService);
+		}
 	}
 }
 

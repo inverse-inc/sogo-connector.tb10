@@ -40,97 +40,162 @@ function unescapedFromCard(theString) {
  * of custom fields that are not part of a Thunderbird card.
  *  
  **************************************************************************/ 
-function importFromVcard(vCardString, addressBook, customFieldsArray) {
-	var vcardLines = new Array;
-	var end = new RegExp(/^END/);
-	
-	vCardString = unescapedFromCard(vCardString);
-	
-	//Preprocessing the multi-lines fields, so that the data is one line only
-	//(Format is carriage return and following line starting with a space)
-	vCardString = vCardString.replace(/\r\n\s/g, "");
+function importFromVcard(vCardString, addressBook, customFields) {
+	var vcard = new Array ();
+	var currentLine = {};
+	var isEscaped = false;
+	var type = 0; /* 0 = tag, 1 = parameters, 2 = value */
+	var parameters = {};
+	var values = new Array();
 
-	// The read lines are put into the vcardLines array until we find the ENDline
-	var cardArray = vCardString.split(/[\r\n]+/);
-	var j = 0;
-	if(cardArray){
-		for (var i=0; i < cardArray.length; i++){
-			vcardLines[j] = cardArray[i];
-			j++;
-			if ( end.test(cardArray[i].toUpperCase())){
-				return CreateCardsFromVcf(addressBook, vcardLines, customFieldsArray);
+	var tag = "";
+	var parameterName = "type";
+	var parameter = "";
+	var value = "";
+
+	var currentChar = 0;
+	while (currentChar < vCardString.length) {
+		var character = vCardString[currentChar];
+		if (isEscaped) {
+			if (type == 0)
+				tag += character;
+			else if (type == 1)
+				parameter += character;
+			else
+				value += character;
+			isEscaped = false;
+		}
+		else {
+			if (character == "\\")
+				isEscaped = true;
+			else {
+				if (type == 0) {
+					if (character == ";") {
+						currentLine["tag"] = tag.toLowerCase();
+						parameters = {};
+						parameterName = "type";
+						parameter = "";
+						type = 1;
+					}
+					else if (character == ":") {
+						currentLine["tag"] = tag.toLowerCase();
+						values = new Array();
+						value = "";
+						type = 2;
+					}
+					else
+						tag += character;
+				}
+				else if (type == 1) {
+					if (character == "=") {
+						parameterName = parameter.toLowerCase();
+						parameter = "";
+					}
+					else if (character == ";") {
+						if (typeof parameters[parameterName] == "undefined")
+							parameters[parameterName] = new Array();
+						parameters[parameterName].push(parameter);
+						parameterName = "type";
+						parameter = "";
+					}
+					else if (character == ":") {
+						if (typeof parameters[parameterName] == "undefined")
+							parameters[parameterName] = new Array();
+						parameters[parameterName].push(parameter);
+						currentLine["parameters"] = parameters;
+						values = new Array();
+						value = "";
+						type = 2;
+					}
+					else
+						parameter += character;
+				}
+				else {
+					if (character != "\r") {
+						if (character == ";") {
+							values.push(value);
+							value = "";
+						}
+						else if (character == "\n") {
+							var nextChar = vCardString[currentChar+1];
+							if (typeof nextChar != "undefined" && nextChar == " ")
+								currentChar++;
+							else {
+								values.push(value);
+								currentLine["values"] = values;
+								vcard.push(currentLine);
+								currentLine = {};
+								tag = "";
+								type = 0;
+							}
+						}
+						else
+							value += character;
+					}
+				}
 			}
 		}
+		currentChar++;
 	}
-	return false;
+
+	var cardDump = dumpObject(vcard);
+	logInfo("vcard dump:\n" + cardDump);
+
+	return CreateCardFromVCF(addressBook, vcard, customFields);
 }
 
 // outParameters must be an array, to enable the fonction to pass back the value
 // of custom fields that are not part of a Thunderbird card.
-function CreateCardsFromVcf(uri,lines, outParameters) {
-	
-	
-	var card = Components.classes["@mozilla.org/addressbook/moz-abmdbcard;1"].createInstance(Components.interfaces.nsIAbCard);
-	// Regexp to test the lines of the vcard
-	var version = new RegExp(/^VERSION/);
+function CreateCardFromVCF(uri, vcard, outParameters) {
+	var version = "2.1";
+	var defaultCharset = "iso-8859-1"; /* 0 = latin 1, 1 = utf-8 */
+	var card = Components.classes["@mozilla.org/addressbook/moz-abmdbcard;1"]
+		.createInstance(Components.interfaces.nsIAbCard);
 
-//	var names = new RegExp(/^N/); 
-	var names = new RegExp(/^N(;.*|)$/);// changed RalfBecker@outdoor-training.de to recognize N;CHARSET=...
-	
-	var fname = new RegExp(/^FN/);
-	var nickname = new RegExp(/^NICKNAME/);
-	var org = new RegExp(/^ORG/);
-	var telhome = new RegExp(/^TEL.*HOME/);
-	var telcell = new RegExp(/^TEL.*CELL/);
-	var telfax = new RegExp(/^TEL.*FAX/);
-	var telwork = new RegExp(/^TEL.*WORK/);
-	var telpager = new RegExp(/^TEL.*PAGER/);
-	var adrhome = new RegExp(/^ADR.*HOME/);
-	var adrwork = new RegExp(/^ADR.*WORK/);
-	var urlhome = new RegExp(/^URL.*HOME/i);
-	var urlwork = new RegExp(/^URL.*WORK/i);
-	var emailpref = new RegExp(/^EMAIL.*PREF/);
-	var email = new RegExp(/^EMAIL/);
-	var title = new RegExp(/^TITLE/);
-	var bday = new RegExp(/^BDAY/);
-	var notes = new RegExp(/^NOTE/);
-	var fbURL = new RegExp(/^FBURL/);
-	var uid = new RegExp(/^UID/);
-	var begin = new RegExp(/^BEGIN/);
-	var end = new RegExp(/^END/);
-	var aim = new RegExp(/^X-AIM/);
-	var htmlFormat = new RegExp(/^X-MOZILLA-HTML/);
-
-	outParameters["fbURL"] = "";
+	outParameters["fburl"] = "";
 	outParameters["uid"] = "";
 	outParameters["groupDavVcardCompatibility"] = "";
-	
+
+	for (var i = 0; i < vcard.length; i++) {
+		if (vcard[i]["tag"] == "version") {
+			version = vcard[i]["values"][0];
+		}
+	}
+	if (version[0] == "3")
+		defaultCharset = "utf-8";
+
+	for (var i = 0; i < vcard.length; i++) {
+		var tag = vcard[i]["tag"];
+		var charset = defaultCharset;
+		var encoding = null;
+
+		var parameters = vcard[i]["parameters"];
+		if (parameters) {
+			for (var parameter in parameters) {
+				if (parameter == "encoding")
+					encoding = parameters[parameter][0].toLowerCase();
+				if (parameter == "charset")
+					charset = parameters[parameter][0].toLowerCase();
+			}
+		}
+		else
+			parameters = {};
+
+		var values = decodedValues(vcard[i]["values"], charset, encoding);
+ 		InsertCardData(card, tag, parameters, values, outParameters);
+	}
+
+	return card;
+}
+
+function InsertCardData(card, tag, parameters, values, outParameters) {
+	logInfo("InsertCardData: " + tag + "\n");
+
 	// Variables needed to fill the email fields
 	var myfirstemail = "";
 	var myemail = "";
 	var myemail2 = "";
 	var myHtmlFormat = 0;
-	for (i=0;i<lines.length;i++) {
-	   var mylinevalue="";
-	   var myline = lines[i];
-
-	   // Find the value of the line, we use substring+indexOf instead
-	   // of split, because there could be value with : inside (es. urls)
-	   mylinevalue = myline.substring(myline.indexOf(":")+1);
-
-	   // Convert the hex 0D and 0A chars in \r and \n (vcard use hex notation)
-	   mylinevalue = mylinevalue.replace(/(=0D|\\r)/g, "\r");
-	   mylinevalue = mylinevalue.replace(/(=0A|\\n)/g, "\n");
-
-	   // Split to find the label of the line
-	   var mylineinit = myline.split(":");
-	   mylineinit[0] = mylineinit[0].toUpperCase();
-
-	   if (notes.test(mylineinit[0])){
-	     //card.notes = mylinevalue;
-	     card.notes = mylinevalue.replace(/\r/g, "");
-	      
-	   }
 
 //	   // Cancel the newlines, the Notes field is the only one that supports them
 //	   mylineinit[0] = mylineinit[0].replace(/\r\n/g,"");
@@ -138,138 +203,190 @@ function CreateCardsFromVcf(uri,lines, outParameters) {
 	 
 
 //    if ( mylineinit[0] == "N" ) { // changed RalfBecker@outdoor-training.de to recognize N;CHARSET=...
-      if ( names.test(mylineinit[0] ) ) {
-	   	
-	      // Split the value of N: to have the lastname and the firstname
-	      var nameentries = mylinevalue.split(";");
-	      var cognome = nameentries[0];
-	      var nome = nameentries[1];
-	      if (nome)
-	         card.firstName = nome;
-	      if (cognome)
-	         card.lastName = cognome;
+	if (tag == "n") {
+		if (values[0])
+			card.lastName = values[0];
+		if (values[1])
+			card.firstName = values[1];
+	} else if (tag == "fn") {
+		card.displayName = values[0];
+	} else if (tag == "nickname") {
+		card.nickName = values[0];
+	} else if (tag == "org") {
+		if (values[0])
+			card.company = values[0];
+		if (values[1])
+			card.department = values[1];
+	} else if (tag == "tel") {
+		var types = new Array();
+		var preTypes = parameters["type"];
+		if (preTypes)
+			for (var i = 0; i < preTypes.length; i++)
+				types[i] = preTypes[i].toUpperCase();
+		if (types.indexOf("HOME") > -1)
+			card.homePhone = values[0];
+		else if (types.indexOf("CELL") > -1)
+			card.cellularNumber = values[0];
+		else if (types.indexOf("FAX") > -1)
+			card.faxNumber = values[0];
+		else if (types.indexOf("WORK") > -1)
+			card.workPhone = values[0];
+		else if (types.indexOf("PAGER") > -1)
+			card.pagerNumber = values[0];
+		else {
+			if (card.workPhone.length == 0)
+				card.workPhone = values[0];
+			else if (card.homePhone.length == 0)
+				card.homePhone = values[0];
+		}
+	} else if (tag == "adr") {
+		var types = new Array();
+		var preTypes = parameters["type"];
+		if (preTypes)
+			for (var i = 0; i < preTypes.length; i++)
+				types[i] = preTypes[i].toUpperCase();
+		if (types.indexOf("HOME") > -1) {
+			if (values[0])
+				card.homeAddress2 = values[0];
+			if (values[2]) 
+				card.homeAddress = values[2];
+			if (values[3])
+				card.homeCity = values[3];
+			if (values[4])
+				card.homeState = values[4];
+			if (values[5])
+				card.homeZipCode = values[5];
+			if (values[6])
+				card.homeCountry = values[6];
 	   }
-	   else if ( fname.test(mylineinit[0]) ) {
-	      if (mylineinit[0].indexOf("QUOTE-PRINTABLE")) 
-	         var fn = quoteprint(mylinevalue);
-	      else
-	         var fn = mylinevalue;
-	       card.displayName = fn;
+		else {
+			if (values[0])
+				card.workAddress2 = values[0];
+			if (values[2]) 
+				card.workAddress = values[2];
+			if (values[3])
+				card.workCity = values[3];
+			if (values[4])
+				card.workState = values[4];
+			if (values[5])
+				card.workZipCode = values[5];
+			if (values[6])
+				card.workCountry = values[6];
 	   }
-	   else if ( nickname.test(mylineinit[0]) ) 
-	      card.nickName = mylinevalue;
-	   else if ( org.test(mylineinit[0]) ) {
-	      var orgentries = mylinevalue.split(";");
-	      var orgcompany = orgentries[0];
-	      var orgdepart = orgentries[1];
-	      if (orgcompany) 
-	         card.company = orgcompany;
-	      if (orgdepart)
-	         card.department = orgdepart;
-	   }
-	   else if ( telhome.test(mylineinit[0]) ) 
-	      card.homePhone = mylinevalue;
-	   else if ( telcell.test(mylineinit[0]) ) 
-	      card.cellularNumber = mylinevalue;
-	   else if ( telfax.test(mylineinit[0]) ) 
-	      card.faxNumber = mylinevalue;
-	   else if ( telwork.test(mylineinit[0]) ) 
-	      card.workPhone = mylinevalue;
-	   else if ( telpager.test(mylineinit[0]) ){ 
-	      card.pagerNumber = mylinevalue;	
-	   }else if ( adrhome.test(mylineinit[0]) ) {
-	      var adrentries = mylinevalue.split(";");
-	      var addressLine2 = adrentries[0];
-	      var indirizzo = adrentries[2];
-	      var citta = adrentries[3];
-	      var stato = adrentries[4];
-	      var zipcode = adrentries[5];
-	      var country = adrentries[6];
-	      if (indirizzo) 
-	         card.homeAddress = indirizzo;
-	      if (citta)
-	         card.homeCity = citta;
-	      if (stato)
-	         card.homeState = stato;
-	      if (zipcode)
-	         card.homeZipCode = zipcode;
-	      if (country)
-	         card.homeCountry = country;
-	      if (addressLine2)
-	      	card.homeAddress2;
-	   }
-	   else if ( adrwork.test(mylineinit[0]) ) {
-	      var adrentries2 = mylinevalue.split(";");
-	      var addressLine2 = adrentries2[0];	      
-	      var indirizzo2 = adrentries2[2];
-	      var citta2 = adrentries2[3];
-	      var stato2 = adrentries2[4];
-	      var zipcode2 = adrentries2[5];
-	      var country2 = adrentries2[6];
-	      if (indirizzo2) 
-	         card.workAddress = indirizzo2;
-	      if (citta2)
-	         card.workCity = citta2;
-	      if (stato2)
-	         card.workState = stato2;
-	      if (zipcode2)
-	         card.workZipCode = zipcode2;
-	      if (country2)
-	         card.workCountry = country2;
-	      if (addressLine2)
-	      	card.workAddress2;	         
-	   }
-	   // With the email address, we must check if exists a label with the PREF
-	   // parameters
-	   // we will write the values after
-	   else if ( emailpref.test(mylineinit[0]) ) 
-	      myfirstemail = mylinevalue;
-	   else if ( ! emailpref.test(mylineinit[0]) && email.test(mylineinit[0]) && myemail == "") 
-	      myemail = mylinevalue;
-	   else if ( ! emailpref.test(mylineinit[0]) && email.test(mylineinit[0]) && myemail != "") 
-	      myemail2 = mylinevalue;
-	   else if ( urlhome.test(mylineinit[0]) ) 
-	      card.webPage2 = mylinevalue;
-	   else if ( urlwork.test(mylineinit[0]) ) 
-	      card.webPage1 = mylinevalue;
-	   else if ( mylineinit[0] == "URL" ) 
-	      card.webPage2 = mylinevalue;
-	   else if ( title.test(mylineinit[0]) ) 
-	      card.jobTitle = mylinevalue;
-	   else if( bday.test(mylineinit[0]) ) {
-	      bdayparts = mylinevalue.split("-");
-	      card.birthYear = bdayparts[0];
-	      card.birthMonth = bdayparts[1];
-	      card.birthDay = bdayparts[2];
-	   }else if ( aim.test(mylineinit[0])){
-	   	card.aimScreenName = mylinevalue;
-	   }else if (htmlFormat.test(mylineinit[0])){
-			myHtmlFormat = mylinevalue == "TRUE"  ? 2:1;
-	   }else if ( fbURL.test(mylineinit[0])){
-			outParameters["fbURL"] = mylinevalue;
-		}else if ( uid.test(mylineinit[0])){
-			outParameters["uid"] = mylinevalue;			
-	   }else if ( begin.test(mylineinit[0]) || end.test(mylineinit[0]) || notes.test(mylineinit[0]) || version.test(mylineinit[0]) || htmlFormat.test(mylineinit[0])) {
-		//Nothing to do
-		}else{
-		//Every line that is not matched by the defined Regexps are put in a custom field for groupDav synchronization
-			outParameters["groupDavVcardCompatibility"] += myline + "\n";
-		} 
+	} else if (tag == "email") {
+		var types = new Array();
+		var preTypes = parameters["type"];
+		if (preTypes)
+			for (var i = 0; i < preTypes.length; i++)
+				types[i] = preTypes[i].toUpperCase();
+		if (types.indexOf("PREF") > -1) {
+			if (card.primaryEmail.length)
+				card.secondEmail = card.primaryEmail;
+			card.primaryEmail = values[0];
+		}
+		else {
+			if (card.primaryEmail.length)
+				card.secondEmail = values[0];
+			else
+				card.primaryEmail = values[0];
+		}
+	} else if (tag == "url") {
+		var types = new Array();
+		var preTypes = parameters["type"];
+		if (preTypes)
+			for (var i = 0; i < preTypes.length; i++)
+				types[i] = preTypes[i].toUpperCase();
+		if (types.indexOf("WORK") > -1) {
+			card.webPage1 = values[0];
+		} else {
+			card.webPage2 = values[0];
+		}
+	} else if (tag == "title") {
+		card.jobTitle = values[0];
+	} else if (tag == "bday") {
+		card.birthYear = values[0];
+		card.birthMonth = values[1];
+		card.birthDay = values[2];
+	} else if (tag == "x-aim") {
+		card.aimScreenName = values[0];
+	} else if (tag == "x-mozilla-html") {
+		if (values[0].toLowerCase() == "true")
+			card.preferMailFormat = true;
+		else
+			card.preferMailFormat = false;
+	} else if (tag == "note") {
+		card.notes = values.join(";");
+	} else if (tag == "begin"
+						 || tag == "end") {
+	} else {
+		outParameters[tag] = values.join(";");
 	}
-	if (myfirstemail != "") {
-	   // So there is an address with the PREF property
-	   card.primaryEmail = myfirstemail;
-	   card.secondEmail = myemail;
-	}else if (myemail != "") {
-	   // There isn't an address with the PREF property
-	   card.primaryEmail = myemail;
-	   card.secondEmail = myemail2;
-	}	
-	card.preferMailFormat = myHtmlFormat;
-
-	return card;
 }
 
+function decodedValues(values, charset, encoding) {
+	var newValues = [];
+
+	for (var i = 0; i < values.length; i++) {
+		var decodedValue = null;
+		if (encoding) {
+			if (encoding == "quoted-printable")
+				decodedValue = decodeQP(values[i]);
+			else
+				throw "Unsupported encoding for vcard value: " + encoding;
+		}
+		else
+			decodedValue = values[i];
+		if (charset == "utf-8")
+			newValues.push(decodedValue);
+		else {
+			var converter = Components.classes["@mozilla.org/intl/utf8converterservice;1"]
+				.getService(Components.interfaces.nsIUTF8ConverterService);
+			newValues.push(converter.convertStringToUTF8(decodedValue, charset, false));
+		}
+	}
+
+	logInfo("newValues: " + dumpObject(newValues));
+
+	return newValues;
+}
+
+function decodeQP(value) {
+	var decoded = "";
+
+	var i = 0;
+	var j = 0;
+	while (i < value.length) {
+		var currentChar = value[i];
+		var decodedChar = currentChar;
+		if (currentChar == "=") {
+			var hexValue = (value[i+1] + value[i+2]).toLowerCase();
+			decodedChar = String.fromCharCode(decodeHEX(hexValue));
+			i += 2;
+		}
+		decoded[j] = decodedChar;
+		j++;
+	}
+
+	return decoded;
+}
+
+function decodeHEX(string) {
+	var t = 0;
+	var currentInt = 0;
+	var charCode0 = "0".charCodeAt(0);
+	var charCodea = "a".charCodeAt(0);
+	var charCodez = "z".charCodeAt(0);
+
+  for (var i = 0; i < string.length; i++) {
+		var code = string.charCodeAt(i);
+		var currentInt = code - charCode0;
+		if (currentInt > 9)
+			currentInt += charCode0 - charCodea;
+		t = t * 16 + currentInt;
+	}
+
+	return t;
+}
 
 function card2vcardV21(oldCard) {
    var card = oldCard.QueryInterface(Components.interfaces.nsIAbMDBCard);

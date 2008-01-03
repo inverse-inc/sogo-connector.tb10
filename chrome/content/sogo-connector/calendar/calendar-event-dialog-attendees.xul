@@ -5,7 +5,4 @@
 
 <overlay id="inverseCalendarEventDialogFreebusyOverlay"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-	
-  <script type="application/x-javascript" src="chrome://sogo-connector/content/calendar/calendar-event-dialog-attendees.js"/>
-	
 </overlay>

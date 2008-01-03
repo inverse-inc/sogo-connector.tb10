@@ -24,11 +24,15 @@
 ********************************************************************************/
 
 function jsInclude(files, target) {
-  var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
-    .getService(Components.interfaces.mozIJSSubScriptLoader);
-  for (var i = 0; i < files.length; i++) {
-		dump("jsInclude: " + files[i] + "\n");
-    loader.loadSubScript(files[i], target);
+	var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+		.getService(Components.interfaces.mozIJSSubScriptLoader);
+	for (var i = 0; i < files.length; i++) {
+		try {
+			loader.loadSubScript(files[i], target);
+		}
+		catch(e) {
+			dump("sync.progress-meter.js: failed to include '" + files[i] + "'\n" + e + "\n");
+		}
 	}
 }
 
@@ -243,7 +247,7 @@ SyncProgressMeter.prototype = {
 				var isNewCard = stateDoc.getElementsByTagName("newCard")[0].textContent == "true";
 				var location;
 				try {
-					location =  stateDoc.getElementsByTagName("location")[0].textContent;
+					location = stateDoc.getElementsByTagName("location")[0].textContent;
 				}
 				catch(e){ }
 				logDebug("case SyncProgressMeter.UPLOAD_STOP_REQUEST_EVENT:" +				
