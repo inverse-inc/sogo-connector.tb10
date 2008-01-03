@@ -159,16 +159,22 @@ function uploadCard(card, uri, isNewCard){
 		if (isNewCard) {
 			messengerWindow.gGroupDAVProgressMeter.initUpload(cardPointerHash, uri, 0, 1);
 			messengerWindow.gAbWinObserverService.notifyObservers(null, messengerWindow.SyncProgressMeter.INITIALIZATION_EVENT, null);	
-			messengerWindow.webdavAddVcard(url + key , card2vcard(card), key, 
-			messengerWindow.gGroupDAVProgressMeter, messengerWindow.gAbWinObserverService);
-		}else{
+			webdavAddVcard(url + key , card2vcard(card), key,
+										 messengerWindow.gGroupDAVProgressMeter,
+										 messengerWindow.gAbWinObserverService);
+		}
+		else {
 			messengerWindow.gGroupDAVProgressMeter.initUpload(cardPointerHash, uri, 1, 0);
-			messengerWindow.gAbWinObserverService.notifyObservers(null, messengerWindow.SyncProgressMeter.INITIALIZATION_EVENT, null);	
+			messengerWindow.gAbWinObserverService.notifyObservers(null,
+																														messengerWindow.SyncProgressMeter.INITIALIZATION_EVENT,
+																														null);
 	
 			//TODO verify if there is a conflict whith the server's version
 			messengerWindow.logWarn("abCommonCardDialog.groupdav.overlay.js: TODO verify if there is a conflict with the server's version");
 	
-			webdavUpdateVcard(url + key , card2vcard(card), key, messengerWindow.gProgressMeter, messengerWindow.gAbWinObserverService);
+			webdavUpdateVcard(url + key , card2vcard(card), key,
+												messengerWindow.gProgressMeter,
+												messengerWindow.gAbWinObserverService);
 		}
 	}
 }
