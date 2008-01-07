@@ -29,7 +29,10 @@ function jsInclude(files, target) {
 			loader.loadSubScript(files[i], target);
 		}
 		catch(e) {
-			dump("messenger.groupdav.overlay.js: failed to include '" + files[i] + "'\n" + e + "\n");
+			dump("messenger.groupdav.overlay.js: failed to include '" + files[i] +
+					 "'\n" + e
+					 + "\nFile: " + e.fileName
+					 + "\nLine: " + e.lineNumber + "\n\n Stack:\n\n" + e.stack);
 		}
 	}
 }

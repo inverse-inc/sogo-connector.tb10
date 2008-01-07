@@ -31,12 +31,16 @@ function jsInclude(files, target) {
 			loader.loadSubScript(files[i], target);
 		}
 		catch(e) {
-			dump("sync.progress-meter.js: failed to include '" + files[i] + "'\n" + e + "\n");
+			dump("sync.progess-meter.js: failed to include '" + files[i] +
+					 "'\n" + e
+					 + "\nFile: " + e.fileName
+					 + "\nLine: " + e.lineNumber + "\n\n Stack:\n\n" + e.stack);
 		}
 	}
 }
 
-jsInclude(["chrome://sogo-connector/content/general/vcard.observers.addressbook.groupdav.js"]);
+jsInclude(["chrome://sogo-connector/content/general/vcard.observers.addressbook.groupdav.js",
+					 "chrome://sogo-connector/content/general/mozilla.utils.inverse.ca.js"]);
 
 /*******************************************************************************
  * Progress Meter Class (Observer)
@@ -71,7 +75,7 @@ SyncProgressMeter.prototype = {
  uploadMeter : 0,   
  downloadCompleted : false,
  //Upload properties	
- cardIndex : {}, //Pseudo-hash that stores mozilla cards
+//  cardIndex : {}, //Pseudo-hash that stores mozilla cards
  updateCounter : 0,  
  vCardsUpDateSize : 0,  
  addCounter : 0,	
@@ -107,7 +111,7 @@ SyncProgressMeter.prototype = {
   },
    
  initUpload : function(cardHash, abURI, updateSize, addSize){
-    this.cardIndex = cardHash;
+//     this.cardIndex = cardHash;
     this.uri = abURI;
     this.vCardsUpDateSize = updateSize;
     this.updateCounter = 0;
@@ -256,25 +260,28 @@ SyncProgressMeter.prototype = {
 								 "\n		etag				= " + etag + 
 								 "\n		isNewCard =  " + isNewCard);
 	
-				var card = this.cardIndex[key];
-				var cardExt = card.QueryInterface(Components.interfaces.nsIAbMDBCard);
+// 				dump("cardIndex:\n" + dumpObject(this.cardIndex) + "\n");
+// 				dump("key: " + key + "\n");
+// 				var card = this.cardIndex[key];
+// 				var cardExt = card.QueryInterface(Components.interfaces.nsIAbMDBCard);
 	
-				if (etag != ""){
-					if (location) {
-						cardExt.setStringAttribute("groupDavKey", location);
-						this.cardIndex[location] = this.cardIndex[key];
-						delete this.cardIndex[key];
-					}
-					cardExt.setStringAttribute("groupDavVersion", etag);
-					card.editCardToDatabase(this.uri);
-				}
-				if(isNewCard){
+// 				if (etag != ""){
+// 					if (location) {
+// 						cardExt.setStringAttribute("groupDavKey", location);
+// 						this.cardIndex[location] = this.cardIndex[key];
+// 						delete this.cardIndex[key];
+// 					}
+// 					cardExt.setStringAttribute("groupDavVersion", etag);
+// 					card.editCardToDatabase(this.uri);
+// 				}
+				if (isNewCard) {
 					this.addCounter++;
 					this.observerService.notifyObservers(window, SyncProgressMeter.CARD_UPLOADED, "add");
-				}else{
+				}
+				else {
 					this.updateCounter++;
 					this.observerService.notifyObservers(window, SyncProgressMeter.CARD_UPLOADED, "update");
-				}	   		
+				}		
 				break;
 				//================================================================================
       case  SyncProgressMeter.CARD_UPLOADED:

@@ -3,6 +3,10 @@ Features
 Working on 
 	Added Deleted on server feature. (low priority)
 	vcard encoding 2.1 and 3.0
+0.64
+	rewrote the upload mechanism to use the Mozilla webdav library
+	generate better identifiers for new vCards
+	code cleanup
 0.63
 	rewrite of the vcard parsing to accept more variations and encodings
 	enhancements to the autocompletion algorithm to avoid doubles

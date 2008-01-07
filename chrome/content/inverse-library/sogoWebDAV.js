@@ -5,18 +5,18 @@ var sogoWebDAVPending = false;
 function _processPending() {
 	sogoWebDAVPending = false;
 	if (sogoWebDAVPendingRequests.length) {
-		dump("processing next query...\n");
+// 		dump("processing next query...\n");
 		var request = sogoWebDAVPendingRequests.shift();
 		var newWebDAV = new sogoWebDAV(request.url, request.target,
 																	 request.data, request.asynchronous);
 		newWebDAV.load(request.operation, request.parameters);
 	}
-	else
-		dump("dav queue empty\n");
+// 	else
+// 		dump("dav queue empty\n");
 }
 
 function onXmlRequestReadyStateChange(request) {
-	dump("xmlreadystatechange: " + request.readyState + "\n");
+// 	dump("xmlreadystatechange: " + request.readyState + "\n");
 	if (request.readyState == 4) {
 		request.target.onDAVQueryComplete(request.status,
 																			request.responseText,
@@ -34,7 +34,7 @@ function sogoWebDAV(url, target, data, asynchronous) {
 
 sogoWebDAV.prototype = {
  realLoad: function(operation, parameters) {
-		dump("dav operation: " + operation + "\n");
+// 		dump("dav operation: " + operation + "\n");
     sogoWebDAVPending = true;
     var webdavSvc = Components.classes['@mozilla.org/webdav/service;1']
     .getService(Components.interfaces.nsIWebDAVService);
@@ -50,6 +50,18 @@ sogoWebDAV.prototype = {
     var resource = new WebDAVResource(url.QueryInterface(Components.interfaces.nsIURL));
     if (operation == "GET")
       webdavSvc.getToString(resource, listener, requestor, null);
+		else if (operation == "PUT") {
+			var stream = Components.classes['@mozilla.org/io/string-input-stream;1']
+				.createInstance(Components.interfaces.nsIStringInputStream);
+			var converter = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
+				.createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
+			converter.charset = "UTF-8";
+			var stringUTF8 = converter.ConvertFromUnicode(parameters.data);
+			stream.setData (stringUTF8, stringUTF8.length);
+
+			webdavSvc.put(resource, parameters.contentType, stream,
+										listener, requestor, null);
+		}
     else if (operation == "PROPFIND")
       webdavSvc.getResourceProperties(resource, parameters.length, parameters,
 																			true, listener, requestor, null);
@@ -87,6 +99,9 @@ sogoWebDAV.prototype = {
  get: function() {
     this.load("GET");
   },
+ put: function(data, contentType) {
+		this.load("PUT", {data: data, contentType: contentType});
+	},
  report: function(query) {
 		var fullQuery = ('<?xml version="1.0" encoding="UTF-8"?>\n'
 										 + query.toXMLString());
@@ -174,6 +189,9 @@ WebDAVListener.prototype = {
 					this.result = new Array();
 				this.result.push(aDetail);
 				break;
+      case Components.interfaces.nsIWebDAVOperationListener.PUT:
+				this.result = aDetail;
+				break;
       }
     }
   },
@@ -206,6 +224,7 @@ InterfaceRequestor.prototype = {
     return this;
   },
  getInterface: function(iid) {
+		dump("Components: " + Components + "\n");
     if (iid.equals(Components.interfaces.nsISupports)
 				|| iid.equals(Components.interfaces.nsIAuthPrompt)
 				|| (iid.equals(Components.interfaces.nsIAuthPrompt2) && !isOnBranch)) {
@@ -224,7 +243,7 @@ InterfaceRequestor.prototype = {
       .getService(Components.interfaces.nsIWindowWatcher)
       .getNewPrompter(null);
     }
-    dump ("no interface in requestor: " + iid + "\n");
+    dump ("sogoWebDAV.js: no interface in requestor: " + iid + "\n");
     throw Components.results.NS_ERROR_NO_INTERFACE;
   },
 

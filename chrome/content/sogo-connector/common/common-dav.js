@@ -45,6 +45,7 @@ function getAutoCompleteCardDAVUri(){
 	}
 	return result
 }
+
 function isAutoCompleteDirectoryServerCardDAV(){
 	var result = false;
 	var prefsService = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);

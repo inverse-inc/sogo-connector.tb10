@@ -53,7 +53,7 @@ function GetCalDAVFBInCardDAVAddressBook(criteria){
 
 		if (directory) {
 			var childSrc = rdf.GetResource("http://home.netscape.com/NC-rdf#CardChild");
-			var cards = ds.GetTargets(resource,childSrc,  false);
+			var cards = ds.GetTargets(resource, childSrc, false);
 			while (cards.hasMoreElements()) {
 					var protoCard = cards.getNext();
 					var card = protoCard.QueryInterface(Components.interfaces.nsIAbCard);

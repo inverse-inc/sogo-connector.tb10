@@ -41,7 +41,7 @@ function unescapedFromCard(theString) {
  *  
  **************************************************************************/ 
 function importFromVcard(vCardString, addressBook, customFields) {
-	var vcard = new Array ();
+	var vcard = new Array();
 	var currentLine = {};
 	var isEscaped = false;
 	var type = 0; /* 0 = tag, 1 = parameters, 2 = value */
@@ -138,8 +138,8 @@ function importFromVcard(vCardString, addressBook, customFields) {
 		currentChar++;
 	}
 
-	var cardDump = dumpObject(vcard);
-	logInfo("vcard dump:\n" + cardDump);
+// 	var cardDump = dumpObject(vcard);
+// 	logInfo("vcard dump:\n" + cardDump);
 
 	return CreateCardFromVCF(addressBook, vcard, customFields);
 }
@@ -189,7 +189,7 @@ function CreateCardFromVCF(uri, vcard, outParameters) {
 }
 
 function InsertCardData(card, tag, parameters, values, outParameters) {
-	logInfo("InsertCardData: " + tag + "\n");
+// 	logInfo("InsertCardData: " + tag + "\n");
 
 	// Variables needed to fill the email fields
 	var myfirstemail = "";
@@ -345,7 +345,7 @@ function decodedValues(values, charset, encoding) {
 		}
 	}
 
-	logInfo("newValues: " + dumpObject(newValues));
+// 	logInfo("newValues: " + dumpObject(newValues));
 
 	return newValues;
 }

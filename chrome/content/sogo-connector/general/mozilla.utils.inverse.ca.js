@@ -206,8 +206,8 @@ function backtrace(aDepth) {
 	var frame = arguments.callee.caller;
 	
 	for (var i = 1; i <= depth; i++) {
-		stack += i+": "+ frame.name+ "\n";
-		frame = frame.arguments.callee.caller;
+		stack += i+": "+ frame.name + "\n";
+		frame = frame.caller;
 		if (!frame){
 			break;
 		}

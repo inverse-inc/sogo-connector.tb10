@@ -192,6 +192,7 @@ function fillDialog(){
 		gCurrentDirectoryURI = window.arguments[0];
 		gCurrentDirectory = gRdfService.GetResource(gCurrentDirectoryURI).QueryInterface(Components.interfaces.nsIAbDirectory);
 
+		dump("prefId: " + gCurrentDirectory.dirPrefId + "\n");
 		var groupdavPrefService = new GroupdavPreferenceService(gCurrentDirectory.dirPrefId);  
 		gDescription = document.getElementById("description").value = gCurrentDirectory.dirName;
 		gUrl = document.getElementById("groupdavURL").value = groupdavPrefService.getURL();

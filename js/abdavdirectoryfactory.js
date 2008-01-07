@@ -44,26 +44,31 @@ function AbDAVDirFactory() {
 //class definition
 AbDAVDirFactory.prototype = {
 	// nsISimpleEnumerator createDirectory ( nsIAbDirectoryProperties properties )
-	createDirectory: function(properties){
+	createDirectory: function(properties) {
 		try{
 			//TODO: validate properties
-			var description = properties.description;
-			var uri = properties.URI;
-			var prefName = properties.prefName;
-			
 			var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
 			dump("\nAbDAVDirFactory values \n");
+			dump("\t properties.description: " + properties.description + "\n");
 			dump("\t properties.uri: " + properties.URI + "\n");
 			dump("\t properties.dirType: " + properties.dirType + "\n");
 			dump("\t properties.fileName: " + properties.fileName + "\n");
-			dump("\t description: " + properties.description + "\n");
-			dump("\t uri: " + uri + "\n");
 			dump("\t properties.prefName: " + properties.prefName + "\n");
 	
+			var description = properties.description;
+			var uri = properties.URI;
+			var prefName = properties.prefName;
+
 			var resource = rdf.GetResource(uri);
 			var directory = resource.QueryInterface(Components.interfaces.nsIAbDirectory);
-			directory.dirName = description;
-			directory.dirPrefId = prefName;	
+
+
+			var cnv = Components.classes["@mozilla.org/intl/saveascharset;1"]
+			.createInstance(Components.interfaces.nsISaveAsCharset);
+ 			cnv.Init("us-ascii", 1, 0);
+			directory.dirName = cnv.Convert(description);
+			directory.dirPrefId = prefName;
+			dump("dirName: " + directory.dirName + "\n");
 			dump("\t directory.dirPrefId: " + directory.dirPrefId + "\n");
 			var singletonEnum = Components.classes["@inverse.ca/jssingletonenumerator;1"]
 			.createInstance(Components.interfaces.inverseIJSSingletonEnumerator);
@@ -76,11 +81,13 @@ AbDAVDirFactory.prototype = {
 			if (dbPath){
       		dbPath.appendRelativePath(properties.fileName);
 	    		var addrDBFactory = Components.classes["@mozilla.org/addressbook/carddatabase;1"].getService(Components.interfaces.nsIAddrDatabase); //nsCOMPtr<nsIAddrDatabase> addrDBFactory = do_GetService(NS_ADDRDATABASE_CONTRACTID, &rv);
-      		listDatabase = addrDBFactory.open(dbPath, true, true);				
+      		listDatabase = addrDBFactory.open(dbPath, true, true);
+					listDatabase.close(true);
 			}
 
 			return singletonEnum;
-		}catch(ex){
+		}
+		catch(ex) {
 			dump (ex + "\n File: "+  ex.fileName + "\n Line: " + ex.lineNumber + "\n\n Stack:\n\t" + ex.stack + "\n\n");
 			throw ex;
 		}

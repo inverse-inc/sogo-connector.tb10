@@ -172,9 +172,6 @@ var DirPaneDoubleClick = function(event){
 			case "cmd_synchGroupdav":
 			SynchronizeGroupdavAddressbook(null);
 			break;
-			case "cmd_synchGroupdav":
-			SynchronizeGroupdavAddressbook();
-			break;
 			}
 
 		},

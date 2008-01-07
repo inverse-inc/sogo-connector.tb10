@@ -82,9 +82,9 @@ function AbDAVDirectory(){
 	// 
 	var childEnumerator = null;
 	this.getChildEnumerator = function() { return childEnumerator;}
-   this.setChildEnumerator = function(val) { childEnumerator = val; }
+	this.setChildEnumerator = function(val) { childEnumerator = val; }
    
-   this.cardDavReportResponse = null;
+	this.cardDavReportResponse = null;
 //   dump("================== AbDAVDirectory constructed ==================");
 	
 //	return true;
@@ -100,17 +100,17 @@ function AbDAVDirectory(){
 
 // void onAutoComplete ( PRUnichar* searchString , nsIAutoCompleteResults previousSearchResult , nsIAutoCompleteListener listener )
 AbDAVDirectory.prototype.onAutoComplete = function(searchString , previousSearchResult , listener ){
-	dump("onAutoComplete");
+	dump("onAutoComplete\n");
 }
 // void onStartLookup ( PRUnichar* searchString , nsIAutoCompleteResults previousSearchResult , nsIAutoCompleteListener listener )
 AbDAVDirectory.prototype.onStartLookup = function(searchString , previousSearchResult , listener){
-	dump("onStartLookup");
-}
+	dump("onStartLookup\n");
+};
 
 // void onStopLookup ( )
 AbDAVDirectory.prototype.onStopLookup = function(){
-	dump('onStopLookup');
-}
+	dump("onStopLookup\n");
+};
 
 //========================================================================================================================
 //	nsIAbDirectorySearch
@@ -234,21 +234,21 @@ try{
 	var card;
 	for (var i = 0; i < nodeList.length; i++){
 		customFieldsArray = new Array();
-		dump("\n===================================================\n");
-		dump(nodeList.item(i).textContent.toString());
-		dump("\n===================================================\n");
+// 		dump("\n===================================================\n");
+// 		dump(nodeList.item(i).textContent.toString());
+// 		dump("\n===================================================\n");
 		card = importFromVcard(nodeList.item(i).textContent.toString(), null, customFieldsArray);
 		
-		var savedCard= this.addCard(card);
+		var savedCard = this.addCard(card);
 		dump (savedCard.displayName +"\n");
 		var cardExt = savedCard.QueryInterface(Components.interfaces.nsIAbMDBCard);
 
 		cardExt.setStringAttribute("calFBURL", customFieldsArray["fburl"]);
 		cardExt.setStringAttribute("uid", customFieldsArray["uid"]);
-		dump("fburl: " + cardExt.getStringAttribute("calFBURL") + "\n") ;
+// 		dump("fburl: " + cardExt.getStringAttribute("calFBURL") + "\n") ;
 		savedCard.editCardToDatabase(uri); 	
 		resultArray.AppendElement(cardExt);
-	}	
+	}
 	result = Components.classes["@inverse.ca/jsenumerator;1"].createInstance(Components.interfaces.inverseIJSEnumerator);
 	if (nodeList.length > 0){
 		result.init(resultArray, nodeList.length);		
@@ -286,9 +286,9 @@ AbDAVDirectory.prototype.__defineGetter__("dirPrefId", function() {
 	return this.mPrefId;
 });
 AbDAVDirectory.prototype.__defineSetter__("dirPrefId", function(val) { 
-	dump("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
-	dump("===========AbDAVDirectory.prototype.__defineSetter__(dirPrefId, function(val: " + val + "\n");
-	dump("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
+// 	dump("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
+// 	dump("===========AbDAVDirectory.prototype.__defineSetter__(dirPrefId, function(val: " + val + "\n");
+// 	dump("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
 	//this.parentDirectory.QueryInterface(Components.interfaces.nsIAbDirectory).dirPrefId = val;
 	this.mPrefId = val;
 });

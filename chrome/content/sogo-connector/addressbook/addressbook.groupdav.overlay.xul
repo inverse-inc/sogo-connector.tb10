@@ -51,7 +51,7 @@
   <commandset id="selectEditMenuItems" oncommandupdate="goUpdateSelectEditMenuItemsGroupdavOverlay()"/>
   
   <commandset id="globalEditMenuItems" oncommandupdate="goUpdateGlobalEditMenuItemsOverlay()">
-    <command id="cmd_synchGroupdav" oncommand="SynchronizeGroupdavAddressbook();"/>
+    <command id="cmd_synchGroupdav" oncommand="SynchronizeGroupdavAddressbook(GetSelectedDirectory());"/>
   </commandset>
 
   <!--Add the GroupDAV synchronize button to the toolbar -->

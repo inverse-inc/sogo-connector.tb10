@@ -60,12 +60,16 @@ function webDavTestFolderConnection(url){
 	}
 }
 
-function webdavAddVcard(webdavURL ,dataString, key,  observerObj, observerService){
-	webdavPutString(webdavURL ,dataString, key, "text/x-vcard; charset=UTF-8", observerObj, observerService, true);
+function webdavAddVcard(webdavURL, dataString, key,
+												observerObj, observerService) {
+	webdavPutString(webdavURL, dataString, key, "text/x-vcard; charset=UTF-8",
+									observerObj, observerService, true);
 }
 
-function webdavUpdateVcard(webdavURL ,dataString, key, observerObj, observerService){
-	webdavPutString(webdavURL ,dataString, key, "text/x-vcard; charset=UTF-8", observerObj, observerService, false);
+function webdavUpdateVcard(webdavURL, dataString, key,
+													 observerObj, observerService) {
+	webdavPutString(webdavURL, dataString, key, "text/x-vcard; charset=UTF-8",
+									observerObj, observerService, false);
 }
 
 function webdavUploadListener(webdavURL, observerService, isNew, key) {
@@ -85,70 +89,66 @@ webdavUploadListener.prototype = {
 		return; 
 	},
  onStopRequest: function (channel, ctxt, status) {
-		var state = "";	
-		try{			
+		var state = "";
+		var signal = null;
+		try {			
 			var httpChannel = channel.QueryInterface(this.components.interfaces.nsIHttpChannel);
-			if (this.components.results.NS_ERROR_NOT_AVAILABLE == status){
+			if (this.components.results.NS_ERROR_NOT_AVAILABLE == status) {
 				logWarn("Upload failure:\n\n" +NS_ERROR_NOT_AVAILABLE + "("+  status +")");
 				state = "<state><status>" + "No Connection to server!  " +  status +"</status><url>" + this.webdavURL + "</url><context>" + ctxt + "</context></state>";    	 
-				this.observerService.notifyObservers(window, this.SyncProgressMeter.UPLOAD_ERROR_EVENT, state);
-				return;
+				signal = this.SyncProgressMeter.UPLOAD_ERROR_EVENT;
 			}
 			else if (httpChannel.responseStatus < 200
 							 || httpChannel.responseStatus > 205) {
 				logWarn("Upload failure, the server could not process the card (google the HTTP status code for more information).\n\n\n"  + "Server HTTP Status Code:"+ httpChannel.responseStatus );
-				if (this.observerService!=null) {
-					state = ("<state><status>" + httpChannel.responseStatus +
-									 "</status><url>" + this.webdavURL + "</url></state>"
-					//							+ httpChannel.getResponseHeader("etag") + "</etag><key>" + key + "</key></state>";
-									 + httpChannel.getResponseHeader("etag") + "</etag><key>" + this.key
-									 + "</key>");
+				state = ("<state><status>" + httpChannel.responseStatus +
+								 "</status><url>" + this.webdavURL + "</url></state>"
+								 //							+ httpChannel.getResponseHeader("etag") + "</etag><key>" + key + "</key></state>";
+								 + httpChannel.getResponseHeader("etag") + "</etag><key>" + this.key
+								 + "</key>");
 
-					if (this.isNew) {	// for new cards check if we got a location header
-						var location = httpChannel.getResponseHeader("location");
-						if (location && location.lastIndexOf('/') >= 0) {	// new url/key via location header
-							state += "<location>" + location.substr(location.lastIndexOf('/')+1) + "</location>";
-						}
+				if (this.isNew) {	// for new cards check if we got a location header
+					var location = httpChannel.getResponseHeader("location");
+					if (location && location.lastIndexOf('/') >= 0) {	// new url/key via location header
+						state += "<location>" + location.substr(location.lastIndexOf('/')+1) + "</location>";
 					}
-					state += "</state>";
-					this.observerService.notifyObservers(window, this.SyncProgressMeter.UPLOAD_ERROR_EVENT, state);
-					return;
 				}
+				state += "</state>";
+				signal = this.SyncProgressMeter.UPLOAD_ERROR_EVENT;
 			}
 			else {
-				if (this.observerService != null) {
-					state = ("<state><newCard>" + this.isNew + "</newCard><etag>" 
-									 + httpChannel.getResponseHeader("etag") + "</etag><key>" +
-									 this.key + "</key></state>");
-
-					this.observerService.notifyObservers(window,
-																							 this.SyncProgressMeter.UPLOAD_STOP_REQUEST_EVENT,
-																							 state);
-					return; 
-				}
+				state = ("<state><newCard>" + this.isNew + "</newCard><etag>" 
+								 + httpChannel.getResponseHeader("etag") + "</etag><key>" +
+								 this.key + "</key></state>");
+				signal = this.SyncProgressMeter.UPLOAD_STOP_REQUEST_EVENT;
 			}
 		}
 		catch(e) {
 			state = ("<state><status>" + e + "\n File: "+  e.fileName + "\n Line: "
 							 + e.lineNumber + "\n\n Stack:\n\n" + e.stack+ "</status>"
 							 + "<url>" + this.webdavURL + "</url></state>");
-
-			this.observerService.notifyObservers(window, this.SyncProgressMeter.UPLOAD_ERROR_EVENT, state);
+			signal = this.SyncProgressMeter.UPLOAD_ERROR_EVENT;
 		}
+
+		if (this.observerService)
+			this.observerService.notifyObservers(window, signal, state);
 	}
 };
 
-function webdavPutString(webdavURL ,dataString, key, contentType, observerObj, observerService, isNew) {
+function webdavPutString(webdavURL ,dataString, key, contentType, observerObj,
+												 observerService, isNew) {
+	throw("please use the sogoWebDAV interface instead!\n"
+				+ "callstack: " + backtrace());
 	var uploadListener = new webdavUploadListener(webdavURL, observerService,
 																								isNew, key);
 	uploadListener.SyncProgressMeter = SyncProgressMeter;
 	try {
 		var stream = Components.classes['@mozilla.org/io/string-input-stream;1'].createInstance(Components.interfaces.nsIStringInputStream);
-		
+
 		var converter = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
 		converter.charset = "UTF-8";
 		var stringUTF8 = converter.ConvertFromUnicode(dataString);
-		
+
 		stream.setData (stringUTF8, stringUTF8.length);		
 
 		var webURL = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIURL);
@@ -156,8 +156,8 @@ function webdavPutString(webdavURL ,dataString, key, contentType, observerObj, o
 
 		var ios = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
 		var channel = ios.newChannelFromURI(webURL).QueryInterface(Components.interfaces.nsIHttpChannel);
-		channel.referrer=webURL;
-		channel.requestMethod="PUT";
+		channel.referrer = webURL;
+		channel.requestMethod = "PUT";
 
 		var uploadChannel = channel.QueryInterface(Components.interfaces.nsIUploadChannel);
 		uploadChannel.setUploadStream(stream, contentType, stringUTF8.length );
@@ -168,10 +168,11 @@ function webdavPutString(webdavURL ,dataString, key, contentType, observerObj, o
 	}
 	catch (e) {
 	//error handling
-		if (observerObj!=null) { 
+		if (observerService && observerObj)
 			observerService.notifyObservers(window,observerObj.onErrorEventName,e);
-		}
-		getMessengerWindow().exceptionHandler(null,"webdavPutString.uploadListener.onStopRequest",e);	
+		getMessengerWindow().exceptionHandler(null,
+																					"webdavPutString.uploadListener.onStopRequest",
+																					e);
 	}
 }
 

@@ -22,190 +22,175 @@
  ********************************************************************************/
 
 function isGroupdavDirectory(abURI) {
-	if (abURI) {
-		var uri = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+	var value = false;
+
+	if (abURI
+			&& abURI.search("mab/MailList") == -1) {
+		var ab = Components.classes["@mozilla.org/rdf/rdf-service;1"]
 			.getService(Components.interfaces.nsIRDFService)
 			.GetResource(abURI)
 			.QueryInterface(Components.interfaces.nsIAbDirectory);
 
-		if (abURI.search("mab/MailList") != -1)
-			return false;
-
 		try {
-			var groupdavPrefService = new GroupdavPreferenceService(uri.dirPrefId);			
+// 			dump("prefservice dirPrefId: " + ab.dirPrefId + "\n");
+			var groupdavPrefService = new GroupdavPreferenceService(ab.dirPrefId);
 		}
 		catch(e) {
 			//var xpcConnect =Components.classes["DEB1D48E-7469-4B01-B186-D9854C7D3F2D"].getService(Components.interfaces.nsIXPConnect);	
-			logError("abURI '" +  abURI + " is invalid in call isGroupdavDirectory(abURI) \n\n STACK:\n");
+			dump("abURI '" + abURI
+					 + " is invalid in call isGroupdavDirectory(abURI) \n\n STACK:\n");
+			dump("ab prefid: " + ab.dirPrefId + "\n");
 			// TODO this needs to be handle better
 			// Currently if for any reason someone messed up prefs.js this could create havoc
 			throw e;
 		}
 
-		if (groupdavPrefService.getDirectoryName() !="")
-			return true;
-		else
-			return false;
+		try {
+// 			dump("the real test\n");
+			value = (groupdavPrefService.getDirectoryName() !="");
+		}
+		catch(e) {}
 	}
-	else
-		return false;
+
+// 	dump("abURI: " + abURI + " isGroupDav? " + value + "\n");
+
+	return value;
 }
 
 function GroupdavPreferenceService(uniqueId) {
-	if (uniqueId == null || uniqueId == ""){
-		//throw new Components.Exception("GroupdavPreferenceService exception: Missing uniqueId");
-		logError("GroupdavPreferenceService exception: Missing uniqueId");
+	if (uniqueId == null || uniqueId == "") {
+		logError("GroupdavPreferenceService exception: Missing uniqueId"+
+						 backtrace());
+		throw new Components.Exception("GroupdavPreferenceService exception: Missing uniqueId");
 	}
-	
-	this.mPreferencesService = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
 
-	this.prefPath = this.prefPathPref + uniqueId + ".";
+	this.mPreferencesService = Components.classes["@mozilla.org/preferences-service;1"]
+		.getService(Components.interfaces.nsIPrefBranch);
+	this.prefPath = "extensions.ca.inverse.addressbook.groupdav." + uniqueId + ".";
 }
 
 GroupdavPreferenceService.prototype = {
-	prefPathPref : "extensions.ca.inverse.addressbook.groupdav.",
-	prefPath : "",
-	mPreferencesService : null,
+	mPreferencesService: null,
+	prefPath: null,
 
-	mURL : "",
-	mDirectoryName : "",
-	mServerType : "",
-	mDisplayDialog : "",
-	mMigrationDone:false,
-	mAutoDeleteFromServer:false,
-	mAutoReadOnly:false,
+	_getPref: function(prefName) {
+		var value = null;
 
-	getReadOnly : function(){
+// 		dump("getPref: " + this.prefPath + prefName + "\n");
+
 		try {
-			this.mAutoReadOnly = this.mPreferencesService.getCharPref(this.prefPath + "readOnly" );
+			value = this.mPreferencesService.getCharPref(this.prefPath + prefName);
 		}
-		catch(e) {}
-		return this.mAutoReadOnly;		
+		catch(e) {
+			dump("exception getting pref '" + this.prefPath + prefName
+					 + "': \n" + e + " (" + e.lineNumber + ")\n");
+			dump("stack: " + backtrace() + "\n");
+			throw("unacceptable condition: " + e);
+		}
+
+		return value;
 	},
-	setReadOnly : function(val){
-		this.mAutoReadOnly = val;
+	_setPref: function(prefName, value) {
+// 		dump("setPref: " + this.prefPath + prefName + " to: " + value + "\n");
 		try {
-			this.mPreferencesService.setCharPref( this.prefPath + "readOnly", this.mAutoReadOnly);
+			this.mPreferencesService.setCharPref(this.prefPath + prefName, value);
 		}
-		catch(e) {}
+		catch(e) {
+			dump("exception setting pref '" + this.prefPath + prefName + "' to value '"
+					 + value + "': \n" + e + " (" + e.lineNumber + ")\n");
+			dump("stack: " + backtrace() + "\n");
+			throw("unacceptable condition: " + e);
+		}
+// 		dump("setPref - done\n");
+	},
+	_getBoolPref: function(prefName) {
+		var boolValue = false;
+		var value = this._getPref(prefName);
+		if (value) {
+			var strValue = value.toLowerCase();
+			if (strValue == "true"
+					|| strValue == "1"
+					|| strValue == "on"
+					|| strValue == "enabled")
+				boolValue = true;
+		}
+
+		return boolValue;
+	},
+	_setBoolPref: function(prefName, value) {
+		var strValue = "false";
+		if (value)
+			strValue = "true";
+		this._setPref(prefName, strValue);
 	},
 
-	getAutoDeleteFromServer : function(){
-		try {
-			this.mAutoDeleteFromServer = this.mPreferencesService.getCharPref(this.prefPath + "autoDeleteFromServer" );
-		}
-		catch(e) {}
-		return this.mAutoDeleteFromServer;		
+	getReadOnly: function() {
+		return this._getBoolPref("readOnly");
 	},
-	
-	setAutoDeleteFromServer : function(val){
-		this.mAutoDeleteFromServer = val;
-		try {
-			this.mPreferencesService.setCharPref( this.prefPath + "autoDeleteFromServer", this.mAutoDeleteFromServer);
-		}
-		catch(e) {}
+	setReadOnly: function(value) {
+// 		dump("value: " + value + "\n");
+		this._setBoolPref("readOnly", value);
 	},
 
-	getURL : function(){
-		if (this.mURL == "") {
-			try {
-				this.mURL = this.mPreferencesService.getCharPref(this.prefPath + "url" );
-				if (this.mURL[this.mURL.length - 1] != '/')
-					this.mURL += '/';
-			}
-			catch(e) {}
+	getAutoDeleteFromServer: function() {
+		return this._getBoolPref("autoDeleteFromServer");
+	},
+	setAutoDeleteFromServer: function(value) {
+		this._setBoolPref("autoDeleteFromServer", value);
+	},
+
+	getURL: function() {
+		var url = this._getPref("url");
+		if (url) {
+			if (url[url.length - 1] != '/')
+				url += '/';
 		}
-		return this.mURL;
+
+		dump("url: " + url + "\n");
+		return url;
 	},
-	
-	getDirectoryName : function(){
-		if ( this.mDirectoryName == "")
-			try { 
-				this.mDirectoryName = this.mPreferencesService.getCharPref( this.prefPath + "name" );
-			}
-			catch(e) {}
-			
-		return this.mDirectoryName;
-	},
-	
-	getHostName : function(){
-		var hostname = "";
+	getHostName: function(){
+		var hostname = null;
 		var url = this.getURL();
-		
-		if (url.length > 0) {
+
+		if (url && url.length > 0) {
 			var uri = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIURI);
 			uri.spec = url;
 			hostname = uri.host;
 		}
+
 		return hostname;
 	},
-	
-	getServerType : function(){
-		if ( this.mServerType == "")
-			try { 
-				this.mServerType = this.mPreferencesService.getCharPref( this.prefPath + "serverType" );
-			}
-			catch(e) {}
-
-		return parseInt(this.mServerType);
+	setURL: function(url) {
+		this._setPref("url", url);
 	},
 	
-	getDisplayDialog : function(){
-		try { 
-			this.mDisplayDialog = this.mPreferencesService.getCharPref( this.prefPath + "displaySyncCompletedDialog");
-		}
-		catch(e) {}
-		
-		return this.mDisplayDialog;
+	getDirectoryName: function() {
+		return this._getPref("name");
+	},
+	setDirectoryName: function(name) {
+		this._setPref("name", name);
 	},
 	
-	getMigrationDone : function(){
-		if (this.mMigrationDone)
-			try {
-				this.mMigrationDone = this.mPreferencesService.getCharPref( this.prefPath + "migrationDone" );
-			}
-			catch(e){}
-		
-		return this.mMigrationDone;
+	getServerType: function() {
+		return parseInt(this._getPref("serverType"));
 	},
-
-	setURL : function(url) {
-		this.mURL = url;
-		try {
-			this.mPreferencesService.setCharPref( this.prefPath + "url", this.mURL);
-		}
-		catch(e) {}
+	setServerType: function(value) {
+		this._setPref("serverType", value);
 	},
 	
-	setDirectoryName : function(dName) {
-		this.mDirectoryName = dName;
-		try {
-			this.mPreferencesService.setCharPref( this.prefPath + "name", this.mDirectoryName);
-		}
-		catch(e) {}
+	getDisplayDialog: function() {
+		return this._getBoolPref("displaySyncCompletedDialog");
+	},
+	setDisplayDialog: function(value) {
+// 		dump("value: " + value + "\n");
+		this._setBoolPref("displaySyncCompletedDialog", value);
 	},
 	
-	setServerType : function(type) {
-		this.mServerType = type;
-		try {
-			this.mPreferencesService.setCharPref( this.prefPath + "serverType", this.mServerType);
-		}
-		catch(e) {}
-	},	
-	
-	setDisplayDialog : function(value) {
-		this.mDisplayDialog = value;
-		try {
-			this.mPreferencesService.setCharPref( this.prefPath + "displaySyncCompletedDialog", this.mDisplayDialog);
-		}
-		catch(e) {}
+	getMigrationDone: function() {
+		return this._getBoolPref("migrationDone");
 	},
-	
-	setMigrationDone: function(done) {
-		this.mMigrationDone = done;
-		try {
-			this.mPreferencesService.setCharPref( this.prefPath + "u", this.mUser);
-		}
-		catch(e) {}
+	setMigrationDone: function(value) {
+		this._setBoolPref("migrationDone", value);
 	}
 };

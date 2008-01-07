@@ -44,11 +44,9 @@ function jsInclude(files, target) {
 	}
 }
 
-jsInclude(["chrome://sogo-connector/content/general/sync.progress-meter.js",
+jsInclude(["chrome://sogo-connector/content/general/sync.addressbook.groupdav.js",
 					 "chrome://sogo-connector/content/general/preference.service.addressbook.groupdav.js",
-					 "chrome://sogo-connector/content/general/implementors.addressbook.groupdav.js",
-					 "chrome://sogo-connector/content/general/webdav.inverse.ca.js",
-					 "chrome://sogo-connector/content/general/vcards.utils.js"]);
+					 "chrome://sogo-connector/content/general/implementors.addressbook.groupdav.js"]);
 
 /**********************************************************************************************
  *
@@ -95,13 +93,14 @@ function setDocumentDirty(boolValue){
 function setGroupDavFields(){
 	var card = gEditCard.card.QueryInterface(Components.interfaces.nsIAbMDBCard);
 	var version = card.getStringAttribute("groupDavVersion");
-	if (version){
+	if (version) {
 		var localUpdatePos = version.indexOf(LOCAL_UPDATE_FLAG);
-		if (localUpdatePos == -1){
+		if (localUpdatePos == -1) {
 		//Only add the flags if it's not already there
 			card.setStringAttribute("groupDavVersion", version + LOCAL_UPDATE_FLAG);
 		}
-	}else{
+	}
+	else {
 		card.setStringAttribute("groupDavVersion"," ");
 	}
 	if (!card.getStringAttribute("groupDavKey")){
@@ -119,63 +118,21 @@ function saveCard(isNewCard){
 			result = EditCardOKButton();
 		}
 		if (result && documentDirty && isGroupdavDirectory(getUri())) {
-			uploadCard(gEditCard.card.QueryInterface(Components.interfaces.nsIAbMDBCard),
+			abWindow.UploadCard(gEditCard.card.QueryInterface(Components.interfaces.nsIAbMDBCard),
 								 getUri(), isNewCard);
 			setDocumentDirty(false);
 		}
-		if (abWindow){
+		if (abWindow) {
 			abWindow.gSynchIsRunning = false;	
 		}
 		return result;
-	}catch (e){
+	}
+	catch (e) {
 		if (abWindow){
 			abWindow.gSynchIsRunning = false;	
 		}
 		messengerWindow.exceptionHandler(null,"saveCard",e);
 		return result;
-	}
-}
-
-/*********************************************
- *
- ********************************************/
-function uploadCard(card, uri, isNewCard){
-	if(false /*! messengerWindow.webDavTestFolderConnection(url)*/){
-		messengerWindow.noConnectionToWebDAVMsg(window,"Upload failure")
-	}else{
-		var key =  card.getStringAttribute("groupDavKey");
-		var version = getModifiedLocalVersion(card.getStringAttribute("groupDavVersion"));
-		var cardPointerHash = new Object();
-		cardPointerHash[key] = card;
-		
-		var groupdavPrefService = new GroupdavPreferenceService(GetDirectoryFromURI(uri).dirPrefId);
-		var url = groupdavPrefService.getURL();
-	
-	
-		//Initialize the CardUploadObserver
-		messengerWindow.gGroupDAVProgressMeter.initDownload(0);
-		messengerWindow.gGroupDAVProgressMeter.displayMsg = groupdavPrefService.getDisplayDialog() == "true";
-	
-		if (isNewCard) {
-			messengerWindow.gGroupDAVProgressMeter.initUpload(cardPointerHash, uri, 0, 1);
-			messengerWindow.gAbWinObserverService.notifyObservers(null, messengerWindow.SyncProgressMeter.INITIALIZATION_EVENT, null);	
-			webdavAddVcard(url + key , card2vcard(card), key,
-										 messengerWindow.gGroupDAVProgressMeter,
-										 messengerWindow.gAbWinObserverService);
-		}
-		else {
-			messengerWindow.gGroupDAVProgressMeter.initUpload(cardPointerHash, uri, 1, 0);
-			messengerWindow.gAbWinObserverService.notifyObservers(null,
-																														messengerWindow.SyncProgressMeter.INITIALIZATION_EVENT,
-																														null);
-	
-			//TODO verify if there is a conflict whith the server's version
-			messengerWindow.logWarn("abCommonCardDialog.groupdav.overlay.js: TODO verify if there is a conflict with the server's version");
-	
-			webdavUpdateVcard(url + key , card2vcard(card), key,
-												messengerWindow.gProgressMeter,
-												messengerWindow.gAbWinObserverService);
-		}
 	}
 }
 
