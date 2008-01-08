@@ -38,8 +38,10 @@ function jsInclude(files, target) {
 }
 
 jsInclude(["chrome://sogo-connector/content/general/preference.service.addressbook.groupdav.js",
+					 "chrome://sogo-connector/content/general/sync.addressbook.groupdav.js",
 					 "chrome://sogo-connector/content/general/sync.progress-meter.js",
 					 "chrome://sogo-connector/content/general/implementors.addressbook.groupdav.js",
+					 "chrome://sogo-connector/content/common/common-dav.js",
 					 "chrome://sogo-connector/content/general/mozilla.utils.inverse.ca.js"]);
 
 /*
@@ -57,6 +59,19 @@ function OnLoadAddressBookOverlay() {
 		.getService(Components.interfaces.nsIObserverService);
 	gGroupDAVProgressMeter = new SyncProgressMeter();
 	addObservers();
+
+	var rdfService = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+    .getService(Components.interfaces.nsIRDFService);
+	var parentDir = rdfService.GetResource("moz-abdirectory://")
+    .QueryInterface(Components.interfaces.nsIAbDirectory);
+	var children = parentDir.childNodes;
+	while (children.hasMoreElements()) {
+		var ab = children.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+		var realAB = ab.QueryInterface(Components.interfaces.nsIAbDirectory);
+		if (isGroupdavDirectory(ab.Value)
+				&& !isCardDavDirectory(ab.Value))
+			SynchronizeGroupdavAddressbook(ab.Value);
+	}
 }
 
 function OnUnloadMessengerOverlay() {
@@ -105,3 +120,4 @@ function removeObservers() {
 	gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.SERVER_SYNC_COMPLETED);
 	gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.SERVER_SYNC_ERROR);
 }
+

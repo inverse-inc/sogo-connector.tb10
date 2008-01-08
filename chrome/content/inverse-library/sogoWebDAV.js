@@ -224,7 +224,7 @@ InterfaceRequestor.prototype = {
     return this;
   },
  getInterface: function(iid) {
-		dump("Components: " + Components + "\n");
+// 		dump("Components: " + Components + "\n");
     if (iid.equals(Components.interfaces.nsISupports)
 				|| iid.equals(Components.interfaces.nsIAuthPrompt)
 				|| (iid.equals(Components.interfaces.nsIAuthPrompt2) && !isOnBranch)) {

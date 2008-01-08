@@ -62,11 +62,10 @@ AbDAVDirFactory.prototype = {
 			var resource = rdf.GetResource(uri);
 			var directory = resource.QueryInterface(Components.interfaces.nsIAbDirectory);
 
-
-			var cnv = Components.classes["@mozilla.org/intl/saveascharset;1"]
-			.createInstance(Components.interfaces.nsISaveAsCharset);
- 			cnv.Init("us-ascii", 1, 0);
-			directory.dirName = cnv.Convert(description);
+// 			var cnv = Components.classes["@mozilla.org/intl/saveascharset;1"]
+// 			.createInstance(Components.interfaces.nsISaveAsCharset);
+//  			cnv.Init("us-ascii", 1, 0);
+			directory.dirName = description;
 			directory.dirPrefId = prefName;
 			dump("dirName: " + directory.dirName + "\n");
 			dump("\t directory.dirPrefId: " + directory.dirPrefId + "\n");

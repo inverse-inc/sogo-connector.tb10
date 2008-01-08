@@ -52,132 +52,16 @@ function noConnectionToWebDAVMsg(win,boxTitle){
 
 function webDavTestFolderConnection(url){
 	var propsList = new Array("<D:getcontentlength/>");
-	try{
+	try {
 		var responseObj=webdav_propfind(url, propsList, null, null); //Let Thunderbird Password Manager handle user and password
 		return true;
-	}catch (e){
+	}
+	catch (e) {
 		return false;
 	}
 }
 
-function webdavAddVcard(webdavURL, dataString, key,
-												observerObj, observerService) {
-	webdavPutString(webdavURL, dataString, key, "text/x-vcard; charset=UTF-8",
-									observerObj, observerService, true);
-}
-
-function webdavUpdateVcard(webdavURL, dataString, key,
-													 observerObj, observerService) {
-	webdavPutString(webdavURL, dataString, key, "text/x-vcard; charset=UTF-8",
-									observerObj, observerService, false);
-}
-
-function webdavUploadListener(webdavURL, observerService, isNew, key) {
-	this.webdavURL = webdavURL;
-	this.observerService = observerService;
-	this.isNew = isNew;
-	this.key = key;
-}
-
-webdavUploadListener.prototype = {
- components: Components, // To get a handle on Components inside the listener!!!
- webdavURL: null,
- onDataAvailable: function (channel, ctxt, inStr, sourceOffset, count) {
-		return;
-	},
- onStartRequest: function (channel, ctxt) {
-		return; 
-	},
- onStopRequest: function (channel, ctxt, status) {
-		var state = "";
-		var signal = null;
-		try {			
-			var httpChannel = channel.QueryInterface(this.components.interfaces.nsIHttpChannel);
-			if (this.components.results.NS_ERROR_NOT_AVAILABLE == status) {
-				logWarn("Upload failure:\n\n" +NS_ERROR_NOT_AVAILABLE + "("+  status +")");
-				state = "<state><status>" + "No Connection to server!  " +  status +"</status><url>" + this.webdavURL + "</url><context>" + ctxt + "</context></state>";    	 
-				signal = this.SyncProgressMeter.UPLOAD_ERROR_EVENT;
-			}
-			else if (httpChannel.responseStatus < 200
-							 || httpChannel.responseStatus > 205) {
-				logWarn("Upload failure, the server could not process the card (google the HTTP status code for more information).\n\n\n"  + "Server HTTP Status Code:"+ httpChannel.responseStatus );
-				state = ("<state><status>" + httpChannel.responseStatus +
-								 "</status><url>" + this.webdavURL + "</url></state>"
-								 //							+ httpChannel.getResponseHeader("etag") + "</etag><key>" + key + "</key></state>";
-								 + httpChannel.getResponseHeader("etag") + "</etag><key>" + this.key
-								 + "</key>");
-
-				if (this.isNew) {	// for new cards check if we got a location header
-					var location = httpChannel.getResponseHeader("location");
-					if (location && location.lastIndexOf('/') >= 0) {	// new url/key via location header
-						state += "<location>" + location.substr(location.lastIndexOf('/')+1) + "</location>";
-					}
-				}
-				state += "</state>";
-				signal = this.SyncProgressMeter.UPLOAD_ERROR_EVENT;
-			}
-			else {
-				state = ("<state><newCard>" + this.isNew + "</newCard><etag>" 
-								 + httpChannel.getResponseHeader("etag") + "</etag><key>" +
-								 this.key + "</key></state>");
-				signal = this.SyncProgressMeter.UPLOAD_STOP_REQUEST_EVENT;
-			}
-		}
-		catch(e) {
-			state = ("<state><status>" + e + "\n File: "+  e.fileName + "\n Line: "
-							 + e.lineNumber + "\n\n Stack:\n\n" + e.stack+ "</status>"
-							 + "<url>" + this.webdavURL + "</url></state>");
-			signal = this.SyncProgressMeter.UPLOAD_ERROR_EVENT;
-		}
-
-		if (this.observerService)
-			this.observerService.notifyObservers(window, signal, state);
-	}
-};
-
-function webdavPutString(webdavURL ,dataString, key, contentType, observerObj,
-												 observerService, isNew) {
-	throw("please use the sogoWebDAV interface instead!\n"
-				+ "callstack: " + backtrace());
-	var uploadListener = new webdavUploadListener(webdavURL, observerService,
-																								isNew, key);
-	uploadListener.SyncProgressMeter = SyncProgressMeter;
-	try {
-		var stream = Components.classes['@mozilla.org/io/string-input-stream;1'].createInstance(Components.interfaces.nsIStringInputStream);
-
-		var converter = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
-		converter.charset = "UTF-8";
-		var stringUTF8 = converter.ConvertFromUnicode(dataString);
-
-		stream.setData (stringUTF8, stringUTF8.length);		
-
-		var webURL = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIURL);
-		webURL.spec = webdavURL;
-
-		var ios = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-		var channel = ios.newChannelFromURI(webURL).QueryInterface(Components.interfaces.nsIHttpChannel);
-		channel.referrer = webURL;
-		channel.requestMethod = "PUT";
-
-		var uploadChannel = channel.QueryInterface(Components.interfaces.nsIUploadChannel);
-		uploadChannel.setUploadStream(stream, contentType, stringUTF8.length );
-		//uploadChannel.setUploadStream(streamUTF8, contentType, -1 );
-
-		logDebug("Sending card: " + key + "\n" +  stringUTF8);
-		uploadChannel.asyncOpen(uploadListener, null);
-	}
-	catch (e) {
-	//error handling
-		if (observerService && observerObj)
-			observerService.notifyObservers(window,observerObj.onErrorEventName,e);
-		getMessengerWindow().exceptionHandler(null,
-																					"webdavPutString.uploadListener.onStopRequest",
-																					e);
-	}
-}
-
 function buildCardDavReportXML(filter){
-
 	var xml = '<?xml version="1.0" encoding="UTF-8"?>' +
 				'<addressbook-query xmlns:D="DAV:" xmlns="urn:ietf:params:xml:ns:carddav">' +
 					'<D:prop><D:getetag/><addressbook-data/></D:prop>' +
@@ -218,7 +102,8 @@ function sendXMLRequestXPCOM(webdavURL,HTTPmethod,HTTPheaders,XMLreq) {
 		retObj.status=request.status;
 		retObj.response=request.responseXML;
 		retObj.responseHeaders=processHTTPHeaders(request.getAllResponseHeaders());
-  } catch(e) {
+  }
+	catch(e) {
     throw e;
   }
   return retObj;
@@ -230,13 +115,9 @@ function cardDavReport(webdavURL, filter) {
 
   //var HTTPheaders=[["Connection","TE"],["TE","trailers, deflate, gzip, compress"],["Depth","1"],["Translate","f"],["Content-type","text/xml"]];
   var HTTPheaders=[["Connection","TE"],["TE","trailers"],["Content-type","text/xml"]];
-  try {
-    // send out the XML request
-    var responseObj = sendXMLRequestXPCOM(webdavURL, "REPORT", HTTPheaders, xmlReq, null, null);
-  } catch(e) {
-    throw e;
-  }
-	switch(responseObj.status){      
+	// send out the XML request
+	var responseObj = sendXMLRequestXPCOM(webdavURL, "REPORT", HTTPheaders, xmlReq, null, null);
+	switch(responseObj.status) {
 		case 207:
 		case 200: // Added to support Open-Xchange   
 			var doc = responseObj.response;
@@ -246,7 +127,7 @@ function cardDavReport(webdavURL, filter) {
 			break;
 		default:
 			throw "cardDavReport(): Error connecting to the Server; response status: " + responseObj.status;      			
-	}  
+	}
   return doc;
 }
 

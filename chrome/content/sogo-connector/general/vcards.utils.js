@@ -41,6 +41,8 @@ function unescapedFromCard(theString) {
  *  
  **************************************************************************/ 
 function importFromVcard(vCardString, addressBook, customFields) {
+	if (!vCardString || vCardString == "")
+		dump("'vCardString' is empty\n" + backtrace() + "\n");
 	var vcard = new Array();
 	var currentLine = {};
 	var isEscaped = false;

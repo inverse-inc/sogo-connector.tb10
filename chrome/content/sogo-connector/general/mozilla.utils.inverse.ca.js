@@ -201,7 +201,7 @@ function setPassword(host, user, pwd){
 }
 
 function backtrace(aDepth) {
-	var depth = aDepth || 10000;
+	var depth = aDepth || 10;
 	var stack = "";
 	var frame = arguments.callee.caller;
 	

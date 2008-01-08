@@ -95,13 +95,16 @@ GroupDavSynchronizer.prototype = {
 		this.fillServerHashes();
 	},
  initSyncVariables: function() {
-		this.gAddressBook = GetDirectoryFromURI(this.gSelectedDirectoryURI);
+		var rdfService = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+    .getService(Components.interfaces.nsIRDFService);
+		this.gAddressBook = rdfService.GetResource(this.gSelectedDirectoryURI)
+		.QueryInterface(Components.interfaces.nsIAbDirectory);
 
 		var prefId;
 		if (this.gSelectedDirectoryURI == "moz-abmdbdirectory://abook.mab")
 			prefId = "pab";
 		else
-			prefId = this.gAddressBook.dirPrefId;
+			prefId = this.gAddressBook.directoryProperties.prefName;
 
 		var groupdavPrefService = new GroupdavPreferenceService(prefId);
 		this.gURL = groupdavPrefService.getURL();
@@ -259,8 +262,9 @@ GroupDavSynchronizer.prototype = {
 // 		dump("initProgressMeter\n");
 		//Initialize SyncProgressMeter (see addressbook.groupdav.overlay.js for definition)
 		this.messengerWindow.gGroupDAVProgressMeter.displayMsg = this.gDisplaySyncDialog;	
-		this.messengerWindow.gGroupDAVProgressMeter.abWindow2	= Components.classes["@mozilla.org/appshell/window-mediator;1"].
-		getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("mail:addressbook");
+		this.messengerWindow.gGroupDAVProgressMeter.abWindow2
+		= Components.classes["@mozilla.org/appshell/window-mediator;1"]
+		.getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("mail:addressbook");
 		
 		if (this.serverDataHash.size
 				+ this.localUpdateHash.size
@@ -408,7 +412,8 @@ GroupDavSynchronizer.prototype = {
 		if (this.gSelectedDirectoryURI == "moz-abmdbdirectory://abook.mab")
 			prefId = "pab";
 		else
-			prefId = this.gAddressBook.dirPrefId;
+			prefId = this.gAddressBook.directoryProperties.prefName;
+
 		var prefService = (Components.classes["@mozilla.org/preferences-service;1"]
 											 .getService(Components.interfaces.nsIPrefBranch));
 		var fileName = prefService.getCharPref(prefId + ".filename");
@@ -455,7 +460,7 @@ GroupDavSynchronizer.prototype = {
 		else {
 			// add the server card
 // 			dump("!!!!!!!!!!!!!! :" + this.gSelectedDirectoryURI + "\n");
-			var savedCard = GetDirectoryFromURI(this.gSelectedDirectoryURI).addCard(card);
+			var savedCard = this.gAddressBook.addCard(card);
 			cardExt = savedCard.QueryInterface(Components.interfaces.nsIAbMDBCard);
 			
 			cardExt.setStringAttribute("groupDavKey", key);
@@ -611,17 +616,13 @@ GroupDavSynchronizer.prototype = {
 			}
 		}
 		//	if (groupdavPrefService.getAutoDeleteFromServer()){
-		if (true) {
-			// Automatic delete
-			this.deleteServerDeleteArrayCards();
-		}
-		else {
-			window.openDialog("chrome://sogo-connector/content/addressbook/test.xul",  "", "chrome,resizable=yes,centerscreen");
-		}
+		this.deleteServerDeleteArrayCards();
 	},
  deleteServerDeleteArrayCards: function() {
 		var card;
-		var db = Components.classes["@mozilla.org/addressbook;1"].createInstance(Components.interfaces.nsIAddressBook).getAbDatabaseFromURI(this.gSelectedDirectoryURI);
+		var db = Components.classes["@mozilla.org/addressbook;1"]
+		.createInstance(Components.interfaces.nsIAddressBook)
+		.getAbDatabaseFromURI(this.gSelectedDirectoryURI);
 		for (var i = 0; i < this.serverDeleteArray.length; i++) {
 			card = this.localCardPointerHash[this.serverDeleteArray[i]]
 				.QueryInterface(Components.interfaces.nsIAbMDBCard);

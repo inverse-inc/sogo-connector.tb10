@@ -22,7 +22,28 @@ Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 02110-1301  USA
 ********************************************************************************/
 
-Components.classes["@mozilla.org/moz/jssubscript-loader;1"].getService(Components.interfaces.mozIJSSubScriptLoader).loadSubScript("chrome://sogo-connector/content/common/common-dav.js");
+function jsInclude(files, target) {
+	var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+		.getService(Components.interfaces.mozIJSSubScriptLoader);
+	for (var i = 0; i < files.length; i++) {
+		try {
+			loader.loadSubScript(files[i], target);
+		}
+		catch(e) {
+			dump("addressbook.groupdav.overlay.js: failed to include '" + files[i] +
+					 "'\n" + e);
+			if (e.fileName)
+				dump ("\nFile: " + e.fileName
+							+ "\nLine: " + e.lineNumber
+							+ "\n\n Stack:\n\n" + e.stack);
+		}
+	}
+}
+
+jsInclude(["chrome://sogo-connector/content/common/common-dav.js",
+					 "chrome://sogo-connector/content/general/mozilla.utils.inverse.ca.js",
+					 "chrome://sogo-connector/content/general/sync.addressbook.groupdav.js",
+					 "chrome://sogo-connector/content/general/preference.service.addressbook.groupdav.js"]);
 
 /*
  * This overlay adds GroupDAV functionalities to Addressbooks
@@ -162,7 +183,7 @@ var DirPaneDoubleClick = function(event){
 				}
 			}
 			catch (e) {
-				exceptionHandler(window,"Exception",e);
+ 				exceptionHandler(window,"Exception",e);
 			}
 			return false;
 		},
@@ -197,8 +218,8 @@ function SetupAbCommandUpdateHandlers(){
 //Override of AbDelete in chrome://messenger/content/addressbook/abCommon.js
 // Addition to delete the card on the groupdav server 
 // Definitions are done in onloadDAV since on Windows it was loaded before the abCommon.js version
-var  AbDeleteOriginal;
-var  AbDelete;
+var AbDeleteOriginal;
+var AbDelete;
 
 var AbDeleteDirectory;
 var AbDeleteDirectoryOriginal;
@@ -312,17 +333,18 @@ function onloadDAV(){
 	AbDeleteDirectory = function() {
 		var prefBranchPath = GetDirectoryFromURI(gSelectedDir).dirPrefId;
 		var prefService;
-		try{
-			if (isGroupdavDirectory(gSelectedDir)){
+		try {
+			if (isGroupdavDirectory(gSelectedDir)) {
 				var groupdavPrefService = new GroupdavPreferenceService(prefBranchPath);
 				prefService = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
 				prefService.deleteBranch(groupdavPrefService.prefPath);
 			}
-		}catch(e){
-			exceptionHandler(window,"Error Deleting AddressBook",e);
+		}
+		catch(e) {
+ 			exceptionHandler(window,"Error Deleting AddressBook",e);
 		}
 		AbDeleteDirectoryOriginal.apply();
-		if (prefService){
+		if (prefService) {
 			// Little patch since AbDeleteDirectoryOriginal does not delete position (ldap_2.servers.AA.position)
 			prefService.deleteBranch(prefBranchPath);
 			prefService.deleteBranch(prefBranchPath + ".position");// strange position is not deleted
@@ -331,3 +353,10 @@ function onloadDAV(){
 }
 
 onloadDAV();
+
+// function onAddressBookLoad() {	
+// 	var prefService = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+
+// }
+
+// window.addEventListener("load", onAddressBookLoad, true);

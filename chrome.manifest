@@ -20,4 +20,6 @@ overlay  chrome://messenger/content/messengercompose/messengercompose.xul chrome
 overlay	chrome://sogo-connector/content/addressbook/abNewCardDialog.groupdav.overlay.xul chrome://sogo-connector/content/addressbook/abCommonCardDialog.groupdav.overlay.xul
 overlay	chrome://sogo-connector/content/addressbook/abEditCardDialog.groupdav.overlay.xul chrome://sogo-connector/content/addressbook/abCommonCardDialog.groupdav.overlay.xul
 
-style 	chrome://sogo-connector/content/addressbook/addressbook.groupdav.overlay.xul chrome://sogo-connector/skin/addressbook/addressbook.groupdav.overlay.css
+overlay chrome://messenger/content/addressbook/pref-editdirectories.xul chrome://sogo-connector/content/addressbook/pref-editdirectories.overlay.xul
+
+style chrome://sogo-connector/content/addressbook/addressbook.groupdav.overlay.xul chrome://sogo-connector/skin/addressbook/addressbook.groupdav.overlay.css

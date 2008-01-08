@@ -31,18 +31,19 @@ function isGroupdavDirectory(abURI) {
 			.GetResource(abURI)
 			.QueryInterface(Components.interfaces.nsIAbDirectory);
 
+ 		var prefId = ab.directoryProperties.prefName;	
+		dump("prefservice dirPrefId: " + ab.dirPrefId + "\n");
 		try {
-// 			dump("prefservice dirPrefId: " + ab.dirPrefId + "\n");
-			var groupdavPrefService = new GroupdavPreferenceService(ab.dirPrefId);
+			var groupdavPrefService = new GroupdavPreferenceService(prefId);
 		}
-		catch(e) {
+		catch (e) {
 			//var xpcConnect =Components.classes["DEB1D48E-7469-4B01-B186-D9854C7D3F2D"].getService(Components.interfaces.nsIXPConnect);	
 			dump("abURI '" + abURI
-					 + " is invalid in call isGroupdavDirectory(abURI) \n\n STACK:\n");
-			dump("ab prefid: " + ab.dirPrefId + "\n");
+					 + " is invalid in call isGroupdavDirectory(abURI) \n\n STACK:\n"
+					 + backtrace(10));
+			dump("ab prefid: " + prefId + "\n");
 			// TODO this needs to be handle better
 			// Currently if for any reason someone messed up prefs.js this could create havoc
-			throw e;
 		}
 
 		try {
@@ -118,9 +119,13 @@ GroupdavPreferenceService.prototype = {
 		return boolValue;
 	},
 	_setBoolPref: function(prefName, value) {
-		var strValue = "false";
+		var strValue;
+
 		if (value)
 			strValue = "true";
+		else
+			strValue = "false";
+
 		this._setPref(prefName, strValue);
 	},
 
