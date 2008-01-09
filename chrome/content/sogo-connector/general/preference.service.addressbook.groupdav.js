@@ -32,11 +32,10 @@ function isGroupdavDirectory(abURI) {
 			.QueryInterface(Components.interfaces.nsIAbDirectory);
 
  		var prefId = ab.directoryProperties.prefName;	
-		dump("prefservice dirPrefId: " + ab.dirPrefId + "\n");
 		try {
 			var groupdavPrefService = new GroupdavPreferenceService(prefId);
 		}
-		catch (e) {
+		catch(e) {
 			//var xpcConnect =Components.classes["DEB1D48E-7469-4B01-B186-D9854C7D3F2D"].getService(Components.interfaces.nsIXPConnect);	
 			dump("abURI '" + abURI
 					 + " is invalid in call isGroupdavDirectory(abURI) \n\n STACK:\n"
@@ -151,7 +150,6 @@ GroupdavPreferenceService.prototype = {
 				url += '/';
 		}
 
-		dump("url: " + url + "\n");
 		return url;
 	},
 	getHostName: function(){

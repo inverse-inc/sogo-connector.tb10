@@ -3,33 +3,26 @@ var context = initContext();
 
 function initContext() {
 	var handler = Components.classes['@inverse.ca/context-manager;1']
-		.getService(Components.interfaces.inverseIJSContextManager);
-	var wrapper = {};
-	handler.getContext("inverse.ca/sogoWebDAV", wrapper);
-	var newContext = wrapper.value.QueryInterface(Components.interfaces.nsIWritablePropertyBag);
-	try {
-		newContext.getProperty("sogoWebDAVPendingRequests");
-	}
-	catch(e) {
- 		newContext.setProperty("sogoWebDAVPendingRequests", new Array());
- 		newContext.setProperty("sogoWebDAVPending", false);
+		.getService(Components.interfaces.inverseIJSContextManager).wrappedJSObject;
+	var newContext = handler.getContext("inverse.ca/sogoWebDAV");
+
+	if (!newContext.sogoWebDAVPendingRequests) {
+ 		newContext.sogoWebDAVPendingRequests = new Array();
+ 		newContext.sogoWebDAVPending = false;
  	}
 
 	return newContext;
 }
 
 function _processPending() {
-	context.setProperty("sogoWebDAVPending", false);
-	var sogoWebDAVPendingRequests
-		= context.getProperty("sogoWebDAVPendingRequests");
-	dump("pending length: " + sogoWebDAVPendingRequests.length + "\n");
-	if (sogoWebDAVPendingRequests.length) {
+	context.sogoWebDAVPending = false;
+	dump("pending length: " + context.sogoWebDAVPendingRequests.length + "\n");
+	if (context.sogoWebDAVPendingRequests.length) {
 		// 		dump("processing next query...\n");
-		var request = sogoWebDAVPendingRequests.shift();
+		var request = context.sogoWebDAVPendingRequests.shift();
 		var newWebDAV = new sogoWebDAV(request.url, request.target,
 																	 request.data, request.asynchronous);
 		newWebDAV.load(request.operation, request.parameters);
-		context.setProperty("sogoWebDAVPendingRequests", sogoWebDAVPendingRequests);
 	}
 }
 
@@ -53,7 +46,7 @@ function sogoWebDAV(url, target, data, asynchronous) {
 sogoWebDAV.prototype = {
  realLoad: function(operation, parameters) {
 		// 		dump("dav operation: " + operation + "\n");
-		context.setProperty("sogoWebDAVPending", true);
+		context.sogoWebDAVPending = true;
     var webdavSvc = Components.classes['@mozilla.org/webdav/service;1']
     .getService(Components.interfaces.nsIWebDAVService);
     var requestor = new InterfaceRequestor();
@@ -101,16 +94,13 @@ sogoWebDAV.prototype = {
       throw ("operation '" + operation + "' is not currently supported");
   },
  load: function(operation, parameters) {
-    if (context.getProperty("sogoWebDAVPending")) {
-			var sogoWebDAVPendingRequests = context.getProperty("sogoWebDAVPendingRequests");
-			sogoWebDAVPendingRequests.push({url: this.url,
-						target: this.target,
-						data: this.cbData,
-						asynchronous: this.asynchronous,
-						operation: operation,
-						parameters: parameters});
-			context.setProperty("sogoWebDAVPendingRequests", sogoWebDAVPendingRequests);
-		}
+    if (context.sogoWebDAVPending)
+			context.sogoWebDAVPendingRequests.push({url: this.url,
+																							target: this.target,
+																							data: this.cbData,
+																							asynchronous: this.asynchronous,
+																							operation: operation,
+																							parameters: parameters});
     else
       this.realLoad(operation, parameters);
   },

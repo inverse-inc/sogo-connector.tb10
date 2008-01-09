@@ -1,8 +1,5 @@
 #include "nsISupports.idl"
-#include "nsIWritablePropertyBag.idl"
 
 [scriptable, uuid(dc93fc98-bec6-11dc-b37a-00163e47dbb4)]
 interface inverseIJSContextManager : nsISupports {
-  void getContext(in AString name, out nsIWritablePropertyBag ctxWrapper);
-  void resetContext(in AString name);
 };

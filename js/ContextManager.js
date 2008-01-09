@@ -1,31 +1,21 @@
 function ContextManager() {
   dump("new ContextManager\n");
   this.contexts = {};
+  this.wrappedJSObject = this;
 }
 
 ContextManager.prototype = {
  contexts: null,
+ wrappedJSObject: null,
 
- getContext: function(name, ctxWrapper) {
+ getContext: function(name) {
     var context = this.contexts[name];
     if (!context) {
-      context = Components.classes["@mozilla.org/hash-property-bag;1"]
-	.createInstance(Components.interfaces.nsIWritablePropertyBag);
-//       context = {};
+      context = {};
       this.contexts[name] = context;
     }
 
-//     dump("wrapper: " + ctxWrapper + "\n");
-//     for (var k in ctxWrapper) {
-//       dump("k: " + k + "; v: " + ctxWrapper[k] + "\n");
-//     }
-//     var newWrapper = Components.classes["@mozilla.org/supports-array;1"]
-//     .createInstance(Components.interfaces.nsISupportsArray);
-//     newWrapper.AppendElement(context);
-    ctxWrapper.value = context;
-//     dump("expected: " + ctxWrapper[0] + "\n");
-
-//     ctxWrapper.value = 5;
+    return context;
   },
  resetContext: function(name) {
     var context = this.contexts[name];

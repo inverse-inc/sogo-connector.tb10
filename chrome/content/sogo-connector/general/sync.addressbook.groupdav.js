@@ -9,21 +9,21 @@
   
  This file is part of "SOGo Connector" a Thunderbird extension.
 
-    "SOGo Connector" is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2 as published by
-    the Free Software Foundation;
+ "SOGo Connector" is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License version 2 as published by
+ the Free Software Foundation;
 
-    "SOGo Connector" is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+ "SOGo Connector" is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with "SOGo Connector"; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ You should have received a copy of the GNU General Public License
+ along with "SOGo Connector"; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  
-		* 
-		********************************************************************************/
+ * 
+ ********************************************************************************/
 
 function jsInclude(files, target) {
 	var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
@@ -49,6 +49,7 @@ jsInclude(["chrome://inverse-library/content/sogoWebDAV.js",
 					 "chrome://sogo-connector/content/general/vcards.utils.js",
 					 "chrome://sogo-connector/content/general/webdav.inverse.ca.js",
 					 "chrome://sogo-connector/content/general/webdav_lib/webdavAPI.js"]);
+
 
 function GroupDavSynchronizer(uri, isDrop) {
 	if (typeof uri == "undefined" || !uri)
@@ -90,9 +91,26 @@ GroupDavSynchronizer.prototype = {
  gAddressBook: null,
  gGroupDavServerInterface: null,
 
+ _initGroupDAVContext: function() {
+		var handler = Components.classes['@inverse.ca/context-manager;1']
+		.getService(Components.interfaces.inverseIJSContextManager).wrappedJSObject;
+		var newContext = handler.getContext("inverse.ca/groupdav/sync-context");
+
+		if (!newContext.requests)
+			newContext.requests = {};
+
+		return newContext;
+	},
  start: function() {
 		this.initSyncVariables();
-		this.fillServerHashes();
+		this.context = this._initGroupDAVContext();
+		if (this.context.requests[this.gURL])
+			dump("a request is already active for url: " + this.gURL + "\n");
+		else {
+			dump("sync with " + this.gURL + "...\n");
+			this.context.requests[this.gURL] = true;
+			this.fillServerHashes();
+		}
 	},
  initSyncVariables: function() {
 		var rdfService = Components.classes["@mozilla.org/rdf/rdf-service;1"]
@@ -484,7 +502,7 @@ GroupDavSynchronizer.prototype = {
 		switch (status) {
 		case 207:
 		case 200: // Added to support Open-Xchange   
-		logDebug("=========Begin Server Cards List, url is: " + this.gURL);
+// 		logDebug("=========Begin Server Cards List, url is: " + this.gURL);
 
 		for (var href in response) {
 			var davObject = response[href];
@@ -496,11 +514,11 @@ GroupDavSynchronizer.prototype = {
 				var cName = cNameArray[cNameArray.length - 1];
 				this.serverVersionHash[cName] = version;
 // 				this.serverDateHash[cName] = new Date(davObject["DAV: getlastmodified"]);
- 				logDebug("\tServer Card key = " + cName + "\tversion = " + version);
+//  				logDebug("\tServer Card key = " + cName + "\tversion = " + version);
 			}
 		}
 
-		logDebug("=========End Server Cards List"); 
+// 		logDebug("=========End Server Cards List"); 
 		this.processServerKeys();
 		break;
 		case 401:
@@ -654,9 +672,12 @@ GroupDavSynchronizer.prototype = {
 	},
 
  _checkCallback: function() {
-		if (this.callback && this.pendingOperations == 0) {
-			this.callback(this.callbackCode, this.callbackFailures,
-										this.callbackData);
+		if (this.pendingOperations == 0) {
+			if (this.callback)
+				this.callback(this.callbackCode, this.callbackFailures,
+											this.callbackData);
+			dump("sync with " + this.gURL + " has ended.\n");
+			this.context.requests[this.gURL] = null;
 		}
 	}
 };
