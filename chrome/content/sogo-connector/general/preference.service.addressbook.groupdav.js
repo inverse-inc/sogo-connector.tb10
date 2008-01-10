@@ -31,7 +31,7 @@ function isGroupdavDirectory(abURI) {
 			.GetResource(abURI)
 			.QueryInterface(Components.interfaces.nsIAbDirectory);
 
- 		var prefId = ab.directoryProperties.prefName;	
+ 		var prefId = ab.directoryProperties.prefName;
 		try {
 			var groupdavPrefService = new GroupdavPreferenceService(prefId);
 		}

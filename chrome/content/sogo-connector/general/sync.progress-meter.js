@@ -1,11 +1,11 @@
 /* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 2 -*- */
-/*************************************************************************************************************   
+/*************************************************************************************************************
  Copyright:	Inverse groupe conseil, 2006 -2007
  Author: 	Robert Bolduc
- Email:		support@inverse.ca 
+ Email:		support@inverse.ca
  URL:			http://inverse.ca
 
- Contributor: Ralf Becker 
+ Contributor: Ralf Becker
 
     This file is part of "SOGo Connector" a Thunderbird extension.
 
@@ -72,13 +72,13 @@ SyncProgressMeter.prototype = {
  downloadFailedLength : 0,
  downloadMeter : 0,
  uploadLength : 0,
- uploadMeter : 0,   
+ uploadMeter : 0,
  downloadCompleted : false,
- //Upload properties	
+ //Upload properties
 //  cardIndex : {}, //Pseudo-hash that stores mozilla cards
- updateCounter : 0,  
- vCardsUpDateSize : 0,  
- addCounter : 0,	
+ updateCounter : 0,
+ vCardsUpDateSize : 0,
+ addCounter : 0,
  vCardsAddSize : 0,
  vCardsUploadTotalSize : 0,
  uploadFailedLength : 0,
@@ -86,8 +86,8 @@ SyncProgressMeter.prototype = {
  downloadMsg : "",
  downloadErrorMsg : "",
  uploadUpdateMsg : "",
- uploadAddMsg : "",	
- uploadErrorMsg	: "",	
+ uploadAddMsg : "",
+ uploadErrorMsg	: "",
  uploadCompleted : false,
 
  displaySyncDialog : false,
@@ -95,22 +95,22 @@ SyncProgressMeter.prototype = {
  observerService : Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService),
  abWindow :  "",
 
- initDownload: function(downloadSize){
+ initDownload: function(downloadSize) {
     this.downloadMeter = 0;
-    this.downloadLength = downloadSize;    
+    this.downloadLength = downloadSize;
     this.downloadFailedLength = 0;
-    this.downloadErrorMsg = ""; 
+    this.downloadErrorMsg = "";
     this.downloadMsg = "";
-		
+
     if(downloadSize == 0)
       this.downloadCompleted = true;
     else
       this.downloadCompleted = false;
-    
+
     updateAddressBookStatusbar("");
   },
-   
- initUpload : function(cardHash, abURI, updateSize, addSize){
+
+ initUpload: function(cardHash, abURI, updateSize, addSize) {
 //     this.cardIndex = cardHash;
     this.uri = abURI;
     this.vCardsUpDateSize = updateSize;
@@ -124,38 +124,38 @@ SyncProgressMeter.prototype = {
     updateAddressBookStatusbar("");
   },
 
- setVCardsUpDateSize: function(size){
+ setVCardsUpDateSize: function(size) {
     this.vCardsUpDateSize = size;
   },
-  
- setVCardsAddSize: function(size){
+
+ setVCardsAddSize: function(size) {
     this.vCardsAddSize = size;
   },
-	
- setVCardsUploadTotalSize: function(size){
+
+ setVCardsUploadTotalSize: function(size) {
     this.vCardsUploadTotalSize =size;
     if (size == 0)
       this.uploadCompleted = true;
     else
-      this.uploadCompleted = false;		
+      this.uploadCompleted = false;
   },
 
  progressBox: function(win, title, msg){
-    if (this.displayMsg){
-      if(this.abWindow){				
+    if (this.displayMsg) {
+      if (this.abWindow) {
 				win = this.abWindow;
       }
-      messageBox(win,title,msg);	
+      messageBox(win,title,msg);
     }
   },
-   
+
  // Components.interfaces.nsIObserver
- observe: function(object, topic, data){  
-    try{
-      var parser;
-      var stateDoc;   			
-			
-      switch (topic){
+ observe: function(object, topic, data) {
+    try {
+      var parser = new DOMParser();
+      var stateDoc;
+
+      switch (topic) {
 				//================================================================================
       case SyncProgressMeter.INITIALIZATION_EVENT:
 				//================================================================================
@@ -165,8 +165,8 @@ SyncProgressMeter.prototype = {
 				this.uploadFailedMsg = "";
 				this.abWindow =  Components.classes["@mozilla.org/appshell/window-mediator;1"].
 					getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("mail:addressbook");
-                  		
-				updateAddressBookStatusbar("initialization completed");                       
+
+				updateAddressBookStatusbar("initialization completed");
 				break;
 				//================================================================================
       case SyncProgressMeter.NOTHING_TO_DO:
@@ -187,38 +187,38 @@ SyncProgressMeter.prototype = {
 				this.downloadMeter++;
 				this.downloadMsg = "Card " + this.downloadMeter + " of "  + this.downloadLength + " downloaded.";
 				updateAddressBookStatusbar(this.downloadMsg);
-					
+
 				if (this.downloadMeter == this.downloadLength){
 					this.downloadCompleted = true;
-					this.observerService.notifyObservers(window, SyncProgressMeter.SERVER_DOWNLOAD_COMPLETED, null);     
+					this.observerService.notifyObservers(window, SyncProgressMeter.SERVER_DOWNLOAD_COMPLETED, null);
 				}
-				break;     					
+				break;
 				//================================================================================
       case SyncProgressMeter.SERVER_DOWNLOAD_COMPLETED:
 				//================================================================================
-				var s1 = this.downloadLength > 1 ? "s": "";	
+				var s1 = this.downloadLength > 1 ? "s": "";
 				this.downloadMsg = "Download completed from server: " + this.downloadLength + " card" + s1 + " downloaded!";
 				updateAddressBookStatusbar(this.downloadMsg);
-		   
+
 				if (this.uploadCompleted)
-					this.observerService.notifyObservers(window, SyncProgressMeter.SERVER_SYNC_COMPLETED, null);     
-					
-				break;              
+					this.observerService.notifyObservers(window, SyncProgressMeter.SERVER_SYNC_COMPLETED, null);
+
+				break;
 				//================================================================================
       case SyncProgressMeter.CARD_DOWNLOAD_FAILED:
 				//================================================================================
 				this.downloadFailedLength++;
 				var cardText = " vcards";
-	
+
 				if (this.downloadFailedLength == 1)
 					cardText = " vcard";
-					
+
 				this.downloadMsg = this.downloadFailedLength + cardText + " have failed to download the syncronization will not be applied!";
 				updateAddressBookStatusbar(this.downloadMsg);
-				  	
+
 				if(this.downloadMeter + this.downloadFailedLength == this.downloadLength)
 					this.observerService.notifyObservers(window, SyncProgressMeter.SERVER_DOWNLOAD_FAILURE, null);
-					
+
 				break;
 				//================================================================================
       case SyncProgressMeter.SERVER_DOWNLOAD_FAILURE:
@@ -233,7 +233,7 @@ SyncProgressMeter.prototype = {
 				//================================================================================
 				this.uploadAddMsg  = this.downloadMsg + "  Beginning server uploads...";
 				updateAddressBookStatusbar(this.uploadAddMsg);
-				break;	
+				break;
 				//================================================================================
       case SyncProgressMeter.UPLOAD_STOP_REQUEST_EVENT:
 				//================================================================================
@@ -241,11 +241,10 @@ SyncProgressMeter.prototype = {
 				//GET /mycard.vcf
 				//if-none-match: ETAG-OF-THE-LAST-UPDATE
 				//---2---
-				//This will only refetch the content if it changed. 
-	
-				parser=new DOMParser();
-				stateDoc=parser.parseFromString(data,"text/xml");
-				
+				//This will only refetch the content if it changed.
+
+				stateDoc = parser.parseFromString(data, "text/xml");
+
 				var etag = stateDoc.getElementsByTagName("etag")[0].textContent;
 				var key =  stateDoc.getElementsByTagName("key")[0].textContent;
 				var isNewCard = stateDoc.getElementsByTagName("newCard")[0].textContent == "true";
@@ -254,18 +253,18 @@ SyncProgressMeter.prototype = {
 					location = stateDoc.getElementsByTagName("location")[0].textContent;
 				}
 				catch(e){ }
-				logDebug("case SyncProgressMeter.UPLOAD_STOP_REQUEST_EVENT:" +				
-								 "\n		key					= " + key + 
-								 "\n		new key (location)	= " + location + 
-								 "\n		etag				= " + etag + 
+				logDebug("case SyncProgressMeter.UPLOAD_STOP_REQUEST_EVENT:" +
+								 "\n		key					= " + key +
+								 "\n		new key (location)	= " + location +
+								 "\n		etag				= " + etag +
 								 "\n		isNewCard =  " + isNewCard);
-	
+
 // 				dump("cardIndex:\n" + dumpObject(this.cardIndex) + "\n");
 // 				dump("key: " + key + "\n");
 // 				var card = this.cardIndex[key];
 // 				var cardExt = card.QueryInterface(Components.interfaces.nsIAbMDBCard);
-	
-// 				if (etag != ""){
+
+// 				if (etag != "") {
 // 					if (location) {
 // 						cardExt.setStringAttribute("groupDavKey", location);
 // 						this.cardIndex[location] = this.cardIndex[key];
@@ -281,20 +280,20 @@ SyncProgressMeter.prototype = {
 				else {
 					this.updateCounter++;
 					this.observerService.notifyObservers(window, SyncProgressMeter.CARD_UPLOADED, "update");
-				}		
+				}
 				break;
 				//================================================================================
       case  SyncProgressMeter.CARD_UPLOADED:
 				//================================================================================
 				var s1 = this.addCounter + " card" + this.addCounter > 1 ? "s": "";
 				var s2= this.vCardsUpDateSize > 1 ? "s": "";
-	
-				this.uploadAddMsg  = this.downloadMsg + "  "  + s1 + " added of " + this.vCardsAddSize +  
-					", " + this.updateCounter + " card" +  s2 + " updated of " + 
+
+				this.uploadAddMsg  = this.downloadMsg + "  "  + s1 + " added of " + this.vCardsAddSize +
+					", " + this.updateCounter + " card" +  s2 + " updated of " +
 					this.vCardsUpDateSize + ".";
-	              								
+
 				updateAddressBookStatusbar(this.uploadAddMsg);
-				   	
+
 				uploadCompleted =	this.updateCounter + this.addCounter == this.vCardsUpDateSize + this.vCardsAddSize;
 				if(uploadCompleted){
 					this.observerService.notifyObservers(window, SyncProgressMeter.UPLOAD_COMPLETED, null);
@@ -304,50 +303,50 @@ SyncProgressMeter.prototype = {
       case SyncProgressMeter.UPLOAD_COMPLETED:
 				//================================================================================
 				this.uploadCompleted = true;
-					
-				this.uploadAddMsg  = this.downloadMsg + "  "  + " Upload Completed: " + this.addCounter + " card" + 
-					this.addCounter > 1 ? "(s)": "" + " added of " + this.vCardsAddSize + ", " + 
-					this.updateCounter + " card" +  this.vCardsUpDateSize > 1 ? "(s)": "" + 
+
+				this.uploadAddMsg  = this.downloadMsg + "  "  + " Upload Completed: " + this.addCounter + " card" +
+					this.addCounter > 1 ? "(s)": "" + " added of " + this.vCardsAddSize + ", " +
+					this.updateCounter + " card" +  this.vCardsUpDateSize > 1 ? "(s)": "" +
 					" updated of " + this.vCardsUpDateSize;
 
 				updateAddressBookStatusbar(this.uploadAddMsg);
 
 				if (this.downloadCompleted);
 				this.observerService.notifyObservers(window, SyncProgressMeter.SERVER_SYNC_COMPLETED, null);
-					
+
 				break;
 				//================================================================================
       case SyncProgressMeter.SERVER_SYNC_COMPLETED:
 				//================================================================================
 				var s1 = this.addCounter > 1 ? "s": "";
 				var s2 = this.updateCounter > 1 ? "s": "";
-        
+
 				this.uploadAddMsg  = this.downloadMsg + "  "  + "Upload Completed: " + this.addCounter + " card" +
-					s1 + " added of " + this.vCardsAddSize + ", " + 
+					s1 + " added of " + this.vCardsAddSize + ", " +
 					this.updateCounter + " card" + s2 +  " updated of " + this.vCardsUpDateSize + ".";
 
 				updateAddressBookStatusbar(this.uploadAddMsg);
-					
+
 				var msg = "Syncronization completed.\n\n" +
 					this.downloadLength + " card(s) downloaded. \n\n" +
 					this.updateCounter + " card(s) updated on the server. \n\n" +
 					this.addCounter + " card(s) added on the server. \n\n";
 
-				this.progressBox(window,"GroupDAV Syncronization",msg);	
-				break;	   
+				this.progressBox(window,"GroupDAV Syncronization",msg);
+				break;
 				//================================================================================
       case SyncProgressMeter.SERVER_SYNC_ERROR:
 				//================================================================================
 				if (this.uploadFailedLength > 0){
 					var cardText = this.uploadFailedLength > 1 ? " cards " : " card ";
-					this.uploadErrorMsg = this.uploadFailedLength + cardText + "could not be uploaded. The server could not process the" + cardText +".\n" 
+					this.uploadErrorMsg = this.uploadFailedLength + cardText + "could not be uploaded. The server could not process the" + cardText +".\n"
 						+ "Google the HTTP Status Code for more information.\n\n"  + "Server HTTP Status Code:" + this.uploadErrorMsg
 						}else{
 					this.uploadErrorMsg = "";
 				}
 				if (this.downloadFailedLength > 0){
 					var cardText = this.downloadFailedLength > 1 ? " cards " : " card ";
-					this.downloadErrorMsg = this.downloadFailedLength + cardText + "could not be downloaded.\n\nThe server response Status Code was: " 
+					this.downloadErrorMsg = this.downloadFailedLength + cardText + "could not be downloaded.\n\nThe server response Status Code was: "
 						+ this.downloadErrorMsg + ".\n\n" + "Google the HTTP Status Code for more information.";
 				}else{
 					this.downloadErrorMsg = "";
@@ -356,31 +355,30 @@ SyncProgressMeter.prototype = {
 					this.downloadLength + " card(s) downloaded. \n\n" +
 					this.updateCounter + " card(s) updated on the server. \n\n" +
 					this.addCounter + " card(s) added on the server. \n\n" +
-					this.downloadErrorMsg +  this.uploadErrorMsg;			
+					this.downloadErrorMsg +  this.uploadErrorMsg;
 				var displayMsgBak =  this.displayMsg;
 				this.displayMsg = true;
-				this.progressBox(window,"GroupDAV Syncronization",msg);	 
+				this.progressBox(window,"GroupDAV Syncronization",msg);
 				this.displayMsg =  displayMsgBak;
-				break;	        		
+				break;
 				//================================================================================
       case SyncProgressMeter.UPLOAD_ERROR_EVENT:
 				//================================================================================
 				logWarn("SyncProgressMeter.UPLOAD_ERROR_EVENT Upload failure:\n\n" + data);
-					
-				parser=new DOMParser();
-				stateDoc=parser.parseFromString(data,"text/xml");
+
+				stateDoc = parser.parseFromString(data, "text/xml");
 				this.uploadErrorMsg = stateDoc.getElementsByTagName("status")[0].textContent;
-	
+
 				this.uploadFailedLength++;
 				var cardText = " vcards";
-					
+
 				if (this.uploadFailedLength == 1)
 					cardText = " vcard";
-					
+
 				updateAddressBookStatusbar( this.uploadFailedLength + cardText + " have failed to upload!");
-					
+
 				if(this.updateCounter + this.addCounter + this.uploadFailedLength == this.vCardsUpDateSize + this.vCardsAddSize){
-					this.observerService.notifyObservers(window, SyncProgressMeter.SERVER_SYNC_ERROR, null);	
+					this.observerService.notifyObservers(window, SyncProgressMeter.SERVER_SYNC_ERROR, null);
 				}
 				break;
 				//================================================================================
@@ -397,7 +395,7 @@ SyncProgressMeter.prototype = {
   },
 
  // Components.interfaces.nsISupports
- QueryInterface : function(iid){
+ QueryInterface : function(iid) {
     if (iid.equals(Components.interfaces.nsIObserver)
 				|| iid.equals(Components.interfaces.nsISupportsWeakReference)
 				|| iid.equals(Components.interfaces.nsISupports))
@@ -406,3 +404,18 @@ SyncProgressMeter.prototype = {
       throw Components.results.NS_NOINTERFACE;
   }
 };
+
+/* for unit tests */
+// function test() {
+//  test: function() {
+// 		this.initSyncVariables();
+// 		var key = "1D528734-658A-0001-6939-945DE76011C5.vcf"
+// 		var state = ("<state><status>" + status
+// 								 + "</status><url>" + this.gURL + "</url>"
+// 								 + "<key>" + key + "</key>"
+// 								 + "</state>");
+// 		this.messengerWindow.gAbWinObserverService.notifyObservers(null,
+// 																															 SyncProgressMeter.UPLOAD_ERROR_EVENT,
+// 																															 state);
+//  }
+// }

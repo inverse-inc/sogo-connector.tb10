@@ -5,7 +5,7 @@
   <RDF:Description RDF:about="urn:mozilla:install-manifest"
     em:name="Inverse SOGo Connector"
     em:id="sogo-connector@inverse.ca"
-    em:version="0.64.2"
+    em:version="0.64.3pre2"
     em:description="A DAV plugin for keeping addressbooks and events in sync"
     em:iconURL="chrome://sogo-connector/skin/addressbook/lori.png"
     em:creator="Inverse/Keyrus Canada &lt;support@inverse.ca>"
@@ -18,7 +18,7 @@
     <em:contributor>Dominik Gehl</em:contributor>
     <em:contributor>Helge Hess</em:contributor>	  
     <em:contributor>Ludovic Marcotte</em:contributor>
-    <em:contributor>Mark Banner for the inputs on the Adressbook architecture http://www.standard8.demon.co.uk/</em:contributor>
+    <em:contributor>Mark Banner for the inputs on the Addressbook architecture http://www.standard8.demon.co.uk/</em:contributor>
     <em:contributor>Neil Deakin</em:contributor>
     <em:contributor>Paolo Kaosmos</em:contributor>	  
     <em:contributor>Raffael Luthiger for the German translation</em:contributor>	  

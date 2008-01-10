@@ -69,8 +69,10 @@ function OnLoadAddressBookOverlay() {
 		var ab = children.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
 		var realAB = ab.QueryInterface(Components.interfaces.nsIAbDirectory);
 		if (isGroupdavDirectory(ab.Value)
-				&& !isCardDavDirectory(ab.Value))
-			SynchronizeGroupdavAddressbook(ab.Value);
+				&& !isCardDavDirectory(ab.Value)) {
+			var synchronizer = new GroupDavSynchronizer(ab.Value, false);
+ 			SynchronizeGroupdavAddressbook(ab.Value);
+		}
 	}
 }
 

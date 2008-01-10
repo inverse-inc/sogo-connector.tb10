@@ -90,6 +90,7 @@ GroupDavSynchronizer.prototype = {
  gSelectedDirectoryURI: null, // gAddressBook to synchronize
  gAddressBook: null,
  gGroupDavServerInterface: null,
+ validCollection: false,     /* is addressbook a vcard-collection? */
 
  _initGroupDAVContext: function() {
 		var handler = Components.classes['@inverse.ca/context-manager;1']
@@ -185,7 +186,7 @@ GroupDavSynchronizer.prototype = {
 			else {
 				// Generate the key and save the modified card locally.
 				var cardKey = this.gGroupDavServerInterface.getNewCardKey();
-				cardExt.setStringAttribute("groupDavKey",cardKey);
+				cardExt.setStringAttribute("groupDavKey", cardKey);
 				card.editCardToDatabase(this.gSelectedDirectoryURI);
 				this.localCardPointerHash[cardKey] = card;
 
@@ -222,7 +223,7 @@ GroupDavSynchronizer.prototype = {
 
 		var data = {query: "server-propfind"};
 		var request = new sogoWebDAV(this.gURL, this, data);
-		request.propfind(["DAV: getetag", "DAV: getcontenttype", "DAV: getlastmodified"]);
+		request.propfind(["DAV: resourcetype", "DAV: getetag", "DAV: getcontenttype", "DAV: getlastmodified"]);
 // 		try {
 // 			var responseObj = webdav_propfind(this.gURL, propsList, null, null); //Let Thunderbird Password Manager handle user and password
 // 		}
@@ -380,7 +381,7 @@ GroupDavSynchronizer.prototype = {
 			this.remainingUploads--;
 			dump("Upload failure, the server could not process the card (google the HTTP status code for more information).\n\n\n"  + "Server HTTP Status Code:"+ status );
 			var state = ("<state><status>" + status
-									 + "</status><url>" + this.webdavURL + "</url></state>"
+									 + "</status><url>" + this.gURL + "</url>"
 									 + "<key>" + key + "</key>"
 									 + "</state>");
 			this.messengerWindow.gAbWinObserverService.notifyObservers(null,
@@ -516,10 +517,18 @@ GroupDavSynchronizer.prototype = {
 // 				this.serverDateHash[cName] = new Date(davObject["DAV: getlastmodified"]);
 //  				logDebug("\tServer Card key = " + cName + "\tversion = " + version);
 			}
+			else {
+				var rsrcType = "" + davObject["DAV: resourcetype"];
+				if (rsrcType.indexOf("vcard-collection") > 1)
+					this.validCollection = true;
+			}
 		}
 
-// 		logDebug("=========End Server Cards List"); 
-		this.processServerKeys();
+// 		logDebug("=========End Server Cards List");
+		if (this.validCollection)
+			this.processServerKeys();
+		else
+			throw ("server '" + this.gURL + "' is not a valid groupdav collection");
 		break;
 		case 401:
 		this._checkCallback();
@@ -651,8 +660,6 @@ GroupDavSynchronizer.prototype = {
  uploadCard: function(card, isNewCard, callback, callbackData) {
 		this.initSyncVariables();
 		var key = card.getStringAttribute("groupDavKey");
-
-		dump("uploading card to " + this.gURL + key + "\n");
 
 		this.localCardPointerHash[key] = card;
 		if (isNewCard) {
