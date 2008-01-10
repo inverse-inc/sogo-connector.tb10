@@ -107,19 +107,21 @@ function addObservers() {
 }
 
 function removeObservers() {
-	gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.INITIALIZATION_EVENT);
-	gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.NOTHING_TO_DO);
-	gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.CARD_DOWNLOADED);
-	gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.CARD_DOWNLOAD_FAILED);
-	gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.SERVER_DOWNLOAD_BEGINS);
-	gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.SERVER_DOWNLOAD_COMPLETED);
-	gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.SERVER_DOWNLOAD_FAILURE);
-	gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.SERVER_UPLOAD_BEGINS);
-	gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.UPLOAD_ERROR_EVENT);
-	gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.UPLOAD_STOP_REQUEST_EVENT);
-	gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.CARD_UPLOADED);
-	gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.UPLOAD_COMPLETED);
-	gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.SERVER_SYNC_COMPLETED);
-	gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.SERVER_SYNC_ERROR);
+	if (gAbWinObserverService) {
+		gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.INITIALIZATION_EVENT);
+		gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.NOTHING_TO_DO);
+		gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.CARD_DOWNLOADED);
+		gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.CARD_DOWNLOAD_FAILED);
+		gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.SERVER_DOWNLOAD_BEGINS);
+		gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.SERVER_DOWNLOAD_COMPLETED);
+		gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.SERVER_DOWNLOAD_FAILURE);
+		gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.SERVER_UPLOAD_BEGINS);
+		gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.UPLOAD_ERROR_EVENT);
+		gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.UPLOAD_STOP_REQUEST_EVENT);
+		gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.CARD_UPLOADED);
+		gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.UPLOAD_COMPLETED);
+		gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.SERVER_SYNC_COMPLETED);
+		gAbWinObserverService.removeObserver(gGroupDAVProgressMeter,
+																				 SyncProgressMeter.SERVER_SYNC_ERROR);
+	}
 }
-
