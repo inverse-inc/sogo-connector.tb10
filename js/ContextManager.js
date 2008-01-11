@@ -1,5 +1,4 @@
 function ContextManager() {
-  dump("new ContextManager\n");
   this.contexts = {};
   this.wrappedJSObject = this;
 }

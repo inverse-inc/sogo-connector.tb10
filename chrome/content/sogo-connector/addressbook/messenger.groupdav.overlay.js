@@ -87,6 +87,7 @@ function OnUnloadMessengerOverlay() {
 }
 
 function addObservers() {
+	gAbWinObserverService.addObserver(gGroupDAVProgressMeter, SyncProgressMeter.API_DISABLED_EVENT, true);
 	gAbWinObserverService.addObserver(gGroupDAVProgressMeter, SyncProgressMeter.INITIALIZATION_EVENT, true);
 	gAbWinObserverService.addObserver(gGroupDAVProgressMeter, SyncProgressMeter.NOTHING_TO_DO, true);
 
@@ -108,6 +109,7 @@ function addObservers() {
 
 function removeObservers() {
 	if (gAbWinObserverService) {
+		gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.API_DISABLED_EVENT);
 		gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.INITIALIZATION_EVENT);
 		gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.NOTHING_TO_DO);
 		gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.CARD_DOWNLOADED);

@@ -49,6 +49,7 @@ jsInclude(["chrome://sogo-connector/content/general/vcard.observers.addressbook.
 function SyncProgressMeter() {
 }
 
+SyncProgressMeter.API_DISABLED_EVENT = "ca.inverse.groupdav.api-disabled";
 SyncProgressMeter.INITIALIZATION_EVENT = "ca.inverse.groupdav.initialized";
 SyncProgressMeter.NOTHING_TO_DO = "ca.inverse.groupdav.insync";
 SyncProgressMeter.SERVER_DOWNLOAD_BEGINS = "ca.inverse.groupdav.DownloadBegins";
@@ -156,6 +157,11 @@ SyncProgressMeter.prototype = {
       var stateDoc;
 
       switch (topic) {
+      case SyncProgressMeter.API_DISABLED_EVENT:
+				dump("open dialog...\n");
+				window.openDialog("chrome://sogo-connector/content/addressbook/lightning-missing.xul",
+													"", "chrome,modal=yes,resizable=no,centerscreen");
+				break;
 				//================================================================================
       case SyncProgressMeter.INITIALIZATION_EVENT:
 				//================================================================================
@@ -163,8 +169,9 @@ SyncProgressMeter.prototype = {
 				this.uploadUpdateMsg	 = "";
 				this.uploadAddMsg	= "";
 				this.uploadFailedMsg = "";
-				this.abWindow =  Components.classes["@mozilla.org/appshell/window-mediator;1"].
-					getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("mail:addressbook");
+				this.abWindow = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+					.getService(Components.interfaces.nsIWindowMediator)
+					.getMostRecentWindow("mail:addressbook");
 
 				updateAddressBookStatusbar("initialization completed");
 				break;
@@ -188,9 +195,11 @@ SyncProgressMeter.prototype = {
 				this.downloadMsg = "Card " + this.downloadMeter + " of "  + this.downloadLength + " downloaded.";
 				updateAddressBookStatusbar(this.downloadMsg);
 
-				if (this.downloadMeter == this.downloadLength){
+				if (this.downloadMeter == this.downloadLength) {
 					this.downloadCompleted = true;
-					this.observerService.notifyObservers(window, SyncProgressMeter.SERVER_DOWNLOAD_COMPLETED, null);
+					this.observerService.notifyObservers(window,
+																							 SyncProgressMeter.SERVER_DOWNLOAD_COMPLETED,
+																							 null);
 				}
 				break;
 				//================================================================================
@@ -283,10 +292,10 @@ SyncProgressMeter.prototype = {
 				}
 				break;
 				//================================================================================
-      case  SyncProgressMeter.CARD_UPLOADED:
+      case SyncProgressMeter.CARD_UPLOADED:
 				//================================================================================
 				var s1 = this.addCounter + " card" + this.addCounter > 1 ? "s": "";
-				var s2= this.vCardsUpDateSize > 1 ? "s": "";
+				var s2 = this.vCardsUpDateSize > 1 ? "s": "";
 
 				this.uploadAddMsg  = this.downloadMsg + "  "  + s1 + " added of " + this.vCardsAddSize +
 					", " + this.updateCounter + " card" +  s2 + " updated of " +

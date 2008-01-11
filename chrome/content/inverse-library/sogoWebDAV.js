@@ -41,6 +41,7 @@ function sogoWebDAV(url, target, data, asynchronous) {
   this.target = target;
   this.cbData = data;
   this.asynchronous = true; /* FIXME */
+	this.testWebDAV();
 }
 
 sogoWebDAV.prototype = {
@@ -130,7 +131,22 @@ sogoWebDAV.prototype = {
 		var queryDoc = xParser.parseFromString(fullQuery, "application/xml");
 
 		this.load("POST", queryDoc);
-  }
+  },
+ testWebDAV: function() {
+		if (!context.webdavAvailability) {
+			try {
+				var webdavSvc = Components.classes['@mozilla.org/webdav/service;1']
+				.getService(Components.interfaces.nsIWebDAVService);
+				context.webdavAvailability = "available";
+			}
+			catch(e) {
+				context.webdavAvailability = "unavailable";
+			}
+		}
+
+		if (context.webdavAvailability == "unavailable")
+			throw "@mozilla.org/webdav/service;1 is unavailable";
+	}
 };
 
 function WebDAVResource(url) {

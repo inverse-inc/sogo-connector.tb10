@@ -104,13 +104,14 @@ GroupDavSynchronizer.prototype = {
 	},
  start: function() {
 		this.initSyncVariables();
-		this.context = this._initGroupDAVContext();
-		if (this.context.requests[this.gURL])
-			dump("a request is already active for url: " + this.gURL + "\n");
-		else {
-			dump("sync with " + this.gURL + "...\n");
-			this.context.requests[this.gURL] = true;
-			this.fillServerHashes();
+		if (!this.context.apiDisabled) {
+			if (this.context.requests[this.gURL])
+				dump("a request is already active for url: " + this.gURL + "\n");
+			else {
+				dump("sync with " + this.gURL + "...\n");
+				this.context.requests[this.gURL] = true;
+				this.fillServerHashes();
+			}
 		}
 	},
  initSyncVariables: function() {
@@ -154,10 +155,22 @@ GroupDavSynchronizer.prototype = {
 		this.conflictHash = {};
 		this.localCardPointerHash = {};
 
-		//Initialization is completed
-		this.messengerWindow.gAbWinObserverService.notifyObservers(null,
-																															 SyncProgressMeter.INITIALIZATION_EVENT,
-																															 null);
+		this.context = this._initGroupDAVContext();
+		try {
+			var testObject = new sogoWebDAV();
+
+			//Initialization is completed
+			this.messengerWindow.gAbWinObserverService.notifyObservers(null,
+																																 SyncProgressMeter.INITIALIZATION_EVENT,
+																																 null);
+		}
+		catch(e) {
+			dump("an exception occured: " + e + "\n");
+			this.context.apiDisabled = true;
+			this.messengerWindow.gAbWinObserverService.notifyObservers(null,
+																																 SyncProgressMeter.API_DISABLED_EVENT,
+																																 null);
+		}
 	},
  // Fill the Local Directory data structures for the syncronization
  fillLocalHashes: function() {
@@ -223,7 +236,8 @@ GroupDavSynchronizer.prototype = {
 
 		var data = {query: "server-propfind"};
 		var request = new sogoWebDAV(this.gURL, this, data);
-		request.propfind(["DAV: resourcetype", "DAV: getetag", "DAV: getcontenttype", "DAV: getlastmodified"]);
+		request.propfind(["DAV: resourcetype", "DAV: getetag",
+											"DAV: getcontenttype", "DAV: getlastmodified"]);
 // 		try {
 // 			var responseObj = webdav_propfind(this.gURL, propsList, null, null); //Let Thunderbird Password Manager handle user and password
 // 		}
@@ -659,23 +673,25 @@ GroupDavSynchronizer.prototype = {
 	},
  uploadCard: function(card, isNewCard, callback, callbackData) {
 		this.initSyncVariables();
-		var key = card.getStringAttribute("groupDavKey");
+		if (!this.apiDisabled) {
+			var key = card.getStringAttribute("groupDavKey");
 
-		this.localCardPointerHash[key] = card;
-		if (isNewCard) {
-			var vcard = card2vcard(card);
-			this.localAdditionHash[key] = vcard;
-			this.localAdditionHash.size++;
-		}
-		else {
-			var version = card.getStringAttribute("groupDavVersion");
-			this.localVersionHash[key] = version
-			this.localUpdateHash[key] = true;
-			this.localUpdateHash.size++;
-		}
+			this.localCardPointerHash[key] = card;
+			if (isNewCard) {
+				var vcard = card2vcard(card);
+				this.localAdditionHash[key] = vcard;
+				this.localAdditionHash.size++;
+			}
+			else {
+				var version = card.getStringAttribute("groupDavVersion");
+				this.localVersionHash[key] = version
+					this.localUpdateHash[key] = true;
+				this.localUpdateHash.size++;
+			}
 
-		this.initProgressMeter();
- 		this.uploadCards();
+			this.initProgressMeter();
+			this.uploadCards();
+		}
 	},
 
  _checkCallback: function() {
