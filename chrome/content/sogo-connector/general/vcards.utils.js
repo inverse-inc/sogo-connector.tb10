@@ -11,6 +11,24 @@
 	Contributors: Ralf Becker, RalfBecker@outdoor-training.de
  */
 
+function jsInclude(files, target) {
+	var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+		.getService(Components.interfaces.mozIJSSubScriptLoader);
+	for (var i = 0; i < files.length; i++) {
+		try {
+			loader.loadSubScript(files[i], target);
+		}
+		catch(e) {
+			dump("implementors.addressbook.groupdav.js: failed to include '" + files[i] +
+					 "'\n" + e
+					 + "\nFile: " + e.fileName
+					 + "\nLine: " + e.lineNumber + "\n\n Stack:\n\n" + e.stack);
+		}
+	}
+}
+
+jsInclude(["chrome://inverse-library/content/uuid.js"]);
+
 function escapedForCards(theString) {
 	theString = theString.replace(/\\/g, "\\\\");
 	theString = theString.replace(/,/g, "\\,");
@@ -571,11 +589,14 @@ function card2vcard(oldCard) {
 
 	var data ="";
 	var vCard = "BEGIN:VCARD\r\nVERSION:3.0\r\n";
-	
-	vCard += "UID:"+ card.getStringAttribute("groupDavKey") + "\r\n";
+
+	var uid = card.getStringAttribute("groupDavKey");
+	if (!uid || uid == "")
+		uid = new UUID();
+	vCard += "UID:"+ uid + "\r\n";
 
 	if (card.lastName != "" || card.firstName != "")
-		vCard += "N:"+ card.lastName+ ";" + card.firstName + "\r\n";
+		vCard += "N:"+ card.lastName + ";" + card.firstName + "\r\n";
 
 	if (card.displayName != "")   
 		vCard += "FN:" + card.displayName +"\r\n";
