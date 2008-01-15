@@ -332,7 +332,7 @@ function decodedValues(values, charset, encoding) {
 		var decodedValue = null;
 		if (encoding) {
 			if (encoding == "quoted-printable")
-				decodedValue = decodeQP(values[i]);
+				decodedValue = decodeQP(values[i], charset);
 			else
 				throw "Unsupported encoding for vcard value: " + encoding;
 		}
@@ -352,24 +352,31 @@ function decodedValues(values, charset, encoding) {
 	return newValues;
 }
 
-function decodeQP(value) {
-	var decoded = "";
+function decodeQP(value, charset) {
+	var decoded = new Array();
 
+	var count = 0;
 	var i = 0;
-	var j = 0;
 	while (i < value.length) {
 		var currentChar = value[i];
-		var decodedChar = currentChar;
 		if (currentChar == "=") {
 			var hexValue = (value[i+1] + value[i+2]).toLowerCase();
-			decodedChar = String.fromCharCode(decodeHEX(hexValue));
-			i += 2;
+			var decodedChar = String.fromCharCode(decodeHEX(hexValue));
+			decoded.push(decodedChar);
+			i += 3;
 		}
-		decoded[j] = decodedChar;
-		j++;
+		else {
+			decoded.push(currentChar);
+			i++;
+		}
+		count++;
 	}
 
-	return decoded;
+	var converter = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
+		.createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
+	converter.charset = charset;
+
+	return converter.ConvertToUnicode(decoded.join(""));
 }
 
 function decodeHEX(string) {
@@ -383,7 +390,7 @@ function decodeHEX(string) {
 		var code = string.charCodeAt(i);
 		var currentInt = code - charCode0;
 		if (currentInt > 9)
-			currentInt += charCode0 - charCodea;
+			currentInt = 10 + code - charCodea;
 		t = t * 16 + currentInt;
 	}
 

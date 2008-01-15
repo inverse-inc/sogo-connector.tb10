@@ -42,6 +42,7 @@ jsInclude(["chrome://sogo-connector/content/general/preference.service.addressbo
 					 "chrome://sogo-connector/content/general/sync.progress-meter.js",
 					 "chrome://sogo-connector/content/general/implementors.addressbook.groupdav.js",
 					 "chrome://sogo-connector/content/common/common-dav.js",
+					 "chrome://sogo-connector/content/general/vcards.utils.js",
 					 "chrome://sogo-connector/content/general/mozilla.utils.inverse.ca.js"]);
 
 /*

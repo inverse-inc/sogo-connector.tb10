@@ -541,8 +541,10 @@ GroupDavSynchronizer.prototype = {
 // 		logDebug("=========End Server Cards List");
 		if (this.validCollection)
 			this.processServerKeys();
-		else
+		else {
+			this.context.requests[this.gURL] = null;
 			throw ("server '" + this.gURL + "' is not a valid groupdav collection");
+		}
 		break;
 		case 401:
 		this._checkCallback();

@@ -49,7 +49,7 @@
       <label flex="1">&lightning-missing.text;</label>
     </hbox>
     <hbox>
-      <label onclick="openURL(this.value);" class="text-link">http://www.mozilla.org/projects/calendar/lightning/</label>
+      <label onclick="openURL(this.childNodes[0].nodeValue);" class="text-link">http://www.mozilla.org/projects/calendar/lightning/</label>
     </hbox>
   </vbox>
 </dialog>
