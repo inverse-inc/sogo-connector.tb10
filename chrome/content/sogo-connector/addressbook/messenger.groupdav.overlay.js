@@ -61,6 +61,10 @@ function OnLoadAddressBookOverlay() {
 	gGroupDAVProgressMeter = new SyncProgressMeter();
 	addObservers();
 
+	setTimeout(_startupFolderSync, 2000);
+}
+
+function _startupFolderSync() {
 	var rdfService = Components.classes["@mozilla.org/rdf/rdf-service;1"]
     .getService(Components.interfaces.nsIRDFService);
 	var parentDir = rdfService.GetResource("moz-abdirectory://")

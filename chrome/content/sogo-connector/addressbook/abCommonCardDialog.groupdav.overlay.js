@@ -93,20 +93,20 @@ function setDocumentDirty(boolValue){
 function setGroupDavFields(){
 	var card = gEditCard.card.QueryInterface(Components.interfaces.nsIAbMDBCard);
 	var version = card.getStringAttribute("groupDavVersion");
-	if (version) {
+	if (version && version != "") {
 		var localUpdatePos = version.indexOf(LOCAL_UPDATE_FLAG);
 		if (localUpdatePos == -1) {
 		//Only add the flags if it's not already there
 			card.setStringAttribute("groupDavVersion", version + LOCAL_UPDATE_FLAG);
 		}
 	}
-	else {
-		card.setStringAttribute("groupDavVersion"," ");
-	}
-	if (!card.getStringAttribute("groupDavKey")){
-	// New Card, create key
-		card.setStringAttribute("groupDavKey",GroupdavServerFactory.get(groupdavTypes.GroupDAV_Generic).getNewCardKey());
-	}
+// 	else {
+// 		card.setStringAttribute("groupDavVersion"," ");
+// 	}
+// 	if (!card.getStringAttribute("groupDavKey")){
+// 	// New Card, create key
+// 		card.setStringAttribute("groupDavKey",GroupdavServerFactory.get(groupdavTypes.GroupDAV_Generic).getNewCardKey());
+// 	}
 }
 
 function saveCard(isNewCard){

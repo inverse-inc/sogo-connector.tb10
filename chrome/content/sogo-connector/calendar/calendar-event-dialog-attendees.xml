@@ -27,7 +27,7 @@
 	          this.setupAutocompleteCardDAV();
 					}
 					else {
-	          this.inverseParentAutocompleteOverride();
+					  this.inverseParentSetupAutocomplete();
 					}
 					]]>
 				</body>
