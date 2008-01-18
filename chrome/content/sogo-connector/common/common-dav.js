@@ -21,6 +21,24 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  ********************************************************************************/
 
+function jsInclude(files, target) {
+ 	var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+		.getService(Components.interfaces.mozIJSSubScriptLoader);
+	for (var i = 0; i < files.length; i++) {
+		try {
+			loader.loadSubScript(files[i], target);
+		}
+		catch(e) {
+			dump("common-dav.js: failed to include '" + files[i] +
+					 "'\n" + e
+					 + "\nFile: " + e.fileName
+					 + "\nLine: " + e.lineNumber + "\n\n Stack:\n\n" + e.stack);
+		}
+	}
+}
+
+jsInclude(["chrome://sogo-connector/content/general/preference.service.addressbook.groupdav.js"]);
+
 var autoCompleteDirectoryPreferencesPrefix = "ldap_2.autoComplete.";
 
 var prefsService = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);

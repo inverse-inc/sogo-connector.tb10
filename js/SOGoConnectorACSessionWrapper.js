@@ -161,7 +161,7 @@ SOGoConnectorACSessionWrapper.prototype = {
 		if (this.running) {
 			this.waiting--;
 
-			if (status)
+			if (status && result)
 				this._fillResults(result.items);
 
 			if (!this.waiting) {
