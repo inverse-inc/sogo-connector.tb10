@@ -51,17 +51,88 @@ jsInclude(["chrome://sogo-connector/content/general/preference.service.addressbo
  */
  
 var gGroupDAVProgressMeter;
-var gAbWinObserverService;
 
-window.addEventListener("load", OnLoadAddressBookOverlay, false);
+function OnLoadMessengerOverlay() {
+	_cleanupAddressBooks();
 
-function OnLoadAddressBookOverlay() {
-	gAbWinObserverService = Components.classes["@mozilla.org/observer-service;1"]
+	window.gAbWinObserverService = Components.classes["@mozilla.org/observer-service;1"]
 		.getService(Components.interfaces.nsIObserverService);
 	gGroupDAVProgressMeter = new SyncProgressMeter();
 	addObservers();
 
-	setTimeout(_startupFolderSync, 2000);
+ 	setTimeout(_startupFolderSync, 2000);
+}
+
+function _cleanupAddressBooks() {
+	var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+		.getService(Components.interfaces.nsIPrefBranch);
+	var path = "ldap_2.servers";
+	var count = {};
+	var children = prefs.getChildList(path, count);
+	var uniqueChildren = {};
+	for (var i = 0; i < children.length; i++) {
+		var leaves = children[i].split(".");
+		uniqueChildren[leaves[2]] = true;
+	}
+
+	_cleanupBogusAB(prefs, uniqueChildren);
+
+	path = "extensions.ca.inverse.addressbook.groupdav.ldap_2.servers";
+	count = {};
+	children = prefs.getChildList(path, count);
+	uniqueChildren = {};
+	for (var i = 0; i < children.length; i++) {
+		var leaves = children[i].split(".");
+		uniqueChildren[leaves[7]] = true;
+	}
+
+	_cleanupOrphanDAVAB(prefs, uniqueChildren);
+}
+
+function _cleanupBogusAB(prefs, uniqueChildren) {
+	var path = "ldap_2.servers";
+
+	for (var key in uniqueChildren) {
+		if (key != "default") {
+			var uriRef = path + "." + key + ".uri";
+			var uri = null;
+// 			dump("trying: " + uriRef + "\n");
+			try {
+				//  			uri = "moz-abdavdirectory://" + prefs.getCharPref(uriRef);
+				uri = prefs.getCharPref(uriRef);
+				if (uri.indexOf("moz-abldapdirectory:") == 0) {
+					dump("deleting: " + path + "." + key + "\n");
+					prefs.deleteBranch(path + "." + key);
+					// 			dump("uri: " + uri + "\n");
+				}
+				else if (uri.indexOf("moz-abdavdirectory:") == 0) {
+					try {
+						prefs.getCharPref("extensions.ca.inverse.addressbook.groupdav"
+															+ ".ldap_2.servers." + key + ".name");
+					}
+					catch(e) {
+						dump("deleting: " + path + "." + key + "\n");
+						prefs.deleteBranch(path + "." + key);
+					};
+				}
+			}
+			catch(e) {};
+		}
+	}
+}
+
+function _cleanupOrphanDAVAB(prefs, uniqueChildren) {
+	var	path = "extensions.ca.inverse.addressbook.groupdav.ldap_2.servers";
+	for (var key in uniqueChildren) {
+		var otherRef = "ldap_2.servers." + key + ".description";
+		try {
+			prefs.getCharPref(otherRef);
+		}
+		catch(e) {
+			dump("deleting orphan: " + path + "." + key + "\n");
+			prefs.deleteBranch(path + "." + key);
+		}
+	}
 }
 
 function _startupFolderSync() {
@@ -87,7 +158,7 @@ function OnUnloadMessengerOverlay() {
 		OnUnloadMessenger();
 	}
 	catch(e) {
-		exceptionHandler(this,"OnLoadAddressBookOverlay",e);
+		exceptionHandler(this,"OnLoadMessengerOverlay",e);
 	}
 }
 
@@ -113,7 +184,7 @@ function addObservers() {
 }
 
 function removeObservers() {
-	if (gAbWinObserverService) {
+	if (window.gAbWinObserverService) {
 		gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.API_DISABLED_EVENT);
 		gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.INITIALIZATION_EVENT);
 		gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.NOTHING_TO_DO);
@@ -132,3 +203,5 @@ function removeObservers() {
 																				 SyncProgressMeter.SERVER_SYNC_ERROR);
 	}
 }
+
+window.addEventListener("load", OnLoadMessengerOverlay, false);

@@ -50,10 +50,13 @@ jsInclude(["chrome://inverse-library/content/sogoWebDAV.js",
 					 "chrome://sogo-connector/content/general/webdav.inverse.ca.js",
 					 "chrome://sogo-connector/content/general/webdav_lib/webdavAPI.js"]);
 
-
 function GroupDavSynchronizer(uri, isDrop) {
 	if (typeof uri == "undefined" || !uri)
 		throw "Missing 'uri' parameter";
+	if (!isGroupdavDirectory(uri)
+			|| isCardDavDirectory(uri))
+		throw "Specified addressbook cannot be synchronized";
+	 
 	this.gSelectedDirectoryURI = uri;
 	this.mIsDrop = isDrop;
 	this.messengerWindow
@@ -678,16 +681,27 @@ GroupDavSynchronizer.prototype = {
 		this.deleteServerDeleteArrayCards();
 	},
  deleteServerDeleteArrayCards: function() {
-		var card;
-		var db = Components.classes["@mozilla.org/addressbook;1"]
-		.createInstance(Components.interfaces.nsIAddressBook)
-		.getAbDatabaseFromURI(this.gSelectedDirectoryURI);
-		for (var i = 0; i < this.serverDeleteArray.length; i++) {
-			card = this.localCardPointerHash[this.serverDeleteArray[i]]
-				.QueryInterface(Components.interfaces.nsIAbMDBCard);
-			db.deleteCard(card, true);
+		if (this.serverDeleteArray.length) {
+			var cards = Components.classes["@mozilla.org/supports-array;1"]
+			.createInstance(Components.interfaces.nsISupportsArray);
+			for (var i = 0; i < this.serverDeleteArray.length; i++) {
+				var card = this.localCardPointerHash[this.serverDeleteArray[i]]
+					.QueryInterface(Components.interfaces.nsIAbMDBCard);
+				cards.AppendElement(card);
+			}
+
+			dump("delete from : " + this.gSelectedDirectoryURI + "\n");
+			this.gAddressBook.deleteCards(cards);
 		}
-		db.closeMDB(true);
+// 		var db = Components.classes["@mozilla.org/addressbook;1"]
+// 		.createInstance(Components.interfaces.nsIAddressBook)
+// 		.getAbDatabaseFromURI(this.gSelectedDirectoryURI);
+// 		for (var i = 0; i < this.serverDeleteArray.length; i++) {
+// 			card = this.localCardPointerHash[this.serverDeleteArray[i]]
+// 				.QueryInterface(Components.interfaces.nsIAbMDBCard);
+// 			db.deleteCard(card, true);
+// 		}
+// 		db.closeMDB(true);
 	},
  uploadCard: function(card, callback, callbackData) {
 		this.initSyncVariables();

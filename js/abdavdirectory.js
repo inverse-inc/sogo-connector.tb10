@@ -195,7 +195,7 @@ AbDAVDirectory.prototype = {
  get childCards() {
 	 var result = this.getChildCards(); 	
 	 //	dump("this.getChildEnumerator() = result = " + result + "\n"); 
-	 return result;  
+	 return result;
  },
 
 //  set childCards (val) { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; },
@@ -215,10 +215,11 @@ AbDAVDirectory.prototype = {
 		//	this.Value contains the following pattern
 		// moz-abdavdirectory://http://sogo.inverse.ca/SOGo/dav/rbolduc/Contacts/public/?(or(PrimaryEmail,c,klm)(DisplayName,c,kkk)(FirstName,c,klm)(LastName,c,k)))
 		// Matching the URL
+
 		var reg = new RegExp(/moz-abdavdirectory:\/\/(.*)\?/);
 		if (!reg.test(this.Value)) {
 			return null;
-		}	
+		}
 		var url = RegExp.$1;
 
 		// Matching the criteria
@@ -238,16 +239,15 @@ AbDAVDirectory.prototype = {
 		var uri = "moz-abdavdirectory://" + url;
 		var resultArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
 				
-		var card;
 		for (var i = 0; i < nodeList.length; i++){
 			customFieldsArray = new Array();
 			// 		dump("\n===================================================\n");
 			// 		dump(nodeList.item(i).textContent.toString());
 			// 		dump("\n===================================================\n");
-			card = importFromVcard(nodeList.item(i).textContent.toString(), null, customFieldsArray);
+			var card = importFromVcard(nodeList.item(i).textContent.toString(), null, customFieldsArray);
 		
 			var savedCard = this.addCard(card);
-			dump (savedCard.displayName +"\n");
+// 			dump (savedCard.displayName +"\n");
 			var cardExt = savedCard.QueryInterface(Components.interfaces.nsIAbMDBCard);
 
 			cardExt.setStringAttribute("calFBURL", customFieldsArray["fburl"]);
@@ -263,7 +263,7 @@ AbDAVDirectory.prototype = {
 		else {
 			result = null;
 		}
-		dump("getChildCards: " + result + "  " +  nodeList.length + "\n");
+// 		dump("getChildCards: " + result + "  " +  nodeList.length + "\n");
 	}
 	catch(e) {
 		dump("Exception in getChildCards:\n" + e + "/n");
@@ -342,7 +342,7 @@ AbDAVDirectory.prototype = {
  addCard: function(card) {
 	 if (!card) {
 		 throw Components.Exception("addCard().  Parameter card is null");
-	 }
+	 } 
 	 var newCard = null ;
 
 	 // this.Value can contain the query so split at "?" to get the uri.

@@ -57,6 +57,42 @@ function isGroupdavDirectory(abURI) {
 	return value;
 }
 
+function isCardDavDirectory(abURI){
+	var value = false;
+
+	if (abURI
+			&& abURI.search("mab/MailList") == -1) {
+		var ab = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+			.getService(Components.interfaces.nsIRDFService)
+			.GetResource(abURI)
+			.QueryInterface(Components.interfaces.nsIAbDirectory);
+
+ 		var prefId = ab.directoryProperties.prefName;
+		try {
+			var groupdavPrefService = new GroupdavPreferenceService(prefId);
+		}
+		catch(e) {
+			//var xpcConnect =Components.classes["DEB1D48E-7469-4B01-B186-D9854C7D3F2D"].getService(Components.interfaces.nsIXPConnect);	
+			dump("abURI '" + abURI
+					 + " is invalid in call isCardDavDirectory(abURI) \n\n STACK:\n"
+					 + backtrace(10));
+			dump("ab prefid: " + prefId + "\n");
+			// TODO this needs to be handle better
+			// Currently if for any reason someone messed up prefs.js this could create havoc
+		}
+
+		try {
+// 			dump("the real test\n");
+			value = groupdavPrefService.getReadOnly();
+		}
+		catch(e) {}
+	}
+
+//  	dump("abURI: " + abURI + " isCardDAV? " + value + "\n");
+
+	return value;
+}
+
 function GroupdavPreferenceService(uniqueId) {
 	if (uniqueId == null || uniqueId == "") {
 		logError("GroupdavPreferenceService exception: Missing uniqueId"+

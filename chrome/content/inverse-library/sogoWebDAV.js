@@ -46,7 +46,7 @@ function sogoWebDAV(url, target, data, asynchronous) {
 
 sogoWebDAV.prototype = {
  realLoad: function(operation, parameters) {
-		// 		dump("dav operation: " + operation + "\n");
+// 		dump("dav operation: " + operation + "\n");
 		context.sogoWebDAVPending = true;
     var webdavSvc = Components.classes['@mozilla.org/webdav/service;1']
     .getService(Components.interfaces.nsIWebDAVService);
@@ -56,12 +56,17 @@ sogoWebDAV.prototype = {
     .getService(Components.interfaces.nsIURI);
     url.spec = this.url;
 
-    var listener = new WebDAVListener(this.target);
+    var listener = new sogoWebDAVListener(this.target);
 		listener.cbData = this.cbData;
 
-    var resource = new WebDAVResource(url.QueryInterface(Components.interfaces.nsIURL));
+		var ourClosure = Components.classes['@mozilla.org/supports-string;1']
+		.createInstance(Components.interfaces.nsISupportsString);
+		ourClosure.data = "sogoWebDAV";
+    var resource
+		= new sogoWebDAVResource(url.QueryInterface(Components.interfaces.nsIURL));
     if (operation == "GET")
-      webdavSvc.getToString(resource, listener, requestor, null);
+      webdavSvc.getToString(resource, listener,
+														requestor, ourClosure);
 		else if (operation == "PUT") {
 			var stream = Components.classes['@mozilla.org/io/string-input-stream;1']
 				.createInstance(Components.interfaces.nsIStringInputStream);
@@ -72,14 +77,15 @@ sogoWebDAV.prototype = {
 			stream.setData (stringUTF8, stringUTF8.length);
 
 			webdavSvc.put(resource, parameters.contentType, stream,
-										listener, requestor, null);
+										listener, requestor, ourClosure);
 		}
     else if (operation == "PROPFIND")
       webdavSvc.getResourceProperties(resource, parameters.length, parameters,
-																			true, listener, requestor, null);
+																			true, listener,
+																			requestor, ourClosure);
     else if (operation == "REPORT")
       webdavSvc.report(resource, parameters, false,
-											 listener, requestor, null);
+											 listener, requestor, ourClosure);
 		else if (operation == "POST") {
 			var xmlRequest = new XMLHttpRequest();
 			xmlRequest.open("POST", this.url, this.asynchronous);
@@ -149,30 +155,35 @@ sogoWebDAV.prototype = {
 	}
 };
 
-function WebDAVResource(url) {
+function sogoWebDAVResource(url) {
 	this.mResourceURL = url;
+	this.mLockToken = "sogoWebDAV";
 }
 
-WebDAVResource.prototype = {
+sogoWebDAVResource.prototype = {
  mResourceURL: {},
+ get lockToken() {
+	 return this.mLockToken;
+ },
  get resourceURL() {
    return this.mResourceURL;
  },
  QueryInterface: function(iid) {
-   if (iid.equals(Components.interfaces.nsIWebDAVResource) ||
-       iid.equals(Components.interfaces.nsISupports)) {
+   if (iid.equals(Components.interfaces.nsIWebDAVResource)
+			 || iid.equals(Components.interfaces.nsIWebDAVResourceWithLock)
+			 || iid.equals(Components.interfaces.nsISupports)) {
      return this;
    }
    throw Components.interfaces.NS_ERROR_NO_INTERFACE;
  }
 };
 
-function WebDAVListener(target) {
+function sogoWebDAVListener(target) {
   this.target = target;
   this.result = null;
 }
 
-WebDAVListener.prototype = {
+sogoWebDAVListener.prototype = {
  QueryInterface: function (aIID) {
     if (!aIID.equals(Components.interfaces.nsISupports)
 				&& !aIID.equals(Components.interfaces.nsIWebDAVOperationListener)) {
@@ -180,47 +191,80 @@ WebDAVListener.prototype = {
     }
     return this;
   },
+ _isOurResource: function(resource) {
+		var isOurs = false;
+		var newrsrc;
+
+		try {
+			newrsrc
+				= resource.QueryInterface(Components.interfaces.nsIWebDAVResourceWithLock);
+			isOurs = (newrsrc.lockToken == "sogoWebDAV");
+		}
+		catch(e) {};
+
+		return isOurs;
+	},
  onOperationComplete: function(aStatusCode, aResource, aOperation,
 															 aClosure) {
-		// 		dump("complete status: " + aStatusCode + "; operation: " + aOperation + "\n");
-    this.target.onDAVQueryComplete(aStatusCode, this.result, this.cbData);
-    this.result = null;
-		_processPending();
+		if (this._isOurResource(aResource)) {
+			this.target.onDAVQueryComplete(aStatusCode, this.result, this.cbData);
+			this.result = null;
+			_processPending();
+		}
+		else
+			dump("skipping operation complete\n");
   },
+ _isOurClosure: function(closure) {
+		var isOurs = false;
+		var newClosure;
+		try {
+			newClosure
+				= closure.QueryInterface(Components.interfaces.nsISupportsString);
+			if (newClosure.toString() == "sogoWebDAV")
+				isOurs = true;
+		}
+		catch(e) {};
+
+		return isOurs;
+	},
  onOperationDetail: function(aStatusCode, aResource, aOperation, aDetail,
 														 aClosure) {
-    var url = aResource.spec;
-		// 		dump("status: " + aStatusCode + "; operation: " + aOperation + "\n");
-    if (aStatusCode > 199 && aStatusCode < 300) {
-      switch (aOperation) {
-      case Components.interfaces.nsIWebDAVOperationListener.GET_TO_STRING:
-				if (!this.result)
-					this.result = "";
-				var utf8String = "";
-				var converter = Components.classes["@mozilla.org/intl/utf8converterservice;1"]
-					.getService(Components.interfaces.nsIUTF8ConverterService);
-				utf8String = converter.convertStringToUTF8(aDetail.QueryInterface(Components.interfaces.nsISupportsCString).toString(),
-																									 "iso-8859-1", false);
-        this.result += utf8String;
-				break;
-      case Components.interfaces.nsIWebDAVOperationListener.GET_PROPERTIES:
-				// 				dump("GET_PROPERTIES\n");
-				if (!this.result)
-					this.result = {};
-        if (!this.result[url])
-					this.result[url] = {};
-				this.getProperties(this.result[url], aDetail);
-				break;
-      case Components.interfaces.nsIWebDAVOperationListener.REPORT:
-				if (!this.result)
-					this.result = new Array();
-				this.result.push(aDetail);
-				break;
-      case Components.interfaces.nsIWebDAVOperationListener.PUT:
-				this.result = aDetail;
-				break;
-      }
+		if (this._isOurClosure(aClosure)) {
+			var url = aResource.spec;
+			// 		dump("status: " + aStatusCode + "; operation: " + aOperation + "\n");
+			if (aStatusCode > 199 && aStatusCode < 300) {
+				switch (aOperation) {
+				case Components.interfaces.nsIWebDAVOperationListener.GET_TO_STRING:
+					if (!this.result)
+						this.result = "";
+					var utf8String = "";
+					var converter = Components.classes["@mozilla.org/intl/utf8converterservice;1"]
+						.getService(Components.interfaces.nsIUTF8ConverterService);
+					utf8String = converter.convertStringToUTF8(aDetail.QueryInterface(Components.interfaces.nsISupportsCString).toString(),
+																										 "iso-8859-1", false);
+					this.result += utf8String;
+					break;
+				case Components.interfaces.nsIWebDAVOperationListener.GET_PROPERTIES:
+// 					dump("GET_PROPERTIES\n");
+					if (!this.result)
+						this.result = {};
+					if (!this.result[url])
+						this.result[url] = {};
+					this.getProperties(this.result[url], aDetail);
+					break;
+				case Components.interfaces.nsIWebDAVOperationListener.REPORT:
+					if (!this.result)
+						this.result = new Array();
+					this.result.push(aDetail);
+					break;
+				case Components.interfaces.nsIWebDAVOperationListener.PUT:
+					this.result = aDetail;
+					break;
+				}
+			}
     }
+		else
+			dump("skipping operation detail\n");
   },
  getProperties: function(hash, aDetail) {
     var text = "";

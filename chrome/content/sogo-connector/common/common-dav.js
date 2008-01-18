@@ -25,18 +25,6 @@ var autoCompleteDirectoryPreferencesPrefix = "ldap_2.autoComplete.";
 
 var prefsService = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
 
-function isCardDavDirectory(abURI){
-	var result = false;
-	if (abURI){
-		if (abURI.search("moz-abdavdirectory") != -1){
-			result = true;
-		}
-	}else{
-		dump( "abURI is undefined for in fonction isCardDavDirectory(abURI)");
-   }
-   return result;
-}
-
 function getAutoCompleteCardDAVUri(){
 	var result = null;
 	var directoryServerPrefix = prefsService.GetCharPref(autoCompleteDirectoryPreferencesPrefix + "directoryServer");
