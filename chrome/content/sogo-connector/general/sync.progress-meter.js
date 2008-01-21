@@ -158,7 +158,6 @@ SyncProgressMeter.prototype = {
 
       switch (topic) {
       case SyncProgressMeter.API_DISABLED_EVENT:
-				dump("open dialog...\n");
 				window.openDialog("chrome://sogo-connector/content/addressbook/lightning-missing.xul",
 													"", "chrome,modal=yes,resizable=no,centerscreen");
 				break;
