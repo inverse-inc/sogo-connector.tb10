@@ -353,7 +353,7 @@ AbDAVDirectory.prototype = {
 	 .QueryInterface(Components.interfaces.nsIAbDirectory);
 	
 	 //moz-abmdbdirectory://abook-45.mab
-	 var prefService = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);	
+	 var prefService = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
 	 var fileName = prefService.getCharPref(resource.dirPrefId + ".filename");
 	 var localUri = "moz-abmdbdirectory://" + fileName;
 	
@@ -570,6 +570,3 @@ AbDAVDirectory.prototype = {
 	 return this;
  }
 };
-
-
-

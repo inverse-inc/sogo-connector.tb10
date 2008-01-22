@@ -74,14 +74,16 @@ sogoWebDAV.prototype = {
 				.createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
 			converter.charset = "UTF-8";
 			var stringUTF8 = converter.ConvertFromUnicode(parameters.data);
-			stream.setData (stringUTF8, stringUTF8.length);
+			stream.setData(stringUTF8, stringUTF8.length);
 
 			webdavSvc.put(resource, parameters.contentType, stream,
 										listener, requestor, ourClosure);
 		}
     else if (operation == "PROPFIND")
-      webdavSvc.getResourceProperties(resource, parameters.length, parameters,
-																			true, listener,
+      webdavSvc.getResourceProperties(resource,
+																			parameters.props.length,
+																			parameters.props,
+																			parameters.deep, listener,
 																			requestor, ourClosure);
     else if (operation == "REPORT")
       webdavSvc.report(resource, parameters, false,
@@ -111,8 +113,10 @@ sogoWebDAV.prototype = {
     else
       this.realLoad(operation, parameters);
   },
- propfind: function(props) {
-    this.load("PROPFIND", props);
+ propfind: function(props, deep) {
+		if (typeof deep == "undefined")
+			deep = true;
+    this.load("PROPFIND", {props: props, deep: deep});
   },
  get: function() {
     this.load("GET");
@@ -230,6 +234,7 @@ sogoWebDAVListener.prototype = {
  onOperationDetail: function(aStatusCode, aResource, aOperation, aDetail,
 														 aClosure) {
 		if (this._isOurClosure(aClosure)) {
+// 			dump("detail resource: " + aResource.spec + "\n");
 			var url = aResource.spec;
 			// 		dump("status: " + aStatusCode + "; operation: " + aOperation + "\n");
 			if (aStatusCode > 199 && aStatusCode < 300) {
@@ -304,6 +309,8 @@ InterfaceRequestor.prototype = {
       .getNewAuthPrompter(null);
     }
     else if (iid.equals(Components.interfaces.nsIProgressEventSink)
+						 || iid.equals(Components.interfaces.nsIChannelEventSink)
+						 || iid.equals(Components.interfaces.nsIHttpEventSink)
 						 || iid.equals(Components.interfaces.nsIDocShellTreeItem)) {
       return this;
     }
@@ -324,5 +331,15 @@ InterfaceRequestor.prototype = {
  onStatus: function onStatus(aRequest, aContext, aStatus, aStatusArg) {},
  // nsIDocShellTreeItem
  findItemWithName: function findItemWithName(name, aRequestor,
-																						 aOriginalRequestor) {}
+																						 aOriginalRequestor) {},
+ 
+ // nsIHttpEventSink
+ onRedirect: function(oldChannel, newChannel) {
+		dump("sogoWebDAV.js: onRedirect...\n");
+	},
+
+ // nsIChannelEventSink
+ onChannelRedirect: function(oldChannel, newChannel, flags) {
+		dump("sogoWebDAV.js: onChannelRedirect...\n");
+	}
 };

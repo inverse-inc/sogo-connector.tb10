@@ -41,24 +41,32 @@ jsInclude(["chrome://sogo-connector/content/general/preference.service.addressbo
 
 var autoCompleteDirectoryPreferencesPrefix = "ldap_2.autoComplete.";
 
-var prefsService = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
-
 function getAutoCompleteCardDAVUri(){
 	var result = null;
+	var prefsService = Components.classes["@mozilla.org/preferences;1"]
+		.getService(Components.interfaces.nsIPref);
+
+// 	dump("prefix: " + autoCompleteDirectoryPreferencesPrefix + "\n");
 	var directoryServerPrefix = prefsService.GetCharPref(autoCompleteDirectoryPreferencesPrefix + "directoryServer");
-	if (directoryServerPrefix){
-		result= prefsService.GetCharPref(directoryServerPrefix + ".uri");
+	if (directoryServerPrefix
+			&& directoryServerPrefix.length > 0) {
+// 		dump("directoryServerPrefix: " + directoryServerPrefix + "\n");
+		try {
+			result = prefsService.GetCharPref(directoryServerPrefix + ".uri");
+// 			dump("result: " + result + "\n");
+		}
+		catch(e) {};
 	}
+
 	return result
 }
 
-function isAutoCompleteDirectoryServerCardDAV(){
+function isAutoCompleteDirectoryServerCardDAV() {
 	var result = false;
-	var prefsService = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
-	
+
 	var uri = getAutoCompleteCardDAVUri(autoCompleteDirectoryPreferencesPrefix)
-	if (uri){
+	if (uri)
 		result = isCardDavDirectory(uri);
-	}		
+
 	return result;
 }

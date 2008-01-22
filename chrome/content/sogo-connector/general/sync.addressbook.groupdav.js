@@ -227,10 +227,9 @@ GroupDavSynchronizer.prototype = {
 
 		this.pendingOperations = 1;
 
-		var data = {query: "server-propfind"};
+		var data = {query: "server-check-propfind"};
 		var request = new sogoWebDAV(this.gURL, this, data);
-		request.propfind(["DAV: resourcetype", "DAV: getetag",
-											"DAV: getcontenttype", "DAV: getlastmodified"]);
+		request.propfind(["DAV: resourcetype"], false);
 // 		try {
 // 			var responseObj = webdav_propfind(this.gURL, propsList, null, null); //Let Thunderbird Password Manager handle user and password
 // 		}
@@ -340,6 +339,8 @@ GroupDavSynchronizer.prototype = {
 // 		dump("onDavQueryComplete: " + cbdata.query + "\n");
 		if (cbdata.query == "vcard-download")
 			this.onVCardDownloadComplete(status, data, cbdata.data);
+		else if (cbdata.query == "server-check-propfind")
+			this.onServerCheckComplete(status, data, cbdata.data);
 		else if (cbdata.query == "server-propfind")
 			this.onServerHashQueryComplete(status, data, cbdata.data);
 		else if (cbdata.query == "card-upload")
@@ -378,7 +379,7 @@ GroupDavSynchronizer.prototype = {
 			var rqData = {query: "card-propfind",
 										data: card,
 										key: key};
-			var request = new sogoWebDAV(cardURL, this, rqData);
+			var request = new sogoWebDAV(cardURL, this, rqData, false);
 			request.propfind(["DAV: getetag"]);
 		}
 		else {
@@ -406,25 +407,27 @@ GroupDavSynchronizer.prototype = {
 		}
 	},
  onCardPropfindComplete: function(status, response, key, card) {
-		var mdbCard = card.QueryInterface(Components.interfaces.nsIAbMDBCard);
-		var cardURL = this.gURL + key;
-		var etag = response[cardURL]["DAV: getetag"];
-		var oldKey = mdbCard.getStringAttribute("groupDavKey");
-		var isNew = (!oldKey || oldKey == "");
-		if (isNew)
-			mdbCard.setStringAttribute("groupDavKey", key);
-		mdbCard.setStringAttribute("groupDavVersion", etag);
-		card.editCardToDatabase(this.gSelectedDirectoryURI);
-		this.serverVersionHash[key] = etag;
+		if (status > 199 && status < 400) {
+			var mdbCard = card.QueryInterface(Components.interfaces.nsIAbMDBCard);
+			var cardURL = this.gURL + key;
+			var etag = response[cardURL]["DAV: getetag"];
+			var oldKey = mdbCard.getStringAttribute("groupDavKey");
+			var isNew = (!oldKey || oldKey == "");
+			if (isNew)
+				mdbCard.setStringAttribute("groupDavKey", key);
+			mdbCard.setStringAttribute("groupDavVersion", etag);
+			card.editCardToDatabase(this.gSelectedDirectoryURI);
+			this.serverVersionHash[key] = etag;
 
-		var state = ("<state><newCard>" + isNew + "</newCard>"
-								 + "<etag>" + etag + "</etag>"
-								 + "<key>" + key + "</key></state>");
-		this.messengerWindow.gAbWinObserverService.notifyObservers(null,
-																															 SyncProgressMeter.UPLOAD_STOP_REQUEST_EVENT,
-																															 state);
+			var state = ("<state><newCard>" + isNew + "</newCard>"
+									 + "<etag>" + etag + "</etag>"
+									 + "<key>" + key + "</key></state>");
+			this.messengerWindow.gAbWinObserverService.notifyObservers(null,
+																																 SyncProgressMeter.UPLOAD_STOP_REQUEST_EVENT,
+																																 state);
 
 // 		dump("key: " + key + "; status: " + status + "; data: " + data + "\n");
+		}
 		this.remainingUploads--;
 		if (this.remainingUploads == 0) {
 			this._commitAddrDB();
@@ -501,6 +504,31 @@ GroupDavSynchronizer.prototype = {
 // 		logDebug("importFromVcard() completed");
 // 		logDebug("//TODO: do a propfind to make sure the version no. (etag) has not changed.");
 	},
+ onServerCheckComplete: function(status, response, key) {
+		this.callbackCode = status;
+		this.pendingOperations = 0;
+
+		if (status > 199 && status < 399) {
+			for (var href in response) {
+				var davObject = response[href];
+				if (href == this.gURL) {
+					var rsrcType = "" + davObject["DAV: resourcetype"];
+					if (rsrcType.indexOf("vcard-collection") > 1
+							|| rsrcType.indexOf("addressbook") > 1) {
+						this.validCollection = true;
+						var data = {query: "server-propfind"};
+						var request = new sogoWebDAV(this.gURL, this, data);
+						request.propfind(["DAV: getcontenttype", "DAV: getetag"]);
+					}
+					else {
+						this.validCollection = false;
+						this._checkCallback();
+						throw ("server '" + this.gURL + "' is not a valid groupdav collection");
+					}
+				}
+			}
+		}
+	},
  onServerHashQueryComplete: function(status, response, key) {
 		this.callbackCode = status;
 		this.pendingOperations = 0;
@@ -513,30 +541,23 @@ GroupDavSynchronizer.prototype = {
 
 		for (var href in response) {
 			var davObject = response[href];
-			var contentType = davObject["DAV: getcontenttype"];
-			if (contentType == "text/x-vcard"
-					|| contentType == "text/vcard") {
-				var version = davObject["DAV: getetag"];
-				var cNameArray = href.split("/");
-				var cName = cNameArray[cNameArray.length - 1];
-				this.serverVersionHash[cName] = version;
-// 				this.serverDateHash[cName] = new Date(davObject["DAV: getlastmodified"]);
-//  				logDebug("\tServer Card key = " + cName + "\tversion = " + version);
-			}
-			else {
-				var rsrcType = "" + davObject["DAV: resourcetype"];
-				this.validCollection = (rsrcType.indexOf("vcard-collection") > 1
-																|| rsrcType.indexOf("addressbook") > 1);
+			if (href != this.gURL) {
+				var contentType = "" + davObject["DAV: getcontenttype"];
+				if (contentType.indexOf("text/x-vcard") == 0
+						|| contentType.indexOf("text/vcard") == 0) {
+					var version = davObject["DAV: getetag"];
+					var cNameArray = href.split("/");
+					var cName = cNameArray[cNameArray.length - 1];
+					this.serverVersionHash[cName] = version;
+					// 				this.serverDateHash[cName] = new Date(davObject["DAV: getlastmodified"]);
+					//  				logDebug("\tServer Card key = " + cName + "\tversion = " + version);
+				}
 			}
 		}
 
 // 		logDebug("=========End Server Cards List");
 		if (this.validCollection)
 			this.processServerKeys();
-		else {
-			this.context.requests[this.gURL] = null;
-			throw ("server '" + this.gURL + "' is not a valid groupdav collection");
-		}
 		break;
 		case 401:
 		this._checkCallback();

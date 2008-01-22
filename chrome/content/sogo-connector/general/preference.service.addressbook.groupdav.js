@@ -61,7 +61,8 @@ function isCardDavDirectory(abURI){
 	var value = false;
 
 	if (abURI
-			&& abURI.search("mab/MailList") == -1) {
+			&& abURI.search("mab/MailList") == -1
+			&& abURI.search("moz-abdavdirectory://") == 0) {
 		var ab = Components.classes["@mozilla.org/rdf/rdf-service;1"]
 			.getService(Components.interfaces.nsIRDFService)
 			.GetResource(abURI)

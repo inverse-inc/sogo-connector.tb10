@@ -4,4 +4,3 @@ if (1) {
   pref("browser.dom.window.dump.enabled", true);
   pref("javascript.options.strict", true);
 }
-

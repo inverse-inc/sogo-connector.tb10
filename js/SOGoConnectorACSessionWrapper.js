@@ -84,7 +84,7 @@ SOGoConnectorACSessionWrapper.prototype = {
 																								Components.interfaces.nsISupportsString)
 					 .data;
 			 }
-			 catch (ex){
+			 catch (ex) {
 				 dump("ERROR: " + ex + "\n");
 			 }
 			 this.mUrl = serverURL;
