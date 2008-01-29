@@ -67,7 +67,7 @@ SOGoConnectorACSessionWrapper.prototype = {
 	 if (autocompleteLocal)
 		 names.push("addrbook");
 
-	 var autocompleteLdap;
+	 var autocompleteLdap = false;
 	 try {
 		 autocompleteLdap = prefs.getBoolPref("ldap_2.autoComplete.useDirectory");
 	 }
@@ -83,12 +83,12 @@ SOGoConnectorACSessionWrapper.prototype = {
 				 serverURL.spec = prefs.getComplexValue(autocompleteDirectory +".uri",
 																								Components.interfaces.nsISupportsString)
 					 .data;
+				 this.mUrl = serverURL;
+				 names.push("carddav");
 			 }
 			 catch (ex) {
 				 dump("ERROR: " + ex + "\n");
 			 }
-			 this.mUrl = serverURL;
-			 names.push("carddav");
 		 }
 		 else
 			 names.push("ldap");
@@ -124,7 +124,8 @@ SOGoConnectorACSessionWrapper.prototype = {
 
 	 for (var i = 0; i < this.sessions.length; i++) {
 		 var session = this.sessions[i];
-		 session.onAutoComplete(searchString, previousSearchResult, this.listeners[i]);
+		 session.onAutoComplete(searchString, previousSearchResult,
+														this.listeners[i]);
 	 }
  },
  onStartLookup: function (searchString, previousSearchResult, listener) {
@@ -137,7 +138,8 @@ SOGoConnectorACSessionWrapper.prototype = {
 
 	 for (var i = 0; i < this.sessions.length; i++) {
 		 var session = this.sessions[i];
-		 session.onStartLookup(searchString, previousSearchResult, this.listeners[i]);
+		 session.onStartLookup(searchString, previousSearchResult,
+													 this.listeners[i]);
 	 }
  },
  onStopLookup: function() {

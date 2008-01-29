@@ -26,11 +26,114 @@ function _processPending() {
 	}
 }
 
-function onXmlRequestReadyStateChange(request) {
+function onPostReadyStateChange(request) {
 	// 	dump("xmlreadystatechange: " + request.readyState + "\n");
 	if (request.readyState == 4) {
 		request.target.onDAVQueryComplete(request.status,
 																			request.responseText,
+																			request.cbData);
+		_processPending();
+	};
+}
+
+function multiStatusParser(doc) {
+	this.document = doc;
+}
+
+multiStatusParser.prototype = {
+ document: null,
+ responses: function() {
+		var responses = {};
+		var nodes = this._getNodes(this.document, "multistatus");
+		if (nodes && nodes.length > 0) {
+			nodes = this._getNodes(nodes[0], "response");
+			for (var i = 0; i < nodes.length; i++) {
+				var hrefNodes = this._getNodes(nodes[i], "href");
+				var href = this._parseNode(hrefNodes[0]);
+				var propstats = this._getPropstats(nodes[i]);
+
+				responses[href] = propstats;
+			}
+		}
+
+		return responses;
+	},
+ _getNodes: function(topNode, tag) {
+		var nodes = new Array();
+
+		for (var i = 0; i < topNode.childNodes.length; i++) {
+			var currentNode = topNode.childNodes[i];
+			if (currentNode.nodeType
+					== Components.interfaces.nsIDOMNode.ELEMENT_NODE
+					&& currentNode.localName == tag)
+				nodes.push(currentNode);
+		}
+
+// 		dump("returning " + nodes.length + " nodes for tag '" + tag + "'\n");
+
+		return nodes;
+	},
+ _getPropstats: function(topNode) {
+		var propstats = {};
+		var nodes = this._getNodes(topNode, "propstat");
+		for (var i = 0; i < nodes.length; i++) {
+			var rawStatus = this._getNodes(nodes[i], "status")[0].childNodes[0].nodeValue;
+			var status = this._parseStatus("" + rawStatus);
+			propstats[status] = this._getProps(nodes[i]);
+		}
+
+		return propstats;
+	},
+ _parseStatus: function(status) {
+		var code = -1;
+
+		if (status.indexOf("HTTP/1.1") == 0) {
+			var words = status.split(" ");
+			code = parseInt(words[1]);
+		}
+
+		return code;
+	},
+ _getProps: function(topNode) {
+		var props = {};
+
+		var nodes = this._getNodes(topNode, "prop")[0].childNodes;
+		for (var i = 0; i < nodes.length; i++)
+			props[nodes[i].localName] = this._parseNode(nodes[i]);
+
+		return props;
+	},
+ _parseNode: function(node) {
+		var data;
+		if (node) {
+			data = true;
+			var nodes = node.childNodes;
+			if (nodes.length > 0) {
+				if (nodes[0].nodeType
+						== Components.interfaces.nsIDOMNode.ELEMENT_NODE) {
+					data = {};
+					for (var i = 0; i < nodes.length; i++)
+						data[nodes[i].localName] = this._parseNode(nodes[i]);
+				}
+				else
+					if (nodes[0].nodeType
+							== Components.interfaces.nsIDOMNode.TEXT_NODE)
+						data = nodes[0].nodeValue;
+			}
+		}
+		else
+			data = false;
+
+		return data;
+	}
+};
+
+function onProppatchReadyStateChange(request) {
+	// 	dump("xmlreadystatechange: " + request.readyState + "\n");
+	if (request.readyState == 4) {
+		var parser = new multiStatusParser(request.responseXML);
+		request.target.onDAVQueryComplete(request.status,
+																			parser.responses(),
 																			request.cbData);
 		_processPending();
 	};
@@ -93,11 +196,29 @@ sogoWebDAV.prototype = {
 			xmlRequest.open("POST", this.url, this.asynchronous);
 			xmlRequest.url = this.url;
 			xmlRequest.onreadystatechange = function() {
-				onXmlRequestReadyStateChange(xmlRequest);
+				onPostReadyStateChange(xmlRequest);
 			};
 			xmlRequest.target = this.target;
 			xmlRequest.cbData = this.cbData;
 			xmlRequest.send(parameters);
+		}
+		else if (operation == "MKCOL") {
+			webdavSvc.makeCollection(resource, listener, requestor, ourClosure);
+		}
+		else if (operation == "DELETE") {
+			webdavSvc.remove(resource, listener, requestor, ourClosure);
+		}
+		else if (operation == "PROPPATCH") {
+			var xmlRequest = new XMLHttpRequest();
+			xmlRequest.open("PROPPATCH", this.url, this.asynchronous);
+			xmlRequest.url = this.url;
+			xmlRequest.onreadystatechange = function() {
+				onProppatchReadyStateChange(xmlRequest);
+			};
+			xmlRequest.target = this.target;
+			xmlRequest.cbData = this.cbData;
+			xmlRequest.send(parameters);
+			dump("test proppatch...\n");
 		}
     else
       throw ("operation '" + operation + "' is not currently supported");
@@ -142,6 +263,21 @@ sogoWebDAV.prototype = {
 
 		this.load("POST", queryDoc);
   },
+ mkcol: function() {
+		this.load("MKCOL");
+  },
+ delete: function() {
+		this.load("DELETE");
+	},
+ proppatch: function(query) {
+		var fullQuery = ('<?xml version="1.0" encoding="UTF-8"?>\n'
+										 + query.toXMLString());
+		var xParser = Components.classes['@mozilla.org/xmlextras/domparser;1']
+		.getService(Components.interfaces.nsIDOMParser);
+		var queryDoc = xParser.parseFromString(fullQuery, "application/xml");
+		this.load("PROPPATCH", queryDoc);
+	},
+ 
  testWebDAV: function() {
 		if (!context.webdavAvailability) {
 			try {
