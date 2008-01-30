@@ -65,12 +65,13 @@ function hasOnlyWhitespaces(string)
 function onAccept() {
 	//There has to be at least a description to create a SOGO addressbook
 	var description = document.getElementById("description").value;
-	if(!description && description == ""){
+	if (!description || description == "") {
 		alert(prefMsgBundle.getString("missingDescriptionMsg"));
 		return false;
 	}
+
 	var url = document.getElementById("groupdavURL").value;
-	if(!url && url == ""){
+	if (!url || url == "") {
 		alert(prefMsgBundle.getString("missingDescriptionURL"));
 		return false;
 	}
@@ -139,14 +140,14 @@ function onAcceptReadOnly() {
 
 		// get the datasource for the addressdirectory
 		var addressbookDS = gRdfService.GetDataSource("rdf:addressdirectory");
-	
+
 		// moz-abdirectory:// is the RDF root to get all types of addressbooks.
 		var parentDir = gRdfService.GetResource("moz-abdirectory://").QueryInterface(Components.interfaces.nsIAbDirectory);
-	
+
 		// the RDF resource URI 
 		var selectedABURI = "moz-abdavdirectory://" + gUrl;
 		//var selectedABURI = properties.URI;
-								  
+
 		try {
 			var selectedABDirectory = gRdfService.GetResource(selectedABURI)
 				.QueryInterface(Components.interfaces.nsIAbDirectory); 
@@ -157,7 +158,7 @@ function onAcceptReadOnly() {
 			throw e;
 		}
 		gCurrentDirectory.dirName = description;
-//		window.opener.gNewServerString = url;       
+//		window.opener.gNewServerString = url;
 	}
 	else {
 		addNewDirectory(addressbook, properties);

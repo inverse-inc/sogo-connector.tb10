@@ -2,7 +2,9 @@ Features
 ========
 Working on 
 	Added Deleted on server feature. (low priority)
-	vcard encoding 2.1 and 3.0
+0.65
+	added asynchronous autocompletion
+	reenabled the ability to download cards from OGo (upload still doesn't work)
 0.64
 	rewrote the upload mechanism to use the Mozilla webdav library
 	generate better identifiers for new vCards
