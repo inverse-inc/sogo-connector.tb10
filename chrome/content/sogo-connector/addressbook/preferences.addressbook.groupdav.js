@@ -75,8 +75,6 @@ function onAccept() {
 		return false;
 	}
 
-
-
 	var readOnly = document.getElementById("readOnly").checked;
 	if (readOnly) {
 		var selectedABURI = "moz-abdavdirectory://" + url;
@@ -268,7 +266,8 @@ function onReadOnlyUpdate(){
 //		document.getElementById("downloadButton").disabled = false;
 		document.getElementById("displaySynchCompleted").disabled = true;
 		dump("checked\n");
-	}else{
+	}
+	else {
 		//document.getElementById("offlineTabId").disabled = true;
 //		document.getElementById("downloadButton").disabled = true;		
 		document.getElementById("displaySynchCompleted").disabled = false;		
