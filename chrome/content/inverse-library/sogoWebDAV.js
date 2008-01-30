@@ -250,37 +250,29 @@ sogoWebDAV.prototype = {
  put: function(data, contentType) {
 		this.load("PUT", {data: data, contentType: contentType});
 	},
- report: function(query) {
-		var xParser = Components.classes['@mozilla.org/xmlextras/domparser;1']
-		.getService(Components.interfaces.nsIDOMParser);
-		var queryDoc = xParser.parseFromString(query, "application/xml");
-
-		this.load("REPORT", queryDoc);
-  },
- post: function(query) {
-		var fullQuery = ('<?xml version="1.0" encoding="UTF-8"?>\n'
-										 + query.toXMLString());
-		var xParser = Components.classes['@mozilla.org/xmlextras/domparser;1']
-		.getService(Components.interfaces.nsIDOMParser);
-		var queryDoc = xParser.parseFromString(fullQuery, "application/xml");
-
-		this.load("POST", queryDoc);
-  },
  mkcol: function() {
 		this.load("MKCOL");
   },
  delete: function() {
 		this.load("DELETE");
 	},
- proppatch: function(query) {
-		var fullQuery = ('<?xml version="1.0" encoding="UTF-8"?>\n'
-										 + query.toXMLString());
+ _loadXMLQuery: function(operation, query) {
 		var xParser = Components.classes['@mozilla.org/xmlextras/domparser;1']
 		.getService(Components.interfaces.nsIDOMParser);
-		var queryDoc = xParser.parseFromString(fullQuery, "application/xml");
-		this.load("PROPPATCH", queryDoc);
+		var queryDoc = xParser.parseFromString(query, "application/xml");
+
+		this.load(operation, queryDoc);
 	},
- 
+ report: function(query) {
+		this._loadXMLQuery("REPORT", query);
+  },
+ post: function(query) {
+		this._loadXMLQuery("POST", query);
+  },
+ proppatch: function(query) {
+		this._loadXMLQuery("PROPPATCH", query);
+	},
+
  testWebDAV: function() {
 		if (!context)
 			context = initContext();

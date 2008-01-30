@@ -226,10 +226,7 @@ var AbDeleteDirectoryOriginal;
 
 // DirTreeObserver that synchronized with the GroupDAV server on card delete
 var abGoupDavDirTreeObserver = { 
-
-
- canDrop: function(index, orientation){
-
+ canDrop: function(index, orientation) {
 		return abDirTreeObserver.canDrop(index, orientation);
 	},
 
@@ -254,33 +251,26 @@ var abGoupDavDirTreeObserver = {
 		}
 	},
 
- onToggleOpenState: function()
- {
+ onToggleOpenState: function() {
  },
 
- onCycleHeader: function(colID, elt)
- {
+ onCycleHeader: function(colID, elt) {
  },
 
- onCycleCell: function(row, colID)
- {
+ onCycleCell: function(row, colID) {
  },
 
- onSelectionChanged: function()
- {
+ onSelectionChanged: function() {
  },
 
- onPerformAction: function(action)
- {
+ onPerformAction: function(action) {
  },
 
- onPerformActionOnRow: function(action, row)
- {
+ onPerformActionOnRow: function(action, row) {
  },
 
- onPerformActionOnCell: function(action, row, colID)
- {
- }	
+ onPerformActionOnCell: function(action, row, colID) {
+ }
 };
 
 //Override of OnLoadDirTree in chrome://messenger/content/addressbook/addresbook..js
@@ -294,20 +284,20 @@ var OnLoadDirTree = function() {
 	var treeBuilder = dirTree.builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
 	OnLoadDirTreeOriginal.apply();
 	treeBuilder.addObserver(abGoupDavDirTreeObserver);	
-}
+};
 
-	function abGroupdavUnload(){
-		var treeBuilder = dirTree.builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
-		treeBuilder.removeObserver(abGoupDavDirTreeObserver);
-	}
+function abGroupdavUnload(){
+	var treeBuilder = dirTree.builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
+	treeBuilder.removeObserver(abGoupDavDirTreeObserver);
+}
 
 // Override AbDeleteDirectory() to delete DAV preferences
 
-function onloadDAV(){
+function onloadDAV() {
 	this.addEventListener("unload", abGroupdavUnload, true);
 
 	AbDeleteOriginal = AbDelete;
-	AbDelete = function(){
+	AbDelete = function() {
 		var cards = GetSelectedAbCards();
 		if (cards && cards.length > 0){
 			for (var i = 0; i < cards.length; i++){ 	

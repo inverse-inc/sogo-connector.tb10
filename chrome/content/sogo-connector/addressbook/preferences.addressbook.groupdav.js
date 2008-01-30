@@ -75,6 +75,8 @@ function onAccept() {
 		return false;
 	}
 
+
+
 	var readOnly = document.getElementById("readOnly").checked;
 	if (readOnly) {
 		var selectedABURI = "moz-abdavdirectory://" + url;
@@ -98,7 +100,10 @@ function onAccept() {
 	}
 	else
 		onAcceptWebDAV();
-	var groupdavPrefService = new GroupdavPreferenceService(gCurrentDirectory.directoryProperties.prefName);
+
+	var groupdavPrefService = new GroupdavPreferenceService(gCurrentDirectory
+																													.directoryProperties
+																													.prefName);
 	groupdavPrefService.setURL(document.getElementById("groupdavURL").value);
 	groupdavPrefService.setDirectoryName(description);
 	groupdavPrefService.setDisplayDialog(document.getElementById("displaySynchCompleted").checked);
@@ -208,7 +213,6 @@ function fillDialog () {
 		fromPreferences = window.arguments[1];
 		gCurrentDirectory = gRdfService.GetResource(gCurrentDirectoryURI).QueryInterface(Components.interfaces.nsIAbDirectory);
 
-		dump("prefId: " + gCurrentDirectory.directoryProperties.prefName + "\n");
 		var groupdavPrefService = new GroupdavPreferenceService(gCurrentDirectory.directoryProperties.prefName);  
 		gDescription = document.getElementById("description").value = gCurrentDirectory.dirName;
 		gUrl = document.getElementById("groupdavURL").value = groupdavPrefService.getURL();
