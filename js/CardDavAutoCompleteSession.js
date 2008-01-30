@@ -42,9 +42,14 @@ function CardDavAutoCompleteSession() {
 };
 
 CardDavAutoCompleteSession.prototype = {
+ active: false,
+ listener: null,
+ searchString: null,
+
  mUrl: null,
  get serverURL() { return this.mUrl; },
  set serverURL(value) { this.mUrl = value },
+
  onAutoComplete: function(searchString, previousSearchResult, listener) {
 	 dump("**************************************************************\n");
 	 dump("CardDavAutoCompleteSession.prototype.onAutoComplete\n");
@@ -52,68 +57,75 @@ CardDavAutoCompleteSession.prototype = {
  },
  onStartLookup: function (searchString, previousSearchResult, listener) {
 	 dump("CardDavAutoCompleteSession.onStartLookup\n");
-	 if (!listener) {
-		 dump("NULL listener in CardDavAutoCompleteSession.prototype.onStartLookup\n");
-		 // 		 listener.onAutoComplete( null, -1);//nsIAutoCompleteStatus::failed
-	 }
-	 else {
+	 if (listener) {
 		 var url = getABDavURL(this.mUrl.spec);
 		 if (url) {
-			 var doc = cardDavReport(url, searchString);
-			 var nodeList = doc.getElementsByTagName("addressbook-data");
-
-			 // To support customs fields introduced in importFromVcard for FreeBuzy
-			 var customFieldsArray;// // TODO: when the overhaul of the vcard parsing is done, this will have to be handle differently!!!
-
-			 var resultsHash = {};
-			 //Adding cards to array
-			 var resultArray = Components.classes["@mozilla.org/supports-array;1"]
-				 .createInstance(Components.interfaces.nsISupportsArray);
-			 for (var i = 0; i < nodeList.length; i++) {
-				 customFieldsArray = new Array();
-				 dump("\n= autocomplete vcard : ============================\n");
-				 dump(nodeList.item(i).textContent.toString());
-				 dump("\n===================================================\n");
-				 var card = importFromVcard(nodeList.item(i).textContent.toString(),
-																		null, customFieldsArray);
-				 var fn = card.displayName;
-				 var email = card.primaryEmail;
-				 if (email.length)
-					 resultArray.AppendElement(formatAutoCompleteItem(fn, email));
-				 email = card.secondEmail;
-				 if (email.length)
-					 resultArray.AppendElement(formatAutoCompleteItem(fn, email));
-			 }
-
-			 dump("=======> resultArray.Count: " + resultArray.Count() + "\n");
-
-			 if (nodeList.length > 0) {
-				 var matchFound = 1; //nsIAutoCompleteStatus::matchFound
-
-				 var results =
-				 Components.classes["@mozilla.org/autocomplete/results;1"]
-					 .createInstance(Components.interfaces.nsIAutoCompleteResults);
-				 //results.items = resultArray.QueryInterface(Components.interfaces.nsICollection);
-				 results.items = resultArray;
-
-				 results.defaultItemIndex = 0;
-				 results.searchString = searchString;
-
-				 listener.onAutoComplete(results, matchFound);
-			 }
-			 else {
-				 var noMatch = 0; //nsIAutoCompleteStatus::noMatch
-				 listener.onAutoComplete(null, noMatch);
-			 }
+			 this.active = true;
+			 this.listener = listener;
+			 this.searchString = searchString;
+			 AsyncCardDavReport(url, searchString, this);
 		 }
 		 else {
 			 dump("no url in CardDavAutoCompleteSession.prototype.onStartLookup\n");
 			 listener.onAutoComplete( null, -1);//nsIAutoCompleteStatus::failed
 		 }
 	 }
+	 else {
+		 dump("NULL listener in CardDavAutoCompleteSession.prototype.onStartLookup\n");
+		 // 		 listener.onAutoComplete( null, -1);//nsIAutoCompleteStatus::failed
+	 }
  },
  onStopLookup: function() {
+	 this.active = false;
 	 dump("CardDavAutoCompleteSession.prototype.onStopLookup\n");
+ },
+ onDAVQueryComplete: function(status, result, data) {
+	 if (this.active && result) {
+		 // To support customs fields introduced in importFromVcard for FreeBuzy
+		 var customFieldsArray;// // TODO: when the overhaul of the vcard parsing is done, this will have to be handle differently!!!
+
+		 var resultsHash = {};
+		 //Adding cards to array
+		 var resultArray = Components.classes["@mozilla.org/supports-array;1"]
+		 .createInstance(Components.interfaces.nsISupportsArray);
+		 for (var i = 0; i < result.length; i++) {
+			 var nodeList = result[i].getElementsByTagName("addressbook-data");
+			 customFieldsArray = new Array();
+// 			 dump("\n= autocomplete vcard : ============================\n");
+// 			 dump(nodeList.item(i).textContent.toString());
+// 			 dump("\n===================================================\n");
+			 var card = importFromVcard(nodeList.item(0).textContent.toString(),
+																	null, customFieldsArray);
+			 var fn = card.displayName;
+			 var email = card.primaryEmail;
+			 if (email.length)
+				 resultArray.AppendElement(formatAutoCompleteItem(fn, email));
+			 email = card.secondEmail;
+			 if (email.length)
+				 resultArray.AppendElement(formatAutoCompleteItem(fn, email));
+		 }
+
+		 dump("=======> resultArray.Count: " + resultArray.Count() + "\n");
+
+		 if (nodeList.length > 0) {
+			 var matchFound = 1; //nsIAutoCompleteStatus::matchFound
+
+			 var results =
+				 Components.classes["@mozilla.org/autocomplete/results;1"]
+				 .createInstance(Components.interfaces.nsIAutoCompleteResults);
+			 //results.items = resultArray.QueryInterface(Components.interfaces.nsICollection);
+			 results.items = resultArray;
+
+			 results.defaultItemIndex = 0;
+			 results.searchString = this.searchString;
+
+			 this.listener.onAutoComplete(results, matchFound);
+		 }
+		 else {
+			 var noMatch = 0; //nsIAutoCompleteStatus::noMatch
+			 this.listener.onAutoComplete(null, noMatch);
+		 }
+	 }
  },
  QueryInterface: function(aIID) {
 	 if (!aIID.equals(Components.interfaces.nsICardDAVAutoCompleteSession)

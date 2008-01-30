@@ -1,9 +1,10 @@
 /* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 2 -*- */
-var context = initContext();
+var context = null;
 
 function initContext() {
 	var handler = Components.classes['@inverse.ca/context-manager;1']
-		.getService(Components.interfaces.inverseIJSContextManager).wrappedJSObject;
+		.getService(Components.interfaces.inverseIJSContextManager)
+		.wrappedJSObject;
 	var newContext = handler.getContext("inverse.ca/sogoWebDAV");
 
 	if (!newContext.sogoWebDAVPendingRequests) {
@@ -77,7 +78,8 @@ multiStatusParser.prototype = {
 		var propstats = {};
 		var nodes = this._getNodes(topNode, "propstat");
 		for (var i = 0; i < nodes.length; i++) {
-			var rawStatus = this._getNodes(nodes[i], "status")[0].childNodes[0].nodeValue;
+			var rawStatus = this._getNodes(nodes[i], "status")[0]
+				.childNodes[0].nodeValue;
 			var status = this._parseStatus("" + rawStatus);
 			propstats[status] = this._getProps(nodes[i]);
 		}
@@ -224,6 +226,9 @@ sogoWebDAV.prototype = {
       throw ("operation '" + operation + "' is not currently supported");
   },
  load: function(operation, parameters) {
+		if (!context)
+			context = initContext();
+
     if (context.sogoWebDAVPending)
 			context.sogoWebDAVPendingRequests.push({url: this.url,
 																							target: this.target,
@@ -246,11 +251,9 @@ sogoWebDAV.prototype = {
 		this.load("PUT", {data: data, contentType: contentType});
 	},
  report: function(query) {
-		var fullQuery = ('<?xml version="1.0" encoding="UTF-8"?>\n'
-										 + query.toXMLString());
 		var xParser = Components.classes['@mozilla.org/xmlextras/domparser;1']
 		.getService(Components.interfaces.nsIDOMParser);
-		var queryDoc = xParser.parseFromString(fullQuery, "application/xml");
+		var queryDoc = xParser.parseFromString(query, "application/xml");
 
 		this.load("REPORT", queryDoc);
   },
@@ -279,6 +282,9 @@ sogoWebDAV.prototype = {
 	},
  
  testWebDAV: function() {
+		if (!context)
+			context = initContext();
+
 		if (!context.webdavAvailability) {
 			try {
 				var webdavSvc = Components.classes['@mozilla.org/webdav/service;1']

@@ -36,7 +36,8 @@ function jsInclude(files, target) {
 	}
 }
 
-jsInclude(["chrome://sogo-connector/content/general/webdav_lib/webdavAPI.js",
+jsInclude(["chrome://inverse-library/content/sogoWebDAV.js",
+					 "chrome://sogo-connector/content/general/webdav_lib/webdavAPI.js",
 					 "chrome://sogo-connector/content/general/sync.progress-meter.js",
 					 "chrome://sogo-connector/content/general/mozilla.utils.inverse.ca.js"]);
 
@@ -107,6 +108,11 @@ function sendXMLRequestXPCOM(webdavURL,HTTPmethod,HTTPheaders,XMLreq) {
     throw e;
   }
   return retObj;
+}
+
+function AsyncCardDavReport(webdavURL, filter, target) {
+	var report = new sogoWebDAV(webdavURL, target);
+	report.report(buildCardDavReportXML(filter));
 }
 
 function cardDavReport(webdavURL, filter) {
