@@ -5,6 +5,7 @@ Working on
 0.65
 	added asynchronous autocompletion
 	reenabled the ability to download cards from OGo (upload still doesn't work)
+	added patch from https://bugzilla.mozilla.org/show_bug.cgi?id=408727 to speedup the display of the monthly view in lightning
 0.64
 	rewrote the upload mechanism to use the Mozilla webdav library
 	generate better identifiers for new vCards
@@ -150,6 +151,3 @@ Todos in code
 	PUT: refetch the card as recommended by Helge
 	complete vCardDownloadObserver
 	complete uploadListener 
-
-	
-
