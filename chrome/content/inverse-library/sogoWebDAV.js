@@ -122,6 +122,7 @@ function onProppatchReadyStateChange(request) {
 }
 
 function sogoWebDAV(url, target, data, asynchronous) {
+	dump("webdav url: " + url + "\n");
 	this.context = null;
   this.url = url;
   this.target = target;

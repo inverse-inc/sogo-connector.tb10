@@ -226,7 +226,8 @@ simpleLdapQuery.prototype = {
 	},
  getQueryResults: function(aServerURL, aProtocolVersion) {
 		dump("getQueryResults\n");
-		return "calFBURL=currently not implemented in LDAP"; /* FIXME */
+		dump("calFBURL currently not implemented in LDAP\n");
+		return "calFBURL="; /* FIXME */
 
 		if (!aServerURL) {
 			throw("simpleLdapQuery.GetQueryResults():"

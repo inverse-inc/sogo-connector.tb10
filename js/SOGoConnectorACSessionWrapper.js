@@ -34,7 +34,7 @@ WrapperListener.prototype = {
 	},
  onStatus: function(statusText) {
 		this.wrapper.onStatus(statusText, this.number);
- }
+	}
 };
 
 //class constructor
@@ -53,104 +53,126 @@ SOGoConnectorACSessionWrapper.prototype = {
  results: null,
 
  initSessions: function() {
-	 var names = new Array();
-	 var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-	              .getService(Components.interfaces.nsIPrefBranch);
+		dump("initSessions\n");
+		var names = new Array();
+		var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+		.getService(Components.interfaces.nsIPrefBranch);
 
-	 var autocompleteLocal = false;
-	 try {
-		 autocompleteLocal = prefs.getBoolPref("mail.enable_autocomplete");
-	 }
-	 catch(e) {
-		 autocompleteLocal = false;
-	 }
-	 if (autocompleteLocal)
-		 names.push("addrbook");
+		var autocompleteLocal = false;
+		try {
+			autocompleteLocal = prefs.getBoolPref("mail.enable_autocomplete");
+		}
+		catch(e) {
+			autocompleteLocal = false;
+		}
+		if (autocompleteLocal)
+			names.push("addrbook");
 
-	 var autocompleteLdap = false;
-	 try {
-		 autocompleteLdap = prefs.getBoolPref("ldap_2.autoComplete.useDirectory");
-	 }
-	 catch(e) {
-		 autocompleteLdap = false;
-	 }
-	 if (autocompleteLdap) {
-		 if (isAutoCompleteDirectoryServerCardDAV()) {
-			 var autocompleteDirectory = prefs.getCharPref("ldap_2.autoComplete.directoryServer");
-			 var serverURL = Components.classes["@mozilla.org/network/standard-url;1"]
-			 .createInstance(Components.interfaces.nsIURL);
-			 try {
-				 serverURL.spec = prefs.getComplexValue(autocompleteDirectory +".uri",
-																								Components.interfaces.nsISupportsString)
-					 .data;
-				 this.mUrl = serverURL;
-				 names.push("carddav");
-			 }
-			 catch (ex) {
-				 dump("ERROR: " + ex + "\n");
-			 }
-		 }
-		 else
-			 names.push("ldap");
-	 }
+		var autocompleteLdap = false;
+		try {
+			autocompleteLdap = prefs.getBoolPref("ldap_2.autoComplete.useDirectory");
+		}
+		catch(e) {
+			autocompleteLdap = false;
+		}
 
-	 var sessions = new Array();
-	 var listeners = new Array();
-	 for (var i = 0; i < names.length; i++) {
-		 try {
-			 var session;
-			 if (names[i] == "carddav") {
-				 session = Components.classes["@mozilla.org/autocompleteSession;1?type=" + names[i]]
-					 .createInstance(Components.interfaces.nsICardDAVAutoCompleteSession);
-				 session.serverURL = this.mUrl;
-			 }
-			 else
-				 session = Components.classes["@mozilla.org/autocompleteSession;1?type=" + names[i]]
-					 .createInstance(Components.interfaces.nsIAutoCompleteSession);
-			 sessions.push(session);
-		 }
-		 catch(e) {
-			 dump("cannot instantiate '" + names[i] + "' auto-complete session\n" + e);
-		 }
-		 listeners.push(new WrapperListener(this, i));
-	 }
-	 this.sessions = sessions;
-	 this.listeners = listeners;
- },
+		var serverURL;
+		if (autocompleteLdap) {
+			var autocompleteDirectory = prefs.getCharPref("ldap_2.autoComplete.directoryServer");
+			if (isAutoCompleteDirectoryServerCardDAV()) {
+				serverURL = Components.classes["@mozilla.org/network/standard-url;1"]
+					.createInstance(Components.interfaces.nsIURI);
+				try {
+					serverURL.spec = prefs.getCharPref(autocompleteDirectory +".uri");
+// 																								 Components.interfaces.nsISupportsString)
+// 						.data;
+					names.push("carddav");
+				}
+				catch (ex) {
+					dump("ERROR: " + ex + "\n");
+				}
+			}
+			else {
+				serverURL = Components.classes["@mozilla.org/network/ldap-url;1"]
+					.createInstance(Components.interfaces.nsIURI);
+				try {
+					dump("autocomplete: " + autocompleteDirectory + "\n");
+					serverURL.spec = prefs.getCharPref(autocompleteDirectory +".uri");
+// 					serverURL.spec = prefs.getComplexValue(autocompleteDirectory +".uri",
+// 																								 Components.interfaces.nsISupportsString)
+// 						.data;
+					names.push("ldap");
+				}
+				catch (ex) {
+					dump("ERROR: " + ex + "\n");
+				}
+			}
+		}
+
+		var sessions = new Array();
+		var listeners = new Array();
+		for (var i = 0; i < names.length; i++) {
+			dump("name: " + names[i] + "\n");
+			try {
+				var session;
+				if (names[i] == "carddav") {
+					session = Components.classes["@mozilla.org/autocompleteSession;1?type=" + names[i]]
+						.createInstance(Components.interfaces.nsICardDAVAutoCompleteSession);
+					session.serverURL = serverURL;
+				}
+				else if (names[i] == "ldap") {
+					session = Components.classes["@mozilla.org/autocompleteSession;1?type=" + names[i]]
+						.createInstance(Components.interfaces.nsILDAPAutoCompleteSession);
+					session.serverURL = serverURL;
+				}
+				else
+					session = Components.classes["@mozilla.org/autocompleteSession;1?type=" + names[i]]
+						.createInstance(Components.interfaces.nsIAutoCompleteSession);
+				sessions.push(session);
+			}
+			catch(e) {
+				dump("cannot instantiate '" + names[i] + "' auto-complete session\n" + e);
+			}
+			listeners.push(new WrapperListener(this, i));
+		}
+		this.sessions = sessions;
+		this.listeners = listeners;
+	},
 
  /* nsIAutoCompleteSession */
  onAutoComplete: function(searchString, previousSearchResult, listener) {
-	 dump("SOGoConnectorACSessionWrapper.prototype.onAutoComplete\n");
+		dump("SOGoConnectorACSessionWrapper.prototype.onAutoComplete\n");
 
-	 for (var i = 0; i < this.sessions.length; i++) {
-		 var session = this.sessions[i];
-		 session.onAutoComplete(searchString, previousSearchResult,
-														this.listeners[i]);
-	 }
- },
+		for (var i = 0; i < this.sessions.length; i++) {
+			var session = this.sessions[i];
+			session.onAutoComplete(searchString, previousSearchResult,
+														 this.listeners[i]);
+		}
+	},
  onStartLookup: function (searchString, previousSearchResult, listener) {
-	 dump("SOGoConnectorACSessionWrapper.prototype.onStartLookup\n");
+		dump("SOGoConnectorACSessionWrapper.prototype.onStartLookup\n");
 
-	 this.waiting = this.sessions.length;
-	 this.running = true;
-	 this.listener = listener;
-	 this.searchString = searchString;
+		this.waiting = this.sessions.length;
+		this.running = true;
+		this.listener = listener;
+		this.searchString = searchString;
 
-	 for (var i = 0; i < this.sessions.length; i++) {
-		 var session = this.sessions[i];
-		 session.onStartLookup(searchString, previousSearchResult,
-													 this.listeners[i]);
-	 }
- },
+		for (var i = 0; i < this.sessions.length; i++) {
+			var session = this.sessions[i];
+			session.onStartLookup(searchString, previousSearchResult,
+														this.listeners[i]);
+		}
+		dump("started\n");
+	},
  onStopLookup: function() {
-	 dump("SOGoConnectorACSessionWrapper.prototype.onStopLookup\n");
+		dump("SOGoConnectorACSessionWrapper.prototype.onStopLookup\n");
 
-	 this._reset();
-	 for (var i = 0; i < this.sessions.length; i++) {
-		 var session = this.sessions[i];
-		 session.onStopLookup();
-	 }
- },
+		this._reset();
+		for (var i = 0; i < this.sessions.length; i++) {
+			var session = this.sessions[i];
+			session.onStopLookup();
+		}
+	},
 
  _reset: function() {
 		this.running = false;
@@ -177,7 +199,7 @@ SOGoConnectorACSessionWrapper.prototype = {
 				this._reset();
 			}
 		}
- },
+	},
  _fillResults: function(results) {
 		if (results) {
 			dump("building results... " + results.Count() + "\n");
@@ -229,7 +251,7 @@ SOGoConnectorACSessionWrapper.prototype = {
 			resultsArray.AppendElement(item);
 		}
 		var results = Components.classes["@mozilla.org/autocomplete/results;1"]
-		                .createInstance(Components.interfaces.nsIAutoCompleteResults);
+		.createInstance(Components.interfaces.nsIAutoCompleteResults);
 		results.defaultItemIndex = 0;
 		results.items = resultsArray;
 		results.searchString = this.searchString;
@@ -238,14 +260,14 @@ SOGoConnectorACSessionWrapper.prototype = {
 	},
  onStatus: function(statusText, number) {
 		dump(number + ": onStatus: " + statusText + "\n");
- },
+	},
 
  /* nsISupports */
  QueryInterface: function(aIID) {
-	 if (!aIID.equals(Components.interfaces.nsIAutoCompleteSession)
-			 && !aIID.equals(Components.interfaces.nsISOGoConnectorACSessionWrapper)
-			 && !aIID.equals(Components.interfaces.nsISupports))
-		 throw Components.results.NS_ERROR_NO_INTERFACE;
-	 return this;
- }
+		if (!aIID.equals(Components.interfaces.nsIAutoCompleteSession)
+				&& !aIID.equals(Components.interfaces.nsISOGoConnectorACSessionWrapper)
+				&& !aIID.equals(Components.interfaces.nsISupports))
+			throw Components.results.NS_ERROR_NO_INTERFACE;
+		return this;
+	}
 };

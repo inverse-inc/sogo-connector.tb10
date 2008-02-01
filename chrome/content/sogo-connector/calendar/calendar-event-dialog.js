@@ -31,14 +31,29 @@ var inverseEventDialog = {
 		for (var i = 0; i < manager.allIdentities.Count(); i++) {
 			var currentIdentity
 				= manager.allIdentities.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgIdentity);
-			var server = manager.GetServersForIdentity(currentIdentity).GetElementAt(0).QueryInterface(Components.interfaces.nsIMsgIncomingServer);
-			var currentOrganizer
-				= { "name": currentIdentity.fullName,
-						"email": ( server.realUsername + "@"
-											 + currentIdentity.email.split("@")[1]) };
-			if (composeService.defaultIdentity == currentIdentity)
-				currentOrganizer["default"] = true;
-			organizers.push(currentOrganizer);
+			var server = manager
+				.GetServersForIdentity(currentIdentity).GetElementAt(0)
+				.QueryInterface(Components.interfaces.nsIMsgIncomingServer);
+			var currentOrganizer;
+			if (server.realUsername.indexOf("@") > -1)
+				currentOrganizer
+					= { "name": currentIdentity.fullName,
+							"email": server.realUsername };
+			else {
+				var domain = currentIdentity.email.split("@")[1];
+				if (domain) {
+					currentOrganizer
+						= { "name": currentIdentity.fullName,
+								"email": ( server.realUsername + "@" + domain) };
+				}
+				else
+					currentOrganizer = null;
+			}
+			if (currentOrganizer) {
+				if (composeService.defaultIdentity == currentIdentity)
+					currentOrganizer["default"] = true;
+				organizers.push(currentOrganizer);
+			}
 		}
 
 		return organizers;

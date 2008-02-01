@@ -31,30 +31,31 @@ var gCachedResults;
 function GetCalDAVFBInCardDAVAddressBook(criteria){
 	var results = new Array();
 
-	// Patch to prevent 2 searches since autocompletion modifies the criteria when it matches the email!!!
-	if ( criteria.search("@") == -1)
-		return results;
+	// Patch to prevent 2 searches since autocompletion modifies the criteria
+	// when it matches the email!!!
+	dump("criteria: " + criteria + "\n");
 
-	if ( gCachedCriteria ==  criteria)
-		return gCachedResults;
-	else
-		gCachedCriteria = criteria;
+	if (criteria.search("@") > -1) {
+		if (gCachedCriteria == criteria)
+			return gCachedResults;
+		else
+			gCachedCriteria = criteria;
 
-	// moz-abdavdirectory://http://sogo.inverse.ca/SOGo/dav/rbolduc/Contacts/public/?(or(PrimaryEmail,c,klm)(DisplayName,c,kkk)(FirstName,c,klm)(LastName,c,k)))
-	var uri = getAutoCompleteCardDAVUri();
-	if ( criteria && criteria.length > 0 && uri ){
-		uri += "?(or(PrimaryEmail,c," + criteria + ")(DisplayName,c," + criteria + ")(FirstName,c," + criteria + ")(LastName,c," + criteria + "))";
+		// moz-abdavdirectory://http://sogo.inverse.ca/SOGo/dav/rbolduc/Contacts/public/?(or(PrimaryEmail,c,klm)(DisplayName,c,kkk)(FirstName,c,klm)(LastName,c,k)))
+		var uri = getAutoCompleteCardDAVUri();
+		if ( criteria && criteria.length > 0 && uri ){
+			uri += "?(or(PrimaryEmail,c," + criteria + ")(DisplayName,c," + criteria + ")(FirstName,c," + criteria + ")(LastName,c," + criteria + "))";
 
-		var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
-		var ds = Components.classes["@mozilla.org/rdf/datasource;1?name=addressdirectory"].getService(Components.interfaces.nsIRDFDataSource);
-		var resource = rdf.GetResource(uri);
+			var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
+			var ds = Components.classes["@mozilla.org/rdf/datasource;1?name=addressdirectory"].getService(Components.interfaces.nsIRDFDataSource);
+			var resource = rdf.GetResource(uri);
 
-		var directory = resource.QueryInterface(Components.interfaces.nsIAbDirectory);	
+			var directory = resource.QueryInterface(Components.interfaces.nsIAbDirectory);	
 
-		if (directory) {
-			var childSrc = rdf.GetResource("http://home.netscape.com/NC-rdf#CardChild");
-			var cards = ds.GetTargets(resource, childSrc, false);
-			while (cards.hasMoreElements()) {
+			if (directory) {
+				var childSrc = rdf.GetResource("http://home.netscape.com/NC-rdf#CardChild");
+				var cards = ds.GetTargets(resource, childSrc, false);
+				while (cards.hasMoreElements()) {
 					var protoCard = cards.getNext();
 					var card = protoCard.QueryInterface(Components.interfaces.nsIAbCard);
 					var matchMail = "";
@@ -73,11 +74,13 @@ function GetCalDAVFBInCardDAVAddressBook(criteria){
 							results.push( { cn: card.displayName, mail: matchMail, calFBURL: fbUrl } );
 						dump("var fbUrl = mdbCard.getStringAttribute('calFBURL'): " + fbUrl + "\n");
 					}
+				}
 			}
 		}
+		dump("Results'size: " + results.length + "\n");
+		gCachedResults = results;
 	}
-	dump("Results'size: " + results.length + "\n");
-	gCachedResults = results;
+
 	return results;
 }
 
