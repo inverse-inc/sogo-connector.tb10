@@ -1,4 +1,4 @@
-/* -*- Mode: java; tab-width: 4; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 4 -*- */
+/* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -68,7 +68,7 @@ simpleLdapQuery.prototype = {
 	},
  onLDAPMessage: function(aMessage) {
 		var messageType;
-    
+
 		dump("onLDAPMessage...\n");
 
 		try {
@@ -78,7 +78,7 @@ simpleLdapQuery.prototype = {
 			this.finishLDAPQuery();
 			throw e;
 		}
-    
+
 		switch (messageType) {
 		case Components.interfaces.nsILDAPMessage.RES_BIND: this.OnLDAPBind(aMessage);
 		case Components.interfaces.nsILDAPMessage.RES_SEARCH_ENTRY: this.OnLDAPSearchEntry(aMessage);
@@ -166,8 +166,8 @@ simpleLdapQuery.prototype = {
 
 		try {
 			this.mOperation
-			= Components.classes["@mozilla.org/network/ldap-operation;1"]
-			.createInstance(Components.interfaces.nsILDAPOperation);
+				= Components.classes["@mozilla.org/network/ldap-operation;1"]
+				.createInstance(Components.interfaces.nsILDAPOperation);
 			this.mOperation.init(this.mConnection, this._getProxyForObject(),
 								 null);
 			this.mAttrCount = {};

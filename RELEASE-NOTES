@@ -3,6 +3,17 @@ Features
 Working on 
 	Added Deleted on server feature. (low priority)
 
+0.66
+	rewrote the CardDAV addressbook implementation
+	  fixes the situation where one was not able to write to a mailing list
+	  fixes the duplicate entries for such addressbooks
+	  fixes the autocompletion working only one time for two tries
+	improved the performance of the freebusy resolution in the attendees window
+
+0.65.1
+	fixed support for freebusy entries containing multiple intervals on
+	the same line
+
 0.65
 	added asynchronous autocompletion
 	added the handling of organizers for whom the user id IS an email address
@@ -177,3 +188,7 @@ Todos in code
 	PUT: refetch the card as recommended by Helge
 	complete vCardDownloadObserver
 	complete uploadListener 
+
+Local variables:
+mode: text
+End:

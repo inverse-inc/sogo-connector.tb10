@@ -87,8 +87,8 @@ Modifications to original file pref-directory-add.xul by:
 -->
 <!ENTITY newDirectoryWidth                 "36em">
 
-<!ENTITY DisplaySynchCompleted.label      "Afficher l'avis de synchronisation">
-<!ENTITY DisplaySynchCompleted.accesskey  "Z">
+<!ENTITY DisplaySyncCompleted.label      "Afficher l'avis de synchronisation">
+<!ENTITY DisplaySyncCompleted.accesskey  "Z">
 <!ENTITY AutoDeleteFromServer.label       "Effacer les cartes qui ont été effacées du serveur automatiquement">
 <!ENTITY AutoDeleteFromServer.accesskey   "E">
 

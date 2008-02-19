@@ -1,5 +1,18 @@
 /* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 2 -*- */
 
+function backtrace(aDepth) {
+	var depth = aDepth || 10;
+	var stack = "";
+	var frame = arguments.callee.caller;
+
+	for (var i = 1; i <= depth && frame; i++) {
+		stack += i+": "+ frame.name + "\n";
+		frame = frame.caller;
+	}
+
+	return stack;
+}
+
 function onPostReadyStateChange(request) {
 	// 	dump("xmlreadystatechange: " + request.readyState + "\n");
 	if (request.readyState == 4) {
@@ -9,7 +22,7 @@ function onPostReadyStateChange(request) {
 		request.client._processPending();
 		request.client = null;
 		request.onreadystatechange = null;
-	};
+	}
 }
 
 function multiStatusParser(doc) {
@@ -118,11 +131,10 @@ function onProppatchReadyStateChange(request) {
 		request.client._processPending();
 		request.client = null;
 		request.onreadystatechange = null;
-	};
+	}
 }
 
 function sogoWebDAV(url, target, data, asynchronous) {
-	dump("webdav url: " + url + "\n");
 	this.context = null;
   this.url = url;
   this.target = target;
@@ -158,6 +170,26 @@ sogoWebDAV.prototype = {
 		}
 	},
 
+ _sendHTTPRequest: function(method, parameters, headers) {
+		var xmlRequest = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
+		.createInstance(Components.interfaces.nsIXMLHttpRequest);
+
+// 		var xmlRequest = new XMLHttpRequest();
+// 		dump("opening XMLHttpRequest: method '" + method + "', url '" + this.url
+// 				 + "', async=" + this.asynchronous + "\n");
+		xmlRequest.open(method, this.url, this.asynchronous);
+		if (headers) {
+			for (var header in headers)
+				xmlRequest.setRequestHeader(header, headers[header]);
+		}
+		xmlRequest.url = this.url;
+		xmlRequest.client = this;
+		xmlRequest.onreadystatechange = function() {
+			onPostReadyStateChange(xmlRequest);
+		};
+		xmlRequest.send(parameters);
+	},
+
  realLoad: function(operation, parameters) {
 		// 		dump("dav operation: " + operation + "\n");
 		this.context.sogoWebDAVPending = true;
@@ -166,7 +198,7 @@ sogoWebDAV.prototype = {
     var requestor = new InterfaceRequestor();
     
     var url = Components.classes['@mozilla.org/network/standard-url;1']
-    .getService(Components.interfaces.nsIURI);
+    .createInstance(Components.interfaces.nsIURI);
     url.spec = this.url;
 
     var listener = new sogoWebDAVListener(this.target, this);
@@ -198,18 +230,16 @@ sogoWebDAV.prototype = {
 																			parameters.props,
 																			parameters.deep, listener,
 																			requestor, ourClosure);
-    else if (operation == "REPORT")
-      webdavSvc.report(resource, parameters, false,
-											 listener, requestor, ourClosure);
+    else if (operation == "REPORT") {
+// 			webdavSvc.report(resource, parameters, false,
+//  											 listener, requestor, ourClosure);
+			this._sendHTTPRequest(operation, parameters,
+														{"Connection": "TE",
+																"TE": "trailers",
+																"Content-Type": "text/xml"});
+		}
 		else if (operation == "POST") {
-			var xmlRequest = new XMLHttpRequest();
-			xmlRequest.open("POST", this.url, this.asynchronous);
-			xmlRequest.url = this.url;
-			xmlRequest.client = this;
-			xmlRequest.onreadystatechange = function() {
-				onPostReadyStateChange(xmlRequest);
-			};
-			xmlRequest.send(parameters);
+			this._sendHTTPRequest(operation, parameters);
 		}
 		else if (operation == "MKCOL") {
 			webdavSvc.makeCollection(resource, listener, requestor, ourClosure);
@@ -218,19 +248,15 @@ sogoWebDAV.prototype = {
 			webdavSvc.remove(resource, listener, requestor, ourClosure);
 		}
 		else if (operation == "PROPPATCH") {
-			var xmlRequest = new XMLHttpRequest();
-			xmlRequest.open("PROPPATCH", this.url, this.asynchronous);
-			xmlRequest.url = this.url;
-			xmlRequest.client = this;
-			xmlRequest.onreadystatechange = function() {
-				onProppatchReadyStateChange(xmlRequest);
-			};
-			xmlRequest.send(parameters);
+			this._sendHTTPRequest(operation, parameters);
 		}
     else
       throw ("operation '" + operation + "' is not currently supported");
   },
  load: function(operation, parameters) {
+		if (!this.url)
+			throw ("missing 'url' parameter");
+
 		if (!this.context)
 			this._initContext();
 
@@ -269,6 +295,7 @@ sogoWebDAV.prototype = {
 		this.load(operation, queryDoc);
 	},
  report: function(query) {
+// 		dump("xxxxxxxx doREPORT: " + query + "\n");
 		this._loadXMLQuery("REPORT", query);
   },
  post: function(query) {
@@ -364,10 +391,11 @@ sogoWebDAVListener.prototype = {
 		try {
 			newClosure
 				= closure.QueryInterface(Components.interfaces.nsISupportsString);
-			if (newClosure.toString() == "sogoWebDAV")
-				isOurs = true;
+			isOurs = (newClosure.toString() == "sogoWebDAV");
 		}
-		catch(e) {};
+		catch(e) {
+			dump("e: " + e + "\n");
+		};
 
 		return isOurs;
 	},
@@ -461,6 +489,10 @@ InterfaceRequestor.prototype = {
       .getService(Components.interfaces.nsIWindowWatcher)
       .getNewPrompter(null);
     }
+		else if (iid.equals(Components.interfaces.nsIBadCertListener)) {
+			return Components.classes["@mozilla.org/nsTokenDialogs;1"]
+			.createInstance(Components.interfaces.nsIBadCertListener);
+		}
     dump ("sogoWebDAV.js: no interface in requestor: " + iid + "\n");
     throw Components.results.NS_ERROR_NO_INTERFACE;
   },

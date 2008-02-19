@@ -12,19 +12,12 @@ const componentData =
     category: "inverse-extensions",
     categoryEntry: "context-manager",
     service: true},
-    {cid: Components.ID("{03db270b-262d-4fa4-802e-829d8b6bc708}"),
-     contractid: "@inverse.ca/jsenumerator;1",
-     script: "Enumerator.js",
-     constructor: "JSEnumerator",
+    {cid: Components.ID("{bc08dfb2-db4e-11dc-9a97-00163e47dbb4}"),
+     contractid: "@inverse.ca/addressbook/volatile-abcard;1",
+     script: "SOGoConnectorVolatileABCard.js",
+     constructor: "SOGoConnectorVolatileABCard",
      category: "inverse-extensions",
-     categoryEntry: "javascript-enumerator",
-     service: false},
-    {cid: Components.ID("{df1c5034-24fe-4bed-8639-e8bdfe6c31e9}"),
-     contractid: "@inverse.ca/jssingletonenumerator;1",
-     script: "SingletonEnumerator.js",
-     constructor: "JSSingletonEnumerator",
-     category: "inverse-extensions",
-     categoryEntry: "javascript-enumerator",
+     categoryEntry: "volatile-addressbook-card",
      service: false},
     {cid: Components.ID("{882c2ce0-f7a2-4894-bce7-a119fb6f3c5c}"),
      contractid: "@mozilla.org/autocompleteSession;1?type=carddav",
@@ -48,12 +41,19 @@ const componentData =
      categoryEntry: "carddav-directory",
      service: false},
     {cid: Components.ID("{868e510b-d758-4f6f-8cba-c223347ab644}"),
+     contractid: "@mozilla.org/addressbook/directory-factory;1?name=carddav",
+     script: "abdavdirectoryfactory.js",
+     constructor: "AbDAVDirFactory",
+     category: "inverse-extensions",
+     categoryEntry: "carddav-directory-factory",
+     service: true},
+    {cid: Components.ID("{868e510b-d758-4f6f-8cba-c223347ab644}"),
      contractid: "@mozilla.org/addressbook/directory-factory;1?name=moz-abdavdirectory",
      script: "abdavdirectoryfactory.js",
      constructor: "AbDAVDirFactory",
      category: "inverse-extensions",
      categoryEntry: "carddav-directory-factory",
-     service: false}];
+     service: true}];
 
 var componentRegistry = {
  mScriptsLoaded: false,
@@ -90,7 +90,8 @@ var componentRegistry = {
       try {
 	var fileurl = iosvc.newFileURI(f);
 	loader.loadSubScript(fileurl.spec, null);
-      } catch (e) {
+      }
+       catch (e) {
 	dump("Error while loading " + fileurl.spec + "\n");
 	throw e;
       }

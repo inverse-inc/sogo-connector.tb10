@@ -41,7 +41,8 @@ function jsInclude(files, target) {
 	}
 }
 
-jsInclude(["chrome://inverse-library/content/sogoWebDAV.js",
+jsInclude(["chrome://inverse-library/content/sogoWebDAV.js",	
+					 "chrome://sogo-connector/content/addressbook/folder-handling.js",
 					 "chrome://sogo-connector/content/general/preference.service.addressbook.groupdav.js",
 					 "chrome://sogo-connector/content/general/sync.progress-meter.js",
 					 "chrome://sogo-connector/content/general/implementors.addressbook.groupdav.js",
@@ -56,7 +57,7 @@ function GroupDavSynchronizer(uri, isDrop) {
 	if (!isGroupdavDirectory(uri)
 			|| isCardDavDirectory(uri))
 		throw "Specified addressbook cannot be synchronized";
-	 
+
 	this.gSelectedDirectoryURI = uri;
 	this.mIsDrop = isDrop;
 	this.messengerWindow
@@ -65,10 +66,13 @@ function GroupDavSynchronizer(uri, isDrop) {
 		.getMostRecentWindow("mail:3pane");
 	this.callbackCode = 0;
 	this.callbackFailures = new Array();
+	this.callback = null;
 	this.callbackData = null;
+	this.context = this._initGroupDAVContext();
 }
 
 GroupDavSynchronizer.prototype = {
+ context: null,
  callback: null,
  callbackCode: 0,
  callbackFailures: null,
@@ -104,8 +108,8 @@ GroupDavSynchronizer.prototype = {
 		return newContext;
 	},
  start: function() {
-		this.initSyncVariables();
 		if (!this.context.apiDisabled) {
+			this.initSyncVariables();
 			if (this.context.requests[this.gURL])
 				dump("a request is already active for url: " + this.gURL + "\n");
 			else {
@@ -116,10 +120,7 @@ GroupDavSynchronizer.prototype = {
 		}
 	},
  initSyncVariables: function() {
-		var rdfService = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-    .getService(Components.interfaces.nsIRDFService);
-		this.gAddressBook = rdfService.GetResource(this.gSelectedDirectoryURI)
-		.QueryInterface(Components.interfaces.nsIAbDirectory);
+		this.gAddressBook = SCGetDirectoryFromURI(this.gSelectedDirectoryURI);
 
 		var prefId;
 		if (this.gSelectedDirectoryURI == "moz-abmdbdirectory://abook.mab")
@@ -129,6 +130,8 @@ GroupDavSynchronizer.prototype = {
 
 		var groupdavPrefService = new GroupdavPreferenceService(prefId);
 		this.gURL = groupdavPrefService.getURL();
+// 		dump("prefId: " + prefId + "\n");
+// 		dump("url: " + this.gURL + "\n");
 
 		this.gDisplaySyncDialog = groupdavPrefService.getDisplayDialog() == "true";
 	
@@ -153,7 +156,6 @@ GroupDavSynchronizer.prototype = {
 		this.conflictHash = {};
 		this.localCardPointerHash = {};
 
-		this.context = this._initGroupDAVContext();
 		try {
 			var testObject = new sogoWebDAV();
 
@@ -172,6 +174,7 @@ GroupDavSynchronizer.prototype = {
 	},
  // Fill the Local Directory data structures for the syncronization
  fillLocalHashes: function() {
+// 		dump("fillLocalhas\n");
 		var cards = this.gAddressBook.childCards;
 		var hasCards = false;
 	
@@ -191,13 +194,13 @@ GroupDavSynchronizer.prototype = {
 				// Cards that exist locally and on the server
 				// Later, the function compareVersions() will use this information to determine 
 				// if the cards needs to be uploaded or if there is a conflict
-// 				dump("xxxx localcard: " + key + "\n");
 				this.localCardPointerHash[key] = card;
 				this.localVersionHash[key]
 					= cardExt.getStringAttribute("groupDavVersion");
+//  				dump("xxxx localcard: " + key + "; version: " + this.localVersionHash[key] + "\n");
 			}
 			else {
-//  				dump("xxxx local addition....\n");
+//   				dump("xxxx local addition....\n");
 				this.localAdditions.push(card);
 			}
 			try {
@@ -226,8 +229,8 @@ GroupDavSynchronizer.prototype = {
 		// instead of using webdavAPI.js
 
 		this.pendingOperations = 1;
-
 		var data = {query: "server-check-propfind"};
+// 		dump("fillServerHashes (url): " + this.gURL + "\n");
 		var request = new sogoWebDAV(this.gURL, this, data);
 		request.propfind(["DAV: resourcetype"], false);
 // 		try {
@@ -250,6 +253,8 @@ GroupDavSynchronizer.prototype = {
 // 			var localDate = null;
 			if (typeof(this.localVersionHash[key]) != "undefined")
 				localVersion = this.localVersionHash[key];
+
+// 			dump("localVersion " + key + ": " + localVersion + "; serverVersion: " + serverVersion + "\n");
 // 			if (typeof(this.localDateHash[key]) != "undefined")
 // 				localDate = this.localDateHash[key];
 // 			dump(key + ": localVersion: " + localVersion + "; serverVersion: " +
@@ -407,16 +412,23 @@ GroupDavSynchronizer.prototype = {
 		}
 	},
  onCardPropfindComplete: function(status, response, key, card) {
+// 		dump("oncardpropfindcomplete: " + key + "\n");
 		if (status > 199 && status < 400) {
 			var mdbCard = card.QueryInterface(Components.interfaces.nsIAbMDBCard);
 			var cardURL = this.gURL + key;
 			var etag = response[cardURL]["DAV: getetag"];
+// 			dump("etag: " + etag + "\n");
 			var oldKey = mdbCard.getStringAttribute("groupDavKey");
 			var isNew = (!oldKey || oldKey == "");
 			if (isNew)
 				mdbCard.setStringAttribute("groupDavKey", key);
+// 			dump("cardpfindcomplete: " + key + "; version: " + etag + "\n");
 			mdbCard.setStringAttribute("groupDavVersion", etag);
-			card.editCardToDatabase(this.gSelectedDirectoryURI);
+// 			card.copy(mdbCard);
+
+// 			dump("new etag: " + card.getStringAttribute("groupDavVersion") + "\n");
+// 			dump("new etag: " + card.getStringAttribute("groupDavKey") + "\n");
+			mdbCard.editCardToDatabase(this.gSelectedDirectoryURI);
 			this.serverVersionHash[key] = etag;
 
 			var state = ("<state><newCard>" + isNew + "</newCard>"
@@ -455,7 +467,6 @@ GroupDavSynchronizer.prototype = {
 		var vcardFieldsArray = {};  //To handle fbURL from SOGo(freebusy) and vcards fields that have no equivalent in Thunderbird.
 		vcardFieldsArray["groupDavVcardCompatibility"] = "";
 
-		var cardExt;
 		if (!this.serverVersionHash[key]) {
 			var string = ("Missing key '" + key + "' from hash"
 										+ " 'this.serverVersionHash'.\n"
@@ -465,53 +476,73 @@ GroupDavSynchronizer.prototype = {
 			throw string;
 		}
 
-// 		logDebug("Vcard downloaded:\n" + "key: " + key + "data: \n" +data);
-		var card = importFromVcard(data, this.gSelectedDirectoryURI,
-															 vcardFieldsArray);
-// 		logDebug("groupDavVcardCompatibility value:\n" + vcardFieldsArray["groupDavVcardCompatibility"]);
-
-		if (this.localCardPointerHash[key]) {
-			// Replace local card with server card
+		var card = importFromVcard(data, vcardFieldsArray);
+		var savedCard;
+ // 		logDebug("groupDavVcardCompatibility value:\n" + vcardFieldsArray["groupDavVcardCompatibility"]);
+		card.setStringAttribute("groupDavKey", key);
+		card.setStringAttribute("groupDavVersion",
+														this.serverVersionHash[key]);
+		// 			logInfo("vcardFieldsArray: " + dumpObject(vcardFieldsArray));
+		card.setStringAttribute("calFBURL", vcardFieldsArray["fburl"]);
+		card.setStringAttribute("groupDavVcardCompatibility",
+														vcardFieldsArray["groupDavVcardCompatibility"]);
+ 
+ 		if (this.localCardPointerHash[key]) {
 			this.localCardPointerHash[key].copy(card);
-			cardExt = this.localCardPointerHash[key].QueryInterface(Components.interfaces.nsIAbMDBCard);
-
-			cardExt.setStringAttribute("groupDavKey", key);
-			cardExt.setStringAttribute("groupDavVersion",
-																 this.serverVersionHash[key]);
-// 			logInfo("vcardFieldsArray: " + dumpObject(vcardFieldsArray));
-			cardExt.setStringAttribute("calFBURL", vcardFieldsArray["fburl"]);
-			cardExt.setStringAttribute("groupDavVcardCompatibility",
-																 vcardFieldsArray["groupDavVcardCompatibility"]);
-			
-			this.localCardPointerHash[key].editCardToDatabase(this.gSelectedDirectoryURI);
-		}
+			savedCard = this.localCardPointerHash[key];
+// 			var savedCard = this.gAddressBook.addCard(card).QueryInterface(Components.interfaces.nsIAbMDBCard);
+// 			this.gAddressBook.dropCard(savedCard);
+// 			var directory
+// 			dump("replacing local card with server card\n");
+// 			// Replace local card with server card
+// 			this.localCardPointerHash[key].copy(card);
+// 			dump("replace test: "
+// 					 + this.localCardPointerHash[key].getStringAttribute("groupDavKey")
+// 					 + "; server key: " + key + "\n");
+ 		}
 		else {
+// 			dump("adding new server card\n");
 			// add the server card
 // 			dump("!!!!!!!!!!!!!! :" + this.gSelectedDirectoryURI + "\n");
-			var savedCard = this.gAddressBook.addCard(card);
-			cardExt = savedCard.QueryInterface(Components.interfaces.nsIAbMDBCard);
-			
-			cardExt.setStringAttribute("groupDavKey", key);
-// 			dump("key: " + key + "\n");
-// 			dump("serverVersionHash[key]: " + this.serverVersionHash[key] + "\n");
-			cardExt.setStringAttribute("groupDavVersion", this.serverVersionHash[key]);
-			cardExt.setStringAttribute("calFBURL", vcardFieldsArray["fburl"]);
-			cardExt.setStringAttribute("groupDavVcardCompatibility",
-																 vcardFieldsArray["groupDavVcardCompatibility"]);
-
-			savedCard.editCardToDatabase(this.gSelectedDirectoryURI);
+			var newCard = Components.classes["@mozilla.org/addressbook/moz-abmdbcard;1"]
+			.createInstance(Components.interfaces.nsIAbCard);
+			newCard.copy(card);
+			// 			var savedCard = 
+			savedCard = this.gAddressBook.addCard(newCard)
+			.QueryInterface(Components.interfaces.nsIAbMDBCard);
 		}
+		savedCard.setStringAttribute("groupDavKey", key);
+		savedCard.setStringAttribute("groupDavVersion",
+																 this.serverVersionHash[key]);
+		// 			logInfo("vcardFieldsArray: " + dumpObject(vcardFieldsArray));
+		savedCard.setStringAttribute("calFBURL", vcardFieldsArray["fburl"]);
+		savedCard.setStringAttribute("groupDavVcardCompatibility",
+																 vcardFieldsArray["groupDavVcardCompatibility"]);
+		savedCard.editCardToDatabase(this.gSelectedDirectoryURI);
+// 			savedCard.setStringAttribute("groupDavVersion",
+// 																	 this.serverVersionHash[key]);
+// 			savedCard.setStringAttribute("groupDavKey", key);
+// 			savedCard.editCardToDatabase(this.gSelectedDirectoryURI);
+// 			.QueryInterface(Components.interfaces.nsIAbMDBCard);
+// 			savedCard.editCardToDatabase(this.gSelectedDirectoryURI);
+// 			dump("new test: "
+// 					 + savedCard.getStringAttribute("groupDavKey")
+// 					 + "; server key: " + key + "\n");
+// 			dump("version: " + savedCard.getStringAttribute("groupDavVersion") + "\n");
+// 		}
+
 // 		logDebug("importFromVcard() completed");
 // 		logDebug("//TODO: do a propfind to make sure the version no. (etag) has not changed.");
 	},
  onServerCheckComplete: function(status, response, key) {
 		this.callbackCode = status;
 		this.pendingOperations = 0;
-
+// 		dump("response: " + response + "\n");
 		if (status > 199 && status < 399) {
 			for (var href in response) {
 				var davObject = response[href];
 				if (href == this.gURL) {
+// 					dump("+++ href: " + href + "\n");
 					var rsrcType = "" + davObject["DAV: resourcetype"];
 					if (rsrcType.indexOf("vcard-collection") > 1
 							|| rsrcType.indexOf("addressbook") > 1) {
@@ -631,7 +662,7 @@ GroupDavSynchronizer.prototype = {
 				request.put(vcard, "text/x-vcard; charset=UTF-8");
 			}
 			else {
-				dump("new vcard could not be generated\n");
+ 				dump("new vcard could not be generated\n");
 				this.remainingUploads--;
 			}
 		}
@@ -651,7 +682,7 @@ GroupDavSynchronizer.prototype = {
 				request.put(vcard, "text/x-vcard; charset=UTF-8");
 			}
 			else {
-				dump("new vcard could not be generated for update\n");
+ 				dump("new vcard could not be generated for update\n");
 				this.remainingUploads--;
 			}
 		}
@@ -676,11 +707,11 @@ GroupDavSynchronizer.prototype = {
 	},
  processConflicts: function() {
 // 		dump("processConflicts\n");
-		for (var key in this.conflictHash) {
-			importFromVcard(this.serverDataHash[key], key, this.serverVersionHash[key],
-											this.gSelectedDirectoryURI);
-			//this.gAddressBook.dropCard(this.localCardPointerHash[key],false);
-		}
+// 		for (var key in this.conflictHash) {
+// 			importFromVcard(this.serverDataHash[key], key, this.serverVersionHash[key],
+// 											this.gSelectedDirectoryURI);
+// 			//this.gAddressBook.dropCard(this.localCardPointerHash[key],false);
+// 		}
 		this.processDeletes();
 		logWarn("TODO:\tCurrently, conflicts are simply overwritten by the server version.\n\t\t\t\t\t\t\tDeletes on the server are simply ignored at this point.");
 		this.pendingOperations--;
@@ -725,8 +756,8 @@ GroupDavSynchronizer.prototype = {
 // 		db.closeMDB(true);
 	},
  uploadCard: function(card, callback, callbackData) {
-		this.initSyncVariables();
-		if (!this.apiDisabled) {
+		if (!this.context.apiDisabled) {
+			this.initSyncVariables();
 			var key = card.getStringAttribute("groupDavKey");
 
 			if (key && key != "") {
@@ -777,6 +808,7 @@ function SynchronizeGroupdavAddressbookDrop(uri) {
 }
 
 function SynchronizeGroupdavAddressbook(uri, callback, callbackData) {
+	dump("sync uri: " + uri + "\n");
 	var synchronizer = new GroupDavSynchronizer(uri, false);
 	synchronizer.callback = callback;
 	synchronizer.callbackData = callbackData;

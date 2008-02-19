@@ -30,7 +30,7 @@
 		You should have received a copy of the GNU General Public License
 		along with "SOGo Connector"; if not, write to the Free Software
 		Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA	02110-1301	USA
- ********************************************************************************/
+********************************************************************************/
 
 /*
  * This overlay adds cardDAV functionalities to autoCompletion
@@ -40,28 +40,28 @@ const CI = Components.interfaces;
 
 /*var cardDAVDirectoryServerObserver = {
 	observe: function(subject, topic, value) {
-			try {
-					setupCardDavAutoCompleteSession();
-			} catch (ex) {
-					// catch the exception and ignore it, so that if LDAP setup 
-					// fails, the entire compose window doesn't get horked
-			}
+	try {
+	setupCardDavAutoCompleteSession();
+	} catch (ex) {
+	// catch the exception and ignore it, so that if LDAP setup 
+	// fails, the entire compose window doesn't get horked
 	}
-}
+	}
+	}
 */
 
-function autoCompleteDirectoryIsCardDav(){
+function autoCompleteDirectoryIsCardDav() {
 	var autocompleteDirectory = sPrefs.getCharPref("ldap_2.autoComplete.directoryServer");
 	var uri = sPrefs.getComplexValue(autocompleteDirectory +".uri", CI.nsISupportsString);
-	if ( uri && uri.data && uri.data.toString() && uri.data.toString().search("moz-abdavdirectory://") == 0)
+	if (uri && uri.data && uri.data.toString() && uri.data.toString().search("carddav://") == 0)
 		return true;
 	else
-		return false;	 
+		return false;
 }
 
 // Override directoryServerObserver to test for CardDAV
 var directoryServerObserver = {
-	observe: function(subject, topic, value) {
+ observe: function(subject, topic, value) {
 		try {
 			if (autoCompleteDirectoryIsCardDav()){
 				setupCardDavAutoCompleteSession();
@@ -69,8 +69,8 @@ var directoryServerObserver = {
 				setupLdapAutocompleteSession();
 			}					
 		} catch (ex) {
-		// catch the exception and ignore it, so that if LDAP setup 
-		// fails, the entire compose window doesn't get horked
+			// catch the exception and ignore it, so that if LDAP setup 
+			// fails, the entire compose window doesn't get horked
 		}
 	}
 };
@@ -84,7 +84,7 @@ function setupCardDavAutoCompleteSession(){
 	autocompleteLdap = sPrefs.getBoolPref("ldap_2.autoComplete.useDirectory");
 	if (autocompleteLdap)
 		autocompleteDirectory = sPrefs.getCharPref("ldap_2.autoComplete.directoryServer");
-		
+
 	if(gCurrentIdentity.overrideGlobalPref) {
 		autocompleteDirectory = gCurrentIdentity.directoryServer;
 	}
@@ -101,11 +101,11 @@ function setupCardDavAutoCompleteSession(){
 	} else {
 		cardDAVSession = Components.classes["@mozilla.org/autocompleteSession;1?type=carddav"].createInstance(CI.nsICardDAVAutoCompleteSession);
 	}
-						
+
 	if (autocompleteDirectory && !gIsOffline) { 
-	// Add observer on the directory server we are autocompleting against
-	// only if current server is different from previous.
-	// Remove observer if current server is different from previous			 
+		// Add observer on the directory server we are autocompleting against
+		// only if current server is different from previous.
+		// Remove observer if current server is different from previous			 
 		gCurrentAutocompleteDirectory = autocompleteDirectory;
 		if (prevAutocompleteDirectory) {
 			if (prevAutocompleteDirectory != gCurrentAutocompleteDirectory) { 
@@ -116,58 +116,60 @@ function setupCardDavAutoCompleteSession(){
 			AddDirectorySettingsObserver();
 		}
 		// fill in the session params if there is a session
-			if (cardDAVSession) {
-				if (!gSessionAdded) {
+		if (cardDAVSession) {
+			if (!gSessionAdded) {
 				// if we make it here, we know that session initialization has
 				// succeeded; add the session for all recipients, and 
 				// remember that we've done so
-					var autoCompleteWidget;
-					for (i=1; i <= awGetMaxRecipients(); i++){
-						autoCompleteWidget = document.getElementById("addressCol2#" + i);
-						if (autoCompleteWidget){
-							autoCompleteWidget.addSession(cardDAVSession);
-							
-							// ldap searches don't insert a default entry with the default domain appended to it
-							// so reduce the minimum results for a popup to 2 in this case. 
-							autoCompleteWidget.minResultsForPopup = 2;
-						}
+				var autoCompleteWidget;
+				for (i=1; i <= awGetMaxRecipients(); i++){
+					autoCompleteWidget = document.getElementById("addressCol2#" + i);
+					if (autoCompleteWidget){
+						autoCompleteWidget.addSession(cardDAVSession);
+
+						// ldap searches don't insert a default entry with the default domain appended to it
+						// so reduce the minimum results for a popup to 2 in this case. 
+						autoCompleteWidget.minResultsForPopup = 2;
 					}
-					gSessionAdded = true;
 				}
+				gSessionAdded = true;
 			}
-		}else {
-			if (gCurrentAutocompleteDirectory) {
+		}
+	}else {
+		if (gCurrentAutocompleteDirectory) {
 			// Remove observer on the directory server since we are not doing Ldap autocompletion.
-				RemoveDirectorySettingsObserver(gCurrentAutocompleteDirectory);
-				gCurrentAutocompleteDirectory = null;
-			}
-			if (gLDAPSession && gSessionAdded) {
-				for (i=1; i <= awGetMaxRecipients(); i++) {
-					document.getElementById("addressCol2#" + i).removeSession(gLDAPSession);
-				}
-				gSessionAdded = false;
-			}
+			RemoveDirectorySettingsObserver(gCurrentAutocompleteDirectory);
+			gCurrentAutocompleteDirectory = null;
 		}
-		var serverURL = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(CI.nsIURL);
-		try {
-
-			dump("******** autocompleteDirectory: " + autocompleteDirectory + "\n");
-			dump(gPrefs.getCharPref(autocompleteDirectory +".uri"));
-			dump("\n")
-			serverURL.spec = gPrefs.getCharPref(autocompleteDirectory +".uri");
-			dump("serverURL.spec: " + serverURL.spec +"\n");
-		} catch (ex){
-			dump("ERROR: " + ex + "\n");
+		if (gLDAPSession && gSessionAdded) {
+			for (i=1; i <= awGetMaxRecipients(); i++) {
+				document.getElementById("addressCol2#" + i).removeSession(gLDAPSession);
+			}
+			gSessionAdded = false;
 		}
-		cardDAVSession.serverURL = serverURL;
+	}
+	var serverURL = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(CI.nsIURL);
+	try {
 
-		gLDAPSession = cardDAVSession;
-		gSetupLdapAutocomplete = true;
+		dump("******** autocompleteDirectory: " + autocompleteDirectory + "\n");
+		dump(gPrefs.getCharPref(autocompleteDirectory +".uri"));
+		dump("\n");
+		var prefix = "carddav://";
+		var uri = "" + gPrefs.getCharPref(autocompleteDirectory +".uri");
+		serverURL.spec = uri.substring(prefix.length);
+		dump("serverURL.spec: " + serverURL.spec +"\n");
+	}
+	catch (ex){
+		dump("ERROR: " + ex + "\n");
+	}
+	cardDAVSession.serverURL = serverURL;
+
+	gLDAPSession = cardDAVSession;
+	gSetupLdapAutocomplete = true;
 }
 
 // No other way to override the function than to copy it and just add the test for autoCompleteDirectoryIsCardDav()
-function setupAutocomplete()
-{
+function setupAutocomplete() {
 	//Setup autocomplete session if we haven't done so already
 	if (!gAutocompleteSession) {
 		gAutocompleteSession = Components.classes["@mozilla.org/autocompleteSession;1?type=addrbook"].getService(CI.nsIAbAutoCompleteSession);
@@ -185,31 +187,30 @@ function setupAutocomplete()
 			// honor it as well
 			//
 			try {
-					if (sPrefs.getBoolPref("mail.autoComplete.highlightNonMatches"))
-						autoCompleteWidget.highlightNonMatches = true;
+				if (sPrefs.getBoolPref("mail.autoComplete.highlightNonMatches"))
+					autoCompleteWidget.highlightNonMatches = true;
 
-					if (sPrefs.getIntPref("mail.autoComplete.commentColumn"))
-						autoCompleteWidget.showCommentColumn = true;
+				if (sPrefs.getIntPref("mail.autoComplete.commentColumn"))
+					autoCompleteWidget.showCommentColumn = true;
 			} catch (ex) {
-					// if we can't get this pref, then don't show the columns (which is
-					// what the XUL defaults to)
+				// if we can't get this pref, then don't show the columns (which is
+				// what the XUL defaults to)
 			}
-							
-		} else {
-			gAutocompleteSession = 1;
 		}
+		else
+			gAutocompleteSession = 1;
 	}
 	if (!gSetupLdapAutocomplete) {
-			try {
-				if (autoCompleteDirectoryIsCardDav()){
-					setupCardDavAutoCompleteSession();
-				}else{
-						setupLdapAutocompleteSession();
-				}
-			} catch (ex) {
-					// catch the exception and ignore it, so that if LDAP setup 
-					// fails, the entire compose window doesn't end up horked
-			}
+		try {
+			if (autoCompleteDirectoryIsCardDav())
+				setupCardDavAutoCompleteSession();
+			else
+				setupLdapAutocompleteSession();
+		}
+		catch (ex) {
+			// catch the exception and ignore it, so that if LDAP setup 
+			// fails, the entire compose window doesn't end up horked
+		}
 	}
 }
 

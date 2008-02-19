@@ -21,11 +21,27 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  ********************************************************************************/
 
+function jsInclude(files, target) {
+	var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+		.getService(Components.interfaces.mozIJSSubScriptLoader);
+	for (var i = 0; i < files.length; i++) {
+		try {
+			loader.loadSubScript(files[i], target);
+		}
+		catch(e) {
+			dump("webdav.inverse.ca.js: failed to include '" + files[i] + "'\n" + e + "\n");
+		}
+	}
+}
+
+jsInclude(["chrome://sogo-connector/content/general/mozilla.utils.inverse.ca.js"]);
+
 function isGroupdavDirectory(abURI) {
 	var value = false;
 
 	if (abURI
-			&& abURI.search("mab/MailList") == -1) {
+			&& abURI.search("mab/MailList") == -1
+			&& abURI.search("moz-abmdbdirectory://") == 0) {
 		var ab = Components.classes["@mozilla.org/rdf/rdf-service;1"]
 			.getService(Components.interfaces.nsIRDFService)
 			.GetResource(abURI)
@@ -34,25 +50,20 @@ function isGroupdavDirectory(abURI) {
  		var prefId = ab.directoryProperties.prefName;
 		try {
 			var groupdavPrefService = new GroupdavPreferenceService(prefId);
+			value = (groupdavPrefService.getDirectoryName() != "");
 		}
 		catch(e) {
 			//var xpcConnect =Components.classes["DEB1D48E-7469-4B01-B186-D9854C7D3F2D"].getService(Components.interfaces.nsIXPConnect);	
-			dump("abURI '" + abURI
-					 + " is invalid in call isGroupdavDirectory(abURI) \n\n STACK:\n"
-					 + backtrace(10));
-			dump("ab prefid: " + prefId + "\n");
+// 			dump("ab prefid: " + prefId + "\n");
+// 			dump("abURI '" + abURI
+// 					 + " is invalid in call isGroupdavDirectory(abURI) \n\n STACK:\n"
+// 					 + backtrace(10));
 			// TODO this needs to be handle better
 			// Currently if for any reason someone messed up prefs.js this could create havoc
 		}
-
-		try {
-// 			dump("the real test\n");
-			value = (groupdavPrefService.getDirectoryName() !="");
-		}
-		catch(e) {}
 	}
 
-// 	dump("abURI: " + abURI + " isGroupDav? " + value + "\n");
+//   	dump("abURI: " + abURI + " isGroupDav? " + value + "\n");
 
 	return value;
 }
@@ -60,44 +71,32 @@ function isGroupdavDirectory(abURI) {
 function isCardDavDirectory(abURI){
 	var value = false;
 
+	var abdavPrefix = "moz-abdavdirectory://";
 	if (abURI
 			&& abURI.search("mab/MailList") == -1
-			&& abURI.search("moz-abdavdirectory://") == 0) {
-		var ab = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-			.getService(Components.interfaces.nsIRDFService)
-			.GetResource(abURI)
-			.QueryInterface(Components.interfaces.nsIAbDirectory);
-
- 		var prefId = ab.directoryProperties.prefName;
+			&& (abURI.search("carddav://") == 0
+					|| abURI.search(abdavPrefix) == 0)) {
+		var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+			.getService(Components.interfaces.nsIPrefBranch);
+		var prefName = abURI.substr(abdavPrefix.length);
 		try {
-			var groupdavPrefService = new GroupdavPreferenceService(prefId);
+			var uri = prefs.getCharPref(prefName + ".uri");
+			value = (uri.search("carddav://") == 0);
 		}
 		catch(e) {
-			//var xpcConnect =Components.classes["DEB1D48E-7469-4B01-B186-D9854C7D3F2D"].getService(Components.interfaces.nsIXPConnect);	
-			dump("abURI '" + abURI
-					 + " is invalid in call isCardDavDirectory(abURI) \n\n STACK:\n"
-					 + backtrace(10));
-			dump("ab prefid: " + prefId + "\n");
-			// TODO this needs to be handle better
-			// Currently if for any reason someone messed up prefs.js this could create havoc
+			dump("uri for " + prefName + " not found\n");
 		}
-
-		try {
-// 			dump("the real test\n");
-			value = groupdavPrefService.getReadOnly();
-		}
-		catch(e) {}
 	}
 
-//  	dump("abURI: " + abURI + " isCardDAV? " + value + "\n");
+	// 	dump("isCardDAV: " + abURI + " = " + value + "\n");
 
 	return value;
 }
 
 function GroupdavPreferenceService(uniqueId) {
 	if (uniqueId == null || uniqueId == "") {
-		logError("GroupdavPreferenceService exception: Missing uniqueId"+
-						 backtrace());
+// 		dump("GroupdavPreferenceService exception: Missing uniqueId"+
+// 				 backtrace());
 		throw new Components.Exception("GroupdavPreferenceService exception: Missing uniqueId");
 	}
 
@@ -119,9 +118,9 @@ GroupdavPreferenceService.prototype = {
 			value = this.mPreferencesService.getCharPref(this.prefPath + prefName);
 		}
 		catch(e) {
-			dump("exception getting pref '" + this.prefPath + prefName
-					 + "': \n" + e + " (" + e.lineNumber + ")\n");
-			dump("stack: " + backtrace() + "\n");
+// 			dump("exception getting pref '" + this.prefPath + prefName
+// 					 + "': \n" + e + " (" + e.lineNumber + ")\n");
+// 			dump("stack: " + backtrace() + "\n");
 			throw("unacceptable condition: " + e);
 		}
 
@@ -133,9 +132,9 @@ GroupdavPreferenceService.prototype = {
 			this.mPreferencesService.setCharPref(this.prefPath + prefName, value);
 		}
 		catch(e) {
-			dump("exception setting pref '" + this.prefPath + prefName + "' to value '"
-					 + value + "': \n" + e + " (" + e.lineNumber + ")\n");
-			dump("stack: " + backtrace() + "\n");
+// 			dump("exception setting pref '" + this.prefPath + prefName + "' to value '"
+// 					 + value + "': \n" + e + " (" + e.lineNumber + ")\n");
+// 			dump("stack: " + backtrace() + "\n");
 			throw("unacceptable condition: " + e);
 		}
 // 		dump("setPref - done\n");

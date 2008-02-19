@@ -58,7 +58,7 @@ function unescapedFromCard(theString) {
  * of custom fields that are not part of a Thunderbird card.
  *  
  **************************************************************************/ 
-function importFromVcard(vCardString, addressBook, customFields) {
+function importFromVcard(vCardString, customFields) {
 	if (!vCardString || vCardString == "")
 		dump("'vCardString' is empty\n" + backtrace() + "\n");
 	var vcard = new Array();
@@ -161,16 +161,16 @@ function importFromVcard(vCardString, addressBook, customFields) {
 // 	var cardDump = dumpObject(vcard);
 // 	logInfo("vcard dump:\n" + cardDump);
 
-	return CreateCardFromVCF(addressBook, vcard, customFields);
+	return CreateCardFromVCF(vcard, customFields);
 }
 
 // outParameters must be an array, to enable the fonction to pass back the value
 // of custom fields that are not part of a Thunderbird card.
-function CreateCardFromVCF(uri, vcard, outParameters) {
+function CreateCardFromVCF(vcard, outParameters) {
 	var version = "2.1";
 	var defaultCharset = "iso-8859-1"; /* 0 = latin 1, 1 = utf-8 */
-	var card = Components.classes["@mozilla.org/addressbook/moz-abmdbcard;1"]
-		.createInstance(Components.interfaces.nsIAbCard);
+	var card = Components.classes["@inverse.ca/addressbook/volatile-abcard;1"]
+		.createInstance(Components.interfaces.nsIAbCard).wrappedJSObject;
 
 	outParameters["fburl"] = "";
 	outParameters["uid"] = "";
@@ -339,6 +339,7 @@ function InsertCardData(card, tag, parameters, values, outParameters) {
 	} else if (tag == "begin"
 						 || tag == "end") {
 	} else {
+// 		dump("tag: " + tag + "; value = " + values.join(";") + "\n")
 		outParameters[tag] = values.join(";");
 	}
 }

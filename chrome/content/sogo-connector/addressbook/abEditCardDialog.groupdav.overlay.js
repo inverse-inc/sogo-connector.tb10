@@ -36,21 +36,20 @@ function jsInclude(files, target) {
 }
 
 jsInclude(["chrome://sogo-connector/content/common/common-dav.js",
-					 "chrome://inverse-library/content/simpleLdapQuery.js"]);
+					 "chrome://inverse-library/content/simpleLdapQuery.js",
+					 "chrome://sogo-connector/content/addressbook/cardedit-overlay-common.js"]);
 
 function UpdateFBUrl() {
-	if (!isLDAPDirectory(getUri())) {
-		// LDAP Directories
-		try {
-			var card = gEditCard.card.QueryInterface(Components.interfaces.nsIAbMDBCard);
-			var fbUrlInput = document.getElementById("FbUrl");
-			card.setStringAttribute("calFBURL", fbUrlInput.value);
-		}
-		catch (e) {
-			//	   cardproperty.setCardValue("calFBURL", fbUrlInput.value);
-		}
+	// LDAP Directories
+	try {
+		var card = gEditCard.card.QueryInterface(Components.interfaces.nsIAbMDBCard);
+		var fbUrlInput = document.getElementById("FbUrl");
+		card.setStringAttribute("calFBURL", fbUrlInput.value);
 	}
-};
+	catch (e) {
+		//	   cardproperty.setCardValue("calFBURL", fbUrlInput.value);
+	}
+}
 
 function ReadLdapFbUrl() {
 	var url = "";
@@ -75,16 +74,22 @@ function ReadLdapFbUrl() {
 	}
 
 	return url;
-};
+}
 
 function LoadFBUrl() {
 	var fbUrlInput = document.getElementById("FbUrl");
 
-	if (isLDAPDirectory(getUri())) {
-		// LDAP Directories
-		fbUrlInput.disabled = true;
-		fbUrlInput.disabledforreadonly = true;
-		fbUrlInput.value = ReadLdapFbUrl();
+	var uri = getUri();
+	var ab = GetDirectoryFromURI(uri);
+	if (ab.isRemote) {
+		if (isCardDavDirectory(uri)) {
+			var card = gEditCard.card.QueryInterface(Components.interfaces.nsIAbMDBCard);
+			fbUrlInput.value = card.getStringAttribute("calFBURL");
+		}
+		else
+			// LDAP Directories
+			fbUrlInput.value = ReadLdapFbUrl();
+ 		fbUrlInput.setAttribute("readonly", "true");
 	}
 	else {
 		try {
@@ -93,19 +98,40 @@ function LoadFBUrl() {
 		}
 		catch (e) {};
 	}
-};
+}
 
 /* event handlers */
-function OnLoadHandler() {
-	LoadFBUrl();
-	this.addEventListener("dialogaccept", OnDialogAcceptHandler, false);
-};
+function SCEditCardOKButton() {
+	var result = this.OldEditCardOKButton();
+	if (result) {
+		var ab = GetDirectoryFromURI(gEditCard.abURI);
+		if (!ab.isRemote) {
+			setDocumentDirty(true);
+			UpdateFBUrl();
+			saveCard(false);
+		}
+	}
 
-function OnDialogAcceptHandler() {
-	UpdateFBUrl();
-	EditCardOKButtonOverlay();
-};
+	return result;
+// 	var uri = getUri();
+// 	var ab = GetDirectoryFromURI(uri);
+// 	if (!ab.isRemote) {
+// 		UpdateFBUrl();
+// 		return saveCard(false);
+// // 		EditCardOKButtonOverlay();
+// 	}
+}
 
 /* starting... */
+function OnLoadHandler() {
+	LoadFBUrl();
+	var uri = getUri();
+	dump("uri: " + uri + "\n");
+	var ab = GetDirectoryFromURI(uri);
+	if (!ab.isRemote) {
+		this.OldEditCardOKButton = this.EditCardOKButton;
+		this.EditCardOKButton = this.SCEditCardOKButton;
+	}
+}
 
 window.addEventListener("load", OnLoadHandler, false);

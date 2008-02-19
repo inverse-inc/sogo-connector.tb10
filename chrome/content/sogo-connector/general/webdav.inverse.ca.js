@@ -52,14 +52,17 @@ function noConnectionToWebDAVMsg(win,boxTitle){
 }
 
 function webDavTestFolderConnection(url){
+	var testResult = false;
+
 	var propsList = new Array("<D:getcontentlength/>");
 	try {
-		var responseObj=webdav_propfind(url, propsList, null, null); //Let Thunderbird Password Manager handle user and password
-		return true;
+		//Let Thunderbird Password Manager handle user and password
+		var responseObj = webdav_propfind(url, propsList, null, null);
+		testResult = true;
 	}
-	catch (e) {
-		return false;
-	}
+	catch (e) {}
+
+	return testResult;
 }
 
 function buildCardDavReportXML(filter){
@@ -70,43 +73,31 @@ function buildCardDavReportXML(filter){
 						'<prop-filter name="mail">' +
 							'<text-match collation="i;unicasemap" match-type="substring">' + filter + '</text-match>' +
 						'</prop-filter>' +
-					'</filter>' +
-       			'<prop-filter name="FN">' +
-         			'<text-match collation="i;unicasemap" match-type="substring">' + filter + '</text-match>' +
-       			'</prop-filter>' +
-				'</addressbook-query>';
+					'</filter>'
+//  +
+//        			'<prop-filter name="FN">' +
+//          			'<text-match collation="i;unicasemap" match-type="substring">' + filter + '</text-match>' +
+//        			'</prop-filter>' +
+		+ '</addressbook-query>';
 	return xml;
 }
 
 // send WebDAV XML request
 function sendXMLRequestXPCOM(webdavURL,HTTPmethod,HTTPheaders,XMLreq) {
  	var retObj = { status : 0, response : "", responseHeaders: new Array() };
-	try {
-		var request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
-		
-		// QI the object to nsIDOMEventTarget to set event handlers on it:
-		request.QueryInterface(Components.interfaces.nsIDOMEventTarget);
-//		request.addEventListener("progress", function(evt) {dump("sendXMLRequestXPCOM.progress()"); }, false);
-//		request.addEventListener("load", function(evt) {dump("sendXMLRequestXPCOM.load()");}, false);
-//		request.addEventListener("error", function(evt) { throw "sendXMLRequestXPCOM(): Problem connecting to the server" }, false);
 
-		// QI it to nsIXMLHttpRequest to open and send the request:
-		request.QueryInterface(Components.interfaces.nsIXMLHttpRequest);
+	var request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
+		.createInstance(Components.interfaces.nsIXMLHttpRequest);
+	request.open(HTTPmethod, webdavURL, false);
+	for (var i = 0; i< HTTPheaders.length; i++)
+		request.setRequestHeader(HTTPheaders[i][0],HTTPheaders[i][1]);
+	request.setRequestHeader("Accept-Encoding", "");
+	request.send(XMLreq);
 
-		request.open(HTTPmethod,webdavURL,false,null,null);
-		for(var i=0; i<HTTPheaders.length; i++){
-			request.setRequestHeader(HTTPheaders[i][0],HTTPheaders[i][1]);
-		}
-		request.setRequestHeader("Accept-Encoding", "");
-		request.send(XMLreq);
-    
-		retObj.status=request.status;
-		retObj.response=request.responseXML;
-		retObj.responseHeaders=processHTTPHeaders(request.getAllResponseHeaders());
-  }
-	catch(e) {
-    throw e;
-  }
+	retObj.status = request.status;
+	retObj.response = request.responseXML;
+	retObj.responseHeaders = processHTTPHeaders(request.getAllResponseHeaders());
+
   return retObj;
 }
 
@@ -124,39 +115,41 @@ function cardDavReport(webdavURL, filter) {
 	// send out the XML request
 	var responseObj = sendXMLRequestXPCOM(webdavURL, "REPORT", HTTPheaders, xmlReq, null, null);
 	switch(responseObj.status) {
-		case 207:
-		case 200: // Added to support Open-Xchange   
-			var doc = responseObj.response;
-			if (doc == null){
-				throw "The Server response to REPORT is malformed!";
-			}
-			break;
-		default:
-			throw "cardDavReport(): Error connecting to the Server; response status: " + responseObj.status;      			
+	case 207:
+	case 200: // Added to support Open-Xchange   
+		var doc = responseObj.response;
+		if (doc == null) {
+			throw "The Server response to REPORT is malformed!";
+		}
+		break;
+	default:
+		throw "cardDavReport(): Error connecting to the Server; response status: "
+			+ responseObj.status;      			
 	}
+
   return doc;
 }
 
-// Returns a string
-function getABDavURL( abUri ){
-	// Matching the URL
-	if (abUri.indexOf("https") > 0)
-		abUri = abUri.replace(/https\/\//,"https://"); // I am fed up!
-	else
-		abUri = abUri.replace(/http\/\//,"http://"); // UGLY patch
+// // Returns a string
+// function getABDavURL( abUri ){
+// 	// Matching the URL
+// 	if (abUri.indexOf("https") > 0)
+// 		abUri = abUri.replace(/https\/\//,"https://"); // I am fed up!
+// 	else
+// 		abUri = abUri.replace(/http\/\//,"http://"); // UGLY patch
 
-	dump("getABDavURL: ");	
-	dump(abUri);
-	dump("\n");
-	var reg = new RegExp(/moz-abdavdirectory:\/\/(.*)/);
+// 	dump("getABDavURL: ");	
+// 	dump(abUri);
+// 	dump("\n");
+// 	var reg = new RegExp(/carddav:\/\/(.*)/);
 	
-	if ( !reg.test(abUri)){
-		dump("WTFFFFFFFFFFFFFFFFFFFFFFFFFFff\n");
-		return null;
-	}else{
-		dump("getABDavURL: ");
-		dump(RegExp.$1);
-		dump("\n");
-		return RegExp.$1;	
-	}
-}
+// 	if ( !reg.test(abUri)){
+// 		dump("WTFFFFFFFFFFFFFFFFFFFFFFFFFFff\n");
+// 		return null;
+// 	}else{
+// 		dump("getABDavURL: ");
+// 		dump(RegExp.$1);
+// 		dump("\n");
+// 		return RegExp.$1;	
+// 	}
+// }

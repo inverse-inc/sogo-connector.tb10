@@ -65,32 +65,24 @@ var messengerWindow = Components.classes["@mozilla.org/appshell/window-mediator;
 var abWindow = Components.classes["@mozilla.org/appshell/window-mediator;1"]
 		.getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("mail:addressbook");
 
-function getUri(){
+function getUri() {
 	var uri;
-	if ( document.getElementById("abPopup")){
+
+	if (document.getElementById("abPopup"))
 		uri = document.getElementById("abPopup").value;
-	}else if(window.arguments[0].abURI){
+	else if (window.arguments[0].abURI)
 		uri = window.arguments[0].abURI;
-	}else{
+	else
 		uri = window.arguments[0].selectedAB;
-	}
+
 	return uri;
 }
 
-function EditCardOKButtonOverlay(){
-	return saveCard(false);
-}
-
-function NewCardOKButtonOverlay(){
-	setDocumentDirty(true);
-	return saveCard(true);
-}
-
-function setDocumentDirty(boolValue){
+function setDocumentDirty(boolValue) {
 	documentDirty = boolValue;
 }
 
-function setGroupDavFields(){
+function setGroupDavFields() {
 	var card = gEditCard.card.QueryInterface(Components.interfaces.nsIAbMDBCard);
 	var version = card.getStringAttribute("groupDavVersion");
 	if (version && version != "") {
@@ -109,51 +101,38 @@ function setGroupDavFields(){
 // 	}
 }
 
-function saveCard(isNewCard){
-	try{		
-		var result =false;
-		if(isNewCard){
-			result = NewCardOKButton();
-		}else{
-			result = EditCardOKButton();
-		}
-		if (result && documentDirty && isGroupdavDirectory(getUri())) {
-			abWindow.UploadCard(gEditCard.card.QueryInterface(Components.interfaces.nsIAbMDBCard),
-								 getUri(), isNewCard);
+function saveCard(isNewCard) {
+	try {
+		if (documentDirty
+				&& isGroupdavDirectory(getUri())) {
+			abWindow.UploadCard(gEditCard.card
+													.QueryInterface(Components.interfaces.nsIAbMDBCard),
+													getUri(), isNewCard);
 			setDocumentDirty(false);
 		}
-		if (abWindow) {
+		if (abWindow)
 			abWindow.gSynchIsRunning = false;	
-		}
-		return result;
 	}
-	catch (e) {
-		if (abWindow){
+	catch(e) {
+		if (abWindow)
 			abWindow.gSynchIsRunning = false;	
-		}
-		messengerWindow.exceptionHandler(null,"saveCard",e);
-		return result;
+		messengerWindow.exceptionHandler(null, "saveCard", e);
 	}
-}
-
-function inverseSetDocumentDirty(){
-	setDocumentDirty(true);
 }
 
 function inverseSetupFieldsEventHandlers(){
 	var tabPanelElement = document.getElementById("abTabPanels");
 	var menulists = tabPanelElement.getElementsByTagName("menulist");
-	for (var i = 0; i < menulists.length; i++){
-		menulists[i].addEventListener("mouseup", inverseSetDocumentDirty, true);
-	}
+	for (var i = 0; i < menulists.length; i++)
+		menulists[i].addEventListener("mouseup", setDocumentDirty, true);
+
 	var textboxes = tabPanelElement.getElementsByTagName("textbox"); 
-   
-	for (var i = 0; i < textboxes.length; i++){
-		textboxes[i].addEventListener("change", inverseSetDocumentDirty, true);
-	}
+
+	for (var i = 0; i < textboxes.length; i++)
+		textboxes[i].addEventListener("change", setDocumentDirty, true);
 }
 
-function inverseInitEventHandlers(){
+function inverseInitEventHandlers() {
 	if (isGroupdavDirectory(getUri()))
 		RegisterSaveListener(setGroupDavFields);
 	inverseSetupFieldsEventHandlers();

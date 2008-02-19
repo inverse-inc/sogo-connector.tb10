@@ -37,11 +37,12 @@ function jsInclude(files, target) {
 	}
 }
 
-jsInclude(["chrome://sogo-connector/content/general/preference.service.addressbook.groupdav.js",
+jsInclude(["chrome://sogo-connector/content/addressbook/folder-handling.js",
+					 "chrome://sogo-connector/content/common/common-dav.js",
+					 "chrome://sogo-connector/content/general/preference.service.addressbook.groupdav.js",
 					 "chrome://sogo-connector/content/general/sync.addressbook.groupdav.js",
 					 "chrome://sogo-connector/content/general/sync.progress-meter.js",
 					 "chrome://sogo-connector/content/general/implementors.addressbook.groupdav.js",
-					 "chrome://sogo-connector/content/common/common-dav.js",
 					 "chrome://sogo-connector/content/general/vcards.utils.js",
 					 "chrome://sogo-connector/content/general/mozilla.utils.inverse.ca.js"]);
 
@@ -49,44 +50,49 @@ jsInclude(["chrome://sogo-connector/content/general/preference.service.addressbo
  * This overlay adds GroupDAV functionalities to Addressbooks
  * it contains the observers needed by the addressBook and the cards dialog
  */
- 
+
 var gGroupDAVProgressMeter;
 
 function OnLoadMessengerOverlay() {
-	_cleanupAddressBooks();
-
 	window.gAbWinObserverService = Components.classes["@mozilla.org/observer-service;1"]
 		.getService(Components.interfaces.nsIObserverService);
 	gGroupDAVProgressMeter = new SyncProgressMeter();
 	addObservers();
 
- 	setTimeout(_startupFolderSync, 2000);
+	/* if SOGo Integrator is present, we let it take the startup procedures */
+	if (!this.sogoIntegratorStartupOverlayOnLoad) {
+		dump("startup from sogo-connector\n");
+		cleanupAddressBooks();
+		startFolderSync();
+	}
+	else
+		dump("skipping startup, sogo-integrator present\n");
 }
 
-function _cleanupAddressBooks() {
+function cleanupAddressBooks() {
 	var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-		.getService(Components.interfaces.nsIPrefBranch);
-	var path = "ldap_2.servers";
+		.getService(Components.interfaces.nsIPrefBranch); 
+
+	var uniqueChildren = _uniqueChildren(prefs, "ldap_2.servers", 2);
+	_cleanupBogusAB(prefs, uniqueChildren);
+
+	uniqueChildren = _uniqueChildren(prefs,
+																	 "extensions.ca.inverse.addressbook.groupdav.ldap_2.servers",
+																	 7);
+	_cleanupOrphanDAVAB(prefs, uniqueChildren);
+	_migrateOldCardDAVDirs(prefs, uniqueChildren);
+}
+
+function _uniqueChildren(prefs, path, dots) {
 	var count = {};
 	var children = prefs.getChildList(path, count);
 	var uniqueChildren = {};
 	for (var i = 0; i < children.length; i++) {
 		var leaves = children[i].split(".");
-		uniqueChildren[leaves[2]] = true;
+		uniqueChildren[leaves[dots]] = true;
 	}
 
-	_cleanupBogusAB(prefs, uniqueChildren);
-
-	path = "extensions.ca.inverse.addressbook.groupdav.ldap_2.servers";
-	count = {};
-	children = prefs.getChildList(path, count);
-	uniqueChildren = {};
-	for (var i = 0; i < children.length; i++) {
-		var leaves = children[i].split(".");
-		uniqueChildren[leaves[7]] = true;
-	}
-
-	_cleanupOrphanDAVAB(prefs, uniqueChildren);
+	return uniqueChildren;
 }
 
 function _cleanupBogusAB(prefs, uniqueChildren) {
@@ -98,23 +104,23 @@ function _cleanupBogusAB(prefs, uniqueChildren) {
 			var uri = null;
 // 			dump("trying: " + uriRef + "\n");
 			try {
-				//  			uri = "moz-abdavdirectory://" + prefs.getCharPref(uriRef);
+				//  			uri = "carddav://" + prefs.getCharPref(uriRef);
 				uri = prefs.getCharPref(uriRef);
 				if (uri.indexOf("moz-abldapdirectory:") == 0) {
 					dump("deleting: " + path + "." + key + "\n");
 					prefs.deleteBranch(path + "." + key);
 					// 			dump("uri: " + uri + "\n");
 				}
-				else if (uri.indexOf("moz-abdavdirectory:") == 0) {
-					try {
-						prefs.getCharPref("extensions.ca.inverse.addressbook.groupdav"
-															+ ".ldap_2.servers." + key + ".name");
-					}
-					catch(e) {
-						dump("deleting: " + path + "." + key + "\n");
-						prefs.deleteBranch(path + "." + key);
-					};
-				}
+// 				else if (uri.indexOf("carddav:") == 0) {
+// 					try {
+// 						prefs.getCharPref("extensions.ca.inverse.addressbook.groupdav"
+// 															+ ".ldap_2.servers." + key + ".name");
+// 					}
+// 					catch(e) {
+// 						dump("deleting: " + path + "." + key + "\n");
+// 						prefs.deleteBranch(path + "." + key);
+// 					};
+// 				}
 			}
 			catch(e) {};
 		}
@@ -125,17 +131,50 @@ function _cleanupOrphanDAVAB(prefs, uniqueChildren) {
 	var	path = "extensions.ca.inverse.addressbook.groupdav.ldap_2.servers";
 	for (var key in uniqueChildren) {
 		var otherRef = "ldap_2.servers." + key + ".description";
+// 		dump("XXXX otherRef: " + otherRef + "\n");
 		try {
 			prefs.getCharPref(otherRef);
 		}
 		catch(e) {
+// 			dump("exception: " + e + "\n");
 			dump("deleting orphan: " + path + "." + key + "\n");
 			prefs.deleteBranch(path + "." + key);
 		}
 	}
 }
 
-function _startupFolderSync() {
+function _migrateOldCardDAVDirs(prefs, uniqueChildren) {
+	var	path = "extensions.ca.inverse.addressbook.groupdav.ldap_2.servers.";
+	for (var key in uniqueChildren) {
+		var fullPath = path + key;
+		try {
+			var isCardDAV = (prefs.getCharPref(fullPath + ".readOnly") == "true");
+			if (isCardDAV) {
+				dump("######### trying to migrate " + key + "\n");
+				var description = "" + prefs.getCharPref(fullPath + ".name");
+				var url = "" + prefs.getCharPref(fullPath + ".url");
+				dump("description: " + description + "\n");
+				dump("url: " + url + "\n");
+				if (description.length > 0
+						&& url.length > 0) {
+					try {
+						prefs.deleteBranch(path + key);
+					}
+					catch(x) {};
+					try {
+						prefs.deleteBranch("ldap_2.servers." + key);
+					}
+					catch(y) {};
+					SCCreateCardDAVDirectory(description, url);
+// 					dump("********* migrated CardDAV: " + key + "\n");
+				}
+			}
+		}
+		catch(e) {}
+	}
+}
+
+function startFolderSync() {
 	var rdfService = Components.classes["@mozilla.org/rdf/rdf-service;1"]
     .getService(Components.interfaces.nsIRDFService);
 	var parentDir = rdfService.GetResource("moz-abdirectory://")
@@ -144,10 +183,9 @@ function _startupFolderSync() {
 	while (children.hasMoreElements()) {
 		var ab = children.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
 		var realAB = ab.QueryInterface(Components.interfaces.nsIAbDirectory);
-		if (isGroupdavDirectory(ab.Value)
-				&& !isCardDavDirectory(ab.Value)) {
+		if (isGroupdavDirectory(ab.Value)) {
 			var synchronizer = new GroupDavSynchronizer(ab.Value, false);
- 			SynchronizeGroupdavAddressbook(ab.Value);
+			synchronizer.start();
 		}
 	}
 }
@@ -163,44 +201,46 @@ function OnUnloadMessengerOverlay() {
 }
 
 function addObservers() {
-	gAbWinObserverService.addObserver(gGroupDAVProgressMeter, SyncProgressMeter.API_DISABLED_EVENT, true);
-	gAbWinObserverService.addObserver(gGroupDAVProgressMeter, SyncProgressMeter.INITIALIZATION_EVENT, true);
-	gAbWinObserverService.addObserver(gGroupDAVProgressMeter, SyncProgressMeter.NOTHING_TO_DO, true);
+	var events = [SyncProgressMeter.API_DISABLED_EVENT,
+								SyncProgressMeter.INITIALIZATION_EVENT,
+								SyncProgressMeter.NOTHING_TO_DO,
+								SyncProgressMeter.SERVER_DOWNLOAD_BEGINS,
+								SyncProgressMeter.CARD_DOWNLOADED,
+								SyncProgressMeter.CARD_DOWNLOAD_FAILED,
+								SyncProgressMeter.SERVER_DOWNLOAD_COMPLETED,
+								SyncProgressMeter.SERVER_DOWNLOAD_FAILURE,
+								SyncProgressMeter.SERVER_UPLOAD_BEGINS,
+								SyncProgressMeter.UPLOAD_STOP_REQUEST_EVENT,
+								SyncProgressMeter.CARD_UPLOADED,
+								SyncProgressMeter.UPLOAD_ERROR_EVENT,
+								SyncProgressMeter.UPLOAD_COMPLETED,
+								SyncProgressMeter.SERVER_SYNC_COMPLETED,
+								SyncProgressMeter.SERVER_SYNC_ERROR];
 
-	gAbWinObserverService.addObserver(gGroupDAVProgressMeter, SyncProgressMeter.SERVER_DOWNLOAD_BEGINS, true);
-	gAbWinObserverService.addObserver(gGroupDAVProgressMeter, SyncProgressMeter.CARD_DOWNLOADED, true);
-	gAbWinObserverService.addObserver(gGroupDAVProgressMeter, SyncProgressMeter.CARD_DOWNLOAD_FAILED, true);
-	gAbWinObserverService.addObserver(gGroupDAVProgressMeter, SyncProgressMeter.SERVER_DOWNLOAD_COMPLETED, true);
-	gAbWinObserverService.addObserver(gGroupDAVProgressMeter, SyncProgressMeter.SERVER_DOWNLOAD_FAILURE, true);
-
-	gAbWinObserverService.addObserver(gGroupDAVProgressMeter, SyncProgressMeter.SERVER_UPLOAD_BEGINS, true);
-	gAbWinObserverService.addObserver(gGroupDAVProgressMeter, SyncProgressMeter.UPLOAD_STOP_REQUEST_EVENT, true);
-	gAbWinObserverService.addObserver(gGroupDAVProgressMeter, SyncProgressMeter.CARD_UPLOADED, true);
-	gAbWinObserverService.addObserver(gGroupDAVProgressMeter, SyncProgressMeter.UPLOAD_ERROR_EVENT, true);
-	gAbWinObserverService.addObserver(gGroupDAVProgressMeter, SyncProgressMeter.UPLOAD_COMPLETED, true);
-
-	gAbWinObserverService.addObserver(gGroupDAVProgressMeter, SyncProgressMeter.SERVER_SYNC_COMPLETED, true);
-	gAbWinObserverService.addObserver(gGroupDAVProgressMeter, SyncProgressMeter.SERVER_SYNC_ERROR, true);   
+	for (var i = 0; i < events.length; i++)
+		gAbWinObserverService.addObserver(gGroupDAVProgressMeter, events[i], true);
 }
 
 function removeObservers() {
 	if (window.gAbWinObserverService) {
-		gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.API_DISABLED_EVENT);
-		gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.INITIALIZATION_EVENT);
-		gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.NOTHING_TO_DO);
-		gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.CARD_DOWNLOADED);
-		gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.CARD_DOWNLOAD_FAILED);
-		gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.SERVER_DOWNLOAD_BEGINS);
-		gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.SERVER_DOWNLOAD_COMPLETED);
-		gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.SERVER_DOWNLOAD_FAILURE);
-		gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.SERVER_UPLOAD_BEGINS);
-		gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.UPLOAD_ERROR_EVENT);
-		gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.UPLOAD_STOP_REQUEST_EVENT);
-		gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.CARD_UPLOADED);
-		gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.UPLOAD_COMPLETED);
-		gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, SyncProgressMeter.SERVER_SYNC_COMPLETED);
-		gAbWinObserverService.removeObserver(gGroupDAVProgressMeter,
-																				 SyncProgressMeter.SERVER_SYNC_ERROR);
+		var events = [SyncProgressMeter.API_DISABLED_EVENT,
+									SyncProgressMeter.INITIALIZATION_EVENT,
+									SyncProgressMeter.NOTHING_TO_DO,
+									SyncProgressMeter.SERVER_DOWNLOAD_BEGINS,
+									SyncProgressMeter.CARD_DOWNLOADED,
+									SyncProgressMeter.CARD_DOWNLOAD_FAILED,
+									SyncProgressMeter.SERVER_DOWNLOAD_COMPLETED,
+									SyncProgressMeter.SERVER_DOWNLOAD_FAILURE,
+									SyncProgressMeter.SERVER_UPLOAD_BEGINS,
+									SyncProgressMeter.UPLOAD_STOP_REQUEST_EVENT,
+									SyncProgressMeter.CARD_UPLOADED,
+									SyncProgressMeter.UPLOAD_ERROR_EVENT,
+									SyncProgressMeter.UPLOAD_COMPLETED,
+									SyncProgressMeter.SERVER_SYNC_COMPLETED,
+									SyncProgressMeter.SERVER_SYNC_ERROR];
+
+		for (var i = 0; i < events.length; i++)
+			gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, events[i]);
 	}
 }
 

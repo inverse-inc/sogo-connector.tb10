@@ -85,7 +85,7 @@ function initLogFile(fileName){
 		file.initWithPath(logFileName);
 		file.create(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0664);
    }
-	logDebug("Logging service started successfully");
+// 	logDebug("Logging service started successfully");
 }
 
 function logDebug(message){
@@ -135,12 +135,13 @@ function exceptionHandler(win,boxtitle,exception){
 }
 
 function xulReadFile(path, charset){
-	try{
+	var data = null;
+	try {
 		dump("you are a B***");
 		var file = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
 		file.initWithPath(path);
 		
-		var data     = new String();
+		data = new String();
 		var fiStream = Components.classes['@mozilla.org/network/file-input-stream;1'].createInstance(Components.interfaces.nsIFileInputStream);
 		var siStream = Components.classes['@mozilla.org/scriptableinputstream;1'].createInstance(Components.interfaces.nsIScriptableInputStream);
 		fiStream.init(file, 1, 0, false);
@@ -148,14 +149,17 @@ function xulReadFile(path, charset){
 		data += siStream.read(-1);
 		siStream.close();
 		fiStream.close();
-		return data;
-	}catch(e){
+	}
+	catch(e) {
 		throw e;
-		return false;
-	}	
+	}
+
+	return data;
 }
 
 function xulFileWrite(filePath, content){
+	var rc = false;
+
 	try{
 		if (typeof netscape != "undefined")
 			netscape.security.PrivilegeManager.enablePrivilege ("UniversalXPConnect");
@@ -170,33 +174,43 @@ function xulFileWrite(filePath, content){
 		outputStream.write(content, content.length);
 		outputStream.flush();
 		outputStream.close();
-		return true;
-	}catch (e){
-		exceptionBox(window, "xulFileWrite", e);
-		return false;
+
+		rc = true;
 	}
+	catch(e) {
+		exceptionBox(window, "xulFileWrite", e);
+	}
+
+	return rc;
 }
 
 //Using Mozilla password manager to retrieve the password
 function getPassword(host, user){
+	var password = "";
+
 	var dhost= new Object();
 	var duser= new Object();
 	var pass= new Object();
-	try{
+	try {
 		var pmInternal = Components.classes["@mozilla.org/passwordmanager;1"].createInstance(Components.interfaces.nsIPasswordManagerInternal);
 		var ret=pmInternal.findPasswordEntry(host,user,"",dhost,duser,pass);
-		return pass.value;
-	}catch(e){}
-	return "";
+		password = pass.value;
+	}
+	catch(e) {}
+
+	return password;
 }
 
 //Using Mozilla password manager to save the password
-function setPassword(host, user, pwd){
-	var passwordManager = Components.classes["@mozilla.org/passwordmanager;1"].createInstance(Components.interfaces.nsIPasswordManager);
-	try{
+function setPassword(host, user, pwd) {
+	var passwordManager = Components.classes["@mozilla.org/passwordmanager;1"]
+		.createInstance(Components.interfaces.nsIPasswordManager);
+	try {
 		passwordManager.removeUser(host,user);
 		passwordManager.addUser(host, user, pwd);
-	}catch(e){}
+	}
+	catch(e){}
+
 	passwordManager.addUser(host,user,pwd);
 }
 
@@ -212,12 +226,12 @@ function backtrace(aDepth) {
 			break;
 		}
 	}
+
 	return stack;
 }
 
 // Returns a decimal number with a 1 digit decimal portion
-function getThunderbirdMajorVersionNumber(){
-
+function getThunderbirdMajorVersionNumber() {
  var fullThunderbirdVersion = Components.classes["@mozilla.org/xre/app-info;1"].createInstance(Components.interfaces.nsIXULAppInfo).version;
  
  return fullThunderbirdVersion.substr(0,3);
@@ -295,8 +309,14 @@ objectDumper.prototype = {
 
 		this.indent += 2;
 		indentation = String.repeat(" ", this.indent);
-		for (var key in object)
-			text += indentation + key + ": " + this.dump(object[key]) + "\n";
+		for (var key in object) {
+			try {
+				text += indentation + key + ": " + this.dump(object[key]) + "\n";
+			}
+			catch(e) {
+				text += indentation + key + ":" + " (an exception occured)\n";
+			}
+		}
 		this.indent -= 2;
 		text += braceIndentation + "}";
 

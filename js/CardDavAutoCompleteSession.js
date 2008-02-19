@@ -51,14 +51,12 @@ CardDavAutoCompleteSession.prototype = {
  set serverURL(value) { this.mUrl = value },
 
  onAutoComplete: function(searchString, previousSearchResult, listener) {
-	 dump("**************************************************************\n");
 	 dump("CardDavAutoCompleteSession.prototype.onAutoComplete\n");
-	 dump("**************************************************************\n");
  },
  onStartLookup: function (searchString, previousSearchResult, listener) {
 	 dump("CardDavAutoCompleteSession.onStartLookup\n");
 	 if (listener) {
-		 var url = getABDavURL(this.mUrl.spec);
+		 var url = this.mUrl.spec;
 		 if (url) {
 			 this.active = true;
 			 this.listener = listener;
@@ -67,7 +65,7 @@ CardDavAutoCompleteSession.prototype = {
 		 }
 		 else {
 			 dump("no url in CardDavAutoCompleteSession.prototype.onStartLookup\n");
-			 listener.onAutoComplete( null, -1);//nsIAutoCompleteStatus::failed
+			 listener.onAutoComplete(null, -1);//nsIAutoCompleteStatus::failed
 		 }
 	 }
 	 else {
@@ -77,25 +75,20 @@ CardDavAutoCompleteSession.prototype = {
  },
  onStopLookup: function() {
 	 this.active = false;
-	 dump("CardDavAutoCompleteSession.prototype.onStopLookup\n");
+// 	 dump("CardDavAutoCompleteSession.prototype.onStopLookup\n");
  },
  onDAVQueryComplete: function(status, result, data) {
 	 if (this.active && result) {
-		 // To support customs fields introduced in importFromVcard for FreeBuzy
-		 var customFieldsArray;// // TODO: when the overhaul of the vcard parsing is done, this will have to be handle differently!!!
-
-		 var resultsHash = {};
-		 //Adding cards to array
 		 var resultArray = Components.classes["@mozilla.org/supports-array;1"]
 		 .createInstance(Components.interfaces.nsISupportsArray);
-		 for (var i = 0; i < result.length; i++) {
-			 var nodeList = result[i].getElementsByTagName("addressbook-data");
-			 customFieldsArray = new Array();
-// 			 dump("\n= autocomplete vcard : ============================\n");
-// 			 dump(nodeList.item(i).textContent.toString());
-// 			 dump("\n===================================================\n");
-			 var card = importFromVcard(nodeList.item(0).textContent.toString(),
-																	null, customFieldsArray);
+
+		 var parser = Components.classes["@mozilla.org/xmlextras/domparser;1"]
+		 .createInstance(Components.interfaces.nsIDOMParser);
+		 var domResult = parser.parseFromString(result, "text/xml");
+		 var nodeList = domResult.getElementsByTagName("addressbook-data");
+		 for (var i = 0; i < nodeList.length; i++) {
+			 var customFields = {};
+			 var card = importFromVcard(nodeList[i].textContent, customFields);
 			 var fn = card.displayName;
 			 var email = card.primaryEmail;
 			 if (email.length)
@@ -105,17 +98,14 @@ CardDavAutoCompleteSession.prototype = {
 				 resultArray.AppendElement(formatAutoCompleteItem(fn, email));
 		 }
 
-		 dump("=======> resultArray.Count: " + resultArray.Count() + "\n");
+// 		 dump("=======> resultArray.Count: " + resultArray.Count() + "\n");
 
 		 if (nodeList.length > 0) {
 			 var matchFound = 1; //nsIAutoCompleteStatus::matchFound
 
-			 var results =
-				 Components.classes["@mozilla.org/autocomplete/results;1"]
+			 var results = Components.classes["@mozilla.org/autocomplete/results;1"]
 				 .createInstance(Components.interfaces.nsIAutoCompleteResults);
-			 //results.items = resultArray.QueryInterface(Components.interfaces.nsICollection);
 			 results.items = resultArray;
-
 			 results.defaultItemIndex = 0;
 			 results.searchString = this.searchString;
 

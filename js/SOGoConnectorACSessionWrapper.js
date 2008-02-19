@@ -39,7 +39,7 @@ WrapperListener.prototype = {
 
 //class constructor
 function SOGoConnectorACSessionWrapper() {
-	dump("SOGoConnectorACSessionWrapper constructor!\n");
+// 	dump("SOGoConnectorACSessionWrapper constructor!\n");
 	this.initSessions();
 };
 
@@ -53,7 +53,6 @@ SOGoConnectorACSessionWrapper.prototype = {
  results: null,
 
  initSessions: function() {
-		dump("initSessions\n");
 		var names = new Array();
 		var prefs = Components.classes["@mozilla.org/preferences-service;1"]
 		.getService(Components.interfaces.nsIPrefBranch);
@@ -83,7 +82,9 @@ SOGoConnectorACSessionWrapper.prototype = {
 				serverURL = Components.classes["@mozilla.org/network/standard-url;1"]
 					.createInstance(Components.interfaces.nsIURI);
 				try {
-					serverURL.spec = prefs.getCharPref(autocompleteDirectory +".uri");
+					var cardDavURL = prefs.getCharPref(autocompleteDirectory +".uri");
+					var cardDavPrefix = "carddav://";
+					serverURL.spec = cardDavURL.substr(cardDavPrefix.length);
 // 																								 Components.interfaces.nsISupportsString)
 // 						.data;
 					names.push("carddav");
@@ -96,7 +97,7 @@ SOGoConnectorACSessionWrapper.prototype = {
 				serverURL = Components.classes["@mozilla.org/network/ldap-url;1"]
 					.createInstance(Components.interfaces.nsIURI);
 				try {
-					dump("autocomplete: " + autocompleteDirectory + "\n");
+// 					dump("autocomplete: " + autocompleteDirectory + "\n");
 					serverURL.spec = prefs.getCharPref(autocompleteDirectory +".uri");
 // 					serverURL.spec = prefs.getComplexValue(autocompleteDirectory +".uri",
 // 																								 Components.interfaces.nsISupportsString)
@@ -112,7 +113,6 @@ SOGoConnectorACSessionWrapper.prototype = {
 		var sessions = new Array();
 		var listeners = new Array();
 		for (var i = 0; i < names.length; i++) {
-			dump("name: " + names[i] + "\n");
 			try {
 				var session;
 				if (names[i] == "carddav") {
@@ -131,7 +131,8 @@ SOGoConnectorACSessionWrapper.prototype = {
 				sessions.push(session);
 			}
 			catch(e) {
-				dump("cannot instantiate '" + names[i] + "' auto-complete session\n" + e);
+				dump("cannot instantiate '" + names[i]
+						 + "' auto-complete session\n" + e);
 			}
 			listeners.push(new WrapperListener(this, i));
 		}
@@ -141,7 +142,7 @@ SOGoConnectorACSessionWrapper.prototype = {
 
  /* nsIAutoCompleteSession */
  onAutoComplete: function(searchString, previousSearchResult, listener) {
-		dump("SOGoConnectorACSessionWrapper.prototype.onAutoComplete\n");
+// 		dump("SOGoConnectorACSessionWrapper.prototype.onAutoComplete\n");
 
 		for (var i = 0; i < this.sessions.length; i++) {
 			var session = this.sessions[i];
@@ -150,7 +151,7 @@ SOGoConnectorACSessionWrapper.prototype = {
 		}
 	},
  onStartLookup: function (searchString, previousSearchResult, listener) {
-		dump("SOGoConnectorACSessionWrapper.prototype.onStartLookup\n");
+// 		dump("SOGoConnectorACSessionWrapper.prototype.onStartLookup\n");
 
 		this.waiting = this.sessions.length;
 		this.running = true;
@@ -162,10 +163,9 @@ SOGoConnectorACSessionWrapper.prototype = {
 			session.onStartLookup(searchString, previousSearchResult,
 														this.listeners[i]);
 		}
-		dump("started\n");
 	},
  onStopLookup: function() {
-		dump("SOGoConnectorACSessionWrapper.prototype.onStopLookup\n");
+// 		dump("SOGoConnectorACSessionWrapper.prototype.onStopLookup\n");
 
 		this._reset();
 		for (var i = 0; i < this.sessions.length; i++) {
@@ -202,8 +202,6 @@ SOGoConnectorACSessionWrapper.prototype = {
 	},
  _fillResults: function(results) {
 		if (results) {
-			dump("building results... " + results.Count() + "\n");
-		
 			for (var i = 0; i < results.Count(); i++) {
 				try {
 					var item = results.GetElementAt(i)
@@ -212,7 +210,6 @@ SOGoConnectorACSessionWrapper.prototype = {
 						this.results = {};
 					var key = item.value;
 					if (key) {
-						dump("first key: " + key + "\n");
 						var index = key.indexOf("<");
 						var hasFN = false;
 						if (index > -1) {
@@ -220,8 +217,6 @@ SOGoConnectorACSessionWrapper.prototype = {
 							var lastIndex = key.indexOf(">");
 							key = key.substr(index + 1, lastIndex - index - 1);
 						}
-						dump("key: " + key + "; hasFN: " + hasFN + "\n");
-					
 						var data = this.results[key];
 						if (!data
 								|| (!data.hasFN && hasFN))

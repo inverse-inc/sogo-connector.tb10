@@ -18,30 +18,16 @@ function jsInclude(files, target) {
 
 jsInclude(["chrome://sogo-connector/content/general/preference.service.addressbook.groupdav.js"]);
 
-var oldEditDirectory = editDirectory;
+function SCEditDirectory() {
+	var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
+	var abURI = "moz-abdavdirectory://" + gCurrentDirectoryServerId;
+	var ab = rdf.GetResource(abURI).QueryInterface(Components.interfaces.nsIAbDirectory);
 
-function selectedDirectoryURI() {
-	var prefService = Components.classes["@mozilla.org/preferences-service;1"]
-		.getService(Components.interfaces.nsIPrefBranch);
-	var prefKey = gCurrentDirectoryServerId + ".uri";
-	var abURI = "";
-	try {
-		abURI = prefService.getCharPref(prefKey);
-	}
-	catch(e) {};
-
-	return abURI;
-}
-
-function editDirectory() {
-	var abURI = selectedDirectoryURI();
-
-	if (isGroupdavDirectory(abURI)) {
+	if (ab.directoryProperties.URI.indexOf("carddav://") == 0) {
 		window.openDialog("chrome://sogo-connector/content/addressbook/preferences.addressbook.groupdav.xul",
-											"", "chrome,modal=yes,resizable=no,centerscreen", abURI,
-											true);
+											"", "chrome,modal=yes,resizable=no,centerscreen", abURI);
 		if (gUpdate) {
-			var directoriesList = document.getElementById("directoriesList"); 
+			var directoriesList = document.getElementById("directoriesList");
 			var selectedNode = directoriesList.selectedItems[0]; 
 			selectedNode.setAttribute('label', gNewServer); 
 			selectedNode.setAttribute('string', gNewServerString);
@@ -49,7 +35,13 @@ function editDirectory() {
 		}
 	}
 	else {
-		oldEditDirectory();
+		this.oldEditDirectory();
 	}
 }
 
+function onSCLoad() {
+	this.oldEditDirectory = this.editDirectory;
+	this.editDirectory = this.SCEditDirectory;
+}
+
+window.addEventListener("load", onSCLoad, false);

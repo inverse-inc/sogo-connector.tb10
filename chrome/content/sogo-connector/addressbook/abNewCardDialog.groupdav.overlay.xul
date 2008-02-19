@@ -26,7 +26,7 @@
 <!DOCTYPE overlay SYSTEM "chrome://sogo-connector/locale/addressbook/ca.inverse.abMainWindow.groupdav.dtd">
 <overlay id="ca.inverse.newcard.groupdav"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    id="abcardDialog"                  
-    ondialogaccept="return NewCardOKButtonOverlay();"/>	
+  <script
+     type="application/x-javascript"
+     src="chrome://sogo-connector/content/addressbook/abNewCardDialog.groupdav.overlay.js"/>
 </overlay>

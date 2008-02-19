@@ -40,7 +40,9 @@ function jsInclude(files, target) {
 	}
 }
 
-jsInclude(["chrome://sogo-connector/content/common/common-dav.js",
+jsInclude(["chrome://inverse-library/content/sogoWebDAV.js",
+					 "chrome://sogo-connector/content/addressbook/folder-handling.js",
+					 "chrome://sogo-connector/content/common/common-dav.js",
 					 "chrome://sogo-connector/content/general/mozilla.utils.inverse.ca.js",
 					 "chrome://sogo-connector/content/general/sync.addressbook.groupdav.js",
 					 "chrome://sogo-connector/content/general/preference.service.addressbook.groupdav.js"]);
@@ -62,12 +64,7 @@ function AbNewGroupDavContacts(){
 										"chrome,modal=yes,resizable=no,centerscreen", null);
 }
 
-function EditGroupDavDirectory(){
-	window.openDialog("chrome://sogo-connector/content/addressbook/preferences.addressbook.groupdav.xul",  "",
-										"chrome,modal=yes,resizable=no,centerscreen", GetSelectedDirectory());
-}
-
-function openGroupdavPreferences(abUri){
+function openGroupdavPreferences(abUri) {
 	window.openDialog("chrome://sogo-connector/content/addressbook/preferences.addressbook.groupdav.xul",  "",
 										"chrome,modal=yes,resizable=no,centerscreen", abUri);
 }
@@ -78,18 +75,20 @@ function openGroupdavPreferences(abUri){
  *
  ********************************************************************************************/
 function disableNewList(){
-	try{
+	try {
 		var node = document.getElementById("button-newlist");
-		if ( node && isGroupdavDirectory(gSelectedDir)){
+		if (node
+				&& (isGroupdavDirectory(gSelectedDir)
+						|| isCardDavDirectory(gSelectedDir)))
 			node.setAttribute('disabled', 'true');
-		}else{
+		else
 			node.removeAttribute('disabled');
-		}
-	}catch (e) {}//Do nothing, exceptions happen before the addressbook is actully loaded
+	}
+	catch (e) {}//Do nothing, exceptions happen before the addressbook is actully loaded
 }
 
 function goUpdateGlobalEditMenuItemsOverlay(){
-	try{
+	try {
 		gSelectedDir = GetSelectedDirectory();
 		goUpdateCommand("cmd_synchGroupdav");
 		goUpdateGlobalEditMenuItems();
@@ -101,7 +100,7 @@ function goUpdateGlobalEditMenuItemsOverlay(){
 }
 
 function CommandUpdate_AddressBookGroupdavOverlay(){
-	try{
+	try {
 		gSelectedDir = GetSelectedDirectory();
 		goUpdateCommand('cmd_synchGroupdav');
 		CommandUpdate_AddressBook();
@@ -124,108 +123,93 @@ function goUpdateSelectEditMenuItemsGroupdavOverlay(){
 	}
 }
 
-//Overidde AbEditSelectedDirectory function in chrome://messenger/content/addressbook/abCommon.js
-var AbEditSelectedDirectoryOriginal = AbEditSelectedDirectory;
-var AbEditSelectedDirectory = function(){
-	var abUri = GetSelectedDirectory();
-	if(isGroupdavDirectory(abUri))
-		openGroupdavPreferences(abUri);
-	else
-		AbEditSelectedDirectoryOriginal.apply();
-};
-
 //Overidde DirPaneDoubleClick function in chrome://messenger/content/addressbook/abCommon.js
 //I am not happy to rewrite DirPaneDoubleClick but enough is enough!
-var DirPaneDoubleClick = function(event){
-	// we only care about left button events
-	if (event.button != 0)
-		return;
+// var DirPaneDoubleClick = function(event) {
+// 	dump("dblclick\n");
+// 	// we only care about left button events
+// 	if (event.button != 0)
+// 		return;
 
-	var row = dirTree.treeBoxObject.getRowAt(event.clientX, event.clientY);
-	if (row == -1 || row > dirTree.view.rowCount-1) {
-		// double clicking on a non valid row should not open the dir properties dialog
-		return;
-	}
-	if (dirTree && dirTree.view.selection && dirTree.view.selection.count == 1) {
-		var abUri = GetSelectedDirectory();
-		if(isGroupdavDirectory(abUri))
-			openGroupdavPreferences(abUri);
-		else
-			AbEditSelectedDirectoryOriginal.apply();
-	}
-}
+// 	var row = dirTree.treeBoxObject.getRowAt(event.clientX, event.clientY);
+// 	if (row == -1 || row > dirTree.view.rowCount-1) {
+// 		// double clicking on a non valid row should not open the dir properties dialog
+// 		return;
+// 	}
+// 	if (dirTree
+// 			&& dirTree.view.selection
+// 			&& dirTree.view.selection.count == 1)
+// 		AbEditSelectedDirectory();
+// };
 
 // Additionnal Controller object for Dir Pane
-	var dirPaneControllerOverlay = {
+function dirPaneControllerOverlay() {
+}
 
-	supportsCommand: function(command) {
-			switch (command) {
-			case "cmd_synchGroupdav":
-			return true;
-			default:
-			return false;
-			}
-		},
+dirPaneControllerOverlay.prototype = {
+ supportsCommand: function(command) {
+		switch (command) {
+		case "cmd_synchGroupdav":
+		return true;
+		default:
+		return false;
+		}
+	},
 
-	isCommandEnabled: function(command) {
-			try{
-				switch (command) {
-				case "cmd_synchGroupdav":
-				if (gSelectedDir && gSelectedDir != ""
-						&& isGroupdavDirectory(gSelectedDir)
-						&& !isCardDavDirectory(gSelectedDir)
-						&& !gSynchIsRunning)
-					return true;
-				else
-					return false;
-				default:
-				return false;
-				}
-			}
-			catch (e) {
- 				exceptionHandler(window,"Exception",e);
-			}
-			return false;
-		},
+ isCommandEnabled: function(command) {
+		var result = false;
 
-	doCommand: function(command){
-			switch (command){
-			case "cmd_synchGroupdav":
-			SynchronizeGroupdavAddressbook(null);
-			break;
-			}
+		try {
+			result = (command == "cmd_synchGroupdav"
+								&& gSelectedDir
+								&& gSelectedDir != ""
+								&& isGroupdavDirectory(gSelectedDir)
+								&& !gSynchIsRunning);
+		}
+		catch (e) {
+			exceptionHandler(window,"Exception",e);
+		}
 
-		},
+		return result;
+	},
 
-	onEvent: function(event) {}
-	};
+ doCommand: function(command){
+		switch (command){
+		case "cmd_synchGroupdav":
+		SynchronizeGroupdavAddressbook(null);
+		break;
+		}
+
+	},
+
+ onEvent: function(event) {}
+};
 
 //Overidde SetupAbCommandUpdateHandlers function in chrome://messenger/content/addressbook/abCommon.js
 //I am not happy to rewrite SetupAbCommandUpdateHandlers but enough is enough!
 function SetupAbCommandUpdateHandlers(){
+	var ctlOvl = new dirPaneControllerOverlay();
+
 	// dir pane
 	if (dirTree) {
-		dirTree.controllers.appendController(dirPaneControllerOverlay);
+		dirTree.controllers.appendController(ctlOvl);
 		dirTree.controllers.appendController(DirPaneController);
 	}
 	// results pane
 	if (gAbResultsTree) {
 		gAbResultsTree.controllers.appendController(ResultsPaneController);
-		gAbResultsTree.controllers.appendController(dirPaneControllerOverlay);
+		gAbResultsTree.controllers.appendController(ctlOvl);
 	}
 }
 
 //Override of AbDelete in chrome://messenger/content/addressbook/abCommon.js
 // Addition to delete the card on the groupdav server 
 // Definitions are done in onloadDAV since on Windows it was loaded before the abCommon.js version
-var AbDeleteOriginal;
-var AbDelete;
-
-var AbDeleteDirectory;
-var AbDeleteDirectoryOriginal;
-
 // DirTreeObserver that synchronized with the GroupDAV server on card delete
-var abGoupDavDirTreeObserver = { 
+function abGroupDavDirTreeObserver() {
+}
+
+abGroupDavDirTreeObserver.prototype = { 
  canDrop: function(index, orientation) {
 		return abDirTreeObserver.canDrop(index, orientation);
 	},
@@ -240,37 +224,36 @@ var abGoupDavDirTreeObserver = {
 		var targetResource = dirTree.builderView.getResourceAtIndex(row);
 		var targetURI = targetResource.Value;
 
-		if (isGroupdavDirectory(targetURI)){
-
+		if (isGroupdavDirectory(targetURI)) {
 			//		var date = new Date();
 			//		var curDate = null;
 
 			//		do { curDate = new Date(); }while(curDate-date < 2000);
 			SynchronizeGroupdavAddressbookDrop(targetURI);
-
 		}
 	},
 
  onToggleOpenState: function() {
- },
+	},
 
  onCycleHeader: function(colID, elt) {
- },
+	},
 
  onCycleCell: function(row, colID) {
- },
+	},
 
  onSelectionChanged: function() {
- },
+		dump("selection changed\n");
+	},
 
  onPerformAction: function(action) {
- },
+	},
 
  onPerformActionOnRow: function(action, row) {
- },
+	},
 
  onPerformActionOnCell: function(action, row, colID) {
- }
+	}
 };
 
 //Override of OnLoadDirTree in chrome://messenger/content/addressbook/addresbook..js
@@ -280,73 +263,129 @@ var abGoupDavDirTreeObserver = {
 // which makes it posssible to call synchronize after abDirTreeObserver.onDrop is called
 var OnLoadDirTreeOriginal = OnLoadDirTree;
 
+var gTreeObserver = new abGroupDavDirTreeObserver();
 var OnLoadDirTree = function() {
 	var treeBuilder = dirTree.builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
 	OnLoadDirTreeOriginal.apply();
-	treeBuilder.addObserver(abGoupDavDirTreeObserver);	
+	treeBuilder.addObserver(gTreeObserver);	
 };
 
-function abGroupdavUnload(){
+function abGroupdavUnload() {
 	var treeBuilder = dirTree.builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
-	treeBuilder.removeObserver(abGoupDavDirTreeObserver);
+	treeBuilder.removeObserver(gTreeObserver);
 }
 
 // Override AbDeleteDirectory() to delete DAV preferences
+//Overidde AbEditSelectedDirectory function in chrome://messenger/content/addressbook/abCommon.js
+function SCAbEditSelectedDirectory() {
+	var abUri = GetSelectedDirectory();
+	dump("editselected\n");
+	dump("abUri: " + abUri + "\n");
+	dump("gSelectedDir: " + gSelectedDir + "\n");
 
-function onloadDAV() {
-	this.addEventListener("unload", abGroupdavUnload, true);
+	var resource = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+	.getService(Components.interfaces.nsIRDFService).GetResource(abUri)
+	.QueryInterface(Components.interfaces.nsIAbDirectory);
 
-	AbDeleteOriginal = AbDelete;
-	AbDelete = function() {
-		var cards = GetSelectedAbCards();
-		if (cards && cards.length > 0){
-			for (var i = 0; i < cards.length; i++){ 	
-				if ( (cards[i] instanceof Components.interfaces.nsIAbMDBCard) && isGroupdavDirectory(gSelectedDir)){				
+	if (isGroupdavDirectory(abUri)
+			|| isCardDavDirectory(abUri))
+		openGroupdavPreferences(abUri);
+	else
+		this.AbEditSelectedDirectoryOriginal.apply();
+}
+
+var deleteListener = {
+ onDAVQueryComplete: function(code, result, data) {
+		if (code > 199 && code < 400) {
+			var directory = SCGetDirectoryFromURI(data.dirURI);
+
+			var cards = Components.classes["@mozilla.org/supports-array;1"]
+			.createInstance(Components.interfaces.nsISupportsArray);
+			cards.AppendElement(data.card);
+			directory.deleteCards(cards);
+		}
+	}
+};
+
+function SCAbDelete() {
+	var cards = GetSelectedAbCards();
+	if (cards && cards.length > 0) {
+		if (isGroupdavDirectory(gSelectedDir)) {
+			for (var i = 0; i < cards.length; i++) {
+				if (cards[i] instanceof Components.interfaces.nsIAbMDBCard) {
 					var card = cards[i].QueryInterface(Components.interfaces.nsIAbMDBCard);
-					if (card){
+					if (card) {
 						var key = card.getStringAttribute("groupDavKey");
-						if (key){
-							var groupdavPrefService = new GroupdavPreferenceService(GetDirectoryFromURI(gSelectedDir).dirPrefId);
+						if (key) {
+							var groupdavPrefService = new GroupdavPreferenceService(GetDirectoryFromURI(gSelectedDir)
+														.dirPrefId);
 							var url = groupdavPrefService.getURL();
 							var href =  url + key;
-							var webdavOb = webdav_delete(href,null,null);
-							logDebug("webdav_delete sent for vcard: " + href);  
+							var deleteOp = new sogoWebDAV(href, deleteListener,
+																						{ dirURI: gSelectedDir, card: card });
+							deleteOp.delete();
+							logDebug("webdav_delete sent for vcard: " + href);
 						}
 					}
 				}
 			}
 		}
-		AbDeleteOriginal.apply();
-	};
-
-	AbDeleteDirectoryOriginal = AbDeleteDirectory;
-	AbDeleteDirectory = function() {
-		var prefBranchPath = GetDirectoryFromURI(gSelectedDir).dirPrefId;
-		var prefService;
-		try {
-			if (isGroupdavDirectory(gSelectedDir)) {
-				var groupdavPrefService = new GroupdavPreferenceService(prefBranchPath);
-				prefService = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
-				prefService.deleteBranch(groupdavPrefService.prefPath);
-			}
-		}
-		catch(e) {
- 			exceptionHandler(window,"Error Deleting AddressBook",e);
-		}
-		AbDeleteDirectoryOriginal.apply();
-		if (prefService) {
-			// Little patch since AbDeleteDirectoryOriginal does not delete position (ldap_2.servers.AA.position)
-			prefService.deleteBranch(prefBranchPath);
-			prefService.deleteBranch(prefBranchPath + ".position");// strange position is not deleted
-		}
-	};
+		this.AbDeleteOriginal.apply();
+	}
 }
 
-onloadDAV();
+/* AbDeleteDirectory done cleanly... */
+function SCAbDeleteDirectory() {
+	var result = false;
 
-// function onAddressBookLoad() {	
-// 	var prefService = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+	var selectedDir = GetSelectedDirectory();
+	if (selectedDir) {
+		var prefService;
+		if (isGroupdavDirectory(selectedDir)
+				|| isCardDavDirectory(selectedDir))
+			result = (SCAbConfirmDeleteDirectory(selectedDir)
+								&& SCDeleteDAVDirectory(selectedDir));
+		else
+			this.AbDeleteDirectoryOriginal.apply();
+	}
 
-// }
+	return result;
+}
 
-// window.addEventListener("load", onAddressBookLoad, true);
+function SCAbConfirmDeleteDirectory(selectedDir) {
+  var confirmDeleteMessage;
+
+	// Check if this address book is being used for collection
+	if (gPrefs.getCharPref("mail.collect_addressbook") == selectedDir
+			&& (gPrefs.getBoolPref("mail.collect_email_address_outgoing")
+					|| gPrefs.getBoolPref("mail.collect_email_address_incoming")
+					|| gPrefs.getBoolPref("mail.collect_email_address_newsgroup"))) {
+		var brandShortName = document.getElementById("bundle_brand").getString("brandShortName");
+		confirmDeleteMessage = gAddressBookBundle.getFormattedString("confirmDeleteCollectionAddressbook",
+																																 [brandShortName]);
+	}
+	else
+		confirmDeleteMessage = gAddressBookBundle.getString("confirmDeleteAddressbook");
+
+  var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+		.getService(Components.interfaces.nsIPromptService);
+
+  return (promptService.confirm(window,
+																gAddressBookBundle.getString("confirmDeleteAddressbookTitle"),
+																confirmDeleteMessage));
+}
+
+function onLoadDAV() {
+	this.addEventListener("unload", abGroupdavUnload, true);
+
+	this.AbEditSelectedDirectoryOriginal = this.AbEditSelectedDirectory;
+	this.AbEditSelectedDirectory = this.SCAbEditSelectedDirectory;
+
+	this.AbDeleteOriginal = this.AbDelete;
+	this.AbDelete = this.SCAbDelete;
+
+	this.AbDeleteDirectoryOriginal = this.AbDeleteDirectory;
+	this.AbDeleteDirectory = this.SCAbDeleteDirectory;
+}
+
+window.addEventListener("load", onLoadDAV, false);

@@ -49,22 +49,17 @@ function getAutoCompleteCardDAVUri(){
 // 	dump("prefix: " + autoCompleteDirectoryPreferencesPrefix + "\n");
 	var directoryServerPrefix = prefsService.GetCharPref(autoCompleteDirectoryPreferencesPrefix + "directoryServer");
 	if (directoryServerPrefix
-			&& directoryServerPrefix.length > 0) {
-// 		dump("directoryServerPrefix: " + directoryServerPrefix + "\n");
-		try {
-			result = prefsService.GetCharPref(directoryServerPrefix + ".uri");
-// 			dump("result: " + result + "\n");
-		}
-		catch(e) {};
-	}
+			&& directoryServerPrefix.length > 0)
+		result = "moz-abdavdirectory://" + directoryServerPrefix;
 
-	return result
+	return result;
 }
 
 function isAutoCompleteDirectoryServerCardDAV() {
 	var result = false;
 
-	var uri = getAutoCompleteCardDAVUri(autoCompleteDirectoryPreferencesPrefix)
+	var uri = getAutoCompleteCardDAVUri(autoCompleteDirectoryPreferencesPrefix);
+	dump("uri: " + uri + "\n");
 	if (uri)
 		result = isCardDavDirectory(uri);
 

@@ -19,7 +19,7 @@
     You should have received a copy of the GNU General Public License
     along with "SOGo Connector"; if not, write to the Free Software
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- ********************************************************************************/
+********************************************************************************/
 
 function jsInclude(files, target) {
 	var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
@@ -34,35 +34,15 @@ function jsInclude(files, target) {
 	}
 }
 
-jsInclude(["chrome://sogo-connector/content/general/preference.service.addressbook.groupdav.js"]);
+jsInclude(["chrome://sogo-connector/content/addressbook/folder-handling.js",
+					 "chrome://sogo-connector/content/general/preference.service.addressbook.groupdav.js",
+					 "chrome://sogo-connector/content/general/mozilla.utils.inverse.ca.js"]);
 
-/* <!--	<script type="application/x-javascript" src="chrome://sogo-connector/content/addressbook/preference.service.addressbook.groupdav.js"/>
-	<script type="application/x-javascript" src="chrome://sogo-connector/content/addressbook/mozilla.utils.inverse.ca.js"/> 
-	<script type="application/x-javascript"
-	src="chrome://help/content/contextHelp.js"/> --> */
-
-var abWindow;
-var gRdfService;
-var gCurrentDirectory = null;
-var gCurrentDirectoryURI;
-var fromPreferences = false;
-
-var prefMsgBundle = document.getElementById("preferencesMsgId");
-														   
-var gDescription;
-var gUrl = null;
-
-// returns true if string contains only whitespaces and/or tabs
-function hasOnlyWhitespaces(string)
-{
-  var str = string.match(/[ \s]/g);
-  if (str && (str.length == string.length))
-    return true;
-  else
-    return false;
-}
+// var fromPreferences = false;
 
 function onAccept() {
+	var prefMsgBundle = document.getElementById("preferencesMsgId");
+														   
 	//There has to be at least a description to create a SOGO addressbook
 	var description = document.getElementById("description").value;
 	if (!description || description == "") {
@@ -77,233 +57,181 @@ function onAccept() {
 	}
 
 	var readOnly = document.getElementById("readOnly").checked;
-	if (readOnly) {
-		var selectedABURI = "moz-abdavdirectory://" + url;
-		var selectedABDirectory = gRdfService.GetResource(selectedABURI).QueryInterface(Components.interfaces.nsIAbDirectory); 
-		var selectedABURI2 = "moz-abdavdirectory://" + url +"/"; //Ugly hack to test the same url ending with "/"
-		var selectedABDirectory2 = gRdfService.GetResource(selectedABURI2).QueryInterface(Components.interfaces.nsIAbDirectory); 
-		var urlHasChanged = gUrl && gUrl.search(url) != 0;
-
-		// Test if the URL already exist!
-		// It is not possible to use the same URL
-		if ((!gUrl || urlHasChanged)
-				&& ((selectedABDirectory.dirPrefId
-						 && selectedABDirectory.dirPrefId.length > 0)
-						|| (selectedABDirectory2.dirPrefId
-								&& selectedABDirectory2.dirPrefId.length > 0))) {
-			alert(prefMsgBundle.getString("URLAlreadyExist"));
-
-			return false;			
-		}
-		onAcceptReadOnly();
-	}
+	if (readOnly)
+		onAcceptCardDAV();
 	else
 		onAcceptWebDAV();
-
-	var groupdavPrefService = new GroupdavPreferenceService(gCurrentDirectory
-																													.directoryProperties
-																													.prefName);
-	groupdavPrefService.setURL(document.getElementById("groupdavURL").value);
-	groupdavPrefService.setDirectoryName(description);
-	groupdavPrefService.setDisplayDialog(document.getElementById("displaySynchCompleted").checked);
-	//groupdavPrefService.setAutoDeleteFromServer(document.getElementById("autoDeleteFromServer").getAttribute("checked"));
-	groupdavPrefService.setReadOnly(readOnly);
-
-	window.opener.gNewServerString = gCurrentDirectoryURI;
-	window.opener.gNewServer = description;
-
-	// set window.opener.gUpdate to true so that SOGO Directory Servers dialog gets updated
-	window.opener.gUpdate = true;
-
-// 	catch(e) {
-// 		abWindow.exceptionHandler(window,"Preference onLoad()",e);
-// 	}
 
 	return true;
 }
 
-//function onAcceptReadOnly(){
-function onAcceptReadOnly() {
-	var properties = Components.classes["@mozilla.org/addressbook/properties;1"].createInstance(Components.interfaces.nsIAbDirectoryProperties);
-	var addressbook = Components.classes["@mozilla.org/addressbook;1"].createInstance(Components.interfaces.nsIAddressBook);
+function onAcceptCardDAV() {
 	var url = document.getElementById("groupdavURL").value;
-
 	var description = document.getElementById("description").value;
-	properties.dirType = 0; //DAV directory, it works with value = 2, go figure why!
-	//properties.URI = "moz-abdavdirectory://" + url + gCurrentDirectory.directoryProperties.prefName;
-	properties.URI = "moz-abdavdirectory://" + url;
-	properties.maxHits = 10; // TODO
-	properties.description = description;
 
-	if (gCurrentDirectory /*&& gCurrentDirectoryString*/){
-	// we are modifying an existing directory
+	var directoryURI = SCGetCurrentDirectoryURI();
+	var directory = SCGetDirectoryFromURI(directoryURI);
+	if (directory && directory.dirPrefId.length > 0) {
+		var properties = directory.directoryProperties;
+		properties.description = description;
+		properties.URI = "carddav://" + url;
 
-		// get the datasource for the addressdirectory
-		var addressbookDS = gRdfService.GetDataSource("rdf:addressdirectory");
+		var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+			.getService(Components.interfaces.nsIRDFService);
+		var parentDir = rdf.GetResource("moz-abdirectory://")
+			.QueryInterface(Components.interfaces.nsIAbDirectory);
+		parentDir.modifyDirectory(directory, properties);
+		window.opener.gNewServerString = directory.dirPrefId;
+	}
+	else
+		window.opener.gNewServerString = SCCreateCardDAVDirectory(description, url);
 
-		// moz-abdirectory:// is the RDF root to get all types of addressbooks.
-		var parentDir = gRdfService.GetResource("moz-abdirectory://").QueryInterface(Components.interfaces.nsIAbDirectory);
+	window.opener.gNewServer = description;
+	window.opener.gUpdate = true;
+}
 
-		// the RDF resource URI 
-		var selectedABURI = "moz-abdavdirectory://" + gUrl;
-		//var selectedABURI = properties.URI;
+function onAcceptWebDAV(){
+	var properties;
+	var description = document.getElementById("description").value;
 
-		try {
-			var selectedABDirectory = gRdfService.GetResource(selectedABURI)
-				.QueryInterface(Components.interfaces.nsIAbDirectory); 
-			addressbook.modifyAddressBook(addressbookDS, parentDir, selectedABDirectory, properties);
-		}
-		catch(e) {
-			abWindow.exceptionHandler(window,"modifyAddressBook",e);
-			throw e;
-		}
-		gCurrentDirectory.dirName = description;
-//		window.opener.gNewServerString = url;
+	var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);	
+		// var addressbookDS = rdf.GetDataSource("rdf:addressdirectory");
+	var parentDir = rdf.GetResource("moz-abdirectory://").QueryInterface(Components.interfaces.nsIAbDirectory);
+	var uri = SCGetCurrentDirectoryURI();
+	var directory = SCGetDirectoryFromURI(uri);
+	if (directory && directory.dirPrefId.length > 0) {
+		// Modifying existing Addressbook
+
+		properties = directory.directoryProperties;
+		properties.description = description;
+
+		dump(parentDir.hasDirectory(directory) + "\n");
+		parentDir.modifyDirectory(directory, properties);
 	}
 	else {
-		addNewDirectory(addressbook, properties);
-	}
-
-	if (fromPreferences) {
-		window.opener.gNewServer = description;
-		window.opener.gNewServerString = properties.prefName;	
-		window.opener.gUpdate = true;
-	}
-}
-
-function addNewDirectory(addressbook, properties) {
-	addressbook.newAddressBook(properties);
-	gCurrentDirectoryURI = properties.URI;
-	gCurrentDirectory = gRdfService.GetResource(gCurrentDirectoryURI).QueryInterface(Components.interfaces.nsIAbDirectory);
-	window.opener.gNewServerString = properties.prefName;	
-}
-
-//function onAccept(){
-function onAcceptWebDAV(){
-		var properties;
-		var description = document.getElementById("description").value;
-		var addressbook = Components.classes["@mozilla.org/addressbook;1"].createInstance(Components.interfaces.nsIAddressBook);		
-		if (gCurrentDirectory == null
-				|| gCurrentDirectory.directoryProperties.prefName == "") {
 		// adding a new Addressbook		
-			properties = Components.classes["@mozilla.org/addressbook/properties;1"].createInstance(Components.interfaces.nsIAbDirectoryProperties);
-			properties.dirType = 2;// ???don't know which values should go in there but 2 seems to get the job done
-			properties.description = document.getElementById("description").value;
+		properties = Components.classes["@mozilla.org/addressbook/properties;1"]
+			.createInstance(Components.interfaces.nsIAbDirectoryProperties);
+		properties.dirType = 2;// ???don't know which values should go in there but 2 seems to get the job done
+		properties.description = document.getElementById("description").value;
 
-			addNewDirectory(addressbook, properties);
-		} else {
-		// Modifying existing Addressbook
-			
-			properties = gCurrentDirectory.directoryProperties; 
-			properties.description = description;
-			gCurrentDirectory.dirName = description;
-			var addressbookDS = gRdfService.GetDataSource("rdf:addressdirectory");
-			
-			// moz-abdirectory:// is the RDF root to get all types of addressbooks.
-			var parentDir = gRdfService.GetResource("moz-abdirectory://").QueryInterface(Components.interfaces.nsIAbDirectory);
-			
-			addressbook.modifyAddressBook(addressbookDS, parentDir, gCurrentDirectory, properties);   		
-		}
+		parentDir.createNewDirectory(properties);
+		window.opener.gNewServerString = properties.prefName;
+	}
+
+	var groupdavPrefService = new GroupdavPreferenceService(properties.prefName);
+	groupdavPrefService.setURL(document.getElementById("groupdavURL").value);
+	groupdavPrefService.setDirectoryName(description);
+	groupdavPrefService.setDisplayDialog(document.getElementById("displaySyncCompleted").checked);
+	//groupdavPrefService.setAutoDeleteFromServer(document.getElementById("autoDeleteFromServer").getAttribute("checked"));
+	groupdavPrefService.setReadOnly(false);
 }
 
-function fillDialog () {
-	if ("arguments" in window && window.arguments[0]) {
-		gCurrentDirectoryURI = window.arguments[0];
-		fromPreferences = window.arguments[1];
-		gCurrentDirectory = gRdfService.GetResource(gCurrentDirectoryURI).QueryInterface(Components.interfaces.nsIAbDirectory);
+function SCGetCurrentDirectoryURI() {
+	var uri;
 
-		var groupdavPrefService = new GroupdavPreferenceService(gCurrentDirectory.directoryProperties.prefName);  
-		gDescription = document.getElementById("description").value = gCurrentDirectory.dirName;
-		gUrl = document.getElementById("groupdavURL").value = groupdavPrefService.getURL();
-		var readOnly = groupdavPrefService.getReadOnly();
-		document.getElementById("readOnly").setAttribute("checked", readOnly);
-		document.getElementById("readOnly").disabled = true;
-
-		if (readOnly){
-			document.getElementById("displaySynchCompleted").disabled = true;			 
-//			document.getElementById("autoDeleteFromServer").disabled = true;
-		}else{
-			document.getElementById("displaySynchCompleted").checked = groupdavPrefService.getDisplayDialog();
-			//document.getElementById("offlineTabId").disabled = true;
-//			document.getElementById("downloadButton").disabled = true;
-//			document.getElementById("autoDeleteFromServer").setAttribute("checked", groupdavPrefService.getAutoDeleteFromServer());									
-		}
-	}else{
-//			document.getElementById("offlineTabId").disabled = true;
-//			document.getElementById("downloadPanel").disabled = true;
-//			document.getElementById("downloadButton").disabled = true;
-	}	   	
+	if ("arguments" in window && window.arguments[0])
+		uri = window.arguments[0];
+	else
+		uri = null;
+	
+	return uri;
 }
-function onLoad(){
+
+function onLoad() {
 	// TODO	add download now for cardDAV, the tab is currently hidden
-	document.getElementById("offlineTabId").hidden = true;	
+// 	document.getElementById("offlineTabId").hidden = true;	
 	
-	prefMsgBundle = document.getElementById("preferencesMsgId");
-	
+// 	dump("dirstring: " + window.arguments[0].selectedDirectoryString + "\n");
+
 	//Read only checkbox event listener
-	document.getElementById("readOnly").addEventListener("CheckboxStateChange", onReadOnlyUpdate, true);
+	document.getElementById("readOnly").addEventListener("CheckboxStateChange",
+																											 onReadOnlyUpdate, true);
 
-	gRdfService = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);	
-	abWindow = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("mail:addressbook");	
+	var uri = SCGetCurrentDirectoryURI();
+	var directory = SCGetDirectoryFromURI(uri);
+	if (directory) {
+		var readOnly = (uri.indexOf("moz-abdavdirectory://") == 0);
+		var roElem = document.getElementById("readOnly");
+		roElem.setAttribute("checked", readOnly);
+		roElem.disabled = true;
 
-	fillDialog();
-}
+		var description = "";
+		var url = "";
+		var displaySync = false;
 
-function onUnload(){
+		if (readOnly) {
+			description = directory.dirName;
+			var cardDavPrefix = "carddav://";
+			var dUrl = directory.directoryProperties.URI;
+			if (dUrl.indexOf(cardDavPrefix) == 0)
+				url = dUrl.substr(cardDavPrefix.length);
+			document.getElementById("displaySyncCompleted").disabled = true;			 
+			//			document.getElementById("autoDeleteFromServer").disabled = true;
+		}
+		else {
+			var groupdavPrefService = new GroupdavPreferenceService(directory.directoryProperties.prefName);
+			description = directory.dirName;
+			url = groupdavPrefService.getURL();
+			displaySync = groupdavPrefService.getDisplayDialog();
+			//document.getElementById("offlineTabId").disabled = true;
+			//			document.getElementById("downloadButton").disabled = true;
+			//			document.getElementById("autoDeleteFromServer").setAttribute("checked", groupdavPrefService.getAutoDeleteFromServer());									
+		}
+		document.getElementById("description").value = description;
+		document.getElementById("groupdavURL").value = url;
+		document.getElementById("displaySyncCompleted").checked = displaySync;
+		// 	else {
+		//			document.getElementById("offlineTabId").disabled = true;
+		//			document.getElementById("downloadPanel").disabled = true;
+		//			document.getElementById("downloadButton").disabled = true;
+		// 	}
+	}
 }
 
 //TODO:catch the directory delete and delete preferences
 
-function onCancel(){
+function onCancel() {
 	window.close();
 }
 
 // Handle readOnly checkbox updates
 
 
-function onReadOnlyUpdate(){
-	if (document.getElementById("readOnly").checked == true){			
-		//document.getElementById("offlineTabId").disabled = null;
-//		document.getElementById("downloadButton").disabled = false;
-		document.getElementById("displaySynchCompleted").disabled = true;
-		dump("checked\n");
-	}
-	else {
-		//document.getElementById("offlineTabId").disabled = true;
-//		document.getElementById("downloadButton").disabled = true;		
-		document.getElementById("displaySynchCompleted").disabled = false;		
-	}
+function onReadOnlyUpdate() {
+	document.getElementById("displaySyncCompleted").disabled
+		= document.getElementById("readOnly").checked;
 }
 
 function DownloadNow(){
 	
-// TODO	add download now for cardDAV
-/*	
-  if (!gDownloadInProgress) {
-    gProgressText = document.getElementById("replicationProgressText");
-    gProgressMeter = document.getElementById("replicationProgressMeter");
+	// TODO	add download now for cardDAV
+	/*	
+			if (!gDownloadInProgress) {
+			gProgressText = document.getElementById("replicationProgressText");
+			gProgressMeter = document.getElementById("replicationProgressMeter");
 
-    gProgressText.hidden = false;
-    gProgressMeter.hidden = false;
-    gReplicationCancelled = false;
+			gProgressText.hidden = false;
+			gProgressMeter.hidden = false;
+			gReplicationCancelled = false;
 
-    try {
+			try {
       gReplicationService.startReplication(gCurrentDirectoryString,
-                                           progressListener);
-    }
-    catch (ex) {
+			progressListener);
+			}
+			catch (ex) {
       EndDownload(false);
-    }
-  } else {
-    gReplicationCancelled = true;
-    try {
+			}
+			} else {
+			gReplicationCancelled = true;
+			try {
       gReplicationService.cancelReplication(gCurrentDirectoryString);
-    }
-    catch (ex) {
+			}
+			catch (ex) {
       // XXX todo
       // perhaps replication hasn't started yet?  This can happen if you hit cancel after attempting to replication when offline 
       dump("unexpected failure while cancelling.  ex=" + ex + "\n");
-    }
-  }
+			}
+			}
   */
 }

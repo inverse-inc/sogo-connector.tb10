@@ -24,9 +24,12 @@
 				<body>
 					<![CDATA[
 					if (isAutoCompleteDirectoryServerCardDAV()) {
+					dump("isCardDAV\n");
 	          this.setupAutocompleteCardDAV();
 					}
 					else {
+					dump("NOT isCarDdav\n");
+
 					  this.inverseParentSetupAutocomplete();
 					}
 					]]>
@@ -81,7 +84,6 @@
 				var autoCompleteWidget;
 				for (i=1; i <= this.mMaxAttendees; i++) {
 					autoCompleteWidget = this.getInputElement(i);
-					dump("xxxxxxxxxxxxxxxxxxxxxx: " + autoCompleteWidget.searchSessions + "\n");
 					if (autoCompleteWidget) {
 					  // ldap searches don't insert a default entry with the default domain appended to it
 					  // so reduce the minimum results for a popup to 2 in this case. 
