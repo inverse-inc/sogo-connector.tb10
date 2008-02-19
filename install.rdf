@@ -3,7 +3,7 @@
   xmlns:NC="http://home.netscape.com/NC-rdf#"
   xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
   <RDF:Description RDF:about="urn:mozilla:install-manifest"
-    em:name="Inverse SOGo Connector (test)"
+    em:name="Inverse SOGo Connector"
     em:id="sogo-connector@inverse.ca"
     em:version="0.66"
     em:description="A DAV plugin for keeping addressbooks and events in sync"
