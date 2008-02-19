@@ -9,6 +9,7 @@ Working on
 	  fixes the duplicate entries for such addressbooks
 	  fixes the autocompletion working only one time for two tries
 	improved the performance of the freebusy resolution in the attendees window
+	added a hook to give up the startup process to the SOGo Integrator if present
 
 0.65.1
 	fixed support for freebusy entries containing multiple intervals on
