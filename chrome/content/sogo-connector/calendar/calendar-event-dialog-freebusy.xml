@@ -54,8 +54,8 @@
 	       if (matchMail.length > 0) {
 		 try {
 		   var fbUrl = protoCard.getStringAttribute("calFBURL");
-// 		   dump("matchMail: " + matchMail + "\n");
-// 		   dump("fbURL: " + fbUrl + "\n");
+//  		   dump("matchMail: " + matchMail + "\n");
+//  		   dump("fbURL: " + fbUrl + "\n");
 		 }
 		 catch(e) {
 		   dump("exception occured: " + e + "\n");
@@ -241,26 +241,26 @@
             // retrieve the string from the appropriate row
             var freebusy = this.getFreeBusyElement(i);
             if (freebusy.hasAttribute("dirty")) {
-	      var fbid = "" + i;
-	      if (this.fbCache[fbid]) {
-		if (this.fbCache[fbid] != -1)
-		  freebusy.onFreeBusy(this.fbCache[fbid]);
-		freebusy.removeAttribute("dirty");
-	      }
-	      else {
-		var calid = freebusy.getAttribute("calid");
-		if (calid && calid.length > 0) {
+	      var calid = freebusy.getAttribute("calid");
+	      if (calid && calid.length) {
+		if (this.fbCache[calid]) {
+		  if (this.fbCache[calid] != -1)
+		    freebusy.onFreeBusy(this.fbCache[calid]);
+		  freebusy.removeAttribute("dirty");
+		}
+		else {
 		  // update with 'no data available' until response will be received
 		  var fbUrl = this.GetCalDAVFB(freebusy, calid,
 					       freebusy.getAttribute("cn"));
-// 		  dump("fbUrl (" + calid + ": " + fbUrl + "\n");
+//  		  dump("fbUrl (" + calid + "): " + fbUrl + "\n");
 		  if (fbUrl) {
 		    freebusy.onFreeBusy(null);
-		    var request = new sogoFBRequest(fbUrl, this, fbid);
+		    var request = new sogoFBRequest(fbUrl, this, {fbid: "" + i,
+								  calid: calid});
 		    request.load();
 		  }
 		  else
-		    this.fbCache[fbid] = -1;
+		    this.fbCache[calid] = -1;
 		}
               }
             }
@@ -273,11 +273,11 @@
 
       <method name="onFreeBusyComplete">
         <parameter name="entries"/>
-        <parameter name="fbid"/>
+        <parameter name="data"/>
         <body>
           <![CDATA[
-	     this.fbCache[fbid] = entries;
-	     var freebusy = this.getFreeBusyElement(fbid);
+	     this.fbCache[data.calid] = entries;
+	     var freebusy = this.getFreeBusyElement(data.fbid);
 	     freebusy.onFreeBusy(entries);
 	     freebusy.removeAttribute("dirty");
           ]]>

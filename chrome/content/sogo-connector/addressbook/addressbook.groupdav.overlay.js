@@ -87,8 +87,9 @@ function disableNewList(){
 	catch (e) {}//Do nothing, exceptions happen before the addressbook is actully loaded
 }
 
-function goUpdateGlobalEditMenuItemsOverlay(){
+function goUpdateGlobalEditMenuItemsOverlay() {
 	try {
+		dump("connector\n");
 		gSelectedDir = GetSelectedDirectory();
 		goUpdateCommand("cmd_synchGroupdav");
 		goUpdateGlobalEditMenuItems();
@@ -101,6 +102,7 @@ function goUpdateGlobalEditMenuItemsOverlay(){
 
 function CommandUpdate_AddressBookGroupdavOverlay(){
 	try {
+		dump("connector\n");
 		gSelectedDir = GetSelectedDirectory();
 		goUpdateCommand('cmd_synchGroupdav');
 		CommandUpdate_AddressBook();

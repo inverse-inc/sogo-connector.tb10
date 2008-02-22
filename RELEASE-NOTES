@@ -8,7 +8,7 @@ Working on
 	  fixes the situation where one was not able to write to a mailing list
 	  fixes the duplicate entries for such addressbooks
 	  fixes the autocompletion working only one time per two tries
-	improved the performance of the freebusy resolution in the attendees window
+	improved the performance and the reliability of the freebusy resolution in the attendees window
 	added a hook to give up the startup process to the SOGo Integrator if present
 
 0.65.1

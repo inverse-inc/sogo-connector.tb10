@@ -39,8 +39,11 @@ function SCGetDirectoryFromURI(uri) {
 				directory = currentChild.QueryInterface(Components.interfaces.nsIAbDirectory);
 		}
 	}
-	else
+	else {
+		dump("uri: " + uri + "\n");
+		dump("backtrace: " + backtrace () + "\n");
 		directory = null;
+	}
 
 	return directory;
 }
