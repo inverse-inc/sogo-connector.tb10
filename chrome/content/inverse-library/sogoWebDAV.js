@@ -17,12 +17,30 @@ function xmlEscape(text) {
 	return text.replace("&", "&amp;").replace("<", "&lt;");
 }
 
-function onPostReadyStateChange(request) {
+function onNormalReadyStateChange(request) {
 	// 	dump("xmlreadystatechange: " + request.readyState + "\n");
 	if (request.readyState == 4) {
 		try {
 			request.client.target.onDAVQueryComplete(request.status,
 																							 request.responseText,
+																							 request.client.cbData);
+			request.client._processPending();
+		}
+		catch(e) {
+			dump("sogoWebDAV.js: an exception occured\n" + e + "\n");
+		}
+		request.client = null;
+		request.onreadystatechange = null;
+	}
+}
+
+function onProppatchReadyStateChange(request) {
+// 	dump("xmlreadystatechange: " + request.readyState + "\n");
+	if (request.readyState == 4) {
+		try {
+			var parser = new multiStatusParser(request.responseXML);
+			request.client.target.onDAVQueryComplete(request.status,
+																							 parser.responses(),
 																							 request.client.cbData);
 			request.client._processPending();
 		}
@@ -130,24 +148,6 @@ multiStatusParser.prototype = {
 	}
 };
 
-function onProppatchReadyStateChange(request) {
-	// 	dump("xmlreadystatechange: " + request.readyState + "\n");
-	if (request.readyState == 4) {
-		try {
-			var parser = new multiStatusParser(request.responseXML);
-			request.client.target.onDAVQueryComplete(request.status,
-																							 parser.responses(),
-																							 request.client.cbData);
-			request.client._processPending();
-		}
-		catch(e) {
-			dump("sogoWebDAV.js: an exception occured\n" + e + "\n");
-		}
-		request.client = null;
-		request.onreadystatechange = null;
-	}
-}
-
 function sogoWebDAV(url, target, data, asynchronous) {
 	this.context = null;
   this.url = url;
@@ -174,7 +174,7 @@ sogoWebDAV.prototype = {
 	},
  _processPending: function() {
 		this.context.sogoWebDAVPending = false;
-		dump("pending length: " + this.context.sogoWebDAVPendingRequests.length + "\n");
+// 		dump("pending length: " + this.context.sogoWebDAVPendingRequests.length + "\n");
 		if (this.context.sogoWebDAVPendingRequests.length) {
 			// 		dump("processing next query...\n");
 			var request = this.context.sogoWebDAVPendingRequests.shift();
@@ -198,9 +198,15 @@ sogoWebDAV.prototype = {
 		}
 		xmlRequest.url = this.url;
 		xmlRequest.client = this;
-		xmlRequest.onreadystatechange = function() {
-			onPostReadyStateChange(xmlRequest);
-		};
+		if (method == "PROPPATCH")
+			xmlRequest.onreadystatechange = function() {
+				onProppatchReadyStateChange(xmlRequest);
+			};
+		else
+			xmlRequest.onreadystatechange = function() {
+				onNormalReadyStateChange(xmlRequest);
+			};
+
 		xmlRequest.send(parameters);
 	},
 
@@ -305,7 +311,6 @@ sogoWebDAV.prototype = {
 		var xParser = Components.classes['@mozilla.org/xmlextras/domparser;1']
 		.getService(Components.interfaces.nsIDOMParser);
 		var queryDoc = xParser.parseFromString(query, "application/xml");
-
 		this.load(operation, queryDoc);
 	},
  report: function(query) {
@@ -402,8 +407,8 @@ sogoWebDAVListener.prototype = {
 			}
 			this.result = null;
 		}
-		else
-			dump("skipping operation complete\n");
+// 		else
+// 			dump("skipping operation complete\n");
   },
  _isOurClosure: function(closure) {
 		var isOurs = false;
@@ -456,8 +461,8 @@ sogoWebDAVListener.prototype = {
 				}
 			}
     }
-		else
-			dump("skipping operation detail\n");
+// 		else
+// 			dump("skipping operation detail\n");
   },
  getProperties: function(hash, aDetail) {
     var text = "";
