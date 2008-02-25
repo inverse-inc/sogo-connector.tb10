@@ -63,7 +63,7 @@
   </toolbar>
   <toolbar id="ab-bar2" 
     defaultset="button-newcard,button-newlist,separator,button-editcard,button-newmessage,separator,button-abdelete,button-groupdavSynch,spring,search-container,separator">		 
-  </toolbar>	
+  </toolbar>
   <!--Add the GroupDAV synchronize menu to the tree contextual menu -->
   <popup id="dirTreeContext">
     <menuseparator/>	
@@ -71,17 +71,9 @@
   </popup>
   
   <!-- Add the New GroupDAV addressbook menu to the File menu	 -->
-  <toolbaritem id="menubar-items">
-    <menubar id="mail-menubar">
-      <menu id="menu_File">
-        <menupopup id="menu_FilePopup">
-          <menu id="menu_New">
-            <menupopup id="menu_NewPopup" >
-              <menuitem id="addGroupDav" label="&newGroupDavCmd.label;" accesskey="&newGroupDavCmd.accesskey;" oncommand="AbNewGroupDavContacts()"/>
-            </menupopup>
-          </menu>
-        </menupopup>
-      </menu>
-    </menubar>
-  </toolbaritem>
+  <menu id="menu_New">
+    <menupopup id="menu_NewPopup" >
+      <menuitem id="addGroupDav" label="&newGroupDavCmd.label;" accesskey="&newGroupDavCmd.accesskey;" oncommand="AbNewGroupDavContacts()"/>
+    </menupopup>
+  </menu>
 </overlay>

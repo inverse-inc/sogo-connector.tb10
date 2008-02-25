@@ -132,7 +132,8 @@ AbDAVDirectory.prototype = {
 			 .getService(Components.interfaces.nsIPrefService);
 		 try {
 			 var branch = service.getBranch(prefName + ".");
-			 this.mDirectoryProperties.description = branch.getCharPref("description");
+			 this.mDirectoryProperties.description
+				 = branch.getCharPref("description");
 			 this.mDirectoryProperties.URI = branch.getCharPref("uri");
 			 this.mDirectoryProperties.dirType = 0;
 			 this.mDirectoryProperties.position = 0;

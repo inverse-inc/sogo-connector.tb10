@@ -17,6 +17,14 @@ function xmlEscape(text) {
 	return text.replace("&", "&amp;").replace("<", "&lt;");
 }
 
+function xmlUnescape(text) {
+	var s = (""+text).replace(/&lt;/g, "<");
+	s = s.replace(/&gt;/g, ">");
+	s = s.replace(/&amp;/g, "&");
+
+	return s;
+}
+
 function onNormalReadyStateChange(request) {
 	// 	dump("xmlreadystatechange: " + request.readyState + "\n");
 	if (request.readyState == 4) {
@@ -174,7 +182,7 @@ sogoWebDAV.prototype = {
 	},
  _processPending: function() {
 		this.context.sogoWebDAVPending = false;
-// 		dump("pending length: " + this.context.sogoWebDAVPendingRequests.length + "\n");
+ 		dump("pending length: " + this.context.sogoWebDAVPendingRequests.length + "\n");
 		if (this.context.sogoWebDAVPendingRequests.length) {
 			// 		dump("processing next query...\n");
 			var request = this.context.sogoWebDAVPendingRequests.shift();

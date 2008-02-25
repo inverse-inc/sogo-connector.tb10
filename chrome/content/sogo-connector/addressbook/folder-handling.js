@@ -40,7 +40,9 @@ function SCGetDirectoryFromURI(uri) {
 		}
 	}
 	else {
-		dump("uri: " + uri + "\n");
+		dump("wrong uri: " + uri + "\n");
+		dump("possible ab is: " + uri.Value + "\n");
+		
 		dump("backtrace: " + backtrace () + "\n");
 		directory = null;
 	}

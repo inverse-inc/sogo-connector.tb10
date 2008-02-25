@@ -1,6 +1,6 @@
 /* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 2 -*- */
 /*********************************************************************************
-Copyright:	Inverse groupe conseil, 2006-2007
+Copyright:	Inverse groupe conseil, 2006-2008
 Author: 		Robert Bolduc
 Email:		support@inverse.ca
 URL:			http://inverse.ca
@@ -89,7 +89,7 @@ function disableNewList(){
 
 function goUpdateGlobalEditMenuItemsOverlay() {
 	try {
-		dump("connector\n");
+// 		dump("connector\n");
 		gSelectedDir = GetSelectedDirectory();
 		goUpdateCommand("cmd_synchGroupdav");
 		goUpdateGlobalEditMenuItems();
@@ -102,7 +102,7 @@ function goUpdateGlobalEditMenuItemsOverlay() {
 
 function CommandUpdate_AddressBookGroupdavOverlay(){
 	try {
-		dump("connector\n");
+// 		dump("connector\n");
 		gSelectedDir = GetSelectedDirectory();
 		goUpdateCommand('cmd_synchGroupdav');
 		CommandUpdate_AddressBook();
@@ -172,6 +172,7 @@ dirPaneControllerOverlay.prototype = {
 			exceptionHandler(window,"Exception",e);
 		}
 
+// 		dump("command is enabled: " + command + ": " + result + "\n");
 		return result;
 	},
 
@@ -189,20 +190,20 @@ dirPaneControllerOverlay.prototype = {
 
 //Overidde SetupAbCommandUpdateHandlers function in chrome://messenger/content/addressbook/abCommon.js
 //I am not happy to rewrite SetupAbCommandUpdateHandlers but enough is enough!
-function SetupAbCommandUpdateHandlers(){
-	var ctlOvl = new dirPaneControllerOverlay();
+// function SetupAbCommandUpdateHandlers() {
+// 	var ctlOvl = new dirPaneControllerOverlay();
 
-	// dir pane
-	if (dirTree) {
-		dirTree.controllers.appendController(ctlOvl);
-		dirTree.controllers.appendController(DirPaneController);
-	}
-	// results pane
-	if (gAbResultsTree) {
-		gAbResultsTree.controllers.appendController(ResultsPaneController);
-		gAbResultsTree.controllers.appendController(ctlOvl);
-	}
-}
+// 	// dir pane
+// 	if (dirTree) {
+// 		dirTree.controllers.appendController(ctlOvl);
+// // 		dirTree.controllers.appendController(DirPaneController);
+// 	}
+// 	// results pane
+// 	if (gAbResultsTree) {
+// // 		gAbResultsTree.controllers.appendController(ResultsPaneController);
+// 		gAbResultsTree.controllers.appendController(ctlOvl);
+// 	}
+// }
 
 //Override of AbDelete in chrome://messenger/content/addressbook/abCommon.js
 // Addition to delete the card on the groupdav server 
@@ -388,6 +389,19 @@ function onLoadDAV() {
 
 	this.AbDeleteDirectoryOriginal = this.AbDeleteDirectory;
 	this.AbDeleteDirectory = this.SCAbDeleteDirectory;
+
+	var ctlOvl = new dirPaneControllerOverlay();
+	// dir pane
+	var dirTree = document.getElementById("dirTree");
+	if (dirTree) {
+		dirTree.controllers.appendController(ctlOvl);
+// 		dirTree.controllers.appendController(DirPaneController);
+	}
+	// results pane
+	if (gAbResultsTree) {
+// 		gAbResultsTree.controllers.appendController(ResultsPaneController);
+		gAbResultsTree.controllers.appendController(ctlOvl);
+	}
 }
 
 window.addEventListener("load", onLoadDAV, false);
