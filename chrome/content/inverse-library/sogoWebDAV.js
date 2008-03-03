@@ -29,13 +29,15 @@ function onNormalReadyStateChange(request) {
 	// 	dump("xmlreadystatechange: " + request.readyState + "\n");
 	if (request.readyState == 4) {
 		try {
-			request.client.target.onDAVQueryComplete(request.status,
-																							 request.responseText,
-																							 request.client.cbData);
+			if (request.client.target)
+				request.client.target.onDAVQueryComplete(request.status,
+																								 request.responseText,
+																								 request.client.cbData);
 			request.client._processPending();
 		}
 		catch(e) {
-			dump("sogoWebDAV.js: an exception occured\n" + e + "\n");
+			dump("sogoWebDAV.js: an exception occured\n" + e + "\n"
+					 + backtrace() + "\n");
 		}
 		request.client = null;
 		request.onreadystatechange = null;
@@ -47,13 +49,15 @@ function onProppatchReadyStateChange(request) {
 	if (request.readyState == 4) {
 		try {
 			var parser = new multiStatusParser(request.responseXML);
-			request.client.target.onDAVQueryComplete(request.status,
-																							 parser.responses(),
-																							 request.client.cbData);
+			if (request.client.target)
+				request.client.target.onDAVQueryComplete(request.status,
+																								 parser.responses(),
+																								 request.client.cbData);
 			request.client._processPending();
 		}
 		catch(e) {
-			dump("sogoWebDAV.js: an exception occured\n" + e + "\n");
+			dump("sogoWebDAV.js: an exception occured\n" + e + "\n"
+					 + backtrace() + "\n");
 		}
 		request.client = null;
 		request.onreadystatechange = null;
@@ -270,6 +274,7 @@ sogoWebDAV.prototype = {
 			this._sendHTTPRequest(operation, parameters);
 		}
 		else if (operation == "MKCOL") {
+			dump("make collection\n");
 			webdavSvc.makeCollection(resource, listener, requestor, ourClosure);
 		}
 		else if (operation == "DELETE") {
@@ -406,12 +411,14 @@ sogoWebDAVListener.prototype = {
 															 aClosure) {
 		if (this._isOurResource(aResource)) {
 			try {
-				this.target.onDAVQueryComplete(aStatusCode, this.result,
-																			 this.cbData);
+				if (this.target)
+					this.target.onDAVQueryComplete(aStatusCode, this.result,
+																				 this.cbData);
 				this.client._processPending();
 			}
 			catch(e) {
-				dump("sogoWebDAV.js: an exception occured\n" + e + "\n");
+				dump("sogoWebDAV.js: an exception occured\n" + e + "\n"
+						 + backtrace() + "\n");
 			}
 			this.result = null;
 		}

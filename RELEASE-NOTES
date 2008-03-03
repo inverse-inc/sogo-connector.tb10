@@ -3,6 +3,9 @@ Features
 Working on 
 	Added Deleted on server feature. (low priority)
 
+0.66.1
+	drag and dropping a card from a GroupDAV directory would not delete the card on the server
+
 0.66
 	rewrite of the CardDAV addressbook implementation
 	  fixes the situation where one was not able to write to a mailing list

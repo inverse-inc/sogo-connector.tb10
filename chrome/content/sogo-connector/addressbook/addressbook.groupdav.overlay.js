@@ -217,23 +217,57 @@ abGroupDavDirTreeObserver.prototype = {
 		return abDirTreeObserver.canDrop(index, orientation);
 	},
 
- onDrop: function(row, orientation){
+ onDrop: function(row, orientation) {
 		var dragSession = dragService.getCurrentSession();
-		if (!dragSession)
-			return;
+		if (dragSession) {
+			var trans = Components.classes["@mozilla.org/widget/transferable;1"]
+				.createInstance(Components.interfaces.nsITransferable);
+			trans.addDataFlavor("moz/abcard");
+			var targetResource = dirTree.builderView.getResourceAtIndex(row);
+			var targetURI = targetResource.Value;
 
-		var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
-		trans.addDataFlavor("moz/abcard");
-		var targetResource = dirTree.builderView.getResourceAtIndex(row);
-		var targetURI = targetResource.Value;
-
-		if (isGroupdavDirectory(targetURI)) {
+			if (isGroupdavDirectory(targetURI)) {
 			//		var date = new Date();
 			//		var curDate = null;
 
 			//		do { curDate = new Date(); }while(curDate-date < 2000);
-			SynchronizeGroupdavAddressbookDrop(targetURI);
+				SynchronizeGroupdavAddressbookDrop(targetURI);
+			}
+
+			var sourceURI = GetSelectedDirectory();
+			if (isGroupdavDirectory(sourceURI)
+					&& dragSession.dragAction
+					== Components.interfaces.nsIDragService.DRAGDROP_ACTION_MOVE) {
+				for (var i = 0; i < dragSession.numDropItems; ++i) {
+					dragSession.getData(trans, i);
+					var dataObj = new Object();
+					var bestFlavor = new Object();
+					var len = new Object();
+					try	{
+						trans.getAnyTransferData(bestFlavor, dataObj, len);
+						dataObj = dataObj.value
+							.QueryInterface(Components.interfaces.nsISupportsString);
+						var transData = dataObj.data.split("\n");
+						var rows = transData[0].split(",");
+						var cards = this._getDroppedCardsOriginalsWithRows(rows);
+						DeleteGroupDAVCards(sourceURI, cards, false);
+					}
+					catch (ex) {}
+				}
+			}
 		}
+	},
+
+ _getDroppedCardsOriginalsWithRows: function(rows) {
+    var abView = GetAbView();
+		var cards = [];
+		for (var j = 0; j < rows.length; j++) {
+			var card = abView.getCardFromRow(rows[j]); 
+			if (card)
+				cards.push(card);
+		}
+
+		return cards;
 	},
 
  onToggleOpenState: function() {
@@ -264,18 +298,19 @@ abGroupDavDirTreeObserver.prototype = {
 //
 // Based on the code in nsXULTreeBuilder.cpp:  Observers will be called in the order that they were added,
 // which makes it posssible to call synchronize after abDirTreeObserver.onDrop is called
-var OnLoadDirTreeOriginal = OnLoadDirTree;
+var SCTreeObserver = new abGroupDavDirTreeObserver();
 
-var gTreeObserver = new abGroupDavDirTreeObserver();
-var OnLoadDirTree = function() {
-	var treeBuilder = dirTree.builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
-	OnLoadDirTreeOriginal.apply();
-	treeBuilder.addObserver(gTreeObserver);	
-};
+function SCOnLoadDirTree() {
+	var treeBuilder = dirTree.builder
+	.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
+	treeBuilder.addObserver(SCTreeObserver);
+	this.SCOnLoadDirTreeOriginal();
+}
 
 function abGroupdavUnload() {
-	var treeBuilder = dirTree.builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
-	treeBuilder.removeObserver(gTreeObserver);
+	var treeBuilder = dirTree.builder
+		.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
+	treeBuilder.removeObserver(SCTreeObserver);
 }
 
 // Override AbDeleteDirectory() to delete DAV preferences
@@ -294,7 +329,7 @@ function SCAbEditSelectedDirectory() {
 			|| isCardDavDirectory(abUri))
 		openGroupdavPreferences(abUri);
 	else
-		this.AbEditSelectedDirectoryOriginal.apply();
+		this.SCAbEditSelectedDirectoryOriginal();
 }
 
 var deleteListener = {
@@ -310,30 +345,35 @@ var deleteListener = {
 	}
 };
 
-function SCAbDelete() {
-	var cards = GetSelectedAbCards();
-	if (cards && cards.length > 0) {
-		if (isGroupdavDirectory(gSelectedDir)) {
-			for (var i = 0; i < cards.length; i++) {
-				if (cards[i] instanceof Components.interfaces.nsIAbMDBCard) {
-					var card = cards[i].QueryInterface(Components.interfaces.nsIAbMDBCard);
-					if (card) {
-						var key = card.getStringAttribute("groupDavKey");
-						if (key) {
-							var groupdavPrefService = new GroupdavPreferenceService(GetDirectoryFromURI(gSelectedDir)
-														.dirPrefId);
-							var url = groupdavPrefService.getURL();
-							var href =  url + key;
-							var deleteOp = new sogoWebDAV(href, deleteListener,
-																						{ dirURI: gSelectedDir, card: card });
-							deleteOp.delete();
-							logDebug("webdav_delete sent for vcard: " + href);
-						}
-					}
-				}
+function DeleteGroupDAVCards(directoryURI, cards, deleteLocally) {
+	var dirPrefID = GetDirectoryFromURI(directoryURI).dirPrefId;
+	for (var i = 0; i < cards.length; i++) {
+		var card = cards[i].QueryInterface(Components.interfaces.nsIAbMDBCard);
+		if (card) {
+			var key = card.getStringAttribute("groupDavKey");
+			if (key) {
+				var groupdavPrefService = new GroupdavPreferenceService(dirPrefID);
+				var url = groupdavPrefService.getURL();
+				var href =  url + key;
+				var deleteOp;
+				if (deleteLocally)
+					deleteOp = new sogoWebDAV(href, deleteListener,
+																		{ dirURI: gSelectedDir, card: card });
+				else
+					deleteOp = new sogoWebDAV(href);
+				deleteOp.delete();
+				logDebug("webdav_delete sent for vcard: " + href);
 			}
 		}
-		this.AbDeleteOriginal.apply();
+	}
+}
+
+function SCAbDelete() {
+	var cards = GetSelectedAbCards();
+	if (cards) {
+		if (isGroupdavDirectory(gSelectedDir))
+			DeleteGroupDAVCards(gSelectedDir, cards, true);
+		this.SCAbDeleteOriginal();
 	}
 }
 
@@ -349,7 +389,7 @@ function SCAbDeleteDirectory() {
 			result = (SCAbConfirmDeleteDirectory(selectedDir)
 								&& SCDeleteDAVDirectory(selectedDir));
 		else
-			this.AbDeleteDirectoryOriginal.apply();
+			this.SCAbDeleteDirectoryOriginal();
 	}
 
 	return result;
@@ -381,14 +421,17 @@ function SCAbConfirmDeleteDirectory(selectedDir) {
 function onLoadDAV() {
 	this.addEventListener("unload", abGroupdavUnload, true);
 
-	this.AbEditSelectedDirectoryOriginal = this.AbEditSelectedDirectory;
+	this.SCAbEditSelectedDirectoryOriginal = this.AbEditSelectedDirectory;
 	this.AbEditSelectedDirectory = this.SCAbEditSelectedDirectory;
 
-	this.AbDeleteOriginal = this.AbDelete;
+	this.SCAbDeleteOriginal = this.AbDelete;
 	this.AbDelete = this.SCAbDelete;
 
-	this.AbDeleteDirectoryOriginal = this.AbDeleteDirectory;
+	this.SCAbDeleteDirectoryOriginal = this.AbDeleteDirectory;
 	this.AbDeleteDirectory = this.SCAbDeleteDirectory;
+
+	this.SCOnLoadDirTreeOriginal = this.OnLoadDirTree;
+	this.OnLoadDirTree = this.SCOnLoadDirTree;
 
 	var ctlOvl = new dirPaneControllerOverlay();
 	// dir pane

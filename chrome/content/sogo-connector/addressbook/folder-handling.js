@@ -91,42 +91,46 @@ function SCCreateGroupDAVDirectory(description, url) {
 function SCDeleteDAVDirectory(uri) {
 	var result = false;
 
-	var directory = SCGetDirectoryFromURI(uri);
-	if (directory) {
-		try {
-			var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-				.getService(Components.interfaces.nsIRDFService);
-			var parentDir = rdf.GetResource("moz-abdirectory://")
-				.QueryInterface(Components.interfaces.nsIAbDirectory);
-			parentDir.deleteDirectory(directory);
+	if (isGroupdavDirectory(uri) || isCardDavDirectory(uri)) {
+		var directory = SCGetDirectoryFromURI(uri);
+		if (directory) {
+			try {
+				var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+					.getService(Components.interfaces.nsIRDFService);
+				var parentDir = rdf.GetResource("moz-abdirectory://")
+					.QueryInterface(Components.interfaces.nsIAbDirectory);
+				parentDir.deleteDirectory(directory);
 
-			var prefBranch = directory.dirPrefId;
-			var prefService = Components.classes["@mozilla.org/preferences-service;1"]
-				.getService(Components.interfaces.nsIPrefBranch);
-			/* groupdav = moz-abmdbdirectory, carddav = moz-abdavdirectory */
-			if (uri.indexOf("moz-abmdbdirectory://") == 0) {
-				prefService.deleteBranch("extensions.ca.inverse.addressbook.groupdav."
-																 + prefBranch);
+				var prefBranch = directory.dirPrefId;
+				var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+					.getService(Components.interfaces.nsIPrefBranch);
+				/* groupdav = moz-abmdbdirectory, carddav = moz-abdavdirectory */
+				if (uri.indexOf("moz-abmdbdirectory://") == 0) {
+					prefService.deleteBranch("extensions.ca.inverse.addressbook.groupdav."
+																	 + prefBranch);
+				}
+				prefService.deleteBranch(prefBranch + ".position");
+
+				var clearPrefsRequired
+					= (prefService.getCharPref("mail.collect_addressbook") == uri
+						 && (prefService.getBoolPref("mail.collect_email_address_outgoing")
+								 || prefService.getBoolPref("mail.collect_email_address_incoming")
+								 || prefService.getBoolPref("mail.collect_email_address_newsgroup")));
+
+				if (clearPrefsRequired) {
+					prefService.setBoolPref("mail.collect_email_address_outgoing", false);
+					prefService.setBoolPref("mail.collect_email_address_incoming", false);
+					prefService.setBoolPref("mail.collect_email_address_newsgroup", false);
+					prefService.setCharPref("mail.collect_addressbook", kPersonalAddressbookURI);
+				}
+
+				result = true;
 			}
-			prefService.deleteBranch(prefBranch + ".position");
-
-			var clearPrefsRequired
-				= (prefService.getCharPref("mail.collect_addressbook") == uri
-						&& (prefService.getBoolPref("mail.collect_email_address_outgoing")
-								|| prefService.getBoolPref("mail.collect_email_address_incoming")
-								|| prefService.getBoolPref("mail.collect_email_address_newsgroup")));
-
-			if (clearPrefsRequired) {
-				prefService.setBoolPref("mail.collect_email_address_outgoing", false);
-				prefService.setBoolPref("mail.collect_email_address_incoming", false);
-				prefService.setBoolPref("mail.collect_email_address_newsgroup", false);
-				prefService.setCharPref("mail.collect_addressbook", kPersonalAddressbookURI);
-			}
-
-			result = true;
+			catch(e) {};
 		}
-		catch(e) {};
 	}
+	else
+		throw("attempting to delete a non-DAV directory: " + uri);
 
 	return result;
 }

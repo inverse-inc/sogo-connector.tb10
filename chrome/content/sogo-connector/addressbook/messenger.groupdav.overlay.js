@@ -71,9 +71,12 @@ function OnLoadMessengerOverlay() {
 
 function cleanupAddressBooks() {
 	var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-		.getService(Components.interfaces.nsIPrefBranch); 
+		.getService(Components.interfaces.nsIPrefBranch);
 
+// 	_cleanupLocalStore();
 	var uniqueChildren = _uniqueChildren(prefs, "ldap_2.servers", 2);
+	_cleanupABRemains(prefs, uniqueChildren);
+	uniqueChildren = _uniqueChildren(prefs, "ldap_2.servers", 2);
 	_cleanupBogusAB(prefs, uniqueChildren);
 
 	uniqueChildren = _uniqueChildren(prefs,
@@ -82,6 +85,18 @@ function cleanupAddressBooks() {
 	_cleanupOrphanDAVAB(prefs, uniqueChildren);
 	_migrateOldCardDAVDirs(prefs, uniqueChildren);
 }
+
+// function _cleanupLocalStore() {
+// 	var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+//     .getService(Components.interfaces.nsIRDFService);
+// 	var ds = rdf.GetDataSource("rdf:local-store");
+// 	var nodes = ds.GetAllResources();
+// 	while (nodes.hasMoreElements()) {
+// 		var currentChild = nodes.getNext()
+// 			.QueryInterface(Components.interfaces.nsIRDFResource);
+// 		dump("currentChild: " + currentChild.Value + "\n");
+// 	}
+// }
 
 function _uniqueChildren(prefs, path, dots) {
 	var count = {};
@@ -93,6 +108,20 @@ function _uniqueChildren(prefs, path, dots) {
 	}
 
 	return uniqueChildren;
+}
+
+function _cleanupABRemains(prefs, uniqueChildren) {
+	var path = "ldap_2.servers";
+
+	for (var key in uniqueChildren) {
+		var branchRef = path + "." + key;
+		var count = {};
+		var children = prefs.getChildList(branchRef, count);
+		if (children.length < 2) {
+			if (children[0] == (branchRef + ".position"))
+				prefs.deleteBranch(branchRef);
+		}
+	}
 }
 
 function _cleanupBogusAB(prefs, uniqueChildren) {
@@ -158,7 +187,7 @@ function _migrateOldCardDAVDirs(prefs, uniqueChildren) {
 				if (description.length > 0
 						&& url.length > 0) {
 					try {
-						prefs.deleteBranch(path + key);
+						prefs.deleteBranch(fullPath);
 					}
 					catch(x) {};
 					try {
