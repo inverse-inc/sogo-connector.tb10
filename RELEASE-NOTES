@@ -5,6 +5,8 @@ Working on
 
 0.66.1
 	drag and dropping a card from a GroupDAV directory would not delete the card on the server
+	fixed a bug in the German translation that would prevent the groupdav addressbook dialog to appear properly
+	the synchronize button would no longer be activated
 
 0.66
 	rewrite of the CardDAV addressbook implementation

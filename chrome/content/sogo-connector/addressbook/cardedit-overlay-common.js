@@ -82,16 +82,11 @@ function setDocumentDirty(boolValue) {
 	documentDirty = boolValue;
 }
 
-function setGroupDavFields() {
-	var card = gEditCard.card.QueryInterface(Components.interfaces.nsIAbMDBCard);
-	var version = card.getStringAttribute("groupDavVersion");
-	if (version && version != "") {
-		var localUpdatePos = version.indexOf(LOCAL_UPDATE_FLAG);
-		if (localUpdatePos == -1) {
-		//Only add the flags if it's not already there
-			card.setStringAttribute("groupDavVersion", version + LOCAL_UPDATE_FLAG);
-		}
-	}
+// function setGroupDavFields() {
+// 	var card = gEditCard.card.QueryInterface(Components.interfaces.nsIAbMDBCard);
+// 	var version = card.getStringAttribute("groupDavVersion");
+// 	if (version && version != "")
+// 		card.setStringAttribute("groupDavVersion", "-1");
 // 	else {
 // 		card.setStringAttribute("groupDavVersion"," ");
 // 	}
@@ -99,15 +94,24 @@ function setGroupDavFields() {
 // 	// New Card, create key
 // 		card.setStringAttribute("groupDavKey",GroupdavServerFactory.get(groupdavTypes.GroupDAV_Generic).getNewCardKey());
 // 	}
-}
+// }
 
 function saveCard(isNewCard) {
 	try {
+		var parentURI = getUri();
+		var uriParts = parentURI.split("/");
+		parentURI = uriParts[0] + "//" + uriParts[2];
 		if (documentDirty
-				&& isGroupdavDirectory(getUri())) {
-			abWindow.UploadCard(gEditCard.card
-													.QueryInterface(Components.interfaces.nsIAbMDBCard),
-													getUri(), isNewCard);
+				&& isGroupdavDirectory(parentURI)) {
+			var mdbCard
+				= gEditCard.card.QueryInterface(Components.interfaces.nsIAbMDBCard);
+			var version = mdbCard.getStringAttribute("groupDavVersion");
+			if (version && version != "")
+				mdbCard.setStringAttribute("groupDavVersion", "-1");
+ 			window.opener.SCSynchronizeFromChildWindow(parentURI);
+// 			abWindow.UploadCard(gEditCard.card
+// 													.QueryInterface(Components.interfaces.nsIAbMDBCard),
+// 													getUri());
 			setDocumentDirty(false);
 		}
 		if (abWindow)
@@ -120,7 +124,7 @@ function saveCard(isNewCard) {
 	}
 }
 
-function inverseSetupFieldsEventHandlers(){
+function inverseSetupFieldsEventHandlers() {
 	var tabPanelElement = document.getElementById("abTabPanels");
 	var menulists = tabPanelElement.getElementsByTagName("menulist");
 	for (var i = 0; i < menulists.length; i++)
@@ -132,11 +136,11 @@ function inverseSetupFieldsEventHandlers(){
 		textboxes[i].addEventListener("change", setDocumentDirty, true);
 }
 
-function inverseInitEventHandlers() {
-	if (isGroupdavDirectory(getUri()))
-		RegisterSaveListener(setGroupDavFields);
-	inverseSetupFieldsEventHandlers();
-}
+// function inverseInitEventHandlers() {
+// // 	if (isGroupdavDirectory(getUri()))
+// // 		RegisterSaveListener(setGroupDavFields);
+// 	inverseSetupFieldsEventHandlers();
+// }
 
 function isLDAPDirectory(uri) {
 	var ab = GetDirectoryFromURI(uri);
@@ -144,4 +148,5 @@ function isLDAPDirectory(uri) {
 	return (ab.isRemote && !isCardDavDirectory(uri));
 }
 
-window.addEventListener("load", inverseInitEventHandlers, false);	
+window.addEventListener("load", inverseSetupFieldsEventHandlers, false);
+

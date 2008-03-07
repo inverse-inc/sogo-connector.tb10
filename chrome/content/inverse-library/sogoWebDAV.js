@@ -37,7 +37,7 @@ function onNormalReadyStateChange(request) {
 		}
 		catch(e) {
 			dump("sogoWebDAV.js: an exception occured\n" + e + "\n"
-					 + backtrace() + "\n");
+					 + e.fileName + ":" + e.lineNumber + "\n");
 		}
 		request.client = null;
 		request.onreadystatechange = null;
@@ -57,7 +57,7 @@ function onProppatchReadyStateChange(request) {
 		}
 		catch(e) {
 			dump("sogoWebDAV.js: an exception occured\n" + e + "\n"
-					 + backtrace() + "\n");
+					 + e.fileName + ":" + e.lineNumber + "\n");
 		}
 		request.client = null;
 		request.onreadystatechange = null;
@@ -418,7 +418,7 @@ sogoWebDAVListener.prototype = {
 			}
 			catch(e) {
 				dump("sogoWebDAV.js: an exception occured\n" + e + "\n"
-						 + backtrace() + "\n");
+						 + e.fileName + ":" + e.lineNumber + "\n");
 			}
 			this.result = null;
 		}

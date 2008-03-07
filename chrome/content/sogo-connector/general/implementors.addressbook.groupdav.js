@@ -39,34 +39,6 @@ function jsInclude(files, target) {
 
 jsInclude(["chrome://inverse-library/content/uuid.js"]);
 
-var LOCAL_UPDATE_FLAG = ".local"; // append to version number when the update is done offline
-var LOCAL_DELETE_FLAG = ".deleted";
-
-var groupdavTypes ={
-	GroupDAV_Generic : 0
-};
-
-function getModifiedLocalVersion(versionString){
-	if (!versionString){
-		return null;
-	}
-	var localUpdatePos = versionString.indexOf(LOCAL_UPDATE_FLAG);
-	if (localUpdatePos != -1)
-	// There is a local update
-		return versionString.substr(0, localUpdatePos);
-	else
-		return null; 
-}
-
-function getDeletedLocalVersion(versionString){
-	var localUpdatePos = versionString.indexOf(LOCAL_DELETE_FLAG);
-	if (localUpdatePos != -1)
-	// There is a local update
-		return versionString.substr(0, localUpdatePos);
-	else
-	return null; 
-}
-
 function GroupdavServerFactory(){}
 
 GroupdavServerFactory.get = function(type){  
@@ -145,5 +117,9 @@ SogoImpl.prototype = {
 
  getNewCardKey: function() {
 		return new UUID() + ".vcf";
+	},
+
+ getNewListKey: function() {
+		return new UUID() + ".vlf";
 	}
 };

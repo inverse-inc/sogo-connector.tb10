@@ -2,14 +2,14 @@
 /*    Orginal code from morescols extension vcardTools.js
  
   		<em:id>{3e17310d-82e8-4a43-bd2f-7c3055bfe589}</em:id>
-		<em:name>MoreColsForAddressBook</em:name>
-		<em:version>0.3.4.1</em:version>
-		<em:description>Add some functions to the Addressbook</em:description>
-		<em:creator>Paolo Kaosmos</em:creator>
-		<em:homepageURL>https://nic-nac-project.de/~kaosmos/index-en.html</em:homepageURL>
+			<em:name>MoreColsForAddressBook</em:name>
+			<em:version>0.3.4.1</em:version>
+			<em:description>Add some functions to the Addressbook</em:description>
+			<em:creator>Paolo Kaosmos</em:creator>
+			<em:homepageURL>https://nic-nac-project.de/~kaosmos/index-en.html</em:homepageURL>
 
-	Contributors: Ralf Becker, RalfBecker@outdoor-training.de
- */
+			Contributors: Ralf Becker, RalfBecker@outdoor-training.de
+*/
 
 function jsInclude(files, target) {
 	var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
@@ -27,15 +27,16 @@ function jsInclude(files, target) {
 	}
 }
 
-jsInclude(["chrome://inverse-library/content/uuid.js"]);
+jsInclude(["chrome://inverse-library/content/uuid.js",
+					 "chrome://inverse-library/content/quoted-printable.js"]);
 
 function escapedForCards(theString) {
 	theString = theString.replace(/\\/g, "\\\\");
 	theString = theString.replace(/,/g, "\\,");
 	theString = theString.replace(/;/g, "\\;");  
 	theString = theString.replace(/,/g, "\\,");
-//  theString.replace(/\n/g, "\\n,");
-//  theString.replace(/\r/g, "\\r,");
+	//  theString.replace(/\n/g, "\\n,");
+	//  theString.replace(/\r/g, "\\r,");
 
 	return theString;
 }
@@ -45,23 +46,19 @@ function unescapedFromCard(theString) {
 	theString = theString.replace(/\,/g, ",");
 	theString = theString.replace(/\;/g, ";");  
 	theString = theString.replace(/\,/g, ",");
-//  theString.replace(/\\n/g, "\n,");
-//  theString.replace(/\\r/g, "\r,");
+	//  theString.replace(/\\n/g, "\n,");
+	//  theString.replace(/\\r/g, "\r,");
 
 	return theString;
 }
 
-/**************************************************************************
- * Function to import directly the vcard.
- *
- * outParameters must be an array, to enable the fonction to pass back the value
- * of custom fields that are not part of a Thunderbird card.
- *  
- **************************************************************************/ 
-function importFromVcard(vCardString, customFields) {
-	if (!vCardString || vCardString == "")
-		dump("'vCardString' is empty\n" + backtrace() + "\n");
-	var vcard = new Array();
+/* this method parses a versit directory:
+	 - normalizing the charset and encodings;
+	 - returning the lines as hashes filled with the tag, parameters and values
+	   accurately separated;
+	 No support yet for embedded directories (VCALENDAR) */
+function versitParse(versitString) {
+	var parseResult = new Array();
 	var currentLine = {};
 	var isEscaped = false;
 	var type = 0; /* 0 = tag, 1 = parameters, 2 = value */
@@ -74,8 +71,8 @@ function importFromVcard(vCardString, customFields) {
 	var value = "";
 
 	var currentChar = 0;
-	while (currentChar < vCardString.length) {
-		var character = vCardString[currentChar];
+	while (currentChar < versitString.length) {
+		var character = versitString[currentChar];
 		if (isEscaped) {
 			if (type == 0)
 				tag += character;
@@ -137,13 +134,13 @@ function importFromVcard(vCardString, customFields) {
 							value = "";
 						}
 						else if (character == "\n") {
-							var nextChar = vCardString[currentChar+1];
+							var nextChar = versitString[currentChar+1];
 							if (typeof nextChar != "undefined" && nextChar == " ")
 								currentChar++;
 							else {
 								values.push(value);
 								currentLine["values"] = values;
-								vcard.push(currentLine);
+								parseResult.push(currentLine);
 								currentLine = {};
 								tag = "";
 								type = 0;
@@ -158,8 +155,24 @@ function importFromVcard(vCardString, customFields) {
 		currentChar++;
 	}
 
-// 	var cardDump = dumpObject(vcard);
-// 	logInfo("vcard dump:\n" + cardDump);
+	return parseResult;
+}
+
+/* VCARD */
+/**************************************************************************
+ * Function to import directly the vcard.
+ *
+ * outParameters must be an array, to enable the fonction to pass back the value
+ * of custom fields that are not part of a Thunderbird card.
+ *  
+ **************************************************************************/ 
+function importFromVcard(vCardString, customFields) {
+	if (!vCardString || vCardString == "")
+		dump("'vCardString' is empty\n" + backtrace() + "\n");
+
+	var vcard = versitParse(vCardString);
+	// 	var cardDump = dumpObject(vcard);
+	// 	logInfo("vcard dump:\n" + cardDump);
 
 	return CreateCardFromVCF(vcard, customFields);
 }
@@ -208,36 +221,26 @@ function CreateCardFromVCF(vcard, outParameters) {
 	return card;
 }
 
-function InsertCardData(card, tag, parameters, values, outParameters) {
-// 	logInfo("InsertCardData: " + tag + "\n");
-
-	// Variables needed to fill the email fields
-	var myfirstemail = "";
-	var myemail = "";
-	var myemail2 = "";
-	var myHtmlFormat = 0;
-
-//	   // Cancel the newlines, the Notes field is the only one that supports them
-//	   mylineinit[0] = mylineinit[0].replace(/\r\n/g,"");
-	 
-	 
-
-//    if ( mylineinit[0] == "N" ) { // changed RalfBecker@outdoor-training.de to recognize N;CHARSET=...
-	if (tag == "n") {
+var _insertCardMethods = {
+ n: function(card, parameters, values) {
 		if (values[0])
 			card.lastName = values[0];
 		if (values[1])
 			card.firstName = values[1];
-	} else if (tag == "fn") {
+	},
+ fn: function(card, parameters, values) {
 		card.displayName = values[0];
-	} else if (tag == "nickname") {
+	},
+ nickname: function(card, parameters, values) {
 		card.nickName = values[0];
-	} else if (tag == "org") {
+	},
+ org: function(card, parameters, values) {
 		if (values[0])
 			card.company = values[0];
 		if (values[1])
 			card.department = values[1];
-	} else if (tag == "tel") {
+	},
+ tel: function(card, parameters, values) {
 		var types = new Array();
 		var preTypes = parameters["type"];
 		if (preTypes)
@@ -259,7 +262,8 @@ function InsertCardData(card, tag, parameters, values, outParameters) {
 			else if (card.homePhone.length == 0)
 				card.homePhone = values[0];
 		}
-	} else if (tag == "adr") {
+	},
+ adr: function(card, parameters, values) {
 		var types = new Array();
 		var preTypes = parameters["type"];
 		if (preTypes)
@@ -278,7 +282,7 @@ function InsertCardData(card, tag, parameters, values, outParameters) {
 				card.homeZipCode = values[5];
 			if (values[6])
 				card.homeCountry = values[6];
-	   }
+		}
 		else {
 			if (values[0])
 				card.workAddress2 = values[0];
@@ -292,8 +296,9 @@ function InsertCardData(card, tag, parameters, values, outParameters) {
 				card.workZipCode = values[5];
 			if (values[6])
 				card.workCountry = values[6];
-	   }
-	} else if (tag == "email") {
+		}
+	},
+ email: function(card, parameters, values) {
 		var types = new Array();
 		var preTypes = parameters["type"];
 		if (preTypes)
@@ -310,7 +315,8 @@ function InsertCardData(card, tag, parameters, values, outParameters) {
 			else
 				card.primaryEmail = values[0];
 		}
-	} else if (tag == "url") {
+	},
+ url: function(card, parameters, values) {
 		var types = new Array();
 		var preTypes = parameters["type"];
 		if (preTypes)
@@ -321,37 +327,53 @@ function InsertCardData(card, tag, parameters, values, outParameters) {
 		} else {
 			card.webPage2 = values[0];
 		}
-	} else if (tag == "title") {
+	},
+ title: function(card, parameters, values) {
 		card.jobTitle = values[0];
-	} else if (tag == "bday") {
+	},
+ bday: function(card, parameters, values) {
 		card.birthYear = values[0];
 		card.birthMonth = values[1];
 		card.birthDay = values[2];
-	} else if (tag == "x-aim") {
-		card.aimScreenName = values[0];
-	} else if (tag == "x-mozilla-html") {
-		if (values[0].toLowerCase() == "true")
-			card.preferMailFormat = true;
-		else
-			card.preferMailFormat = false;
-	} else if (tag == "note") {
-		card.notes = values.join(";");
-	} else if (tag == "begin"
-						 || tag == "end") {
-	} else {
-// 		dump("tag: " + tag + "; value = " + values.join(";") + "\n")
+	},
+ "x-aim": function(card, parameters, values) {
+	 card.aimScreenName = values[0];
+ },
+ "x-mozilla-html": function(card, parameters, values) {
+	 if (values[0].toLowerCase() == "true")
+		 card.preferMailFormat = true;
+	 else
+		 card.preferMailFormat = false;
+ },
+ note: function(card, parameters, values) {
+	 card.notes = values.join(";");
+ },
+ begin: function(card, parameters, values) {
+ },
+ end: function(card, parameters, values) {
+ }
+};
+
+function InsertCardData(card, tag, parameters, values, outParameters) {
+	// 	logInfo("InsertCardData: " + tag + "\n");
+
+	if (typeof _insertCardMethods[tag] != "undefined")
+		_insertCardMethods[tag](card, parameters, values);
+	else
 		outParameters[tag] = values.join(";");
-	}
 }
 
 function decodedValues(values, charset, encoding) {
 	var newValues = [];
 
+	var decoder = new QuotedPrintableDecoder();
+	decoder.charset = charset;
+
 	for (var i = 0; i < values.length; i++) {
 		var decodedValue = null;
 		if (encoding) {
 			if (encoding == "quoted-printable")
-				decodedValue = decodeQP(values[i], charset);
+				decodedValue = decoded.decode(values[i]);
 			else
 				throw "Unsupported encoding for vcard value: " + encoding;
 		}
@@ -366,231 +388,18 @@ function decodedValues(values, charset, encoding) {
 		}
 	}
 
-// 	logInfo("newValues: " + dumpObject(newValues));
+	// 	logInfo("newValues: " + dumpObject(newValues));
 
 	return newValues;
-}
-
-function decodeQP(value, charset) {
-	var decoded = new Array();
-
-	var count = 0;
-	var i = 0;
-	while (i < value.length) {
-		var currentChar = value[i];
-		if (currentChar == "=") {
-			var hexValue = (value[i+1] + value[i+2]).toLowerCase();
-			var decodedChar = String.fromCharCode(decodeHEX(hexValue));
-			decoded.push(decodedChar);
-			i += 3;
-		}
-		else {
-			decoded.push(currentChar);
-			i++;
-		}
-		count++;
-	}
-
-	var converter = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
-		.createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
-	converter.charset = charset;
-
-	return converter.ConvertToUnicode(decoded.join(""));
-}
-
-function decodeHEX(string) {
-	var t = 0;
-	var currentInt = 0;
-	var charCode0 = "0".charCodeAt(0);
-	var charCodea = "a".charCodeAt(0);
-	var charCodez = "z".charCodeAt(0);
-
-  for (var i = 0; i < string.length; i++) {
-		var code = string.charCodeAt(i);
-		var currentInt = code - charCode0;
-		if (currentInt > 9)
-			currentInt = 10 + code - charCodea;
-		t = t * 16 + currentInt;
-	}
-
-	return t;
-}
-
-function card2vcardV21(oldCard) {
-   var card = oldCard.QueryInterface(Components.interfaces.nsIAbMDBCard);
-   var quoted = "ENCODING=QUOTED-PRINTABLE:";
-   var data = "";
-   var vCard = "";
-   var encoder = new QuotedPrintableEncoder();
-   data = "BEGIN:VCARD\r\nVERSION:2.1\r\n";
-   vCard = vCard + data;
-   data = "N;"+ quoted + encoder.Encode(card.lastName) + ";" + encoder.Encode(card.firstName) + "\r\n";
-   if (card.lastName != "" || card.firstName != "")
-      vCard = vCard + data;
-   data = "FN;ENCODING=QUOTED-PRINTABLE:"+encoder.Encode(card.displayName)+"\r\n";
-   if (card.displayName != "")   
-      vCard = vCard + data;
-   data = "ORG:"+card.company+";"+card.department+"\r\n";
-   if (! (card.company == "" && card.department == "")) 
-      vCard = vCard + data;
-   data = "NICKNAME:"+card.nickName+"\r\n";
-   if (card.nickName != "") 
-      vCard = vCard + data;
-   data = "ADR;WORK;POSTAL:" + card.workAddress2 + ";;"+card.workAddress+";"+card.workCity+";"+card.workState+";"+card.workZipCode+";"+card.workCountry+"\r\n";
-   if (data != "ADR;WORK;POSTAL:;;;;;;\r\n") 
-      vCard = vCard + data;
-   data = "LABEL;WORK;ENCODING=QUOTED-PRINTABLE:"+card.workAddress+"=0D=0A"+card.workCity+", "+card.workZipCode+" "+card.workCountry+"\r\n";
-   if (data != "LABEL;WORK;ENCODING=QUOTED-PRINTABLE:=0D=0A,  \r\n") 
-      vCard = vCard + data;
-   data = "ADR;HOME;POSTAL:" + card.homeAddress2 + ";;"+card.homeAddress+";"+card.homeCity+";"+card.homeState+";"+card.homeZipCode+";"+card.homeCountry+"\r\n";
-   if (data != "ADR;HOME;POSTAL:;;;;;;\r\n") 
-      vCard = vCard + data;
-   data = "LABEL;HOME;ENCODING=QUOTED-PRINTABLE:"+encoder.Encode(card.homeAddress)+"=0D=0A"+encoder.Encode(card.homeCity)+", "+encoder.Encode(card.homeZipCode)+" "+encoder.Encode(card.homeCountry)+"\r\n";
-   if (data != "LABEL;HOME;ENCODING=QUOTED-PRINTABLE:=0D=0A,  \r\n" ) 
-      vCard = vCard + data;
-   data = "TEL;WORK;VOICE:"+ card.workPhone+"\r\n";
-   if (card.workPhone != "") 
-      vCard = vCard + data;
-   data = "TEL;HOME;VOICE:"+ card.homePhone+"\r\n";
-   if (card.homePhone != "") 
-      vCard = vCard + data;
-   data = "TEL;CELL;VOICE:"+ card.cellularNumber+"\r\n";
-   if (card.cellularNumber != "") 
-      vCard = vCard + data;
-   data = "TEL;FAX:"+ card.faxNumber+"\r\n";
-   if (card.faxNumber != "") 
-      vCard = vCard + data;
-   if (card.pagerNumber)
-   	vCard += "TEL;PAGER:"+ card.pagerNumber + "\r\n";
-
-   if (card.preferMailFormat != ""){
-   	var value = "";
-   	switch (card.preferMailFormat){
-   		case 0:
-   			break;
-   		case 2:
-   			value = "TRUE";
-   			break;
-   		case 1:
-   			value = "FALSE";
-   			break;
-   	}
-   	vCard += "X-MOZILLA-HTML:" + value + "\r\n";
-   }
-   data = "EMAIL;PREF;INTERNET:"+ card.primaryEmail+"\r\n";
-   if (card.primaryEmail != "") 
-      vCard = vCard + data;
-   data = "EMAIL;INTERNET:"+ card.secondEmail+"\r\n";
-   if (card.secondEmail != "") 
-      vCard = vCard + data;
-   data = "URL;HOME:"+ card.webPage2+"\r\n";
-   if (card.webPage2 != "") 
-      vCard = vCard + data;
-   data = "TITLE:"+ card.jobTitle+"\r\n";
-   if (card.jobTitle != "") 
-      vCard = vCard + data;
-   data = "URL;WORK:"+ card.webPage1+"\r\n";
-   if (card.webPage1 != "") 
-      vCard = vCard + data;
-   data = "BDAY:"+card.birthYear+"-"+card.birthMonth+"-"+card.birthDay+"\r\n";
-   if (card.birthYear != "" && card.birthMonth != "" && card.birthDay !="") 
-      vCard = vCard + data;
-   if (card.notes != "") {
-      data = "NOTE;ENCODING=QUOTED-PRINTABLE:"+encoder.Encode(card.notes);
-      vCard = vCard + data + "\r\n";
-   }
-   if ( card.aimScreenName != ""){
-   	vCard += "X-AIM:" + card.aimScreenName + "\r\n";
-   }
-   var fbUrl = card.getStringAttribute("calFBURL");
-   if (fbUrl && fbUrl.length > 0) {
-      data = "FBURL:"+fbUrl;
-      vCard = vCard + data + "\r\n";
-   }
-   var groupDavVcardCompatibilityField = card.getStringAttribute("groupDavVcardCompatibility");
-   if (groupDavVcardCompatibilityField) {
-      vCard += groupDavVcardCompatibilityField + "\r\n";
-   }
-   data = "END:VCARD\r\n\r\n";
-
-   return vCard + data;
-}
-
-// This is needed just for the displayed name: Thunderbird wants it in QUOTE-PRINTABLE
-// format in 7bit, otherwise it won't display correctly the special chars.
-// It's a strange beahviour because there seems to be just for this field.
-// This function is not perfect, but works quite well, I hope... '
-function quoteprint(str) {
-  var UC  = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
-  UC.charset="UTF-8";
-  str = str.replace(/\=/g, "%");
-  str = unescape(str);
-  try { str = UC.ConvertToUnicode(str); }
-  catch(e) {}
-
-  return str;
-}
-
-/* qp encoder */
-function QuotedPrintableEncoder() {
-   this.MaxLineSize = 76;
-   // Exclamation point through less than, and greater than through tilde
-   // Tab is not listed here as UnAltered but could be
-   this.UnAltered = String.fromCharCode(32) + String.fromCharCode(60) + String.fromCharCode(62) + String.fromCharCode(126);
-   this.UnAlteredEnd = String.fromCharCode(33) + String.fromCharCode(60) + String.fromCharCode(62) + String.fromCharCode(126);
-
-   return this;
-}
-
-QuotedPrintableEncoder.prototype.Encode = function(InputText) {
-   var re = new RegExp("\r\n","g");
-   var SplitText, i, s="";
-   SplitText = InputText.split(re);
-   for (i=0; i<SplitText.length; ++i)
-      s += this.EncodeLine(SplitText[i]) + "\r\n";
-
-   return s.substring(0, s.length - 2);
-}
-
-QuotedPrintableEncoder.prototype.EncodeLine = function(Text) {
-   var SplitText, i, s="", c=256;
-   if (Text.length == 0)
-      return "";
-   for (i=0; i<Text.length-1; ++i)
-      s += this.EncodeCharacter(Text.charCodeAt(i), this.UnAltered);
-   // Encode last character; if space, encode it
-   s += this.EncodeCharacter(Text.charCodeAt(Text.length-1), this.UnAlteredEnd);
-   if (s.length <= this.MaxLineSize)
-      return s;
-   // Split into lines of MaxLineSize characters or less
-   SplitText = s.slice(0, this.MaxLineSize);
-   i = this.MaxLineSize;
-   while (i<s.length) {
-      SplitText += "=\r\n"+ s.slice(i, i+this.MaxLineSize);
-      i += this.MaxLineSize;
-   }
-
-   return SplitText;
-}
-
-QuotedPrintableEncoder.prototype.EncodeCharacter = function(Character, UnAltered) {
-   var i, x, Alter=true;
-   for (i=0; i<UnAltered.length; i+=2)
-      if (Character >= UnAltered.charCodeAt(i) && Character <= UnAltered.charCodeAt(i+1))
-         Alter=false;
-   if (!Alter)
-      return String.fromCharCode(Character);
-   x = Character.toString(16).toUpperCase();
-
-   return (x.length == 1) ? "=0" + x : "=" + x;
 }
 
 function card2vcard(oldCard) {
 	var card = oldCard.QueryInterface(Components.interfaces.nsIAbMDBCard);
 
 	var data ="";
-	var vCard = "BEGIN:VCARD\r\nVERSION:3.0\r\n";
-
+	var vCard = ("BEGIN:VCARD\r\n"
+							 + "VERSION:3.0\r\n"
+							 + "PRODID:-//Inverse groupe conseil//SOGo Connector 1.0//EN\r\n");
 	var uid = card.getStringAttribute("groupDavKey");
 	if (!uid || uid == "")
 		uid = new UUID();
@@ -634,14 +443,14 @@ function card2vcard(oldCard) {
 	if (card.preferMailFormat != ""){
 		var value = "";
 		switch (card.preferMailFormat){
-			case 0:
-				break;
-			case 2:
-				value = "TRUE";
-				break;
-			case 1:
-				value = "FALSE";
-				break;
+		case 0:
+			break;
+		case 2:
+			value = "TRUE";
+			break;
+		case 1:
+			value = "FALSE";
+			break;
 		}
 		vCard += "X-MOZILLA-HTML:" + value + "\r\n";
 	}
@@ -698,15 +507,92 @@ function card2vcard(oldCard) {
 
 	var fbUrl = card.getStringAttribute("calFBURL");
 	if (fbUrl && fbUrl.length > 0) {
-		data = "FBURL:"+fbUrl;
+		data = "FBURL:" + fbUrl;
 		vCard = vCard + data + "\r\n";
 	}
-	
+
 	var groupDavVcardCompatibilityField = card.getStringAttribute("groupDavVcardCompatibility");
 	if (groupDavVcardCompatibilityField) {
 		vCard += groupDavVcardCompatibilityField + "\r\n";
-   }
-   vCard += "END:VCARD\r\n\r\n";
+	}
+	vCard += "END:VCARD\r\n\r\n";
 
-   return vCard;
+	return vCard;
+}
+
+/* VLIST */
+function updateListFromVList(list, vListString, cardUIDs, listCards) {
+	// 	var listCard = list.QueryInterface(Components.interfaces.nsIAbCard);
+	list = list.QueryInterface(Components.interfaces.nsIAbDirectory);
+	var listRsrc = list.QueryInterface(Components.interfaces.nsIRDFResource);
+	var uriParts = listRsrc.Value.split("/");
+	var parentURI = uriParts[0] + "//" + uriParts[2];
+	// 	dump("updating list: uri: " + listRsrc.Value
+	// 			 + "; parentURI: " + parentURI + "\n");
+	// 	dump("content:\n" + vListString + "\n");
+
+	list.addressLists.Clear();
+	var parsedString = versitParse(vListString);
+	for (var i = 0; i < parsedString.length; i++) {
+		var line = parsedString[i];
+		if (line.tag == "fn")
+			list.dirName = line.values[0];
+		else if (line.tag == "nickname")
+			list.listNickName = line.values[0];
+		else if (line.tag == "description")
+			list.description = line.values[0];
+		else if (line.tag == "card") {
+			var card = cardUIDs[line.values[0]];
+			// 			dump("card '" + line.values[0] + "': ");
+			if (card)
+				list.addressLists.AppendElement(card);
+			else
+				throw "card with uid '" + line.values[0] + "' was not found in directory";
+		}
+	}
+
+	list.editMailListToDatabase(parentURI, null);
+}
+
+function list2vlist(uid, list) {
+	list = list.QueryInterface(Components.interfaces.nsIAbDirectory);
+	var vList = ("BEGIN:VLIST\r\n"
+							 + "PRODID:-//Inverse groupe conseil//SOGo Connector 1.0//EN\r\n"
+							 + "VERSION:1.0\r\n"
+							 + "UID:" + uid + "\r\n");
+	vList += "FN:" + list.dirName + "\r\n";
+	var data = "" + list.listNickName;
+	if (data.length)
+		vList += "NICKNAME:" + data + "\r\n";
+	var data = "" + list.description;
+	if (data.length)
+		vList += "DESCRIPTION:" + data + "\r\n";
+
+	var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+		.getService(Components.interfaces.nsIRDFService);
+	var ds = Components
+		.classes["@mozilla.org/rdf/datasource;1?name=addressdirectory"]
+		.getService(Components.interfaces.nsIRDFDataSource);
+	var childSrc = rdf.GetResource("http://home.netscape.com/NC-rdf#CardChild");
+	var cards = ds.GetTargets(list, childSrc, false);
+	while (cards.hasMoreElements()) {
+		var card = cards.getNext().QueryInterface(Components.interfaces.nsIAbCard);
+		var mdbCard = card.QueryInterface(Components.interfaces.nsIAbMDBCard);
+		var entry = "CARD";
+		var key = "" + mdbCard.getStringAttribute("groupDavKey");
+		if (!key.length)
+			throw "card has no GroupDAV identifier key";
+		if (card.primaryEmail.length)
+			entry += ";EMAIL=" + card.primaryEmail;
+		if (card.displayName.length)
+			entry += ";FN=" + card.displayName;
+		entry += ":" + key + "\r\n";
+		vList += entry;
+	}
+
+	vList += "END:VLIST";
+
+	// 	dump("vList:\n" + vList + "\n");
+
+	return vList;
 }

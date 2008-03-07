@@ -1,9 +1,10 @@
 /* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 2 -*- */
 /*********************************************************************************
 Copyright:	Inverse groupe conseil, 2006-2008
-Author: 		Robert Bolduc
-Email:		support@inverse.ca
-URL:			http://inverse.ca
+Authors: 		Robert Bolduc <rbolduc@inverse.ca>
+						Wolfgang Sourdeau <wsourdeau@inverse.ca>
+Email:		  support@inverse.ca
+URL:			  http://inverse.ca/
 
 This file is part of "SOGo Connector" a Thunderbird extension.
 
@@ -77,9 +78,7 @@ function openGroupdavPreferences(abUri) {
 function disableNewList(){
 	try {
 		var node = document.getElementById("button-newlist");
-		if (node
-				&& (isGroupdavDirectory(gSelectedDir)
-						|| isCardDavDirectory(gSelectedDir)))
+		if (isCardDavDirectory(gSelectedDir))
 			node.setAttribute('disabled', 'true');
 		else
 			node.removeAttribute('disabled');
@@ -106,7 +105,7 @@ function CommandUpdate_AddressBookGroupdavOverlay(){
 		gSelectedDir = GetSelectedDirectory();
 		goUpdateCommand('cmd_synchGroupdav');
 		CommandUpdate_AddressBook();
-		disableNewList();
+ 		disableNewList();
 	}
 	catch (e) {
 		//		exceptionHandler(window,"Error",e);
@@ -118,7 +117,7 @@ function goUpdateSelectEditMenuItemsGroupdavOverlay(){
 		gSelectedDir = GetSelectedDirectory();
 		goUpdateCommand('cmd_synchGroupdav');
 		goUpdateSelectEditMenuItems();
-		disableNewList();
+ 		disableNewList();
 	}
 	catch (e) {
 		//		exceptionHandler(window,"Error",e);
@@ -332,49 +331,113 @@ function SCAbEditSelectedDirectory() {
 		this.SCAbEditSelectedDirectoryOriginal();
 }
 
-var deleteListener = {
+var cardDeleteListener = {
  onDAVQueryComplete: function(code, result, data) {
 		if (code > 199 && code < 400) {
 			var directory = SCGetDirectoryFromURI(data.dirURI);
 
 			var cards = Components.classes["@mozilla.org/supports-array;1"]
 			.createInstance(Components.interfaces.nsISupportsArray);
-			cards.AppendElement(data.card);
+			cards.AppendElement(data.component);
 			directory.deleteCards(cards);
 		}
 	}
 };
 
-function DeleteGroupDAVCards(directoryURI, cards, deleteLocally) {
-	var dirPrefID = GetDirectoryFromURI(directoryURI).dirPrefId;
-	for (var i = 0; i < cards.length; i++) {
-		var card = cards[i].QueryInterface(Components.interfaces.nsIAbMDBCard);
-		if (card) {
-			var key = card.getStringAttribute("groupDavKey");
-			if (key) {
-				var groupdavPrefService = new GroupdavPreferenceService(dirPrefID);
-				var url = groupdavPrefService.getURL();
-				var href =  url + key;
-				var deleteOp;
-				if (deleteLocally)
-					deleteOp = new sogoWebDAV(href, deleteListener,
-																		{ dirURI: gSelectedDir, card: card });
-				else
-					deleteOp = new sogoWebDAV(href);
-				deleteOp.delete();
-				logDebug("webdav_delete sent for vcard: " + href);
-			}
+var listDeleteListener = {
+ onDAVQueryComplete: function(code, result, data) {
+		if (code > 199 && code < 400) {
+			var directory = SCGetDirectoryFromURI(data.dirURI);
+			directory.deleteDirectory(data.component);
 		}
+	}
+};
+
+function DeleteGroupDAVList(prefService, parentDirURI, list) {
+	var attributes = new GroupDAVListAttributes(list);
+	_deleteGroupDAVComponentWithKey(prefService, parentDirURI,
+																	attributes.key, listDeleteListener, list);
+}
+
+function DeleteGroupDAVCard(prefService, parentDirURI, card) {
+	var mdbCard = card.QueryInterface(Components.interfaces.nsIAbMDBCard);
+	_deleteGroupDAVComponentWithKey(prefService,
+																	parentDirURI,
+																	mdbCard.getStringAttribute("groupDavKey"),
+																	cardDeleteListener, card);
+}
+
+function _deleteGroupDAVComponentWithKey(prefService, parentDirURI, key,
+																				 listener, component) {
+	dump("deleting key: " + key + "\n");
+	if (key && key.length) {
+		var href = prefService.getURL() + key;
+		var deleteOp;
+		if (listener)
+			deleteOp = new sogoWebDAV(href, listener,
+																{dirURI: parentDirURI,
+																 component: component});
+		else
+			deleteOp = new sogoWebDAV(href);
+		deleteOp.delete();
+		// 				dump("webdav_delete on '" + href + "'\n");
 	}
 }
 
-function SCAbDelete() {
-	var cards = GetSelectedAbCards();
-	if (cards) {
-		if (isGroupdavDirectory(gSelectedDir))
-			DeleteGroupDAVCards(gSelectedDir, cards, true);
-		this.SCAbDeleteOriginal();
+function DeleteGroupDAVCards(directoryURI, cards, deleteLocally) {
+	dump("deleting " + cards.length + "\n");
+	var dirPrefID = GetDirectoryFromURI(directoryURI).dirPrefId;
+	var prefService = new GroupdavPreferenceService(dirPrefID);
+	for (var i = 0; i < cards.length; i++) {
+		var card = cards[i].QueryInterface(Components.interfaces.nsIAbCard);
+		var key = "";
+		if (card.isMailList) {
+			var list = SCGetDirectoryFromURI(card.mailListURI);
+			DeleteGroupDAVList(prefService, directoryURI, list);
+		}
+		else
+			DeleteGroupDAVCard(prefService, directoryURI, card);
 	}
+	dump("done deleting\n");
+}
+
+function SCAbConfirmDelete(types) {
+	var confirm = false;
+
+	if (types != kNothingSelected) {
+		var promptService
+			= Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+			.getService(Components.interfaces.nsIPromptService);
+
+		confirm = true;
+		if (types != kCardsOnly) {
+			var confirmDeleteMessage;
+			if (types == kListsAndCards)
+				confirmDeleteMessage
+					= gAddressBookBundle.getString("confirmDeleteListsAndCards");
+			else if (types == kMultipleListsOnly)
+				confirmDeleteMessage
+					= gAddressBookBundle.getString("confirmDeleteMailingLists");
+			else
+				confirmDeleteMessage
+					= gAddressBookBundle.getString("confirmDeleteMailingList");
+			confirm = (promptService.confirm(window, null, confirmDeleteMessage));
+		}
+	}
+
+	return confirm;
+}
+
+function SCAbDelete() {
+	if (isGroupdavDirectory(gSelectedDir)) {
+		var types = GetSelectedCardTypes();
+		if (types != kNothingSelected && SCAbConfirmDelete(types)) {
+			var cards = GetSelectedAbCards();
+			DeleteGroupDAVCards(gSelectedDir, cards, true);
+		}
+	}
+	else
+		this.SCAbDeleteOriginal();
 }
 
 /* AbDeleteDirectory done cleanly... */
@@ -388,8 +451,25 @@ function SCAbDeleteDirectory() {
 				|| isCardDavDirectory(selectedDir))
 			result = (SCAbConfirmDeleteDirectory(selectedDir)
 								&& SCDeleteDAVDirectory(selectedDir));
-		else
-			this.SCAbDeleteDirectoryOriginal();
+		else {
+			var directory = SCGetDirectoryFromURI(selectedDir);
+			if (directory.isMailList) {
+				var uriParts = selectedDir.split("/");
+				var parentDirURI = uriParts[0] + "//" + uriParts[2];
+				if (isGroupdavDirectory(parentDirURI)) {
+					if (SCAbConfirmDelete(kSingleListOnly)) {
+						var parentDir = SCGetDirectoryFromURI(parentDirURI);
+						var prefService = new GroupdavPreferenceService(parentDir.dirPrefId);
+						DeleteGroupDAVList(prefService, parentDirURI,
+															 directory);
+					}
+				}
+				else
+					this.SCAbDeleteDirectoryOriginal();
+			}
+			else
+				this.SCAbDeleteDirectoryOriginal();
+		}
 	}
 
 	return result;
@@ -416,6 +496,10 @@ function SCAbConfirmDeleteDirectory(selectedDir) {
   return (promptService.confirm(window,
 																gAddressBookBundle.getString("confirmDeleteAddressbookTitle"),
 																confirmDeleteMessage));
+}
+
+function SCSynchronizeFromChildWindow(uri) {
+	this.setTimeout(SynchronizeGroupdavAddressbook, 100, uri, null);
 }
 
 function onLoadDAV() {

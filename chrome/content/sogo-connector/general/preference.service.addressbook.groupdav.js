@@ -164,14 +164,6 @@ GroupdavPreferenceService.prototype = {
 		this._setPref(prefName, strValue);
 	},
 
-	getReadOnly: function() {
-		return this._getBoolPref("readOnly");
-	},
-	setReadOnly: function(value) {
-// 		dump("value: " + value + "\n");
-		this._setBoolPref("readOnly", value);
-	},
-
 	getAutoDeleteFromServer: function() {
 		return this._getBoolPref("autoDeleteFromServer");
 	},
@@ -231,5 +223,63 @@ GroupdavPreferenceService.prototype = {
 	},
 	setMigrationDone: function(value) {
 		this._setBoolPref("migrationDone", value);
+	}
+};
+
+function GroupDAVListAttributes(list) {
+	var listRsrc = list.QueryInterface(Components.interfaces.nsIRDFResource);
+	var uri = listRsrc.Value;
+	var uriParts = uri.split("/");
+	var parentURI = uriParts[0] + "//" + uriParts[2];
+
+	var ab = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+		.getService(Components.interfaces.nsIRDFService)
+		.GetResource(parentURI)
+		.QueryInterface(Components.interfaces.nsIAbDirectory);
+	var prefPrefix = "ldap_2.servers.";
+	var uniqueID = (ab.directoryProperties.prefName.substr(prefPrefix.length)
+									.replace("_", "", "g")
+									+ "_" + uriParts[3].replace("_", "", "g"));
+	this.mPrefs = Components.classes["@mozilla.org/preferences-service;1"]
+		.getService(Components.interfaces.nsIPrefBranch);
+	this.prefPath = "extensions.ca.inverse.addressbook.groupdav." + uniqueID;
+	dump("list prefPath: " + this.prefPath + "\n");
+}
+
+GroupDAVListAttributes.prototype = {
+ _getCharPref: function(key) {
+		var value;
+		try {
+			value = this.mPrefs.getCharPref(this.prefPath + "." + key);
+		}
+		catch(e) {
+			value = null;
+		}
+
+		return value;
+	},
+ _setCharPref: function(key, value) {
+		this.mPrefs.setCharPref(this.prefPath + "." + key, value);
+	},
+
+	get key() {
+		return this._getCharPref("key");
+	},
+	set key(newKey) {
+		this._setCharPref("key", newKey);
+	},
+
+	get version() {
+		return this._getCharPref("version");
+	},
+	set version(newVersion) {
+		this._setCharPref("version", newVersion);
+	},
+
+ deleteRecord: function() {
+		try {
+			this.mPrefs.deleteBranch(this.prefPath);
+		}
+		catch(e) {};
 	}
 };

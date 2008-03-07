@@ -26,25 +26,47 @@ jsInclude(["chrome://sogo-connector/content/general/preference.service.addressbo
 function SCGetDirectoryFromURI(uri) {
 	var directory = null;
 
+// 	dump("getting dir: " + uri + "\n");
 	if (uri && uri.length > 0) {
+		var uriParts = uri.split("/");
 		var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
 			.getService(Components.interfaces.nsIRDFService);
 		var parentDir = rdf.GetResource("moz-abdirectory://")
 			.QueryInterface(Components.interfaces.nsIAbDirectory);
-		var nodes = parentDir.childNodes;
-		while (!directory && nodes.hasMoreElements()) {
-			var currentChild = nodes.getNext()
-				.QueryInterface(Components.interfaces.nsIRDFResource);
-			if (currentChild.Value == uri)
-				directory = currentChild.QueryInterface(Components.interfaces.nsIAbDirectory);
+		var currentURI = uriParts[0] + "/";
+		var currentDirectory = parentDir;
+		for (var i = 2; currentDirectory && i < uriParts.length; i++) {
+			currentURI += "/" + uriParts[i];
+// 			dump("currentURI:  " + currentURI + "\n");
+			currentDirectory = _SCGetChildDirectoryFromURI(currentDirectory,
+																										 currentURI);
 		}
+		directory = currentDirectory;
 	}
 	else {
 		dump("wrong uri: " + uri + "\n");
-		dump("possible ab is: " + uri.Value + "\n");
+		if (uri)
+			dump("possible ab is: " + uri.Value + "\n");
 		
-		dump("backtrace: " + backtrace () + "\n");
+		dump("backtrace: " + backtrace() + "\n");
 		directory = null;
+	}
+
+// 	if (directory)
+// 		dump("dir found!\n");
+
+	return directory;
+}
+
+function _SCGetChildDirectoryFromURI(parentDir, uri) {
+	var directory = null;
+
+	var nodes = parentDir.childNodes;
+	while (!directory && nodes.hasMoreElements()) {
+		var currentChild = nodes.getNext()
+			.QueryInterface(Components.interfaces.nsIRDFResource);
+		if (currentChild.Value == uri)
+			directory = currentChild.QueryInterface(Components.interfaces.nsIAbDirectory);
 	}
 
 	return directory;
@@ -83,7 +105,6 @@ function SCCreateGroupDAVDirectory(description, url) {
 	groupdavPrefService.setDirectoryName(description);
 	groupdavPrefService.setURL(url);
 	groupdavPrefService.setDisplayDialog(false);
-	groupdavPrefService.setReadOnly(false);
 
 	return SCGetDirectoryFromURI("moz-abmdbdirectory://" + properties.fileName);
 }
@@ -134,3 +155,24 @@ function SCDeleteDAVDirectory(uri) {
 
 	return result;
 }
+
+function SCGetChildCards(directory) {
+	var childCards = [];
+
+	var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+		.getService(Components.interfaces.nsIRDFService);
+	var ds = Components.classes["@mozilla.org/rdf/datasource;1?name=addressdirectory"]
+		.getService(Components.interfaces.nsIRDFDataSource);
+	var childSrc = rdf.GetResource("http://home.netscape.com/NC-rdf#CardChild");
+	var cards = ds.GetTargets(directory, childSrc, false);
+	while (cards.hasMoreElements()) {
+		var card = cards.getNext().QueryInterface(Components.interfaces.nsIAbCard);
+		if (!card.isMailList)
+			childCards.push(card);
+	}
+	 
+	dump("got " + childCards.length + " cards\n");
+
+	return childCards;
+}
+
