@@ -109,6 +109,69 @@ function SCCreateGroupDAVDirectory(description, url) {
 	return SCGetDirectoryFromURI("moz-abmdbdirectory://" + properties.fileName);
 }
 
+function SCDeleteDirectoryWithURI(uri) {
+	var directory = SCGetDirectoryFromURI(uri);
+	if (directory)
+		SCDeleteDirectory(directory);
+}
+
+function SCDeleteDirectory(directory) {
+	directory = directory.QueryInterface(Components.interfaces.nsIAbDirectory);
+	var prefBranch = directory.dirPrefId;
+
+	_SCDeleteAddressBook(directory);
+	var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+		.getService(Components.interfaces.nsIPrefBranch);
+	prefService.deleteBranch(prefBranch + ".position");
+
+	var rdfDirectory
+		= directory.QueryInterface(Components.interfaces.nsIRDFResource);
+	var clearPrefsRequired
+		= (prefService.getCharPref("mail.collect_addressbook") == rdfDirectory.Value
+			 && (prefService.getBoolPref("mail.collect_email_address_outgoing")
+					 || prefService.getBoolPref("mail.collect_email_address_incoming")
+					 || prefService.getBoolPref("mail.collect_email_address_newsgroup")));
+
+	if (clearPrefsRequired) {
+		prefService.setBoolPref("mail.collect_email_address_outgoing", false);
+		prefService.setBoolPref("mail.collect_email_address_incoming", false);
+		prefService.setBoolPref("mail.collect_email_address_newsgroup", false);
+		prefService.setCharPref("mail.collect_addressbook",
+														kPersonalAddressbookURI);
+	}
+}
+
+function _SCDeleteAddressBook(directory) {
+	var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+		.getService(Components.interfaces.nsIRDFService);
+	var parentDir = rdf.GetResource("moz-abdirectory://")
+		.QueryInterface(Components.interfaces.nsIAbDirectory);
+
+	dump("dir: " + directory + "\n");
+	parentDir.deleteDirectory(directory);
+// 	var ab = Components.classes["@mozilla.org/addressbook;1"]
+// 		.createInstance(Components.interfaces.nsIAddressBook);
+
+// 	var parentArray = Components.classes["@mozilla.org/supports-array;1"]
+// 		.createInstance(Components.interfaces.nsISupportsArray);
+// 	parentArray.AppendElement(parentDir);
+// 	var abArray = Components.classes["@mozilla.org/supports-array;1"]
+// 		.createInstance(Components.interfaces.nsISupportsArray);
+// 	parentArray.AppendElement(directory);
+
+// 	dump("deleteaddressbook...\n");
+// 	var ds = Components
+// 		.classes["@mozilla.org/rdf/datasource;1?name=addressdirectory"]
+// 		.getService(Components.interfaces.nsIRDFDataSource);
+// 	ab.deleteAddressBooks(ds, parentArray, abArray);
+// 	dump("delete done\n");
+}
+
+function SCDeleteDirectories(directories) {
+	for (var i = 0; i < directories.length; i++)
+		SCDeleteDirectory(directories[i]);
+}
+
 function SCDeleteDAVDirectory(uri) {
 	var result = false;
 
@@ -116,34 +179,14 @@ function SCDeleteDAVDirectory(uri) {
 		var directory = SCGetDirectoryFromURI(uri);
 		if (directory) {
 			try {
-				var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-					.getService(Components.interfaces.nsIRDFService);
-				var parentDir = rdf.GetResource("moz-abdirectory://")
-					.QueryInterface(Components.interfaces.nsIAbDirectory);
-				parentDir.deleteDirectory(directory);
-
+				SCDeleteDirectory(directory);
 				var prefBranch = directory.dirPrefId;
 				var prefService = Components.classes["@mozilla.org/preferences-service;1"]
 					.getService(Components.interfaces.nsIPrefBranch);
 				/* groupdav = moz-abmdbdirectory, carddav = moz-abdavdirectory */
-				if (uri.indexOf("moz-abmdbdirectory://") == 0) {
+				if (uri.indexOf("moz-abmdbdirectory://") == 0)
 					prefService.deleteBranch("extensions.ca.inverse.addressbook.groupdav."
 																	 + prefBranch);
-				}
-				prefService.deleteBranch(prefBranch + ".position");
-
-				var clearPrefsRequired
-					= (prefService.getCharPref("mail.collect_addressbook") == uri
-						 && (prefService.getBoolPref("mail.collect_email_address_outgoing")
-								 || prefService.getBoolPref("mail.collect_email_address_incoming")
-								 || prefService.getBoolPref("mail.collect_email_address_newsgroup")));
-
-				if (clearPrefsRequired) {
-					prefService.setBoolPref("mail.collect_email_address_outgoing", false);
-					prefService.setBoolPref("mail.collect_email_address_incoming", false);
-					prefService.setBoolPref("mail.collect_email_address_newsgroup", false);
-					prefService.setCharPref("mail.collect_addressbook", kPersonalAddressbookURI);
-				}
 
 				result = true;
 			}
@@ -170,9 +213,31 @@ function SCGetChildCards(directory) {
 		if (!card.isMailList)
 			childCards.push(card);
 	}
-	 
+
 	dump("got " + childCards.length + " cards\n");
 
 	return childCards;
 }
 
+function SCCopyAddressBook(sourceAB, destAB) {
+	destAB = destAB.QueryInterface(Components.interfaces.nsIAbDirectory);
+	var childCards = SCGetChildCards(sourceAB);
+	for (var i = 0; i < childCards.length; i++)
+		destAB.addCard(childCards[i]);
+
+	var nodes = sourceAB.childNodes;
+	while (nodes.hasMoreElements()) {
+		var currentList = nodes.getNext()
+			.QueryInterface(Components.interfaces.nsIAbDirectory);
+		var newList = Components.classes["@mozilla.org/addressbook/directoryproperty;1"]
+			.createInstance(Components.interfaces.nsIAbDirectory);
+		newList.dirName = currentList.dirName;
+		newList.listNickName = currentList.listNickName;
+		newList.description = currentList.description;
+
+		var childCards = SCGetChildCards(currentList);
+		for (var i = 0; i < childCards.length; i++)
+			newList.addressLists.AppendElement(childCards[i]);
+		destAB.addMailList(newList);
+	}
+}
