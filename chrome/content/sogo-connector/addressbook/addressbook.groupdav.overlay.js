@@ -233,8 +233,12 @@ abGroupDavDirTreeObserver.prototype = {
 				SynchronizeGroupdavAddressbookDrop(targetURI);
 			}
 
-			var sourceURI = GetSelectedDirectory();
-			if (isGroupdavDirectory(sourceURI)
+			var sourceDirectory = gAbView.directory;
+			var sourceURI = sourceDirectory
+				.QueryInterface(Components.interfaces.nsIRDFResource)
+				.Value;
+			if (targetURI.indexOf(sourceURI) != 0
+					&& isGroupdavDirectory(sourceURI)
 					&& dragSession.dragAction
 					== Components.interfaces.nsIDragService.DRAGDROP_ACTION_MOVE) {
 				for (var i = 0; i < dragSession.numDropItems; ++i) {
@@ -249,7 +253,7 @@ abGroupDavDirTreeObserver.prototype = {
 						var transData = dataObj.data.split("\n");
 						var rows = transData[0].split(",");
 						var cards = this._getDroppedCardsOriginalsWithRows(rows);
-						DeleteGroupDAVCards(sourceURI, cards, false);
+						DeleteGroupDAVCards(sourceDirectory, cards, false);
 					}
 					catch (ex) {}
 				}
@@ -334,12 +338,10 @@ function SCAbEditSelectedDirectory() {
 var cardDeleteListener = {
  onDAVQueryComplete: function(code, result, data) {
 		if (code > 199 && code < 400) {
-			var directory = SCGetDirectoryFromURI(data.dirURI);
-
 			var cards = Components.classes["@mozilla.org/supports-array;1"]
 			.createInstance(Components.interfaces.nsISupportsArray);
 			cards.AppendElement(data.component);
-			directory.deleteCards(cards);
+			data.directory.deleteCards(cards);
 		}
 	}
 };
@@ -347,58 +349,61 @@ var cardDeleteListener = {
 var listDeleteListener = {
  onDAVQueryComplete: function(code, result, data) {
 		if (code > 199 && code < 400) {
-			var directory = SCGetDirectoryFromURI(data.dirURI);
-			directory.deleteDirectory(data.component);
+			dump("directory: " + data.directory + "\n");
+			dump("component: " + data.component + "\n");
+			data.directory.deleteDirectory(data.component);
+			var attributes = new GroupDAVListAttributes(data.component);
+			attributes.deleteRecord();
 		}
 	}
 };
 
-function DeleteGroupDAVList(prefService, parentDirURI, list) {
-	var attributes = new GroupDAVListAttributes(list);
-	_deleteGroupDAVComponentWithKey(prefService, parentDirURI,
-																	attributes.key, listDeleteListener, list);
+function DeleteGroupDAVCards(directory, cards, deleteLocally) {
+	var rdfAB = directory.QueryInterface(Components.interfaces.nsIRDFResource);
+	var realABURI = rdfAB.Value.split("?")[0];
+
+	var origDirectory = SCGetDirectoryFromURI(realABURI);
+	var dirPrefID = origDirectory.dirPrefId;
+	var prefService = new GroupdavPreferenceService(dirPrefID);
+	for (var i = 0; i < cards.length; i++) {
+		var card = cards[i].QueryInterface(Components.interfaces.nsIAbCard);
+		var key;
+		var listener;
+		var component;
+		if (card.isMailList) {
+			var list = SCGetDirectoryFromURI(card.mailListURI);
+			var attributes = new GroupDAVListAttributes(list);
+			key = attributes.key;
+			listener = listDeleteListener;
+			component = list;
+		}
+		else {
+			var mdbCard = card.QueryInterface(Components.interfaces.nsIAbMDBCard);
+			key = mdbCard.getStringAttribute("groupDavKey");
+			listener = cardDeleteListener;
+			component = card;
+		}
+
+		_deleteGroupDAVComponentWithKey(prefService, key, listener, directory,
+																		component);
+	}
 }
 
-function DeleteGroupDAVCard(prefService, parentDirURI, card) {
-	var mdbCard = card.QueryInterface(Components.interfaces.nsIAbMDBCard);
-	_deleteGroupDAVComponentWithKey(prefService,
-																	parentDirURI,
-																	mdbCard.getStringAttribute("groupDavKey"),
-																	cardDeleteListener, card);
-}
-
-function _deleteGroupDAVComponentWithKey(prefService, parentDirURI, key,
-																				 listener, component) {
+function _deleteGroupDAVComponentWithKey(prefService, key, listener,
+																				 directory, component) {
 	dump("deleting key: " + key + "\n");
 	if (key && key.length) {
 		var href = prefService.getURL() + key;
 		var deleteOp;
 		if (listener)
 			deleteOp = new sogoWebDAV(href, listener,
-																{dirURI: parentDirURI,
+																{directory: directory,
 																 component: component});
 		else
 			deleteOp = new sogoWebDAV(href);
 		deleteOp.delete();
 		// 				dump("webdav_delete on '" + href + "'\n");
 	}
-}
-
-function DeleteGroupDAVCards(directoryURI, cards, deleteLocally) {
-	dump("deleting " + cards.length + "\n");
-	var dirPrefID = GetDirectoryFromURI(directoryURI).dirPrefId;
-	var prefService = new GroupdavPreferenceService(dirPrefID);
-	for (var i = 0; i < cards.length; i++) {
-		var card = cards[i].QueryInterface(Components.interfaces.nsIAbCard);
-		var key = "";
-		if (card.isMailList) {
-			var list = SCGetDirectoryFromURI(card.mailListURI);
-			DeleteGroupDAVList(prefService, directoryURI, list);
-		}
-		else
-			DeleteGroupDAVCard(prefService, directoryURI, card);
-	}
-	dump("done deleting\n");
 }
 
 function SCAbConfirmDelete(types) {
@@ -433,7 +438,7 @@ function SCAbDelete() {
 		var types = GetSelectedCardTypes();
 		if (types != kNothingSelected && SCAbConfirmDelete(types)) {
 			var cards = GetSelectedAbCards();
-			DeleteGroupDAVCards(gSelectedDir, cards, true);
+			DeleteGroupDAVCards(gAbView.directory, cards, true);
 		}
 	}
 	else
@@ -446,34 +451,43 @@ function SCAbDeleteDirectory() {
 
 	var selectedDir = GetSelectedDirectory();
 	if (selectedDir) {
-		var prefService;
 		if (isGroupdavDirectory(selectedDir)
 				|| isCardDavDirectory(selectedDir))
 			result = (SCAbConfirmDeleteDirectory(selectedDir)
 								&& SCDeleteDAVDirectory(selectedDir));
 		else {
 			var directory = SCGetDirectoryFromURI(selectedDir);
-			if (directory.isMailList) {
-				var uriParts = selectedDir.split("/");
-				var parentDirURI = uriParts[0] + "//" + uriParts[2];
-				if (isGroupdavDirectory(parentDirURI)) {
-					if (SCAbConfirmDelete(kSingleListOnly)) {
-						var parentDir = SCGetDirectoryFromURI(parentDirURI);
-						var prefService = new GroupdavPreferenceService(parentDir.dirPrefId);
-						DeleteGroupDAVList(prefService, parentDirURI,
-															 directory);
-					}
-				}
-				else
-					this.SCAbDeleteDirectoryOriginal();
-			}
-			else
+			if (!(directory.isMailList
+						&& _SCDeleteListAsDirectory(directory, selectedDir)))
 				this.SCAbDeleteDirectoryOriginal();
 		}
 	}
 
 	return result;
 }
+
+function _SCDeleteListAsDirectory(directory, selectedDir) {
+	var result = false;
+
+	var uriParts = selectedDir.split("/");
+	var parentDirURI = uriParts[0] + "//" + uriParts[2];
+	if (isGroupdavDirectory(parentDirURI)) {
+		var attributes = new GroupDAVListAttributes(directory);
+		if (attributes.key) {
+			result = true;
+			if (SCAbConfirmDelete(kSingleListOnly)) {
+				var parentDir = SCGetDirectoryFromURI(parentDirURI);
+				var prefService = new GroupdavPreferenceService(parentDir.dirPrefId);
+				_deleteGroupDAVComponentWithKey(prefService, attributes.key,
+																				listDeleteListener, parentDir,
+																				directory);
+			}
+		}
+	}
+
+	return result;
+}
+
 
 function SCAbConfirmDeleteDirectory(selectedDir) {
   var confirmDeleteMessage;

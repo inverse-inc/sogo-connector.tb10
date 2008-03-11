@@ -29,15 +29,6 @@
 
 <overlay id="ca.inverse.messenger.compose.carddav" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <window id="msgcomposeWindow">
-    <script type="application/x-javascript" src="chrome://sogo-connector/content/addressbook/messenger.compose.carddav.overlay.js"/>	
+    <script type="application/x-javascript" src="chrome://sogo-connector/content/addressbook/autocomplete-common.js"/>	
   </window>
 </overlay>
-
-
-
-
-
-
-
-
-

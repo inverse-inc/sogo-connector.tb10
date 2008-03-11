@@ -243,7 +243,7 @@ function GroupDAVListAttributes(list) {
 	this.mPrefs = Components.classes["@mozilla.org/preferences-service;1"]
 		.getService(Components.interfaces.nsIPrefBranch);
 	this.prefPath = "extensions.ca.inverse.addressbook.groupdav." + uniqueID;
-	dump("list prefPath: " + this.prefPath + "\n");
+	dump("*** list: " + this.prefPath + "\n");
 }
 
 GroupDAVListAttributes.prototype = {
@@ -256,9 +256,11 @@ GroupDAVListAttributes.prototype = {
 			value = null;
 		}
 
+		dump(key + ": " + value + "\n");
 		return value;
 	},
  _setCharPref: function(key, value) {
+		dump("new " + key + ": " + value + "\n");
 		this.mPrefs.setCharPref(this.prefPath + "." + key, value);
 	},
 

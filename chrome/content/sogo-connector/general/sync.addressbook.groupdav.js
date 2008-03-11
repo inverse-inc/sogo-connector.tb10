@@ -193,17 +193,21 @@ GroupDavSynchronizer.prototype = {
 			var mdbCard = card.QueryInterface(Components.interfaces.nsIAbMDBCard);
 			var key = mdbCard.getStringAttribute("groupDavKey");
 			if (key && key != "") {
+// 				dump("card '" + card.displayName + "' will be updated\n");
 				// Cards that exist locally and on the server
 				// Later, the function compareCardVersions() will use this information to determine 
 				// if the cards needs to be uploaded or if there is a conflict
 				this.localCardPointerHash[key] = card;
 				var version = mdbCard.getStringAttribute("groupDavVersion");
 				this.localCardVersionHash[key] = version;
-				if (version == "-1")
+				if (version == "-1") {
+					this.serverCardVersionHash[key] = version;
 					this.localCardUpdates.push(this.localCardPointerHash[key]);
+				}
 				// dump("xxxx localcard: " + key + "; version: " + version + "\n");
 			}
 			else {
+// 				dump("card '" + card.displayName + "' will be added\n");
 				//   				dump("xxxx local addition....\n");
 				this.localCardAdditions.push(card);
 			}
@@ -211,7 +215,7 @@ GroupDavSynchronizer.prototype = {
 		//	logDebug("=========End Local Cards List");
 	},
  fillLocalListHashes: function() {
- 		dump("fillLocalListHashes\n");
+//  		dump("fillLocalListHashes\n");
 		var lists = this.gAddressBook.childNodes;
 		var count = 0;
 		while (lists.hasMoreElements()) {
@@ -221,16 +225,19 @@ GroupDavSynchronizer.prototype = {
 				var attributes = new GroupDAVListAttributes(list);
 				var key = attributes.key;
 				if (key) {
+ 					dump("list '" + list.dirName + "' will be updated (" + key + ")\n");
 					this.localListPointerHash[key] = list;
 					this.localListVersionHash[key] = attributes.version;
-					dump("found old list: " + key
-							 + "; version: " + attributes.version
-							 + "\n");
-					if (attributes.version == "-1")
+// 					dump("found old list: " + key
+// 							 + "; version: " + attributes.version
+// 							 + "\n");
+					if (attributes.version == "-1") {
+						this.serverListVersionHash[key] = "-1";
 						this.localListUpdates.push(this.localListPointerHash[key]);
+					}
 				}
 				else {
-					dump("new list in additions\n");
+ 					dump("list '" + list.dirName + "' will be added\n");
 					this.localListAdditions.push(list);
 				}
 			}
@@ -678,15 +685,19 @@ GroupDavSynchronizer.prototype = {
 		this.callbackCode = status;
 		this.pendingOperations = 0;
 		// 		dump("pendingOperations: " + this.pendingOperations + "\n");
-		// 		dump("response: " + response + "\n");
+// 		dump("status: " + status + "\n");
+// 		dump("response: " + response + "\n");
+// 		dump("dump:" + dumpObject(response) + "\n");
 		if (status > 199 && status < 399) {
 			for (var href in response) {
 				var davObject = response[href];
+				if (href[href.length-1] != '/')
+					href += '/';
 				if (href == this.gURL) {
 					// 					dump("+++ href: " + href + "\n");
 					var rsrcType = "" + davObject["DAV: resourcetype"];
-					if (rsrcType.indexOf("vcard-collection") > 1
-							|| rsrcType.indexOf("addressbook") > 1) {
+					if (rsrcType.indexOf("vcard-collection") > 0
+							|| rsrcType.indexOf("addressbook") > 0) {
 						this.validCollection = true;
 						var data = {query: "server-propfind"};
 						var request = new sogoWebDAV(this.gURL, this, data);
@@ -694,6 +705,7 @@ GroupDavSynchronizer.prototype = {
 					}
 					else {
 						this.validCollection = false;
+						this.context.requests[this.gURL] = null;
 						this._checkCallback();
 						throw ("server '" + this.gURL + "' is not a valid groupdav collection");
 					}
@@ -722,7 +734,7 @@ GroupDavSynchronizer.prototype = {
 						var cNameArray = href.split("/");
 						var cName = cNameArray[cNameArray.length - 1];
 						this.serverCardVersionHash[cName] = version;
-						dump(cName + " is vcard\n");
+// 						dump(cName + " is vcard\n");
 						//  				logDebug("\tServer Card key = " + cName + "\tversion = " + version);
 					}
 					else if (contentType.indexOf("text/x-vlist") == 0) {
@@ -731,10 +743,10 @@ GroupDavSynchronizer.prototype = {
 						var cName = cNameArray[cNameArray.length - 1];
 						this.serverListVersionHash[cName] = version;
 						//  				logDebug("\tServer Card key = " + cName + "\tversion = " + version);
-						dump(cName + " is vlist\n");
+// 						dump(cName + " is vlist\n");
 					}
 					else {
-						dump("unknown content-type: " + contentType + "\n");
+						dump("unknown content-type: " + contentType + "(ignored)\n");
 					}
 				}
 			}
@@ -952,9 +964,9 @@ GroupDavSynchronizer.prototype = {
 		// 		var deleteListStringForTestPurposes = "";
 		//Filling the Server deleted cards Hash
 		for (var key in this.localCardPointerHash) {
-			if (key != "size" && this.serverCardVersionHash[key] == null) {
+			if (key != "size"
+					&& this.serverCardVersionHash[key] == null)
 				deletes.push(key);
-			}
 		}
 		//	if (groupdavPrefService.getAutoDeleteFromServer()){
 		this._deleteCards(deletes);
@@ -980,10 +992,14 @@ GroupDavSynchronizer.prototype = {
 		// 		var deleteListStringForTestPurposes = "";
 		//Filling the Server deleted cards Hash
 		for (var key in this.localListPointerHash) {
-			if (key != "size" && this.serverListVersionHash[key] == null) {
+			if (key != "size"
+					&& this.serverListVersionHash[key] == null) {
 				var list = this.localListPointerHash[key];
 				var attributes = new GroupDAVListAttributes(list);
 				attributes.deleteRecord();
+				dump("deleting list: " + key
+						 + "; " + this.serverListVersionHash[key]
+						 + "; " + this.localListVersionHash[key] + "\n");
 				this.gAddressBook.deleteDirectory(list);
 			}
 		}
@@ -1002,14 +1018,14 @@ GroupDavSynchronizer.prototype = {
 		}
 
 		if (this.pendingOperations == 0) {
-			dump("switching processMode!\n");
+// 			dump("switching processMode!\n");
 			if (this.processMode == 0) {
 				this.processMode = 1;
 				this.processLists();
 			}
 			else if (this.processMode == 1) {
 				if (this.callback) {
-					dump("this.callback: " + this.callback + "\n");
+// 					dump("this.callback: " + this.callback + "\n");
 					this.callback(this.callbackCode, this.callbackFailures,
 												this.callbackData);
 				}

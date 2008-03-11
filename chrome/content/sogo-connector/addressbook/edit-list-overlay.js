@@ -71,8 +71,4 @@ function SCEditListOKButton() {
 	return rc;
 }
 
-function listUploadComplete() {
-	setTimeout("window.close()", 100);
-}
-
 window.addEventListener("load", OnLoadEditListOverlay, false);

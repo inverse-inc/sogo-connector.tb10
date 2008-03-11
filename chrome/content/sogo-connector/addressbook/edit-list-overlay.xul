@@ -26,5 +26,7 @@
 <overlay id="ca.inverse.groupdav.pref-editdirectories.overlay"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/x-javascript"
-    src="chrome://sogo-connector/content/addressbook/edit-list-overlay.js"/>	
+    src="chrome://sogo-connector/content/addressbook/autocomplete-common.js"/>
+  <script type="application/x-javascript"
+    src="chrome://sogo-connector/content/addressbook/edit-list-overlay.js"/>
 </overlay>

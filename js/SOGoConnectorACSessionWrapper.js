@@ -39,7 +39,7 @@ WrapperListener.prototype = {
 
 //class constructor
 function SOGoConnectorACSessionWrapper() {
-// 	dump("SOGoConnectorACSessionWrapper constructor!\n");
+//  	dump("SOGoConnectorACSessionWrapper constructor!\n");
 	this.initSessions();
 };
 
@@ -79,6 +79,7 @@ SOGoConnectorACSessionWrapper.prototype = {
 		if (autocompleteLdap) {
 			var autocompleteDirectory = prefs.getCharPref("ldap_2.autoComplete.directoryServer");
 			if (isAutoCompleteDirectoryServerCardDAV()) {
+				dump("carddav\n");
 				serverURL = Components.classes["@mozilla.org/network/standard-url;1"]
 					.createInstance(Components.interfaces.nsIURI);
 				try {
@@ -94,6 +95,7 @@ SOGoConnectorACSessionWrapper.prototype = {
 				}
 			}
 			else {
+				dump("ldap\n");
 				serverURL = Components.classes["@mozilla.org/network/ldap-url;1"]
 					.createInstance(Components.interfaces.nsIURI);
 				try {
@@ -114,6 +116,7 @@ SOGoConnectorACSessionWrapper.prototype = {
 		var listeners = new Array();
 		for (var i = 0; i < names.length; i++) {
 			try {
+// 				dump("name: " + names[i] + "\n");
 				var session;
 				if (names[i] == "carddav") {
 					session = Components.classes["@mozilla.org/autocompleteSession;1?type=" + names[i]]
@@ -179,6 +182,7 @@ SOGoConnectorACSessionWrapper.prototype = {
 		this.results = null;
 		this.waiting = 0;
 		this.searchString = null;
+		this.listener = null;
 	},
 
  onAutoComplete: function(result, status, number) {
