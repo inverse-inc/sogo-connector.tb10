@@ -23,9 +23,9 @@
 <!ENTITY newGroupDavCmd.label                      	"Remote-Adressbuch">
 <!ENTITY newGroupDavCmd.accesskey                  	"R">
 
-<!ENTITY GroupDavSynch.label                      		"Synchronisieren">
-<!ENTITY GroupDavSynch.accesskey                  		"S">
-<!ENTITY GroupDavSynch.tooltip                      	"Karten mit dem Server synchronisieren">
+<!ENTITY GroupDavSync.label                      		"Synchronisieren">
+<!ENTITY GroupDavSync.accesskey                  		"S">
+<!ENTITY GroupDavSync.tooltip                      	"Karten mit dem Server synchronisieren">
 
 <!ENTITY GroupDavConf.label                      		"Konfigurieren">
 <!ENTITY GroupDavConf.accesskey                  		"K">

@@ -55,7 +55,7 @@ Modifications to original file pref-directory-add.xul by:
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA	
  ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY newDirectoryTitle.label          "Propriétés du serveur GroupDAV">
+<!ENTITY newDirectoryTitle.label          "Propriétés du carnet d'adresses distant">
 <!ENTITY groupdavName.label               "Nom: ">
 <!ENTITY groupdavName.accesskey           "n">
 <!ENTITY groupdavURL.label                "URL: ">

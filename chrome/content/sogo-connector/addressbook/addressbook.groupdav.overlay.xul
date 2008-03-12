@@ -25,7 +25,8 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA	
 -->
 
-<?xml-stylesheet href="chrome://messenger/skin/addressbook/addressbook.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/addressbook/addressbook.css"
+ type="text/css"?>
 
 <?xul-overlay href="chrome://communicator/content/contentAreaContextOverlay.xul"?>
 <!DOCTYPE overlay SYSTEM "chrome://sogo-connector/locale/addressbook/ca.inverse.abMainWindow.groupdav.dtd">
@@ -37,7 +38,8 @@
   <script type="application/x-javascript" src="chrome://sogo-connector/content/addressbook/sync.addressbook.groupdav.js"/>	
   <script type="application/x-javascript" src="chrome://sogo-connector/content/addressbook/vcards.utils.js"/> -->
   
-  <script type="application/x-javascript" src="chrome://sogo-connector/content/addressbook/addressbook.groupdav.overlay.js"/>
+  <script type="application/x-javascript"
+    src="chrome://sogo-connector/content/addressbook/addressbook.groupdav.overlay.js"/>
   <!--======================================================================================
   Override the window onunload event. 
   It is not possible to override onunload but onloadDAV() is called 
@@ -45,29 +47,23 @@
   ===========================================================================================-->
   <!--	<window  id="addressbookWindow" onunload="OnUnloadAddressBookOverlay()"/> -->
 
-  <!-- Add the GroupDAV Synchronize command and override the oncommandupdate to enable the command when GroupDAV-->
-  <commandset id="CommandUpdate_AddressBook" oncommandupdate="CommandUpdate_AddressBookGroupdavOverlay()"/>
-
-  <commandset id="selectEditMenuItems" oncommandupdate="goUpdateSelectEditMenuItemsGroupdavOverlay()"/>
-  
-  <commandset id="globalEditMenuItems" oncommandupdate="goUpdateGlobalEditMenuItemsOverlay()">
-    <command id="cmd_synchGroupdav" oncommand="SynchronizeGroupdavAddressbook(GetSelectedDirectory());"/>
+  <commandset id="addressBook">
+    <command id="cmd_syncGroupdav" oncommand="SynchronizeGroupdavAddressbook(GetSelectedDirectory());"/>
   </commandset>
 
   <!--Add the GroupDAV synchronize button to the toolbar -->
   <toolbarpalette id="AddressBookToolbarPalette">
-    <toolbarbutton id="button-groupdavSynch" label="&GroupDavSynch.label;" tooltiptext="&GroupDavSynch.tooltip;" class="" command="cmd_synchGroupdav"/>	  
+    <toolbarbutton id="button-groupdavSync" label="&GroupDavSync.label;" tooltiptext="&GroupDavSync.tooltip;" class="" command="cmd_syncGroupdav"/>	  
   </toolbarpalette>
-  <toolbar id="ab-bar" 
-    defaultset="button-newcard,button-newlist,separator,button-editcard,button-newmessage,separator,button-abdelete,separator,button-groupdavSynch,spring,throbber-box">
-  </toolbar>
-  <toolbar id="ab-bar2" 
-    defaultset="button-newcard,button-newlist,separator,button-editcard,button-newmessage,separator,button-abdelete,button-groupdavSynch,spring,search-container,separator">		 
+
+  <toolbar id="ab-bar2"
+    defaultset="button-newcard,button-newlist,separator,button-editcard,button-newmessage,separator,button-abdelete,button-groupdavSync,spring,search-container,separator">		 
+
   </toolbar>
   <!--Add the GroupDAV synchronize menu to the tree contextual menu -->
   <popup id="dirTreeContext">
     <menuseparator/>	
-    <menuitem id="dirTreeContext-synchGroupdav" label="&GroupDavSynch.label;" accesskey="&GroupDavSynch.accesskey;" command="cmd_synchGroupdav"/>
+    <menuitem id="dirTreeContext-syncGroupdav" label="&GroupDavSync.label;" accesskey="&GroupDavSync.accesskey;" command="cmd_syncGroupdav"/>
   </popup>
   
   <!-- Add the New GroupDAV addressbook menu to the File menu	 -->

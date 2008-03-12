@@ -18,7 +18,7 @@ jsInclude(["chrome://sogo-connector/content/addressbook/cardedit-overlay-common.
 function OnLoadHandler() {
 	this.OldNewCardOKButton = this.NewCardOKButton;
 	this.NewCardOKButton = this.SCNewCardOKButton;
-};
+}
 
 function SCNewCardOKButton() {
 	var result = this.OldNewCardOKButton();
