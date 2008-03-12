@@ -307,14 +307,15 @@ var deleteManager = {
 	},
  decrement: function(code) {
 		this.mCount--;
-		if (!(code > 199 && code < 400
+		if (!((code > 199 && code < 400)
+					|| code == 404
 					|| code > 599))
 			this.mErrors++;
-				
+
 		return (this.mCount == 0);
 	},
  finish: function() {
-		if (this.mErrors)
+		if (this.mErrors != 0)
 			SCOpenDeleteFailureDialog(this.mDirectory);
 		this.mDirectory = null;
 	}
@@ -330,7 +331,7 @@ var cardDeleteListener = {
 			cards.AppendElement(data.component);
 			data.directory.deleteCards(cards);
 		}
-		if (deleteManager.decrement())
+		if (deleteManager.decrement(code))
 			deleteManager.finish();
 	}
 };
@@ -344,7 +345,7 @@ var listDeleteListener = {
 			var attributes = new GroupDAVListAttributes(data.component);
 			attributes.deleteRecord();
 		}
-		if (deleteManager.decrement())
+		if (deleteManager.decrement(code))
 			deleteManager.finish();
 	}
 };
@@ -474,6 +475,7 @@ function _SCDeleteListAsDirectory(directory, selectedDir) {
 			if (SCAbConfirmDelete(kSingleListOnly)) {
 				var parentDir = SCGetDirectoryFromURI(parentDirURI);
 				var prefService = new GroupdavPreferenceService(parentDir.dirPrefId);
+				deleteManager.begin(parentDirURI, 1);
 				_deleteGroupDAVComponentWithKey(prefService, attributes.key,
 																				listDeleteListener, parentDir,
 																				directory);
