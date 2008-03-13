@@ -116,7 +116,7 @@ SOGoConnectorACSessionWrapper.prototype = {
 		var listeners = new Array();
 		for (var i = 0; i < names.length; i++) {
 			try {
-// 				dump("name: " + names[i] + "\n");
+ 				dump("session name: " + names[i] + "\n");
 				var session;
 				if (names[i] == "carddav") {
 					session = Components.classes["@mozilla.org/autocompleteSession;1?type=" + names[i]]
@@ -131,7 +131,7 @@ SOGoConnectorACSessionWrapper.prototype = {
 				else
 					session = Components.classes["@mozilla.org/autocompleteSession;1?type=" + names[i]]
 						.createInstance(Components.interfaces.nsIAutoCompleteSession);
-				sessions.push(session);
+				sessions.push(session.QueryInterface(Components.interfaces.nsIAutoCompleteSession));
 			}
 			catch(e) {
 				dump("cannot instantiate '" + names[i]
@@ -145,7 +145,7 @@ SOGoConnectorACSessionWrapper.prototype = {
 
  /* nsIAutoCompleteSession */
  onAutoComplete: function(searchString, previousSearchResult, listener) {
-// 		dump("SOGoConnectorACSessionWrapper.prototype.onAutoComplete\n");
+ 		dump("SOGoConnectorACSessionWrapper.prototype.onAutoComplete\n");
 
 		for (var i = 0; i < this.sessions.length; i++) {
 			var session = this.sessions[i];
@@ -154,7 +154,7 @@ SOGoConnectorACSessionWrapper.prototype = {
 		}
 	},
  onStartLookup: function (searchString, previousSearchResult, listener) {
-// 		dump("SOGoConnectorACSessionWrapper.prototype.onStartLookup\n");
+ 		dump("SOGoConnectorACSessionWrapper.prototype.onStartLookup\n");
 
 		this.waiting = this.sessions.length;
 		this.running = true;
@@ -168,7 +168,7 @@ SOGoConnectorACSessionWrapper.prototype = {
 		}
 	},
  onStopLookup: function() {
-// 		dump("SOGoConnectorACSessionWrapper.prototype.onStopLookup\n");
+ 		dump("SOGoConnectorACSessionWrapper.prototype.onStopLookup\n");
 
 		this._reset();
 		for (var i = 0; i < this.sessions.length; i++) {

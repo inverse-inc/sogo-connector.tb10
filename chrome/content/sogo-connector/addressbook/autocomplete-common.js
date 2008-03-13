@@ -91,10 +91,12 @@ function setupCardDavAutoCompleteSession() {
 				// succeeded; add the session for all recipients, and 
 				// remember that we've done so
 				for (var i = 1; i <= awGetMaxRecipients(); i++) {
-// 					dump("i: " + i + "\n");
-					var autoCompleteWidget = document.getElementById("addressCol1#" + i);
+ 					dump("i: " + i + "\n");
+					var autoCompleteWidget = document.getElementById("addressCol2#" + i);
+					if (!autoCompleteWidget)
+						autoCompleteWidget = document.getElementById("addressCol1#" + i);
 					if (autoCompleteWidget) {
-// 						dump("widget found\n");
+ 						dump("widget found\n");
 						autoCompleteWidget.addSession(cardDAVSession);
 
 						// ldap searches don't insert a default entry with the default domain appended to it
@@ -113,8 +115,12 @@ function setupCardDavAutoCompleteSession() {
 			gCurrentAutocompleteDirectory = null;
 		}
 		if (gLDAPSession && gSessionAdded) {
-			for (var i = 1; i <= awGetMaxRecipients(); i++)
-				document.getElementById("addressCol1#" + i).removeSession(gLDAPSession);
+			for (var i = 1; i <= awGetMaxRecipients(); i++) {
+				var autoCompleteWidget = document.getElementById("addressCol2#" + i);
+				if (!autoCompleteWidget)
+					autoCompleteWidget = document.getElementById("addressCol1#" + i);
+				autoCompleteWidget.removeSession(gLDAPSession);
+			}
 			gSessionAdded = false;
 		}
 	}
@@ -154,3 +160,5 @@ function SIOnAutoCompleteLoadListener() {
 }
 
 window.addEventListener("load", SIOnAutoCompleteLoadListener, false);
+
+dump("autc\n");
