@@ -303,12 +303,14 @@ GroupDavSynchronizer.prototype = {
 	},
  initProgressMeter: function() {
 		// 		dump("initProgressMeter\n");
-		//Initialize SyncProgressMeter (see addressbook.groupdav.overlay.js for definition)
-		this.messengerWindow.gGroupDAVProgressMeter.displayMsg = this.gDisplaySyncDialog;	
-		this.messengerWindow.gGroupDAVProgressMeter.abWindow2
-		= Components.classes["@mozilla.org/appshell/window-mediator;1"]
-		.getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("mail:addressbook");
-		
+		//Initialize SyncProgressMeter (see addressbook.groupdav.overlay.js for
+		//definition)
+		if (this.messengerWindow.gGroupDAVProgressMeter) {
+			this.messengerWindow.gGroupDAVProgressMeter.displayMsg = this.gDisplaySyncDialog;	
+			this.messengerWindow.gGroupDAVProgressMeter.abWindow2
+			= Components.classes["@mozilla.org/appshell/window-mediator;1"]
+			.getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("mail:addressbook");
+		}
 		if (this.serverCardDataHash.size
 				+ this.localCardUpdates.length
 				+ this.localCardAdditions.length == 0) {
