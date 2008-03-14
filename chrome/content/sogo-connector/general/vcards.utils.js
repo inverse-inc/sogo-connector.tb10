@@ -167,14 +167,18 @@ function versitParse(versitString) {
  *  
  **************************************************************************/ 
 function importFromVcard(vCardString, customFields) {
+	var card = null;
 	if (!vCardString || vCardString == "")
 		dump("'vCardString' is empty\n" + backtrace() + "\n");
-
-	var vcard = versitParse(vCardString);
+	else {
+		var vcard = versitParse(vCardString);
 	// 	var cardDump = dumpObject(vcard);
 	// 	logInfo("vcard dump:\n" + cardDump);
 
-	return CreateCardFromVCF(vcard, customFields);
+		card = CreateCardFromVCF(vcard, customFields);
+	}
+
+	return card;
 }
 
 // outParameters must be an array, to enable the fonction to pass back the value
