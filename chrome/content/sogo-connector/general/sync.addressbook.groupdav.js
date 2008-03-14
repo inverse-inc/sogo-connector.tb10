@@ -172,16 +172,18 @@ GroupDavSynchronizer.prototype = {
 
 		try {
 			//Initialization is completed
-			this.messengerWindow.gAbWinObserverService.notifyObservers(null,
-																																 SyncProgressMeter.INITIALIZATION_EVENT,
-																																 null);
+			if (this.messengerWindow.gAbWinObserverService)
+				this.messengerWindow.gAbWinObserverService.notifyObservers(null,
+																																	 SyncProgressMeter.INITIALIZATION_EVENT,
+																																	 null);
 		}
 		catch(e) {
 			dump("an exception occured: " + e + "\n");
 			this.context.apiDisabled = true;
-			this.messengerWindow.gAbWinObserverService.notifyObservers(null,
-																																 SyncProgressMeter.API_DISABLED_EVENT,
-																																 null);
+			if (this.messengerWindow.gAbWinObserverService)
+				this.messengerWindow.gAbWinObserverService.notifyObservers(null,
+																																	 SyncProgressMeter.API_DISABLED_EVENT,
+																																	 null);
 		}
 	},
  // Fill the Local Directory data structures for the syncronization
@@ -310,31 +312,35 @@ GroupDavSynchronizer.prototype = {
 		if (this.serverCardDataHash.size
 				+ this.localCardUpdates.length
 				+ this.localCardAdditions.length == 0) {
-			this.messengerWindow
-				.gAbWinObserverService.notifyObservers(null,
-																							 SyncProgressMeter.NOTHING_TO_DO,
-																							 null);	
+			if (this.messengerWindow.gAbWinObserverService)
+				this.messengerWindow
+					.gAbWinObserverService.notifyObservers(null,
+																								 SyncProgressMeter.NOTHING_TO_DO,
+																								 null);	
 		}
 		else {
-			this.messengerWindow.gGroupDAVProgressMeter.initDownload(this.serverCardDataHash.size);
-			this.messengerWindow.gGroupDAVProgressMeter.initUpload(this.localCardPointerHash,
-																														 this.gSelectedDirectoryURI,
-																														 this.localCardUpdates.length,
-																														 this.localCardAdditions.length);
-			this.messengerWindow.gGroupDAVProgressMeter.setVCardsUpDateSize(this.localCardUpdates.length);
-			this.messengerWindow.gGroupDAVProgressMeter.setVCardsAddSize(this.localCardAdditions.length);
-			this.messengerWindow.gGroupDAVProgressMeter.setVCardsUploadTotalSize(this.localCardUpdates.length
-																																					 +
-																																					 this.localCardAdditions.length);
+			if (this.messengerWindow.gGroupDAVProgressMeter) {
+				this.messengerWindow.gGroupDAVProgressMeter.initDownload(this.serverCardDataHash.size);
+				this.messengerWindow.gGroupDAVProgressMeter.initUpload(this.localCardPointerHash,
+																															 this.gSelectedDirectoryURI,
+																															 this.localCardUpdates.length,
+																															 this.localCardAdditions.length);
+				this.messengerWindow.gGroupDAVProgressMeter.setVCardsUpDateSize(this.localCardUpdates.length);
+				this.messengerWindow.gGroupDAVProgressMeter.setVCardsAddSize(this.localCardAdditions.length);
+				this.messengerWindow.gGroupDAVProgressMeter.setVCardsUploadTotalSize(this.localCardUpdates.length
+																																						 +
+																																						 this.localCardAdditions.length);
+			}
 		}
 	},
  downloadVcards: function() {
 		// 		dump("downloadVcards\n");
 		this.remainingDownloads = 0;
 		if (this.serverCardDataHash.size > 0) {
-			this.messengerWindow.gAbWinObserverService.notifyObservers(null,
-																																 SyncProgressMeter.SERVER_DOWNLOAD_BEGINS,
-																																 null);
+			if (this.messengerWindow.gAbWinObserverService)
+				this.messengerWindow.gAbWinObserverService.notifyObservers(null,
+																																	 SyncProgressMeter.SERVER_DOWNLOAD_BEGINS,
+																																	 null);
 			for (var key in this.serverCardDataHash)
 				if (key != "size")
 					this.downloadVcardAsync(key);
@@ -405,15 +411,17 @@ GroupDavSynchronizer.prototype = {
 			// 			logInfo("download data: " + data);
 			this.serverCardDataHash[key] = data;
 			this._importCard(key, data);
-			this.messengerWindow.gAbWinObserverService.notifyObservers(null,
-																																 SyncProgressMeter.CARD_DOWNLOADED,
-																																 key);
+			if (this.messengerWindow.gAbWinObserverService)
+				this.messengerWindow.gAbWinObserverService.notifyObservers(null,
+																																	 SyncProgressMeter.CARD_DOWNLOADED,
+																																	 key);
 		}
 		else {
 			this.callbackFailures.push(key);
-			this.messengerWindow.gAbWinObserverService.notifyObservers(null,
-																																 SyncProgressMeter.CARD_DOWNLOAD_FAILED,
-																																 key);
+			if (this.messengerWindow.gAbWinObserverService)
+				this.messengerWindow.gAbWinObserverService.notifyObservers(null,
+																																	 SyncProgressMeter.CARD_DOWNLOAD_FAILED,
+																																	 key);
 		}
 		if (this.remainingDownloads == 0) {
 			this._commitAddrDB();
@@ -454,9 +462,10 @@ GroupDavSynchronizer.prototype = {
 									 + "</status><url>" + this.gURL + "</url>"
 									 + "<key>" + key + "</key>"
 									 + "</state>");
-			this.messengerWindow.gAbWinObserverService.notifyObservers(null,
-																																 SyncProgressMeter.UPLOAD_ERROR_EVENT,
-																																 state);
+			if (this.messengerWindow.gAbWinObserverService)
+				this.messengerWindow.gAbWinObserverService.notifyObservers(null,
+																																	 SyncProgressMeter.UPLOAD_ERROR_EVENT,
+																																	 state);
 
 			// 			if (isNew) {	// for new cards check if we got a location header
 			// 				var location = httpChannel.getResponseHeader("location");
@@ -495,9 +504,10 @@ GroupDavSynchronizer.prototype = {
 			var state = ("<state><newCard>" + isNew + "</newCard>"
 									 + "<etag>" + etag + "</etag>"
 									 + "<key>" + key + "</key></state>");
-			this.messengerWindow.gAbWinObserverService.notifyObservers(null,
-																																 SyncProgressMeter.UPLOAD_STOP_REQUEST_EVENT,
-																																 state);
+			if (this.messengerWindow.gAbWinObserverService)
+				this.messengerWindow.gAbWinObserverService.notifyObservers(null,
+																																	 SyncProgressMeter.UPLOAD_STOP_REQUEST_EVENT,
+																																	 state);
 
 			// 		dump("key: " + key + "; status: " + status + "; data: " + data + "\n");
 		}
@@ -813,9 +823,10 @@ GroupDavSynchronizer.prototype = {
 		this.remainingUploads = 0;
 		if (this.localCardUpdates.length
 				+ this.localCardAdditions.length > 0) {
-			this.messengerWindow.gAbWinObserverService.notifyObservers(null,
-																																 SyncProgressMeter.SERVER_UPLOAD_BEGINS,
-																																 null);
+			if (this.messengerWindow.gAbWinObserverService)
+				this.messengerWindow.gAbWinObserverService.notifyObservers(null,
+																																	 SyncProgressMeter.SERVER_UPLOAD_BEGINS,
+																																	 null);
 			this.uploadLocalCardAdditions(); //asyncronuous
 			this.uploadLocalCardUpdates(); // asyncronuous
 		}
