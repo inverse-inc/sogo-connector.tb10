@@ -360,8 +360,7 @@ function DeleteGroupDAVCards(directory, cards, deleteLocally) {
 		}
 
 		if (key && key.length)
-			_deleteGroupDAVComponentWithKey(prefService, key, directory,
-																			component, deleteLocally);
+			_deleteGroupDAVComponentWithKey(prefService, key, directory, component, deleteLocally);
 	}
 }
 
@@ -459,7 +458,7 @@ function _SCDeleteListAsDirectory(directory, selectedDir) {
 				var prefService = new GroupdavPreferenceService(parentDir.dirPrefId);
 				deleteManager.begin(parentDirURI, 1);
 				_deleteGroupDAVComponentWithKey(prefService, attributes.key,
-																				parentDir, directory);
+																				parentDir, directory, true);
 			}
 		}
 	}
