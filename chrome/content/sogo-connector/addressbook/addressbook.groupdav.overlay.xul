@@ -25,27 +25,18 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA	
 -->
 
+<!DOCTYPE overlay
+  SYSTEM "chrome://sogo-connector/locale/addressbook/ca.inverse.abMainWindow.groupdav.dtd">
+
 <?xml-stylesheet href="chrome://messenger/skin/addressbook/addressbook.css"
  type="text/css"?>
 
 <?xul-overlay href="chrome://communicator/content/contentAreaContextOverlay.xul"?>
-<!DOCTYPE overlay SYSTEM "chrome://sogo-connector/locale/addressbook/ca.inverse.abMainWindow.groupdav.dtd">
 
-<overlay id="ca.inverse.addressbook.groupdav" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <!--The order of loading is important!-->
-  
-<!--  <script type="application/x-javascript" src="chrome://sogo-connector/content/addressbook/implementors.addressbook.groupdav.js"/>
-  <script type="application/x-javascript" src="chrome://sogo-connector/content/addressbook/sync.addressbook.groupdav.js"/>	
-  <script type="application/x-javascript" src="chrome://sogo-connector/content/addressbook/vcards.utils.js"/> -->
-  
+<overlay id="ca.inverse.addressbook.groupdav"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/x-javascript"
     src="chrome://sogo-connector/content/addressbook/addressbook.groupdav.overlay.js"/>
-  <!--======================================================================================
-  Override the window onunload event. 
-  It is not possible to override onunload but onloadDAV() is called 
-  at the beginning of addressbook.groupdav.overlay.js (see the comment before the call). 
-  ===========================================================================================-->
-  <!--	<window  id="addressbookWindow" onunload="OnUnloadAddressBookOverlay()"/> -->
 
   <commandset id="addressBook">
     <command id="cmd_syncGroupdav" oncommand="SynchronizeGroupdavAddressbook(GetSelectedDirectory());"/>

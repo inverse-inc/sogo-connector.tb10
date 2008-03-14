@@ -17,6 +17,8 @@ jsInclude(["chrome://sogo-connector/content/addressbook/folder-handling.js",
 					 "chrome://sogo-connector/content/general/sync.addressbook.groupdav.js",
 					 "chrome://sogo-connector/content/general/preference.service.addressbook.groupdav.js"]);
 
+var autocompleteWidgetPrefix = "addressCol1";
+
 function OnLoadEditListOverlay() {
 	this.SCOldMailListOKButton = this.MailListOKButton;
 	this.MailListOKButton = this.SCMailListOKButton;

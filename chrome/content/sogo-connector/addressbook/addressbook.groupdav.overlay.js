@@ -54,6 +54,8 @@ jsInclude(["chrome://inverse-library/content/sogoWebDAV.js",
 
 var gSynchIsRunning = false;
 var gSelectedDir = "";
+var gCurDirectory = null;
+var gLDAPPrefsService = null;
 
 /*****************************************************************************************
  *
@@ -134,8 +136,9 @@ dirPaneControllerOverlay.prototype = {
 			try {
 				switch (command) {
 				case "cmd_syncGroupdav":
-					result = (isGroupdavDirectory(gSelectedDir)
-										&& !gSynchIsRunning);
+					if (gSelectedDir)
+						result = (isGroupdavDirectory(gSelectedDir)
+											&& !gSynchIsRunning);
 					break;
 				case "cmd_newlist":
 				case "cmd_newcard":
@@ -153,7 +156,7 @@ dirPaneControllerOverlay.prototype = {
 	},
 
  doCommand: function(command){
-		dump("doCommand: " + command + "\n");
+// 		dump("doCommand: " + command + "\n");
 		switch (command){
 		case "cmd_syncGroupdav":
 		SynchronizeGroupdavAddressbook(null);
@@ -165,125 +168,112 @@ dirPaneControllerOverlay.prototype = {
  onEvent: function(event) {}
 };
 
-//Override of AbDelete in chrome://messenger/content/addressbook/abCommon.js
-// Addition to delete the card on the groupdav server 
-// Definitions are done in onloadDAV since on Windows it was loaded before the abCommon.js version
-// DirTreeObserver that synchronized with the GroupDAV server on card delete
-function abGroupDavDirTreeObserver() {
-}
+abDirTreeObserver.SCOnDrop = function(row, or) {
+	var dragSession = dragService.getCurrentSession();
+	if (dragSession) {
+		var abView = GetAbView();
+		var sourceDirectory = abView.directory;
+		var sourceURI = sourceDirectory
+			.QueryInterface(Components.interfaces.nsIRDFResource)
+			.Value;
 
-abGroupDavDirTreeObserver.prototype = { 
- canDrop: function(index, orientation) {
-		return abDirTreeObserver.canDrop(index, orientation);
-	},
+		var dirTree = document.getElementById("dirTree");
+		var targetResource = dirTree.builderView.getResourceAtIndex(row);
+		var targetURI = targetResource.Value;
 
- onDrop: function(row, orientation) {
-		var dragSession = dragService.getCurrentSession();
-		if (dragSession) {
-			var trans = Components.classes["@mozilla.org/widget/transferable;1"]
-				.createInstance(Components.interfaces.nsITransferable);
-			trans.addDataFlavor("moz/abcard");
-			var targetResource = dirTree.builderView.getResourceAtIndex(row);
-			var targetURI = targetResource.Value;
+		var cardKeys;
+		if (targetURI.indexOf(sourceURI) != 0
+				&& isGroupdavDirectory(sourceURI)
+				&& (dragSession.dragAction
+						== Components.interfaces.nsIDragService.DRAGDROP_ACTION_MOVE))
+			cardKeys = this._getDroppedCardsKeysFromSession(dragSession, abView);
+		else
+			cardKeys = null;
 
-			if (isGroupdavDirectory(targetURI)) {
-			//		var date = new Date();
-			//		var curDate = null;
-
-			//		do { curDate = new Date(); }while(curDate-date < 2000);
-				SynchronizeGroupdavAddressbookDrop(targetURI);
-			}
-
-			var sourceDirectory = gAbView.directory;
-			var sourceURI = sourceDirectory
-				.QueryInterface(Components.interfaces.nsIRDFResource)
-				.Value;
-			if (targetURI.indexOf(sourceURI) != 0
-					&& isGroupdavDirectory(sourceURI)
-					&& dragSession.dragAction
-					== Components.interfaces.nsIDragService.DRAGDROP_ACTION_MOVE) {
-				for (var i = 0; i < dragSession.numDropItems; ++i) {
-					dragSession.getData(trans, i);
-					var dataObj = new Object();
-					var bestFlavor = new Object();
-					var len = new Object();
-					try	{
-						trans.getAnyTransferData(bestFlavor, dataObj, len);
-						dataObj = dataObj.value
-							.QueryInterface(Components.interfaces.nsISupportsString);
-						var transData = dataObj.data.split("\n");
-						var rows = transData[0].split(",");
-						var cards = this._getDroppedCardsOriginalsWithRows(rows);
-						DeleteGroupDAVCards(sourceDirectory, cards, false);
-					}
-					catch (ex) {}
-				}
-			}
+		var proceed = true;
+		try {
+			this.SCOnDropOld(row, or);
 		}
-	},
-
- _getDroppedCardsOriginalsWithRows: function(rows) {
-    var abView = GetAbView();
-		var cards = [];
-		for (var j = 0; j < rows.length; j++) {
-			var card = abView.getCardFromRow(rows[j]); 
-			if (card)
-				cards.push(card);
+		catch(e) {
+			proceed = false;
+			dump("an exception occured: " + e + "\n");
 		}
 
-		return cards;
-	},
+		if (isGroupdavDirectory(targetURI))
+			SynchronizeGroupdavAddressbookDrop(targetURI);
 
- onToggleOpenState: function() {
-	},
-
- onCycleHeader: function(colID, elt) {
-	},
-
- onCycleCell: function(row, colID) {
-	},
-
- onSelectionChanged: function() {
-		dump("selection changed\n");
-	},
-
- onPerformAction: function(action) {
-	},
-
- onPerformActionOnRow: function(action, row) {
-	},
-
- onPerformActionOnCell: function(action, row, colID) {
+		dump("cardKeys: " + cardKeys.length + "  to delete\n");
+		if (proceed) {
+			var prefService = new GroupdavPreferenceService(sourceDirectory.dirPrefId);
+			for (var i = 0; i < cardKeys.length; i++) {
+				dump("deleting " + cardKeys[i] + "\n");
+				_deleteGroupDAVComponentWithKey(prefService, cardKeys[i]);
+			}
+		}
+		dump("done drop delete\n");
 	}
 };
 
-//Override of OnLoadDirTree in chrome://messenger/content/addressbook/addresbook..js
-// Addition to upload the card on the groupdav server
-//
-// Based on the code in nsXULTreeBuilder.cpp:  Observers will be called in the order that they were added,
-// which makes it posssible to call synchronize after abDirTreeObserver.onDrop is called
-var SCTreeObserver = new abGroupDavDirTreeObserver();
+abDirTreeObserver._getDroppedCardsKeysFromSession = function(dragSession, abView) {
+	var cards = [];
 
-function SCOnLoadDirTree() {
-	var treeBuilder = dirTree.builder
-	.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
-	treeBuilder.addObserver(SCTreeObserver);
-	this.SCOnLoadDirTreeOriginal();
-}
+	var trans = Components.classes["@mozilla.org/widget/transferable;1"]
+	.createInstance(Components.interfaces.nsITransferable);
+	trans.addDataFlavor("moz/abcard");
 
-function abGroupdavUnload() {
-	var treeBuilder = dirTree.builder
-		.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
-	treeBuilder.removeObserver(SCTreeObserver);
-}
+	for (var i = 0; i < dragSession.numDropItems; i++) {
+		dragSession.getData(trans, i);
+		var dataObj = new Object();
+		var bestFlavor = new Object();
+		var len = new Object();
+		try	{
+			trans.getAnyTransferData(bestFlavor, dataObj, len);
+			dataObj = dataObj.value
+				.QueryInterface(Components.interfaces.nsISupportsString);
+// 			dump("drop data = /" + dataObj.data + "/\n");
+			var transData = dataObj.data.split("\n");
+			var rows = transData[0].split(",");
+
+			for (var j = 0; j < rows.length; j++) {
+				var card = abView.getCardFromRow(rows[j]);
+				if (card)
+					this._pushCardKey(card, cards);
+			}
+
+// 			dump("cards: " + cards.length + "\n");
+		}
+		catch (ex) {
+			dump("ex: " + ex + "\n");
+		}
+	}
+
+	return cards;
+};
+
+abDirTreeObserver._pushCardKey = function(card, cards) {
+	var key = null;
+
+	if (card.isMailList) {
+		var list = SCGetDirectoryFromURI(card.mailListURI);
+		var attributes = new GroupDAVListAttributes(list);
+		key = attributes.key;
+	}
+	else {
+		var mdbCard = card.QueryInterface(Components.interfaces.nsIAbMDBCard);
+		key = mdbCard.getStringAttribute("groupDavKey");
+	}
+
+	if (key && key.length)
+		cards.push(key);
+};
 
 // Override AbDeleteDirectory() to delete DAV preferences
 //Overidde AbEditSelectedDirectory function in chrome://messenger/content/addressbook/abCommon.js
 function SCAbEditSelectedDirectory() {
 	var abUri = GetSelectedDirectory();
-	dump("editselected\n");
-	dump("abUri: " + abUri + "\n");
-	dump("gSelectedDir: " + gSelectedDir + "\n");
+// 	dump("editselected\n");
+// 	dump("abUri: " + abUri + "\n");
+// 	dump("gSelectedDir: " + gSelectedDir + "\n");
 
 	var resource = Components.classes["@mozilla.org/rdf/rdf-service;1"]
 	.getService(Components.interfaces.nsIRDFService).GetResource(abUri)
@@ -318,89 +308,80 @@ var deleteManager = {
 		if (this.mErrors != 0)
 			SCOpenDeleteFailureDialog(this.mDirectory);
 		this.mDirectory = null;
-	}
-}
-
-var cardDeleteListener = {
+	},
  onDAVQueryComplete: function(code, result, data) {
-		if ((code > 199 && code < 400)
-				|| code == 404
-				|| code == 604) {
-			var cards = Components.classes["@mozilla.org/supports-array;1"]
-			.createInstance(Components.interfaces.nsISupportsArray);
-			cards.AppendElement(data.component);
-			data.directory.deleteCards(cards);
+		if (data.deleteLocally
+				&& ((code > 199 && code < 400)
+						|| code == 404
+						|| code == 604)) {
+			if (data.component instanceof Components.interfaces.nsIAbCard) {
+				var cards = Components.classes["@mozilla.org/supports-array;1"]
+				.createInstance(Components.interfaces.nsISupportsArray);
+				cards.AppendElement(data.component);
+				data.directory.deleteCards(cards);
+			}
+			else if (data.component instanceof Components.interfaces.nsIAbDirectory) {
+				data.directory.deleteDirectory(data.component);
+				var attributes = new GroupDAVListAttributes(data.component);
+				attributes.deleteRecord();
+			}
+			else
+				dump("component is of unknown type: " + data.component + "\n");
 		}
-		if (deleteManager.decrement(code))
-			deleteManager.finish();
-	}
-};
-
-var listDeleteListener = {
- onDAVQueryComplete: function(code, result, data) {
-		if ((code > 199 && code < 400)
-				|| code == 404
-				|| code == 604) {
-			data.directory.deleteDirectory(data.component);
-			var attributes = new GroupDAVListAttributes(data.component);
-			attributes.deleteRecord();
-		}
-		if (deleteManager.decrement(code))
-			deleteManager.finish();
+		if (this.decrement(code))
+			this.finish();
 	}
 };
 
 function DeleteGroupDAVCards(directory, cards, deleteLocally) {
 	var rdfAB = directory.QueryInterface(Components.interfaces.nsIRDFResource);
 	var realABURI = rdfAB.Value.split("?")[0];
-
+// 	dump("delete: " + cards.length + " cards\n");
 	var origDirectory = SCGetDirectoryFromURI(realABURI);
-	var dirPrefID = origDirectory.dirPrefId;
-	var prefService = new GroupdavPreferenceService(dirPrefID);
+	var prefService = new GroupdavPreferenceService(origDirectory.dirPrefId);
 
 	deleteManager.begin(directory, cards.length);
 	for (var i = 0; i < cards.length; i++) {
 		var card = cards[i].QueryInterface(Components.interfaces.nsIAbCard);
 		var key;
-		var listener;
 		var component;
 		if (card.isMailList) {
 			var list = SCGetDirectoryFromURI(card.mailListURI);
 			var attributes = new GroupDAVListAttributes(list);
 			key = attributes.key;
-			listener = listDeleteListener;
 			component = list;
 		}
 		else {
+// 			dump("card: " + card.displayName + "\n");
 			var mdbCard = card.QueryInterface(Components.interfaces.nsIAbMDBCard);
 			key = mdbCard.getStringAttribute("groupDavKey");
-			listener = cardDeleteListener;
+// 			dump("key: " + key + "\n");
 			component = card;
 		}
 
-		_deleteGroupDAVComponentWithKey(prefService, key, listener, directory,
-																		component);
+		if (key && key.length)
+			_deleteGroupDAVComponentWithKey(prefService, key, directory,
+																			component, deleteLocally);
 	}
 }
 
-function _deleteGroupDAVComponentWithKey(prefService, key, listener,
-																				 directory, component) {
+function _deleteGroupDAVComponentWithKey(prefService, key,
+																				 directory, component,
+																				 deleteLocally) {
+// 	dump("\n\nwe delete: " + key + "\n\n\n");
 	if (key && key.length) {
 		var href = prefService.getURL() + key;
-		var deleteOp;
-		if (listener)
-			deleteOp = new sogoWebDAV(href, listener,
-																{directory: directory,
-																 component: component});
-		else
-			deleteOp = new sogoWebDAV(href);
+		var deleteOp = new sogoWebDAV(href, deleteManager,
+																	{directory: directory,
+																	 component: component,
+																	 deleteLocally: deleteLocally});
 		deleteOp.delete();
 		// 				dump("webdav_delete on '" + href + "'\n");
 	}
 	else /* 604 = "not found locally" */
-		listener.onDAVQueryComplete(604, null,
-																{directory: directory,
-																		component: component});
+		deleteManager.onDAVQueryComplete(604, null,
+																		 {directory: directory,
+																				 component: component});
 }
 
 function SCAbConfirmDelete(types) {
@@ -435,7 +416,8 @@ function SCAbDelete() {
 		var types = GetSelectedCardTypes();
 		if (types != kNothingSelected && SCAbConfirmDelete(types)) {
 			var cards = GetSelectedAbCards();
-			DeleteGroupDAVCards(gAbView.directory, cards, true);
+			var abView = GetAbView();
+			DeleteGroupDAVCards(abView.directory, cards, true);
 		}
 	}
 	else
@@ -477,8 +459,7 @@ function _SCDeleteListAsDirectory(directory, selectedDir) {
 				var prefService = new GroupdavPreferenceService(parentDir.dirPrefId);
 				deleteManager.begin(parentDirURI, 1);
 				_deleteGroupDAVComponentWithKey(prefService, attributes.key,
-																				listDeleteListener, parentDir,
-																				directory);
+																				parentDir, directory);
 			}
 		}
 	}
@@ -515,8 +496,6 @@ function SCSynchronizeFromChildWindow(uri) {
 }
 
 function onLoadDAV() {
-	this.addEventListener("unload", abGroupdavUnload, true);
-
 	this.SCAbEditSelectedDirectoryOriginal = this.AbEditSelectedDirectory;
 	this.AbEditSelectedDirectory = this.SCAbEditSelectedDirectory;
 	this.SCAbDeleteOriginal = this.AbDelete;
@@ -524,8 +503,9 @@ function onLoadDAV() {
 	this.SCAbDeleteDirectoryOriginal = this.AbDeleteDirectory;
 	this.AbDeleteDirectory = this.SCAbDeleteDirectory;
 
-	this.SCOnLoadDirTreeOriginal = this.OnLoadDirTree;
-	this.OnLoadDirTree = this.SCOnLoadDirTree;
+	/* drag and drop */
+	abDirTreeObserver.SCOnDropOld = abDirTreeObserver.onDrop;
+	abDirTreeObserver.onDrop = abDirTreeObserver.SCOnDrop;
 
 	/* command updaters */
 	this.SCCommandUpdate_AddressBookOld = this.CommandUpdate_AddressBook;

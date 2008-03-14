@@ -60,10 +60,12 @@ var documentDirty = false;
 // This is necessary to allow the listener of webdavPutString  and the upload Observer to remain in scope
 // since the dialog is closed before the listener can do its job.
 var messengerWindow = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-		.getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("mail:3pane");
+	.getService(Components.interfaces.nsIWindowMediator)
+	.getMostRecentWindow("mail:3pane");
 
 var abWindow = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-		.getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("mail:addressbook");
+	.getService(Components.interfaces.nsIWindowMediator)
+	.getMostRecentWindow("mail:addressbook");
 
 function getUri() {
 	var uri;

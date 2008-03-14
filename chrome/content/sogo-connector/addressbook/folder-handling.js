@@ -136,8 +136,7 @@ function SCDeleteDirectory(directory) {
 		prefService.setBoolPref("mail.collect_email_address_outgoing", false);
 		prefService.setBoolPref("mail.collect_email_address_incoming", false);
 		prefService.setBoolPref("mail.collect_email_address_newsgroup", false);
-		prefService.setCharPref("mail.collect_addressbook",
-														kPersonalAddressbookURI);
+		prefService.setCharPref("mail.collect_addressbook",	"moz-abmdbdirectory://abook.mab");
 	}
 }
 

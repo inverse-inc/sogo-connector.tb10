@@ -56,15 +56,21 @@ CardDavAutoCompleteSession.prototype = {
  onStartLookup: function (searchString, previousSearchResult, listener) {
 	 dump("CardDavAutoCompleteSession.onStartLookup\n");
 	 if (listener) {
-		 var url = this.mUrl.spec;
-		 if (url) {
-			 this.active = true;
-			 this.listener = listener;
-			 this.searchString = searchString;
-			 AsyncCardDavReport(url, searchString, this);
+		 if (this.mUrl) {
+			 var url = this.mUrl.spec;
+			 if (url) {
+				 this.active = true;
+				 this.listener = listener;
+				 this.searchString = searchString;
+				 AsyncCardDavReport(url, searchString, this);
+			 }
+			 else {
+				 dump("no url in CardDavAutoCompleteSession.prototype.onStartLookup\n");
+				 listener.onAutoComplete(null, -1);//nsIAutoCompleteStatus::failed
+			 }
 		 }
 		 else {
-			 dump("no url in CardDavAutoCompleteSession.prototype.onStartLookup\n");
+			 dump("no mUrl in CardDavAutoCompleteSession.prototype.onStartLookup\n");
 			 listener.onAutoComplete(null, -1);//nsIAutoCompleteStatus::failed
 		 }
 	 }

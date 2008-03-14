@@ -57,7 +57,7 @@ function OnLoadMessengerOverlay() {
 	window.gAbWinObserverService = Components.classes["@mozilla.org/observer-service;1"]
 		.getService(Components.interfaces.nsIObserverService);
 	gGroupDAVProgressMeter = new SyncProgressMeter();
-	addObservers();
+// 	addObservers();
 
 	/* if SOGo Integrator is present, we let it take the startup procedures */
 	if (!this.sogoIntegratorStartupOverlayOnLoad) {
@@ -221,7 +221,7 @@ function startFolderSync() {
 
 function OnUnloadMessengerOverlay() {
 	try {
-		removeObservers();
+// 		removeObservers();
 		OnUnloadMessenger();
 	}
 	catch(e) {
@@ -230,24 +230,27 @@ function OnUnloadMessengerOverlay() {
 }
 
 function addObservers() {
-	var events = [SyncProgressMeter.API_DISABLED_EVENT,
-								SyncProgressMeter.INITIALIZATION_EVENT,
-								SyncProgressMeter.NOTHING_TO_DO,
-								SyncProgressMeter.SERVER_DOWNLOAD_BEGINS,
-								SyncProgressMeter.CARD_DOWNLOADED,
-								SyncProgressMeter.CARD_DOWNLOAD_FAILED,
-								SyncProgressMeter.SERVER_DOWNLOAD_COMPLETED,
-								SyncProgressMeter.SERVER_DOWNLOAD_FAILURE,
-								SyncProgressMeter.SERVER_UPLOAD_BEGINS,
-								SyncProgressMeter.UPLOAD_STOP_REQUEST_EVENT,
-								SyncProgressMeter.CARD_UPLOADED,
-								SyncProgressMeter.UPLOAD_ERROR_EVENT,
-								SyncProgressMeter.UPLOAD_COMPLETED,
-								SyncProgressMeter.SERVER_SYNC_COMPLETED,
-								SyncProgressMeter.SERVER_SYNC_ERROR];
+	if (window.gAbWinObserverService) {
+		var events = [SyncProgressMeter.API_DISABLED_EVENT,
+									SyncProgressMeter.INITIALIZATION_EVENT,
+									SyncProgressMeter.NOTHING_TO_DO,
+									SyncProgressMeter.SERVER_DOWNLOAD_BEGINS,
+									SyncProgressMeter.CARD_DOWNLOADED,
+									SyncProgressMeter.CARD_DOWNLOAD_FAILED,
+									SyncProgressMeter.SERVER_DOWNLOAD_COMPLETED,
+									SyncProgressMeter.SERVER_DOWNLOAD_FAILURE,
+									SyncProgressMeter.SERVER_UPLOAD_BEGINS,
+									SyncProgressMeter.UPLOAD_STOP_REQUEST_EVENT,
+									SyncProgressMeter.CARD_UPLOADED,
+									SyncProgressMeter.UPLOAD_ERROR_EVENT,
+									SyncProgressMeter.UPLOAD_COMPLETED,
+									SyncProgressMeter.SERVER_SYNC_COMPLETED,
+									SyncProgressMeter.SERVER_SYNC_ERROR];
 
-	for (var i = 0; i < events.length; i++)
-		gAbWinObserverService.addObserver(gGroupDAVProgressMeter, events[i], true);
+		for (var i = 0; i < events.length; i++)
+			gAbWinObserverService.addObserver(gGroupDAVProgressMeter, events[i],
+																				true);
+	}
 }
 
 function removeObservers() {

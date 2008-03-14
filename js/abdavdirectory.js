@@ -347,7 +347,7 @@ return false },
 
  get listNickName() {
 // 	 dump("abdavdirectory.js: listNickName\n");
-	 return null; /*this.parentDirectory.listNickName*/; },
+	 return null; /*this.parentDirectory.listNickName*/ },
  set listNickName(val) { this.parentDirectory.listNickName = val; },
 
  get description() { 

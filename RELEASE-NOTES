@@ -10,6 +10,7 @@ Working on
 	deleting cards in GroupDAV directories would delete them on the server before the confirmation window was answered
 	the creation window for remote DAV addressbooks would no longer be accepted
 	added handling of personal mailing lists, using a versit-style format named "VLIST"
+	drag and dropping contacts from one groupdav directory to another, and back, would generate an exception and drop the card
 
 0.66
 	rewrite of the CardDAV addressbook implementation

@@ -32,10 +32,11 @@ var inverseEventDialog = {
 			var currentIdentity
 				= manager.allIdentities.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgIdentity);
 			var server = manager
-				.GetServersForIdentity(currentIdentity).GetElementAt(0)
+				.GetServersForIdentity(currentIdentity)
+				.GetElementAt(0)
 				.QueryInterface(Components.interfaces.nsIMsgIncomingServer);
 			var currentOrganizer;
-			if (server.realUsername.indexOf("@") > -1)
+			if (server.realUsername && server.realUsername.indexOf("@") > -1)
 				currentOrganizer
 					= { "name": currentIdentity.fullName,
 							"email": server.realUsername };

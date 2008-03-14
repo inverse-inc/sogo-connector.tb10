@@ -52,18 +52,24 @@ function autoCompleteDirectoryIsCardDav() {
 		}
 	}
 
+	dump("uri: " + uri + "\n");
+
 	return (uri && uri.indexOf("carddav://") == 0);
 }
 
 function setupCardDavAutoCompleteSession() {
-	var autocompleteDirectory = null;
+	var autocompleteDirectory;
 // 	var prevAutocompleteDirectory = gCurrentAutocompleteDirectory;
 
 	var prefService = Components.classes["@mozilla.org/preferences-service;1"]
 		.getService(Components.interfaces.nsIPrefBranch);
 	var autocompleteLdap = prefService.getBoolPref("ldap_2.autoComplete.useDirectory");
-	if (autocompleteLdap)
-		autocompleteDirectory = prefService.getCharPref("ldap_2.autoComplete.directoryServer");
+	if (autocompleteLdap) {
+		autocompleteDirectory
+			= prefService.getCharPref("ldap_2.autoComplete.directoryServer");
+	}
+	else
+		autocompleteDirectory = null;
 
 // 	if (gCurrentIdentity.overrideGlobalPref)
 // 		autocompleteDirectory = gCurrentIdentity.directoryServer;
@@ -78,9 +84,12 @@ function setupCardDavAutoCompleteSession() {
 		cardDAVSession = gLDAPSession;
 	else
 		cardDAVSession = Components
-			.classes["@mozilla.org/autocompleteSession;1?type=sogo-connector"]
+			.classes["@mozilla.org/autocompleteSession;1?type=carddav"]
 			.createInstance(Components.interfaces.nsIAutoCompleteSession);
 
+	if (!autocompleteWidgetPrefix)
+		throw("no autocomplete widget prefix defined");
+					
 	if (autocompleteDirectory && !gIsOffline) {
 		gCurrentAutocompleteDirectory = autocompleteDirectory;
 
@@ -91,12 +100,10 @@ function setupCardDavAutoCompleteSession() {
 				// succeeded; add the session for all recipients, and 
 				// remember that we've done so
 				for (var i = 1; i <= awGetMaxRecipients(); i++) {
- 					dump("i: " + i + "\n");
-					var autoCompleteWidget = document.getElementById("addressCol2#" + i);
-					if (!autoCompleteWidget)
-						autoCompleteWidget = document.getElementById("addressCol1#" + i);
+//  					dump("i: " + i + "\n");
+					var autoCompleteWidget = document.getElementById(autocompleteWidgetPrefix + "#" + i);
 					if (autoCompleteWidget) {
- 						dump("widget found\n");
+//  						dump("widget found\n");
 						autoCompleteWidget.addSession(cardDAVSession);
 
 						// ldap searches don't insert a default entry with the default domain appended to it
@@ -116,31 +123,30 @@ function setupCardDavAutoCompleteSession() {
 		}
 		if (gLDAPSession && gSessionAdded) {
 			for (var i = 1; i <= awGetMaxRecipients(); i++) {
-				var autoCompleteWidget = document.getElementById("addressCol2#" + i);
-				if (!autoCompleteWidget)
-					autoCompleteWidget = document.getElementById("addressCol1#" + i);
+				var autoCompleteWidget
+					= document.getElementById(autocompleteWidgetPrefix + "#" + i);
 				autoCompleteWidget.removeSession(gLDAPSession);
 			}
 			gSessionAdded = false;
 		}
 	}
 
-// 	if (autocompleteDirectory) {
-// 		var serverURL = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIURL);
-// 		try {
-// // 			dump("******** autocompleteDirectory: " + autocompleteDirectory + "\n");
-// // 			dump(gPrefs.getCharPref(autocompleteDirectory +".uri"));
-// // 			dump("\n");
-// 			var prefix = "carddav://";
-// 			var uri = "" + gPrefs.getCharPref(autocompleteDirectory +".uri");
-// 			serverURL.spec = uri.substring(prefix.length);
-// // 			dump("serverURL.spec: " + serverURL.spec +"\n");
-// 		}
-// 		catch (ex) {
-// 			dump("autocomplete-common.js: " + ex + "\n");
-// 		}
-// 		cardDAVSession.serverURL = serverURL;
-// 	}
+	if (autocompleteDirectory) {
+// 			dump("******** autocompleteDirectory: " + autocompleteDirectory + "\n");
+// 			dump(gPrefs.getCharPref(autocompleteDirectory +".uri"));
+// 			dump("\n");
+		var prefix = "carddav://";
+		var uri = "" + gPrefs.getCharPref(autocompleteDirectory +".uri");
+		var serverURL = Components.classes["@mozilla.org/network/standard-url;1"]
+			.createInstance(Components.interfaces.nsIURL);
+		serverURL.spec = uri.substring(prefix.length);
+// 		dump("uri: " + uri + "\n");
+// 			dump("serverURL.spec: " + serverURL.spec +"\n");
+		cardDAVSession.QueryInterface(Components.interfaces.nsICardDAVAutoCompleteSession)
+			.serverURL = serverURL;
+	}
+	else
+		dump("no autocomplete directory\n");
 
 	gLDAPSession = cardDAVSession;
 	gSetupLdapAutocomplete = true;
@@ -160,5 +166,3 @@ function SIOnAutoCompleteLoadListener() {
 }
 
 window.addEventListener("load", SIOnAutoCompleteLoadListener, false);
-
-dump("autc\n");
