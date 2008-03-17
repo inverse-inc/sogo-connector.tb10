@@ -219,6 +219,10 @@ function startFolderSync() {
 	}
 }
 
+function SCSynchronizeFromChildWindow(uri) {
+	this.setTimeout(SynchronizeGroupdavAddressbook, 100, uri, null);
+}
+
 function OnUnloadMessengerOverlay() {
 	try {
 // 		removeObservers();

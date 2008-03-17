@@ -137,7 +137,7 @@ function onXMLRequestReadyStateChange(request) {
 				dump("status code: " + request.status + "\n");
 				var response;
 				if (request.method == "PROPPATCH")
-					setTimeout(parseProppatch, 100, request.responseXML, request.status,
+					setTimeout(parseProppatch, 1, request.responseXML, request.status,
 										 request.client.target, request.client.cbData);
 				else
 					request.client.target.onDAVQueryComplete(request.status,

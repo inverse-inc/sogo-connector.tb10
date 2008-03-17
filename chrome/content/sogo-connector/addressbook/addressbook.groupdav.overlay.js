@@ -412,6 +412,7 @@ function SCAbConfirmDelete(types) {
 
 function SCAbDelete() {
 	if (isGroupdavDirectory(gSelectedDir)) {
+		dump("test\n");
 		var types = GetSelectedCardTypes();
 		if (types != kNothingSelected && SCAbConfirmDelete(types)) {
 			var cards = GetSelectedAbCards();
@@ -491,7 +492,7 @@ function SCAbConfirmDeleteDirectory(selectedDir) {
 }
 
 function SCSynchronizeFromChildWindow(uri) {
-	this.setTimeout(SynchronizeGroupdavAddressbook, 100, uri, null);
+	this.setTimeout(SynchronizeGroupdavAddressbook, 1, uri, null);
 }
 
 function onLoadDAV() {

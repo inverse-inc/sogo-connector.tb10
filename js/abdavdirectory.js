@@ -140,7 +140,7 @@ AbDAVDirectory.prototype = {
 		 }
 		 catch(e) {
 			 dump("directory-properties: exception (new directory '" + prefName
-						+ "' ?):" + e + "\n");
+						+ "', URI '" + this.mValue + "' ?):" + e + "\n");
 		 }
 	 }
  },

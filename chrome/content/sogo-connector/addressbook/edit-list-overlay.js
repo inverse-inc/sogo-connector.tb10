@@ -58,6 +58,7 @@ function SCMailListOKButton() {
 
 function SCEditListOKButton() {
 	var rc = this.SCOldEditListOKButton();
+
 	if (rc) {
 		var listURI = window.arguments[0].listURI;
 		var parentURI = GetParentDirectoryFromMailingListURI(listURI);
