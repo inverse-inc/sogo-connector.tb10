@@ -65,20 +65,22 @@ function webDavTestFolderConnection(url){
 	return testResult;
 }
 
-function buildCardDavReportXML(filter){
-	var xml = '<?xml version="1.0" encoding="UTF-8"?>' +
-				'<addressbook-query xmlns:D="DAV:" xmlns="urn:ietf:params:xml:ns:carddav">' +
-					'<D:prop><D:getetag/><addressbook-data/></D:prop>' +
-					'<filter>' +
-						'<prop-filter name="mail">' +
-							'<text-match collation="i;unicasemap" match-type="substring">' + filter + '</text-match>' +
-						'</prop-filter>' +
-					'</filter>'
+function buildCardDavReportXML(filter) {
+	var xml = ('<?xml version="1.0" encoding="UTF-8"?>'
+						 + '<C:addressbook-query xmlns:D="DAV:"'
+						 + ' xmlns:C="urn:ietf:params:xml:ns:carddav">'
+						 + '<D:prop><D:getetag/><C:addressbook-data/></D:prop>'
+						 + '<C:filter><C:prop-filter name="mail">'
+						 + '<C:text-match collation="i;unicasemap" match-type="substring">'
+						 + xmlEscape(filter)
+						 + '</C:text-match></C:prop-filter></C:filter>'
+						 + '</C:addressbook-query>');
 //  +
 //        			'<prop-filter name="FN">' +
 //          			'<text-match collation="i;unicasemap" match-type="substring">' + filter + '</text-match>' +
 //        			'</prop-filter>' +
-		+ '</addressbook-query>';
+// 		+ '</addressbook-query>';
+
 	return xml;
 }
 
