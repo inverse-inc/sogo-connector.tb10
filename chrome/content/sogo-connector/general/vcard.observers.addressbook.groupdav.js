@@ -24,12 +24,14 @@
 ********************************************************************************/
 
 function updateAddressBookStatusbar(text){
-	var abWindow = Components.classes["@mozilla.org/appshell/window-mediator;1"].
-		getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("mail:addressbook");
+	/* FIXME: à virer */
+// 	var abWindow =
+// 	Components.classes["@mozilla.org/appshell/window-mediator;1"].
+// 		getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("mail:addressbook");
 
-	if(abWindow){			
-		abWindow.document.getElementById('statusText').setAttribute("label", text);			
-	}else{
-		document.getElementById('statusText').setAttribute("label", text);	
-	}
+// 	if(abWindow){			
+// 		abWindow.document.getElementById('statusText').setAttribute("label", text);			
+// 	}else{
+// 		document.getElementById('statusText').setAttribute("label", text);	
+// 	}
 }
