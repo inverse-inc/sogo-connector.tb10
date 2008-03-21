@@ -35,25 +35,22 @@ var inverseEventDialog = {
 				.GetServersForIdentity(currentIdentity)
 				.GetElementAt(0)
 				.QueryInterface(Components.interfaces.nsIMsgIncomingServer);
-			var currentOrganizer;
-			if (server.realUsername && server.realUsername.indexOf("@") > -1)
-				currentOrganizer
-					= { "name": currentIdentity.fullName,
-							"email": server.realUsername };
-			else {
-				var domain = currentIdentity.email.split("@")[1];
-				if (domain) {
-					currentOrganizer
-						= { "name": currentIdentity.fullName,
-								"email": ( server.realUsername + "@" + domain) };
+			if (server.realUsername) {
+				var email = server.realUsername;
+				var name = currentIdentity.fullName;
+				if (server.realUsername.indexOf("@") < 0) {
+					var domain = currentIdentity.email.split("@")[1];
+					if (domain)
+						email += "@" + domain;
 				}
-				else
-					currentOrganizer = null;
-			}
-			if (currentOrganizer) {
-				if (composeService.defaultIdentity == currentIdentity)
-					currentOrganizer["default"] = true;
-				organizers.push(currentOrganizer);
+				if (email && email.indexOf("@") > -1) {
+					if (!name)
+						name = email.split("@")[0];
+					var currentOrganizer = { name: name, email: email };
+					if (composeService.defaultIdentity == currentIdentity)
+						currentOrganizer["default"] = true;
+					organizers.push(currentOrganizer);
+				}
 			}
 		}
 
@@ -80,8 +77,11 @@ var inverseEventDialog = {
 		var organizer = window.calendarItem.organizer;
 		if (organizer) {
 			organizers.parentNode.removeChild(organizers);
-			var organizerName = (organizer.commonName
-													 + " <" + organizer.id.split(":")[1] + ">");
+			var email = organizer.id.split(":")[1];
+			var fullname = organizer.commonName;
+			if (!fullname)
+				fullname = email.split("@")[0];
+			var organizerName = fullname + " <" + email + ">";
 			existingOrganizer.setAttribute('value', organizerName);
 			window.organizer = organizer;
 		}

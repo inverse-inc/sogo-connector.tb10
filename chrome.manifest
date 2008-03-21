@@ -9,9 +9,10 @@ content inverse-library chrome/content/inverse-library/
 overlay	chrome://calendar/content/sun-calendar-event-dialog.xul chrome://sogo-connector/content/calendar/calendar-event-dialog.xul
 overlay	chrome://calendar/content/sun-calendar-event-dialog-attendees.xul chrome://sogo-connector/content/calendar/calendar-event-dialog-attendees.xul
 
-overlay	chrome://lightning/content/messenger-overlay-sidebar.xul chrome://sogo-connector/content/lightning/messenger-overlay-sidebar.xul
+#overlay	chrome://lightning/content/messenger-overlay-sidebar.xul chrome://sogo-connector/content/lightning/messenger-overlay-sidebar.xul
 
 overlay	chrome://messenger/content/messenger.xul chrome://sogo-connector/content/addressbook/messenger.groupdav.overlay.xul
+overlay	chrome://messenger/content/messageWindow.xul chrome://sogo-connector/content/addressbook/messagewindow-overlay.xul
 overlay	chrome://messenger/content/addressbook/addressbook.xul chrome://sogo-connector/content/addressbook/addressbook.groupdav.overlay.xul
 overlay chrome://messenger/content/messengercompose/messengercompose.xul chrome://sogo-connector/content/addressbook/messengercompose-overlay.xul
 

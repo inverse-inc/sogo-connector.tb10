@@ -52,8 +52,6 @@ function autoCompleteDirectoryIsCardDav() {
 		}
 	}
 
-	dump("uri: " + uri + "\n");
-
 	return (uri && uri.indexOf("carddav://") == 0);
 }
 
