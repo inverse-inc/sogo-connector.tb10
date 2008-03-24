@@ -41,7 +41,6 @@ jsInclude(["chrome://sogo-connector/content/addressbook/folder-handling.js",
 					 "chrome://sogo-connector/content/common/common-dav.js",
 					 "chrome://sogo-connector/content/general/preference.service.addressbook.groupdav.js",
 					 "chrome://sogo-connector/content/general/sync.addressbook.groupdav.js",
-					 "chrome://sogo-connector/content/general/sync.progress-meter.js",
 					 "chrome://sogo-connector/content/general/implementors.addressbook.groupdav.js",
 					 "chrome://sogo-connector/content/general/vcards.utils.js",
 					 "chrome://sogo-connector/content/general/mozilla.utils.inverse.ca.js"]);
@@ -51,15 +50,39 @@ jsInclude(["chrome://sogo-connector/content/addressbook/folder-handling.js",
  * it contains the observers needed by the addressBook and the cards dialog
  */
 
-var gGroupDAVProgressMeter;
+var groupdavSynchronizationObserver = {
+ count: 0,
+ handleNotification: function(notification, data) {
+		var active = (this.count > 0);
+		var throbber = document.getElementById("navigator-throbber");
+		if (notification == "groupdav.synchronization.start") {
+			this.count++;
+			if (!active) {
+				dump("GETTING BUSY\n");
+				throbber.setAttribute("busy", true);
+			}
+		}
+		else if (notification == "groupdav.synchronization.stop") {
+			this.count--;
+			if (active) {
+				dump("RESTING\n");
+				throbber.setAttribute("busy", false);
+			}
+		}
+	}
+};
 
 function OnLoadMessengerOverlay() {
-	window.gAbWinObserverService = Components.classes["@mozilla.org/observer-service;1"]
-		.getService(Components.interfaces.nsIObserverService);
-	gGroupDAVProgressMeter = new SyncProgressMeter();
-// 	addObservers();
-
 	/* if SOGo Integrator is present, we let it take the startup procedures */
+
+	var nmgr = Components.classes["@inverse.ca/notification-manager;1"]
+		.getService(Components.interfaces.inverseIJSNotificationManager)
+		.wrappedJSObject;
+	nmgr.registerObserver("groupdav.synchronization.start",
+												groupdavSynchronizationObserver);
+	nmgr.registerObserver("groupdav.synchronization.stop",
+												groupdavSynchronizationObserver);
+
 	if (!this.sogoIntegratorStartupOverlayOnLoad) {
 		dump("startup from sogo-connector\n");
 		cleanupAddressBooks();
@@ -67,6 +90,18 @@ function OnLoadMessengerOverlay() {
 	}
 	else
 		dump("skipping startup, sogo-integrator present\n");
+
+	window.addEventListener("unload", SCUnloadHandler, false);
+}
+
+function SCUnloadHandler(event) {
+	var nmgr = Components.classes["@inverse.ca/notification-manager;1"]
+		.getService(Components.interfaces.inverseIJSNotificationManager)
+		.wrappedJSObject;
+	nmgr.unregisterObserver("groupdav.synchronization.start",
+													groupdavSynchronizationObserver);
+	nmgr.unregisterObserver("groupdav.synchronization.stop",
+													groupdavSynchronizationObserver);
 }
 
 function cleanupAddressBooks() {
@@ -221,63 +256,6 @@ function startFolderSync() {
 
 function SCSynchronizeFromChildWindow(uri) {
 	this.setTimeout(SynchronizeGroupdavAddressbook, 100, uri, null);
-}
-
-function OnUnloadMessengerOverlay() {
-	try {
-// 		removeObservers();
-		OnUnloadMessenger();
-	}
-	catch(e) {
-		exceptionHandler(this,"OnLoadMessengerOverlay",e);
-	}
-}
-
-function addObservers() {
-	if (window.gAbWinObserverService) {
-		var events = [SyncProgressMeter.API_DISABLED_EVENT,
-									SyncProgressMeter.INITIALIZATION_EVENT,
-									SyncProgressMeter.NOTHING_TO_DO,
-									SyncProgressMeter.SERVER_DOWNLOAD_BEGINS,
-									SyncProgressMeter.CARD_DOWNLOADED,
-									SyncProgressMeter.CARD_DOWNLOAD_FAILED,
-									SyncProgressMeter.SERVER_DOWNLOAD_COMPLETED,
-									SyncProgressMeter.SERVER_DOWNLOAD_FAILURE,
-									SyncProgressMeter.SERVER_UPLOAD_BEGINS,
-									SyncProgressMeter.UPLOAD_STOP_REQUEST_EVENT,
-									SyncProgressMeter.CARD_UPLOADED,
-									SyncProgressMeter.UPLOAD_ERROR_EVENT,
-									SyncProgressMeter.UPLOAD_COMPLETED,
-									SyncProgressMeter.SERVER_SYNC_COMPLETED,
-									SyncProgressMeter.SERVER_SYNC_ERROR];
-
-		for (var i = 0; i < events.length; i++)
-			gAbWinObserverService.addObserver(gGroupDAVProgressMeter, events[i],
-																				true);
-	}
-}
-
-function removeObservers() {
-	if (window.gAbWinObserverService) {
-		var events = [SyncProgressMeter.API_DISABLED_EVENT,
-									SyncProgressMeter.INITIALIZATION_EVENT,
-									SyncProgressMeter.NOTHING_TO_DO,
-									SyncProgressMeter.SERVER_DOWNLOAD_BEGINS,
-									SyncProgressMeter.CARD_DOWNLOADED,
-									SyncProgressMeter.CARD_DOWNLOAD_FAILED,
-									SyncProgressMeter.SERVER_DOWNLOAD_COMPLETED,
-									SyncProgressMeter.SERVER_DOWNLOAD_FAILURE,
-									SyncProgressMeter.SERVER_UPLOAD_BEGINS,
-									SyncProgressMeter.UPLOAD_STOP_REQUEST_EVENT,
-									SyncProgressMeter.CARD_UPLOADED,
-									SyncProgressMeter.UPLOAD_ERROR_EVENT,
-									SyncProgressMeter.UPLOAD_COMPLETED,
-									SyncProgressMeter.SERVER_SYNC_COMPLETED,
-									SyncProgressMeter.SERVER_SYNC_ERROR];
-
-		for (var i = 0; i < events.length; i++)
-			gAbWinObserverService.removeObserver(gGroupDAVProgressMeter, events[i]);
-	}
 }
 
 window.addEventListener("load", OnLoadMessengerOverlay, false);

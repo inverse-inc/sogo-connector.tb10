@@ -1,5 +1,23 @@
 /* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 2 -*- */
 
+function jsInclude(files, target) {
+ 	var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+		.getService(Components.interfaces.mozIJSSubScriptLoader);
+	for (var i = 0; i < files.length; i++) {
+		try {
+			loader.loadSubScript(files[i], target);
+		}
+		catch(e) {
+			dump("sogoWebDAV.js: failed to include '" + files[i] +
+					 "'\n" + e
+					 + "\nFile: " + e.fileName
+					 + "\nLine: " + e.lineNumber + "\n\n Stack:\n\n" + e.stack);
+		}
+	}
+}
+
+jsInclude(["chrome://inverse-library/content/uuid.js"]);
+
 function backtrace(aDepth) {
 	var depth = aDepth || 10;
 	var stack = "";
@@ -133,8 +151,8 @@ function onXMLRequestReadyStateChange(request) {
 	if (request.readyState == 4) {
 		if (request.client.target) {
 			try {
-				dump("method: " + request.method + "\n");
-				dump("status code: " + request.status + "\n");
+// 				dump("method: " + request.method + "\n");
+// 				dump("status code: " + request.status + "\n");
 				var response;
 				if (request.method == "PROPPATCH")
 					setTimeout(parseProppatch, 1, request.responseXML, request.status,
@@ -149,7 +167,7 @@ function onXMLRequestReadyStateChange(request) {
 						 + e.fileName + ":" + e.lineNumber + "\n");
 			}
 		}
-		request.client._processPending();
+// 		request.client._processPending();
 		request.client = null;
 		request.onreadystatechange = null;
 	}
@@ -157,6 +175,7 @@ function onXMLRequestReadyStateChange(request) {
 
 function sogoWebDAV(url, target, data, asynchronous) {
 	this.context = null;
+	this.closure = "" + new UUID();
   this.url = url;
   this.target = target;
   this.cbData = data;
@@ -172,24 +191,24 @@ sogoWebDAV.prototype = {
 		.wrappedJSObject;
 		var newContext = handler.getContext("inverse.ca/sogoWebDAV");
 
-		if (!newContext.sogoWebDAVPendingRequests) {
-			newContext.sogoWebDAVPendingRequests = new Array();
-			newContext.sogoWebDAVPending = false;
-		}
+// 		if (!newContext.sogoWebDAVPendingRequests) {
+// 			newContext.sogoWebDAVPendingRequests = new Array();
+// 			newContext.sogoWebDAVPending = false;
+// 		}
 
 		this.context = newContext;
 	},
- _processPending: function() {
-		this.context.sogoWebDAVPending = false;
- 		dump("pending length: " + this.context.sogoWebDAVPendingRequests.length + "\n");
-		if (this.context.sogoWebDAVPendingRequests.length) {
-			// 		dump("processing next query...\n");
-			var request = this.context.sogoWebDAVPendingRequests.shift();
-			var newWebDAV = new sogoWebDAV(request.url, request.target,
-																		 request.data, request.asynchronous);
-			newWebDAV.load(request.operation, request.parameters);
-		}
-	},
+//  _processPending: function() {
+// 		this.context.sogoWebDAVPending = false;
+//  		dump("pending length: " + this.context.sogoWebDAVPendingRequests.length + "\n");
+// 		if (this.context.sogoWebDAVPendingRequests.length) {
+// 			// 		dump("processing next query...\n");
+// 			var request = this.context.sogoWebDAVPendingRequests.shift();
+// 			var newWebDAV = new sogoWebDAV(request.url, request.target,
+// 																		 request.data, request.asynchronous);
+// 			newWebDAV.load(request.operation, request.parameters);
+// 		}
+// 	},
 
  _sendHTTPRequest: function(method, parameters, headers) {
 		var xmlRequest = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
@@ -213,9 +232,10 @@ sogoWebDAV.prototype = {
 		xmlRequest.send(parameters);
 	},
 
- realLoad: function(operation, parameters) {
+ load: function(operation, parameters) {
+//  realLoad: function(operation, parameters) {
 		// 		dump("dav operation: " + operation + "\n");
-		this.context.sogoWebDAVPending = true;
+// 		this.context.sogoWebDAVPending = true;
     var webdavSvc = Components.classes['@mozilla.org/webdav/service;1']
     .getService(Components.interfaces.nsIWebDAVService);
     var requestor = new InterfaceRequestor();
@@ -224,14 +244,17 @@ sogoWebDAV.prototype = {
     .createInstance(Components.interfaces.nsIURI);
     url.spec = this.url;
 
-    var listener = new sogoWebDAVListener(this.target, this);
-		listener.cbData = this.cbData;
-
 		var ourClosure = Components.classes['@mozilla.org/supports-string;1']
 		.createInstance(Components.interfaces.nsISupportsString);
-		ourClosure.data = "sogoWebDAV";
-    var resource
-		= new sogoWebDAVResource(url.QueryInterface(Components.interfaces.nsIURL));
+		ourClosure.data = this.closure;
+
+    var listener = new sogoWebDAVListener(this.target, this);
+		listener.cbData = this.cbData;
+		listener.closure = this.closure;
+
+    var resource = new sogoWebDAVResource(url.QueryInterface(Components.interfaces.nsIURL));
+		resource.mClosure = this.closure;
+
     if (operation == "GET")
       webdavSvc.getToString(resource, listener,
 														requestor, ourClosure);
@@ -265,7 +288,7 @@ sogoWebDAV.prototype = {
 			this._sendHTTPRequest(operation, parameters);
 		}
 		else if (operation == "MKCOL") {
-			dump("make collection\n");
+// 			dump("make collection\n");
 			webdavSvc.makeCollection(resource, listener, requestor, ourClosure);
 		}
 		else if (operation == "DELETE") {
@@ -277,23 +300,23 @@ sogoWebDAV.prototype = {
     else
       throw ("operation '" + operation + "' is not currently supported");
   },
- load: function(operation, parameters) {
-		if (!this.url)
-			throw ("missing 'url' parameter");
+//  load: function(operation, parameters) {
+// 		if (!this.url)
+// 			throw ("missing 'url' parameter");
 
-		if (!this.context)
-			this._initContext();
+// 		if (!this.context)
+// 			this._initContext();
 
-    if (this.context.sogoWebDAVPending)
-			this.context.sogoWebDAVPendingRequests.push({url: this.url,
-						target: this.target,
-						data: this.cbData,
-						asynchronous: this.asynchronous,
-						operation: operation,
-						parameters: parameters});
-    else
-      this.realLoad(operation, parameters);
-  },
+//     if (this.context.sogoWebDAVPending)
+// 			this.context.sogoWebDAVPendingRequests.push({url: this.url,
+// 						target: this.target,
+// 						data: this.cbData,
+// 						asynchronous: this.asynchronous,
+// 						operation: operation,
+// 						parameters: parameters});
+//     else
+//       this.realLoad(operation, parameters);
+//   },
  propfind: function(props, deep) {
 		if (typeof deep == "undefined")
 			deep = true;
@@ -350,13 +373,14 @@ sogoWebDAV.prototype = {
 
 function sogoWebDAVResource(url) {
 	this.mResourceURL = url;
-	this.mLockToken = "sogoWebDAV";
+	this.mClosure = null;
 }
 
 sogoWebDAVResource.prototype = {
  mResourceURL: {},
+ mClosure: null,
  get lockToken() {
-	 return this.mLockToken;
+	 return this.mClosure;
  },
  get resourceURL() {
    return this.mResourceURL;
@@ -375,9 +399,11 @@ function sogoWebDAVListener(target, client) {
   this.target = target;
 	this.client = client;
   this.result = null;
+	this.closure = null;
 }
 
 sogoWebDAVListener.prototype = {
+ closure: null,
  QueryInterface: function (aIID) {
     if (!aIID.equals(Components.interfaces.nsISupports)
 				&& !aIID.equals(Components.interfaces.nsIWebDAVOperationListener)) {
@@ -392,7 +418,10 @@ sogoWebDAVListener.prototype = {
 		try {
 			newrsrc
 				= resource.QueryInterface(Components.interfaces.nsIWebDAVResourceWithLock);
-			isOurs = (newrsrc.lockToken == "sogoWebDAV");
+			isOurs = (newrsrc.lockToken.toString() == this.closure);
+// 			dump("isOurs: " + isOurs + "\n");
+// 			dump("locktk: " + newrsrc.lockToken + "\n");
+// 			dump("closure: " + this.closure + "\n");
 		}
 		catch(e) {};
 
@@ -401,11 +430,12 @@ sogoWebDAVListener.prototype = {
  onOperationComplete: function(aStatusCode, aResource, aOperation,
 															 aClosure) {
 		if (this._isOurResource(aResource)) {
+// 			dump("OnOPerationComplete... " + aStatusCode + "\n");
 			try {
 				if (this.target)
 					this.target.onDAVQueryComplete(aStatusCode, this.result,
 																				 this.cbData);
-				this.client._processPending();
+// 				this.client._processPending();
 			}
 			catch(e) {
 				dump("sogoWebDAV.js 3: an exception occured\n" + e + "\n"
@@ -422,7 +452,7 @@ sogoWebDAVListener.prototype = {
 		try {
 			newClosure
 				= closure.QueryInterface(Components.interfaces.nsISupportsString);
-			isOurs = (newClosure.toString() == "sogoWebDAV");
+			isOurs = (newClosure.toString() == this.closure);
 		}
 		catch(e) {
 			dump("e: " + e + "\n");

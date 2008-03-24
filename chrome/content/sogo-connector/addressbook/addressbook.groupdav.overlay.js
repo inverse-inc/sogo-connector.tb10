@@ -467,7 +467,6 @@ function _SCDeleteListAsDirectory(directory, selectedDir) {
 	return result;
 }
 
-
 function SCAbConfirmDeleteDirectory(selectedDir) {
   var confirmDeleteMessage;
 
@@ -494,6 +493,51 @@ function SCAbConfirmDeleteDirectory(selectedDir) {
 function SCSynchronizeFromChildWindow(uri) {
 	this.setTimeout(SynchronizeGroupdavAddressbook, 1, uri, null);
 }
+
+var groupdavSynchronizationObserver = {
+ oldPC: -1,
+ syncManager: null,
+
+ _createProgressBar: function() {
+		var progressBar = document.createElement("progressmeter");
+		progressBar.setAttribute("id", "groupdavProgressMeter");
+		progressBar.setAttribute("mode", "determined");
+		progressBar.setAttribute("value", "0%");
+
+		return progressBar;
+	},
+ ensureProgressBar: function() {
+		var progressBar = document.getElementById("groupdavProgressMeter");
+		if (!progressBar) {
+			progressBar = this._createProgressBar();
+			var panel = document.getElementById("groupdavProgressPanel");
+			panel.appendChild(progressBar);
+			panel.setAttribute("collapsed", false);
+		}
+	},
+ handleNotification: function(notification, data) {
+		if (notification == "groupdav.synchronization.start") {
+		  this.ensureProgressBar();
+		}
+		else if (notification == "groupdav.synchronization.stop") {
+			var progressBar = document.getElementById("groupdavProgressMeter");
+			if (progressBar) {
+				var panel = document.getElementById("groupdavProgressPanel");
+				panel.removeChild(progressBar);
+				panel.setAttribute("collapsed", true);
+			}
+		}
+		else if (notification == "groupdav.synchronization.addressbook.updated") {
+			this.ensureProgressBar();
+			var progressBar = document.getElementById("groupdavProgressMeter");
+			var pc = Math.round(this.syncManager.globalProgress() * 100);
+			if (this.oldPC != pc) {
+				progressBar.setAttribute("value", pc + "%");
+				this.oldPC = pc;
+			}
+		}
+	}
+};
 
 function onLoadDAV() {
 	this.SCAbEditSelectedDirectoryOriginal = this.AbEditSelectedDirectory;
@@ -527,6 +571,20 @@ function onLoadDAV() {
 // 		gAbResultsTree.controllers.appendController(ResultsPaneController);
 		gAbResultsTree.controllers.appendController(ctlOvl);
 	}
+
+	var nmgr = Components.classes["@inverse.ca/notification-manager;1"]
+		.getService(Components.interfaces.inverseIJSNotificationManager)
+		.wrappedJSObject;
+	var smgr = Components.classes["@inverse.ca/sync-progress-manager;1"]
+		.getService(Components.interfaces.inverseIJSSyncProgressManager)
+		.wrappedJSObject;
+	groupdavSynchronizationObserver.syncManager = smgr;
+	nmgr.registerObserver("groupdav.synchronization.start",
+												groupdavSynchronizationObserver);
+	nmgr.registerObserver("groupdav.synchronization.stop",
+												groupdavSynchronizationObserver);
+	nmgr.registerObserver("groupdav.synchronization.addressbook.updated",
+												groupdavSynchronizationObserver);
 }
 
 window.addEventListener("load", onLoadDAV, false);

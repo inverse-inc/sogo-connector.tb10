@@ -29,7 +29,7 @@
 <!DOCTYPE overlay SYSTEM "chrome://sogo-connector/locale/addressbook/ca.inverse.abMainWindow.groupdav.dtd">
 
 <overlay id="ca.inverse.messenger.groupdav" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <window id="messengerWindow" onunload="OnUnloadMessengerOverlay()">
+  <window id="messengerWindow">
     <script type="application/x-javascript"
       src="chrome://sogo-connector/content/addressbook/messenger.groupdav.overlay.js"/>
   </window>

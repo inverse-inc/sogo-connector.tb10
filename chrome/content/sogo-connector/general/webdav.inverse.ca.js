@@ -38,7 +38,6 @@ function jsInclude(files, target) {
 
 jsInclude(["chrome://inverse-library/content/sogoWebDAV.js",
 					 "chrome://sogo-connector/content/general/webdav_lib/webdavAPI.js",
-					 "chrome://sogo-connector/content/general/sync.progress-meter.js",
 					 "chrome://sogo-connector/content/general/mozilla.utils.inverse.ca.js"]);
 
 function getMessengerWindow() {

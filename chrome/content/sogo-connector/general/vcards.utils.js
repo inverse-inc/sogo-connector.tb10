@@ -525,7 +525,7 @@ function card2vcard(oldCard) {
 }
 
 /* VLIST */
-function updateListFromVList(list, vListString, cardUIDs, listCards) {
+function updateListFromVList(list, vListString, cards) {
 	// 	var listCard = list.QueryInterface(Components.interfaces.nsIAbCard);
 	list = list.QueryInterface(Components.interfaces.nsIAbDirectory);
 	var listRsrc = list.QueryInterface(Components.interfaces.nsIRDFResource);
@@ -534,6 +534,8 @@ function updateListFromVList(list, vListString, cardUIDs, listCards) {
 	// 	dump("updating list: uri: " + listRsrc.Value
 	// 			 + "; parentURI: " + parentURI + "\n");
 	// 	dump("content:\n" + vListString + "\n");
+
+	var listUpdated = false;
 
 	list.addressLists.Clear();
 	var parsedString = versitParse(vListString);
@@ -546,16 +548,39 @@ function updateListFromVList(list, vListString, cardUIDs, listCards) {
 		else if (line.tag == "description")
 			list.description = line.values[0];
 		else if (line.tag == "card") {
-			var card = cardUIDs[line.values[0]];
+			var card = cards[line.values[0]];
 			// 			dump("card '" + line.values[0] + "': ");
+			if (!card) {
+				var email = line.parameters["email"][0];
+				if (email) {
+					listUpdated = true;
+					card = _findCardWithEmail(cards, email);
+				}
+			}
 			if (card)
 				list.addressLists.AppendElement(card);
-			else
-				throw "card with uid '" + line.values[0] + "' was not found in directory";
+			else {
+				listUpdated = true;
+				dump("card with uid '" + line.values[0]
+						 + "' was not found in directory");
+			}
 		}
 	}
 
 	list.editMailListToDatabase(parentURI, null);
+
+	return listUpdated;
+}
+
+function _findCardWithEmail(cards, email) {
+	var card = null;
+
+	for (var k in cards) {
+		if (cards[k].primaryEmail == email)
+			card = cards[k];
+	}
+
+	return card;
 }
 
 function list2vlist(uid, list) {

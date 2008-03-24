@@ -63,4 +63,8 @@
       <menuitem id="addGroupDav" label="&newGroupDavCmd.label;" accesskey="&newGroupDavCmd.accesskey;" oncommand="AbNewGroupDavContacts()"/>
     </menupopup>
   </menu>
+
+  <statusbar id="status-bar">
+    <statusbarpanel id="groupdavProgressPanel" collapsed="true"/>
+  </statusbar>
 </overlay>
