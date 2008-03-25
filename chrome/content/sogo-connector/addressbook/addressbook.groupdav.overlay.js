@@ -353,10 +353,15 @@ function DeleteGroupDAVCards(directory, cards, deleteLocally) {
 		}
 		else {
 // 			dump("card: " + card.displayName + "\n");
-			var mdbCard = card.QueryInterface(Components.interfaces.nsIAbMDBCard);
-			key = mdbCard.getStringAttribute("groupDavKey");
+			try {
+				var mdbCard = card.QueryInterface(Components.interfaces.nsIAbMDBCard);
+				key = mdbCard.getStringAttribute("groupDavKey");
 // 			dump("key: " + key + "\n");
-			component = card;
+				component = card;
+			}
+			catch(e) {
+				key = null;
+			}
 		}
 
 		if (key && key.length)
@@ -540,7 +545,8 @@ var groupdavSynchronizationObserver = {
 
 function _updateProgressBar(pc) {
 	var progressBar = document.getElementById("groupdavProgressMeter");
-	progressBar.setAttribute("value", pc + "%");
+	if (progressBar)
+		progressBar.setAttribute("value", pc + "%");
 }
 
 function onLoadDAV() {
