@@ -167,7 +167,6 @@ function onXMLRequestReadyStateChange(request) {
 						 + e.fileName + ":" + e.lineNumber + "\n");
 			}
 		}
-// 		request.client._processPending();
 		request.client = null;
 		request.onreadystatechange = null;
 	}
@@ -189,26 +188,8 @@ sogoWebDAV.prototype = {
 		var handler = Components.classes['@inverse.ca/context-manager;1']
 		.getService(Components.interfaces.inverseIJSContextManager)
 		.wrappedJSObject;
-		var newContext = handler.getContext("inverse.ca/sogoWebDAV");
-
-// 		if (!newContext.sogoWebDAVPendingRequests) {
-// 			newContext.sogoWebDAVPendingRequests = new Array();
-// 			newContext.sogoWebDAVPending = false;
-// 		}
-
-		this.context = newContext;
+		this.context = handler.getContext("inverse.ca/sogoWebDAV");
 	},
-//  _processPending: function() {
-// 		this.context.sogoWebDAVPending = false;
-//  		dump("pending length: " + this.context.sogoWebDAVPendingRequests.length + "\n");
-// 		if (this.context.sogoWebDAVPendingRequests.length) {
-// 			// 		dump("processing next query...\n");
-// 			var request = this.context.sogoWebDAVPendingRequests.shift();
-// 			var newWebDAV = new sogoWebDAV(request.url, request.target,
-// 																		 request.data, request.asynchronous);
-// 			newWebDAV.load(request.operation, request.parameters);
-// 		}
-// 	},
 
  _sendHTTPRequest: function(method, parameters, headers) {
 		var xmlRequest = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
@@ -235,7 +216,6 @@ sogoWebDAV.prototype = {
  load: function(operation, parameters) {
 //  realLoad: function(operation, parameters) {
 		// 		dump("dav operation: " + operation + "\n");
-// 		this.context.sogoWebDAVPending = true;
     var webdavSvc = Components.classes['@mozilla.org/webdav/service;1']
     .getService(Components.interfaces.nsIWebDAVService);
     var requestor = new InterfaceRequestor();
@@ -300,23 +280,6 @@ sogoWebDAV.prototype = {
     else
       throw ("operation '" + operation + "' is not currently supported");
   },
-//  load: function(operation, parameters) {
-// 		if (!this.url)
-// 			throw ("missing 'url' parameter");
-
-// 		if (!this.context)
-// 			this._initContext();
-
-//     if (this.context.sogoWebDAVPending)
-// 			this.context.sogoWebDAVPendingRequests.push({url: this.url,
-// 						target: this.target,
-// 						data: this.cbData,
-// 						asynchronous: this.asynchronous,
-// 						operation: operation,
-// 						parameters: parameters});
-//     else
-//       this.realLoad(operation, parameters);
-//   },
  propfind: function(props, deep) {
 		if (typeof deep == "undefined")
 			deep = true;
@@ -435,7 +398,6 @@ sogoWebDAVListener.prototype = {
 				if (this.target)
 					this.target.onDAVQueryComplete(aStatusCode, this.result,
 																				 this.cbData);
-// 				this.client._processPending();
 			}
 			catch(e) {
 				dump("sogoWebDAV.js 3: an exception occured\n" + e + "\n"
