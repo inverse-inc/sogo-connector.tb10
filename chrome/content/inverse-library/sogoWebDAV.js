@@ -139,13 +139,6 @@ function xmlUnescape(text) {
 	return s;
 }
 
-function parseProppatch(xmlResponse, status, target, data) {
-	var parser = new multiStatusParser(xmlResponse);
-	var response = parser.responses();
-	
-	target.onDAVQueryComplete(status, response, data);
-}
-
 function onXMLRequestReadyStateChange(request) {
 	// 	dump("xmlreadystatechange: " + request.readyState + "\n");
 	if (request.readyState == 4) {
@@ -154,13 +147,16 @@ function onXMLRequestReadyStateChange(request) {
 // 				dump("method: " + request.method + "\n");
 // 				dump("status code: " + request.status + "\n");
 				var response;
-				if (request.method == "PROPPATCH")
-					setTimeout(parseProppatch, 1, request.responseXML, request.status,
-										 request.client.target, request.client.cbData);
+				var responseText;
+				if (request.method == "PROPPATCH") {
+					var parser = new multiStatusParser(request.responseXML);
+					responseText = parser.responses();
+				}
 				else
-					request.client.target.onDAVQueryComplete(request.status,
-																									 request.responseText,
-																									 request.client.cbData);
+					responseText = request.responseText;
+				request.client.target.onDAVQueryComplete(request.status,
+																								 responseText,
+																								 request.client.cbData);
 			}
 			catch(e) {
 				dump("sogoWebDAV.js 1: an exception occured\n" + e + "\n"
@@ -394,14 +390,15 @@ sogoWebDAVListener.prototype = {
 															 aClosure) {
 		if (this._isOurResource(aResource)) {
 // 			dump("OnOPerationComplete... " + aStatusCode + "\n");
-			try {
-				if (this.target)
+			if (this.target) {
+				try {
 					this.target.onDAVQueryComplete(aStatusCode, this.result,
 																				 this.cbData);
-			}
-			catch(e) {
-				dump("sogoWebDAV.js 3: an exception occured\n" + e + "\n"
-						 + e.fileName + ":" + e.lineNumber + "\n");
+				}
+				catch(e) {
+					dump("sogoWebDAV.js 3: an exception occured\n" + e + "\n"
+							 + e.fileName + ":" + e.lineNumber + "\n");
+				}
 			}
 			this.result = null;
 		}

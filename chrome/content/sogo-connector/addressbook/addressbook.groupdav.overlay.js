@@ -512,20 +512,24 @@ var groupdavSynchronizationObserver = {
 		return progressBar;
 	},
  ensureProgressBar: function() {
-		var progressBar = document.getElementById("groupdavProgressMeter");
-		if (!progressBar) {
-			progressBar = this._createProgressBar();
-			var panel = document.getElementById("groupdavProgressPanel");
-			panel.appendChild(progressBar);
-			panel.setAttribute("collapsed", false);
-		}
+// 		dump("document: " + document + "\n");
+// 		dump("window: " + window + "\n");
+// 		dump("window.title: " + window.title + "\n");
+// 		dump("window.document: " + window.document + "\n");
+		var progressBar = this._createProgressBar();
+		var panel = document.getElementById("groupdavProgressPanel");
+		panel.appendChild(progressBar);
+		panel.setAttribute("collapsed", false);
+		
+		return progressBar;
 	},
  handleNotification: function(notification, data) {
+		var progressBar = document.getElementById("groupdavProgressMeter");
 		if (notification == "groupdav.synchronization.start") {
-		  this.ensureProgressBar();
+			if (!progressBar)
+				this.ensureProgressBar();
 		}
 		else if (notification == "groupdav.synchronization.stop") {
-			var progressBar = document.getElementById("groupdavProgressMeter");
 			if (progressBar) {
 				var panel = document.getElementById("groupdavProgressPanel");
 				panel.removeChild(progressBar);
@@ -533,7 +537,8 @@ var groupdavSynchronizationObserver = {
 			}
 		}
 		else if (notification == "groupdav.synchronization.addressbook.updated") {
-			this.ensureProgressBar();
+			if (!progressBar)
+				progressBar = this.ensureProgressBar();
 			var pc = Math.floor(this.syncManager.globalProgress() * 100);
 			if (this.oldPC != pc) {
 				window.setTimeout(_updateProgressBar, 200, pc);

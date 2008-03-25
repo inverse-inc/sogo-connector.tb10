@@ -110,6 +110,7 @@ function saveCard(isNewCard) {
 			var version = mdbCard.getStringAttribute("groupDavVersion");
 			if (version && version != "")
 				mdbCard.setStringAttribute("groupDavVersion", "-1");
+			dump("window.opener.title: " + window.opener.title + "\n");
  			window.opener.SCSynchronizeFromChildWindow(parentURI);
 // 			abWindow.UploadCard(gEditCard.card
 // 													.QueryInterface(Components.interfaces.nsIAbMDBCard),
