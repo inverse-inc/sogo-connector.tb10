@@ -28,3 +28,5 @@
 <!ENTITY GroupDavSync.tooltip                      	"Synchronise les fiches locales avec celles du serveur">
 <!ENTITY GroupDavConf.label                      		"Configurer">
 <!ENTITY GroupDavConf.accesskey                  		"C">
+
+<!ENTITY addressbook.synchronize.label	"Synchronisation :">

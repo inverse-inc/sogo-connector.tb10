@@ -65,6 +65,8 @@
   </menu>
 
   <statusbar id="status-bar">
-    <statusbarpanel id="groupdavProgressPanel" collapsed="true"/>
+    <statusbarpanel id="groupdavProgressPanel" collapsed="true">
+      <label value="&addressbook.synchronize.label;"/>
+    </statusbarpanel>
   </statusbar>
 </overlay>

@@ -29,3 +29,5 @@
 
 <!ENTITY GroupDavConf.label                      		"Konfigurieren">
 <!ENTITY GroupDavConf.accesskey                  		"K">
+
+<!ENTITY addressbook.synchronize.label	"Synchronisierung:">

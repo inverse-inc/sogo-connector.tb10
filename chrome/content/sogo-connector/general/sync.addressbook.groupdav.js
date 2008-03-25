@@ -724,13 +724,14 @@ GroupDavSynchronizer.prototype = {
 		}
 	},
  processCards: function() {
-		this.progressMgr.registerAddressBook(this.gURL,
-																				 this.localCardAdditions.length
-																				 + this.localCardUpdates.length
-																				 + this.localListAdditions.length
-																				 + this.localListUpdates.length
-																				 + this.serverCardDataHash.size
-																				 + this.serverListDataHash.size);
+		var total = (this.localCardAdditions.length
+								 + this.localCardUpdates.length
+								 + this.localListAdditions.length
+								 + this.localListUpdates.length
+								 + this.serverCardDataHash.size
+								 + this.serverListDataHash.size);
+		if (total > 0)
+			this.progressMgr.registerAddressBook(this.gURL, total);
 
 		if (this.mIsDrop) {
 			this.pendingOperations = 1;
@@ -981,7 +982,15 @@ GroupDavSynchronizer.prototype = {
 					this.callback(this.callbackCode, this.callbackFailures,
 												this.callbackData);
 				}
-				this.progressMgr.unregisterAddressBook(this.gURL);
+
+				var total = (this.localCardAdditions.length
+										 + this.localCardUpdates.length
+										 + this.localListAdditions.length
+										 + this.localListUpdates.length
+										 + this.serverCardDataHash.size
+										 + this.serverListDataHash.size);
+				if (total > 0)
+					this.progressMgr.unregisterAddressBook(this.gURL);
 				dump(this.mCounter +"/sync with " + this.gURL + " has ended.\n");
 				this.context.requests[this.gURL] = null;
 			}

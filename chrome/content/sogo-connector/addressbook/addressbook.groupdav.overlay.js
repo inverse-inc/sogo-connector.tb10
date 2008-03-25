@@ -529,15 +529,19 @@ var groupdavSynchronizationObserver = {
 		}
 		else if (notification == "groupdav.synchronization.addressbook.updated") {
 			this.ensureProgressBar();
-			var progressBar = document.getElementById("groupdavProgressMeter");
-			var pc = Math.round(this.syncManager.globalProgress() * 100);
+			var pc = Math.floor(this.syncManager.globalProgress() * 100);
 			if (this.oldPC != pc) {
-				progressBar.setAttribute("value", pc + "%");
+				window.setTimeout(_updateProgressBar, 200, pc);
 				this.oldPC = pc;
 			}
 		}
 	}
 };
+
+function _updateProgressBar(pc) {
+	var progressBar = document.getElementById("groupdavProgressMeter");
+	progressBar.setAttribute("value", pc + "%");
+}
 
 function onLoadDAV() {
 	this.SCAbEditSelectedDirectoryOriginal = this.AbEditSelectedDirectory;

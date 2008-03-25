@@ -215,7 +215,7 @@ sogoWebDAV.prototype = {
 
  load: function(operation, parameters) {
 //  realLoad: function(operation, parameters) {
-		// 		dump("dav operation: " + operation + "\n");
+// 		dump("dav operation: " + operation + " on " + this.url + "\n");
     var webdavSvc = Components.classes['@mozilla.org/webdav/service;1']
     .getService(Components.interfaces.nsIWebDAVService);
     var requestor = new InterfaceRequestor();
