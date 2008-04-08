@@ -146,7 +146,8 @@ function _SCDeleteAddressBook(directory) {
 	var parentDir = rdf.GetResource("moz-abdirectory://")
 		.QueryInterface(Components.interfaces.nsIAbDirectory);
 
-	dump("dir: " + directory + "\n");
+// 	dump("dir: " + directory + "\n");
+// 	dump("dir.dirName: " + directory.dirName + "\n");
 	parentDir.deleteDirectory(directory);
 // 	var ab = Components.classes["@mozilla.org/addressbook;1"]
 // 		.createInstance(Components.interfaces.nsIAddressBook);

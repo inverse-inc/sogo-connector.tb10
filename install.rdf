@@ -5,7 +5,7 @@
   <RDF:Description RDF:about="urn:mozilla:install-manifest"
     em:name="Inverse SOGo Connector"
     em:id="sogo-connector@inverse.ca"
-    em:version="0.67"
+    em:version="0.68pre1"
     em:description="A DAV plugin for keeping addressbooks and events in sync"
     em:iconURL="chrome://sogo-connector/skin/addressbook/lori.png"
     em:creator="Inverse/Keyrus Canada &lt;support@inverse.ca>"

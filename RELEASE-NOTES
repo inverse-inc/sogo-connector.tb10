@@ -3,6 +3,9 @@ Features
 Working on 
 	Added Deleted on server feature. (low priority)
 
+0.68
+	CardDAV addressbooks now appear in the compose window
+
 0.67
 	drag and dropping a card from a GroupDAV directory would not delete the card on the server
 	using the German translation would prevent the groupdav addressbook dialog to appear properly

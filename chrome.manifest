@@ -21,6 +21,7 @@ overlay	chrome://messenger/content/addressbook/abEditCardDialog.xul chrome://sog
 
 overlay	chrome://messenger/content/addressbook/abMailListDialog.xul chrome://sogo-connector/content/addressbook/edit-list-overlay.xul
 overlay chrome://messenger/content/addressbook/abEditListDialog.xul chrome://sogo-connector/content/addressbook/edit-list-overlay.xul
+overlay chrome://messenger/content/addressbook/abContactsPanel.xul chrome://sogo-connector/content/addressbook/contactspanel-overlay.xul
 
 overlay chrome://messenger/content/addressbook/pref-editdirectories.xul chrome://sogo-connector/content/addressbook/pref-editdirectories.overlay.xul
 
