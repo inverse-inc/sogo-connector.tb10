@@ -98,7 +98,7 @@ sogoFBRequest.prototype = {
 			fbText = this._preparse(this._joinLines(fbText));
 			var ics = Components.classes["@mozilla.org/calendar/ics-service;1"]
 			.getService(Components.interfaces.calIICSService);
-			var cal = ics.parseICS(fbText);
+			var cal = ics.parseICS(fbText, null);
 			var vfb = cal.getFirstSubcomponent("VFREEBUSY");
 
 			var entries = new Array();

@@ -4,17 +4,24 @@ var inverseEventDialog = {
  onLoadHandler: function(event) {
 		var attendees = document.getElementById("attendee-row");
 		var row = document.getElementById("inverse-organizer-row");
+		var fixedLabel = document.getElementById("fixedConfidentialLabel");
+		var organizers = document.getElementById("item-organizer");
+
+		if (!attendees) {
+			/* Lightning 0.8 */
+			attendees = document.getElementById("event-grid-attendee-row");
+			row = document.getElementById("event-grid-inverse-organizer-row");
+			fixedLabel = document.getElementById("event-grid-fixedConfidentialLabel");
+			organizers = document.getElementById("event-grid-item-organizer");
+		}
 		attendees.removeChild(row);
 		attendees.parentNode.insertBefore(row, attendees);
-
-		var organizers = document.getElementById("item-organizer");
 
 		inverseEventDialog.updateOrganizers(organizers);
 		organizers.addEventListener("command",
 																inverseEventDialog.updateExistingOrganizer,
 																false);
 
-		var fixedLabel = document.getElementById("fixedConfidentialLabel");
 		var buttonPrivacy = document.getElementById("button-privacy");
 		var nodes = buttonPrivacy.getElementsByTagName("menuitem");
 		nodes[1].label = fixedLabel.value;
@@ -59,6 +66,8 @@ var inverseEventDialog = {
  fillOrganizers: function() {
 		// add organizers to the organizer menulist
 		var organizerList = document.getElementById("item-organizer");
+		if (!organizerList) /* Lightning 0.8 */
+			organizerList = document.getElementById("event-grid-item-organizer");
 		var organizers = this.loadOrganizers();
 		var selectIndex = 0;
 		for (var i = 0; i < organizers.length; i++) {
@@ -74,6 +83,9 @@ var inverseEventDialog = {
  updateOrganizers: function(organizers) {
 		var existingOrganizer
 		= document.getElementById("item-existing-organizer");
+		if (!existingOrganizer) /* Lightning 0.8 */
+			existingOrganizer = document
+				.getElementById("event-grid-item-existing-organizer");
 		var organizer = window.calendarItem.organizer;
 		if (organizer) {
 			organizers.parentNode.removeChild(organizers);
@@ -92,7 +104,10 @@ var inverseEventDialog = {
 		}
 	},
  updateExistingOrganizer: function(event) {
-		var menuItem = document.getElementById("item-organizer").selectedItem;
+		var organizerItem = document.getElementById("item-organizer");
+		if (!organizerItem) /* Lightning 0.8 */
+			organizerItem = document.getElementById("event-grid-item-organizer")
+		var menuItem = organizerItem.selectedItem;
 		var organizer = Components.classes["@mozilla.org/calendar/attendee;1"]
 		.createInstance(Components.interfaces.calIAttendee);
 		organizer.commonName = menuItem.organizer["name"];

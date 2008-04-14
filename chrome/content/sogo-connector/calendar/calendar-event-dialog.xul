@@ -18,6 +18,17 @@
         crop="right"/>
     </row>
   </row>
+  <row id="event-grid-attendee-row" position="1">
+    <label id="event-grid-fixedConfidentialLabel" collapsed="true"
+      value="&event.menu.options.privacy.confidential.label;"/>
+    <!-- Organizer -->
+    <row id="event-grid-inverse-organizer-row" align="center">
+      <label value="&event.organizers.label;" disable-on-readonly="true"/>
+      <menulist id="event-grid-item-organizer" flex="1" disable-on-readonly="true"/>
+      <label id="event-grid-item-existing-organizer"
+        crop="right"/>
+    </row>
+  </row>
 
   <checkbox id="event-all-day" disabled="true"/>
 </overlay>
