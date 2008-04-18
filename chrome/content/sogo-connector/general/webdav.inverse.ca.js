@@ -103,8 +103,11 @@ function sendXMLRequestXPCOM(webdavURL,HTTPmethod,HTTPheaders,XMLreq) {
 }
 
 function AsyncCardDavReport(webdavURL, filter, target) {
-	var report = new sogoWebDAV(webdavURL, target);
+	var timestamp = Date.now();
+	var report = new sogoWebDAV(webdavURL, target, timestamp, true);
 	report.report(buildCardDavReportXML(filter));
+
+	return timestamp;
 }
 
 function cardDavReport(webdavURL, filter) {

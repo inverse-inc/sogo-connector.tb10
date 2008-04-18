@@ -45,6 +45,7 @@ CardDavAutoCompleteSession.prototype = {
  active: false,
  listener: null,
  searchString: null,
+ lastRequest: 0,
 
  mUrl: null,
  get serverURL() { return this.mUrl; },
@@ -62,7 +63,7 @@ CardDavAutoCompleteSession.prototype = {
 				 this.active = true;
 				 this.listener = listener;
 				 this.searchString = searchString;
-				 AsyncCardDavReport(url, searchString, this);
+				 this.lastRequest = AsyncCardDavReport(url, searchString, this);
 			 }
 			 else {
 				 dump("no url in CardDavAutoCompleteSession.prototype.onStartLookup\n");
@@ -84,7 +85,7 @@ CardDavAutoCompleteSession.prototype = {
 // 	 dump("CardDavAutoCompleteSession.prototype.onStopLookup\n");
  },
  onDAVQueryComplete: function(status, result, data) {
-	 if (this.active && result) {
+	 if (this.active && data == this.lastRequest && result) {
 		 var resultArray = Components.classes["@mozilla.org/supports-array;1"]
 		 .createInstance(Components.interfaces.nsISupportsArray);
 
