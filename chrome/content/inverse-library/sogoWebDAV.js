@@ -48,7 +48,7 @@ multiStatusParser.prototype = {
 					var hrefNodes = this._getNodes(nodes[i], "href");
 					var href = this._parseNode(hrefNodes[0]);
 					var propstats = this._getPropstats(nodes[i]);
-					
+
 					responses[href] = propstats;
 				}
 			}
@@ -78,7 +78,12 @@ multiStatusParser.prototype = {
 			var rawStatus = this._getNodes(nodes[i], "status")[0]
 				.childNodes[0].nodeValue;
 			var status = this._parseStatus("" + rawStatus);
-			propstats[status] = this._getProps(nodes[i]);
+			var props = this._getProps(nodes[i]);
+			if (propstats[status])
+				for (var prop in props)
+					propstats[status][prop] = props[prop];
+			else
+				propstats[status] = props;
 		}
 
 		return propstats;
@@ -97,8 +102,11 @@ multiStatusParser.prototype = {
 		var props = {};
 
 		var nodes = this._getNodes(topNode, "prop")[0].childNodes;
-		for (var i = 0; i < nodes.length; i++)
-			props[nodes[i].localName] = this._parseNode(nodes[i]);
+		for (var i = 0; i < nodes.length; i++) {
+			if (nodes[i].nodeType == 1
+					== Components.interfaces.nsIDOMNode.ELEMENT_NODE)
+				props[nodes[i].localName] = this._parseNode(nodes[i]);
+		}
 
 		return props;
 	},
