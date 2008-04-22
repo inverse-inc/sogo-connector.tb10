@@ -136,13 +136,13 @@ multiStatusParser.prototype = {
 };
 
 function xmlEscape(text) {
-	return text.replace("&", "&amp;").replace("<", "&lt;");
+	return text.replace("&", "&amp;", "g").replace("<", "&lt;", "g");
 }
 
 function xmlUnescape(text) {
-	var s = (""+text).replace(/&lt;/g, "<");
-	s = s.replace(/&gt;/g, ">");
-	s = s.replace(/&amp;/g, "&");
+	var s = (""+text).replace(/&lt;/g, "<", "g");
+	s = s.replace(/&gt;/g, ">", "g");
+	s = s.replace(/&amp;/g, "&",  "g");
 
 	return s;
 }
