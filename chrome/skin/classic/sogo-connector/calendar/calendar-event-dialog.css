@@ -1,0 +1,70 @@
+.cal-attendee-button {
+    -moz-box-orient: vertical;
+    min-width: 0px;
+    list-style-image: url(chrome://messenger/skin/addressbook/icons/addressbook-toolbar.png);
+}
+
+toolbar[mode="full"] .cal-attendee-button {
+    min-width: 55px;
+}
+
+/*--------------------------------------------------------------------
+ *   Event dialog toolbar buttons - small
+ *-------------------------------------------------------------------*/
+
+toolbar[iconsize="small"] .cal-attendee-button {
+    -moz-box-orient: vertical;
+/*     list-style-image: url("chrome://calendar/skin/sun-calendar-event-dialog-toolbar.png"); */
+}
+
+#button-accept {
+    list-style-image: url(chrome://sogo-connector/skin/calendar/accept-flat.png);
+    -moz-image-region: rect(0px 24px 24px 0px);
+}
+
+#button-accept[disabled="true"],
+#button-accept[disabled="true"]:hover,
+#button-accept[disabled="true"]:hover:active {
+    list-style-image: url(chrome://sogo-connector/skin/calendar/accept-off.png);
+}
+
+#button-accept:hover {
+    list-style-image: url(chrome://sogo-connector/skin/calendar/accept-high.png);
+}
+
+#button-accept:hover:active {
+}
+
+#button-decline {
+    list-style-image: url(chrome://sogo-connector/skin/calendar/decline-flat.png);
+    -moz-image-region: rect(0px 24px 24px 0px);
+}
+
+#button-decline[disabled="true"],
+#button-decline[disabled="true"]:hover,
+#button-decline[disabled="true"]:hover:active {
+    list-style-image: url(chrome://sogo-connector/skin/calendar/decline-off.png);
+}
+
+#button-decline:hover {
+    list-style-image: url(chrome://sogo-connector/skin/calendar/decline-high.png);
+}
+#button-decline:hover:active {
+}
+
+#button-close {
+    -moz-image-region: rect(0px 144px 24px 120px);
+}
+
+#button-close[disabled="true"],
+#button-close[disabled="true"]:hover,
+#button-close[disabled="true"]:hover:active {
+    -moz-image-region: rect(48px 144px 72px 120px);
+}
+
+#button-close:hover {
+    -moz-image-region: rect(24px 144px 48px 120px);
+}
+
+#button-close:hover:active {
+}

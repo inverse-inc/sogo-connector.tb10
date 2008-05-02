@@ -2,10 +2,56 @@
 
 <!DOCTYPE overlay SYSTEM "chrome://sogo-connector/locale/calendar/calendar-event-dialog.dtd">
 
+<?xml-stylesheet type="text/css" href="chrome://global/skin/global.css"?>
+<?xml-stylesheet type="text/css"
+  href="chrome://sogo-connector/skin/calendar/calendar-event-dialog.css"?>
+<?xml-stylesheet type="text/css"
+  href="chrome://sogo-connector/content/calendar/calendar-event-dialog.css"?>
+
 <overlay id="inverseCalendarEventOverlay"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/x-javascript"
     src="chrome://sogo-connector/content/calendar/calendar-event-dialog.js"/>
+
+  <commandset id="itemCommands">
+    <command id="cmd_SCAccept" oncommand="SCAcceptEvent();"/>
+    <command id="cmd_SCDecline" oncommand="SCDeclineEvent();"/>
+    <command id="cmd_SCClose" oncommand="SCCloseEvent();"/>
+  </commandset>
+
+  <toolbox id="event-toolbox" visible="false">
+    <toolbar id="event-toolbar" collapsed="true"/>
+    <toolbar id="event-attendee-toolbar"
+      defaultset="button-accept,button-decline"
+      class="chromeclass-toolbar"
+      collapsed="true"
+      customizable="false">
+      <toolbarbutton id="button-accept"
+	mode="dialog"
+	class="cal-attendee-button"
+	label="&attendee.toolbar.accept.label;"
+	command="cmd_SCAccept"
+	disable-on-readonly="true"/>
+      <toolbarbutton id="button-decline"
+	mode="dialog"
+	class="cal-attendee-button"
+	label="&attendee.toolbar.decline.label;"
+	command="cmd_SCDecline"
+	disable-on-readonly="true"/>
+    </toolbar>
+    <toolbar id="event-close-toolbar"
+      defaultset="button-close"
+      class="chromeclass-toolbar"
+      collapsed="false"
+      customizable="false">
+      <toolbarbutton id="button-close"
+	mode="dialog"
+	class="cal-attendee-button"
+	label="&attendee.toolbar.close.label;"
+	command="cmd_SCClose"
+	disable-on-readonly="true"/>
+    </toolbar>
+  </toolbox>
 
   <row id="attendee-row" position="1">
     <label id="fixedConfidentialLabel" collapsed="true"

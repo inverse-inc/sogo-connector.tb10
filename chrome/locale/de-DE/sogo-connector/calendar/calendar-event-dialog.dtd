@@ -1,3 +1,6 @@
+<!ENTITY  attendee.toolbar.accept.label "Annehmen">
+<!ENTITY  attendee.toolbar.decline.label "Ablehnen">
+<!ENTITY  attendee.toolbar.close.label "Schließen">
 <!ENTITY  event.organizers.label                           "Veranstalter">
 <!ENTITY  event.menu.options.privacy.confidential.label    "v">
 <!ENTITY  event.confidential.label                         "Vertraulicher Termin">
