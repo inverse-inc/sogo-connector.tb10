@@ -98,11 +98,13 @@ CalDAVAclManager.prototype = {
     var entry = null;
 
     var calendarURL = fixURL(calendarURI.spec);
-    var componentURL = calendarURL + componentID;
     var calendar = this.calendarEntry(calendarURI);
     entry = new CalDAVAclComponentEntry(componentID);
     entry.parentCalendarEntry = calendar;
-    this._queryComponent(entry, componentURL);
+    if (componentID) {
+      var componentURL = calendar.mItemInfoCache[component.id].locationPath;
+      this._queryComponent(entry, componentURL);
+    }
 
     return entry;
   },
@@ -440,9 +442,11 @@ CalDAVAclComponentEntry.prototype = {
     return this.parentCalendarEntry.userIsOwner();
   },
  userCanModify: function userCanModify() {
-    return (this.userPrivileges
-	    .indexOf("{DAV:}write")
-	    > -1);
+    var privileges = (this.id
+		      ? this.userPrivileges
+		      : this.parentCalendarEntry.userPrivileges);
+
+    return (privileges.indexOf("{DAV:}write") > -1);
   },
  userCanRespond: function userCanRespond() {
     return (this.userPrivileges

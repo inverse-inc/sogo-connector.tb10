@@ -23,8 +23,7 @@ function SCOnLoadHandler(event) {
 	if (calendar.type == "caldav") {
 		calendar = calendar.wrappedJSObject;
 		component = window.arguments[0].calendarEvent;
-		var componentURL = calendar.mItemInfoCache[component.id].locationPath;
-		componentEntry = mgr.componentEntry(calendar.uri, componentURL);
+		componentEntry = mgr.componentEntry(calendar.uri, component.id);
 		initInterval = setInterval(SCReadyCallback, 100);
 	}
 }
