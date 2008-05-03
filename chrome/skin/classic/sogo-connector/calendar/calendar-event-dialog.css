@@ -68,3 +68,21 @@ toolbar[iconsize="small"] .cal-attendee-button {
 
 #button-close:hover:active {
 }
+
+#button-close.pinstripe {
+    -moz-image-region: rect(0px 192px 32px 160px);
+}
+
+#button-close.pinstripe[disabled="true"],
+#button-close.pinstripe[disabled="true"]:hover,
+#button-close.pinstripe[disabled="true"]:hover:active {
+    -moz-image-region: rect(64px 192px 96px 160px);
+}
+
+#button-close.pinstripe:hover {
+    -moz-image-region: rect(32px 192px 64px 160px);
+}
+
+#button-close.pinstripe:hover:active {
+}
+

@@ -18,12 +18,27 @@ function SCReadyCallback() {
 	}
 }
 
+function fixCloseButton() {
+	var appInfo = Components.classes["@mozilla.org/xre/app-info;1"]
+		.getService(Components.interfaces.nsIXULRuntime);
+	if (appInfo.OS == "Darwin") {
+		var closeBtn = document.getElementById("button-close");
+		var closeCls = closeBtn.getAttribute("class");
+		closeBtn.setAttribute("class", closeCls + " pinstripe");
+	}
+}
+
 function SCOnLoadHandler(event) {
+	fixCloseButton();
+
 	var calendar = window.arguments[0].calendar;
 	if (calendar.type == "caldav") {
 		calendar = calendar.wrappedJSObject;
 		component = window.arguments[0].calendarEvent;
-		componentEntry = mgr.componentEntry(calendar.uri, component.id);
+		var componentURL = ((component.id)
+												? calendar.mItemInfoCache[component.id].locationPath
+												: null);
+		componentEntry = mgr.componentEntry(calendar.uri, componentURL);
 		initInterval = setInterval(SCReadyCallback, 100);
 	}
 }
@@ -178,7 +193,7 @@ function SCUpdateCustomFields() {
 }
 
 function SCLoadOrganizers() {
-	var organizers = new Array();
+	var organizers = [];
 
 	var composeService = Components.classes["@mozilla.org/messengercompose;1"]
 		.getService(Components.interfaces.nsIMsgComposeService);
@@ -214,12 +229,36 @@ function SCLoadOrganizers() {
 	return organizers;
 }
 
+function SCLoadAclOrganizers() {
+	var organizers = [];
+
+	var identities = componentEntry.parentCalendarEntry.identities;
+	for (var i = 0; i < identities.length; i++) {
+		var email = identities[i].email;
+		var name = identities[i].cn;
+		if (email && email.indexOf("@") > -1) {
+			if (!(name && name.length))
+				name = email.split("@")[0];
+			var currentOrganizer = { name: name, email: email };
+			if (i == 0)
+				currentOrganizer["default"] = true;
+			organizers.push(currentOrganizer);
+		}
+	}
+
+	return organizers;
+}
+
 function SCFillOrganizers() {
 	// add organizers to the organizer menulist
 	var organizerList = document.getElementById("item-organizer");
 	if (!organizerList) /* Lightning 0.8 */
 		organizerList = document.getElementById("event-grid-item-organizer");
-	var organizers = SCLoadOrganizers();
+	var organizers;
+	if (componentEntry.parentCalendarEntry.hasAccessControl)
+		organizers = SCLoadAclOrganizers();
+	else
+		organizer = SCLoadOrganizers();
 	var selectIndex = 0;
 	for (var i = 0; i < organizers.length; i++) {
 		var organizer = organizers[i];
@@ -238,8 +277,10 @@ function SCUpdateOrganizers(organizers) {
 	if (!existingOrganizer) /* Lightning 0.8 */
 		existingOrganizer = document
 			.getElementById("event-grid-item-existing-organizer");
-	var organizer = window.calendarItem.organizer;
-	if (organizer) {
+	var organizer = component.organizer;
+	if (organizer
+			&& !(componentEntry.parentCalendarEntry.hasAccessControl
+					 && componentEntry.userIsOwner())) {
 		organizers.parentNode.removeChild(organizers);
 		var email = organizer.id.split(":")[1];
 		var fullname = organizer.commonName;
@@ -250,9 +291,12 @@ function SCUpdateOrganizers(organizers) {
 		window.organizer = organizer;
 	}
 	else {
-		existingOrganizer.parentNode.removeChild(existingOrganizer);
-		SCFillOrganizers();
-		SCUpdateExistingOrganizer();
+		if (!componentEntry.parentCalendarEntry.hasAccessControl
+				|| componentEntry.userIsOwner()) {
+			existingOrganizer.parentNode.removeChild(existingOrganizer);
+			SCFillOrganizers();
+			SCUpdateExistingOrganizer();
+		}
 	}
 }
 

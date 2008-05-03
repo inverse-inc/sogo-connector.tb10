@@ -25,11 +25,12 @@ function xmlUnescape(text) {
 function onXMLRequestReadyStateChange(request) {
 //   dump("xmlreadystatechange: " + request.readyState + "\n");
   if (request.readyState == 4) {
-    if (request.client) {
+    if (request.client && request.status) {
       try {
-// 	dump("method: " + request.method + "\n");
-// 	dump("status code: " + request.status + "\n");
+ 	// dump("method: " + request.method + "\n");
+ 	// dump("status code: " + request.status + "\n");
 	var responseText = request.responseText;
+	// dump("response: "  + responseText + "\n");
 
 	var headers = {};
 	var textHeaders = request.getAllResponseHeaders().split("\n");
@@ -94,17 +95,17 @@ CalDAVAclManager.prototype = {
     return entry;
 //     }
   },
- componentEntry: function componentEntry(calendarURI, componentID) {
+ componentEntry: function componentEntry(calendarURI, componentURL) {
     var entry = null;
 
     var calendarURL = fixURL(calendarURI.spec);
     var calendar = this.calendarEntry(calendarURI);
-    entry = new CalDAVAclComponentEntry(componentID);
+    entry = new CalDAVAclComponentEntry(componentURL);
     entry.parentCalendarEntry = calendar;
-    if (componentID) {
-      var componentURL = calendar.mItemInfoCache[component.id].locationPath;
+    if (componentURL)
       this._queryComponent(entry, componentURL);
-    }
+    else
+      entry.userPrivileges = [];
 
     return entry;
   },
@@ -427,13 +428,13 @@ CalDAVAclCalendarEntry.prototype = {
   }
 };
 
-function CalDAVAclComponentEntry(id) {
-  this.id = id;
+function CalDAVAclComponentEntry(url) {
+  this.url = url;
 }
 
 CalDAVAclComponentEntry.prototype = {
  parentCalendarEntry: null,
- id: null,
+ url: null,
  isComponentReady: function isComponentReady() {
     return (this.parentCalendarEntry.isCalendarReady()
 	    && typeof(this.userPrivileges != "undefined"));
@@ -442,7 +443,7 @@ CalDAVAclComponentEntry.prototype = {
     return this.parentCalendarEntry.userIsOwner();
   },
  userCanModify: function userCanModify() {
-    var privileges = (this.id
+    var privileges = (this.url
 		      ? this.userPrivileges
 		      : this.parentCalendarEntry.userPrivileges);
 
