@@ -180,9 +180,9 @@ function SCMakeWidgetsReadOnly() {
 	menuBar.setAttribute("collapsed", "true");
 	var eventGrid = document.getElementById("event-grid");
 	_makeChildNodesReadOnly(eventGrid);
-	var attendeeList = document.getElementById("attendee-list");
-	attendeeList.removeAttribute("onclick");
-	attendeeList.setAttribute("class", "");
+
+	this.SCOldShowAttendeePopup = this.showAttendeePopup;
+	this.showAttendeePopup = SCShowAttendeePopup;
 }
 
 function _makeChildNodesReadOnly(node) {
@@ -190,6 +190,7 @@ function _makeChildNodesReadOnly(node) {
 			== Components.interfaces.nsIDOMNode.ELEMENT_NODE) {
 		if (node.localName == "textbox"
 				|| node.localName == "menulist"
+				|| node.localName == "menuitem"
 				|| node.localName == "datetimepicker"
 				|| node.localName == "checkbox")
 			node.setAttribute("disabled", "true");
@@ -420,5 +421,12 @@ function SCCloseEvent() {
 	var dialog = document.getElementById("sun-calendar-event-dialog");
 	dialog.cancelDialog();
 }
+
+function SCShowAttendeePopup(event) {
+	SCOldShowAttendeePopup(event);
+	var popup = document.getElementById("attendee-popup");
+	_makeChildNodesReadOnly(popup);
+}
+
 
 window.addEventListener("load", SCOnLoadHandler, false);
