@@ -194,7 +194,7 @@ function _makeChildNodesReadOnly(node) {
 				|| node.localName == "checkbox")
 			node.setAttribute("disabled", "true");
 		else {
-			dump("node: " + node.localName + "\n");
+// 			dump("node: " + node.localName + "\n");
 			for (var i = 0; i < node.childNodes.length; i++)
 				_makeChildNodesReadOnly(node.childNodes[i]);
 		}
@@ -314,29 +314,31 @@ function SCUpdateOrganizers(organizers) {
 			.getElementById("event-grid-item-existing-organizer");
 	var organizer = component.organizer;
 
+	var organizerMenu = false;
 	if (organizer) {
-		organizers.parentNode.removeChild(organizers);
-		var email = organizer.id.split(":")[1];
-		var fullname = organizer.commonName;
-		if (!fullname)
-			fullname = email.split("@")[0];
-		var organizerName = fullname + " <" + email + ">";
-		existingOrganizer.setAttribute('value', organizerName);
-		window.organizer = organizer;
-	}
-	else {
-		if (componentEntry.parentCalendarEntry.hasAccessControl) {
-			if (componentEntry.userIsOwner()) {
-				existingOrganizer.parentNode.removeChild(existingOrganizer);
-				SCFillOrganizers();
-				SCUpdateExistingOrganizer();
-			}
-		}
+		if (componentEntry.parentCalendarEntry.hasAccessControl
+				&& componentEntry.userIsOwner()
+				&& !eventHasAttendees())
+			organizerMenu = true;
 		else {
+			organizers.parentNode.removeChild(organizers);
+			var email = organizer.id.split(":")[1];
+			var fullname = organizer.commonName;
+			if (!fullname)
+				fullname = email.split("@")[0];
+			var organizerName = fullname + " <" + email + ">";
+			existingOrganizer.setAttribute('value', organizerName);
+			window.organizer = organizer;
+		}
+	}
+	else
+		organizerMenu = (!componentEntry.parentCalendarEntry.hasAccessControl
+										 || componentEntry.userIsOwner());
+
+	if (organizerMenu) {
 			existingOrganizer.parentNode.removeChild(existingOrganizer);
 			SCFillOrganizers();
 			SCUpdateExistingOrganizer();
-		}
 	}
 }
 
