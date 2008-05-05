@@ -22,45 +22,6 @@ function xmlUnescape(text) {
   return s;
 }
 
-function onXMLRequestReadyStateChange(request) {
-//   dump("xmlreadystatechange: " + request.readyState + "\n");
-  if (request.readyState == 4) {
-    if (request.client && request.status) {
-      try {
- 	// dump("method: " + request.method + "\n");
- 	// dump("status code: " + request.status + "\n");
-	var responseText = request.responseText;
-	// dump("response: "  + responseText + "\n");
-
-	var headers = {};
-	var textHeaders = request.getAllResponseHeaders().split("\n");
-	for (var i = 0; i < textHeaders.length; i++) {
-	  var line = textHeaders[i].replace(/\r$/, "", "g");
-	  if (line.length) {
-	    var elems = line.split(":");
-	    var key = elems[0].toLowerCase();
-	    var value = elems[1].replace(/(^[ 	]+|[ 	]+$)/, "", "g");
-	    headers[key] = value;
-	  }
-	}
-
-	request.client.onDAVQueryComplete(request.status,
-					  request.url,
-					  headers,
-					  responseText,
-					  request.callbackData);
-      }
-      catch(e) {
-	dump("CAlDAVAclManager.js: an exception occured\n" + e + "\n"
-	     + e.fileName + ":" + e.lineNumber + "\n");
-      }
-    }
-    request.client = null;
-    request.url = null;
-    request.callbackData = null;
-  }
-}
-
 function statusCode(status) {
   var code = -1;
 
@@ -96,11 +57,10 @@ CalDAVAclManager.prototype = {
 //     }
   },
  componentEntry: function componentEntry(calendarURI, componentURL) {
-    var entry = null;
-
     var calendarURL = fixURL(calendarURI.spec);
     var calendar = this.calendarEntry(calendarURI);
-    entry = new CalDAVAclComponentEntry(componentURL);
+
+    var entry = new CalDAVAclComponentEntry(componentURL);
     entry.parentCalendarEntry = calendar;
     if (componentURL)
       this._queryComponent(entry, componentURL);
@@ -128,6 +88,7 @@ CalDAVAclManager.prototype = {
  _optionsCallback: function _optionsCallback(status, url, headers,
 					     response, data) {
    var dav = headers["dav"];
+//    dump("options callback\n");
    if (dav.indexOf("access-control")) {
      var calURL = fixURL(url);
      this.calendars[calURL].hasAccessControl = true;
@@ -151,7 +112,7 @@ CalDAVAclManager.prototype = {
 	var node = nodes[0];
 	var subnodes = node.childNodes;
 	for (var i = 0; i < subnodes.length; i++) {
-	  if (subnodes[i].nodeType == Node.ELEMENT_NODE) {
+	  if (subnodes[i].nodeType == Components.interfaces.nsIDOMNode.ELEMENT_NODE) {
 	    var value = subnodes[i].childNodes[0].nodeValue;
 	    if (value.indexOf("/") == 0) {
 	      var clone = this.calendars[url].uri.clone();
@@ -168,7 +129,7 @@ CalDAVAclManager.prototype = {
       if (nodes.length) {
 	var subnodes = nodes[0].childNodes;
 	for (var i = 0; i < subnodes.length; i++) {
-	  if (subnodes[i].nodeType == Node.ELEMENT_NODE) {
+	  if (subnodes[i].nodeType == Components.interfaces.nsIDOMNode.ELEMENT_NODE) {
 	    var value = subnodes[i].childNodes[0].nodeValue;
 	    if (value.indexOf("/") == 0) {
 	      var clone = this.calendars[url].uri.clone();
@@ -322,6 +283,7 @@ CalDAVAclManager.prototype = {
 
  /* component controller */
  _queryComponent: function _queryComponent(entry, url) {
+    dump("queryCompoennt\n");
     var propfind = ("<?xml version='1.0' encoding='UTF-8'?>\n"
 		    + "<D:propfind xmlns:D='DAV:'><D:prop><D:current-user-privilege-set/></D:prop></D:propfind>");
     this.xmlRequest(url, "PROPFIND", propfind,
@@ -344,7 +306,7 @@ CalDAVAclManager.prototype = {
     for (var i = 0; i < nodes.length; i++) {
       var subnodes = nodes[i].childNodes;
       for (var j = 0; j < subnodes.length; j++)
-	if (subnodes[j].nodeType == Node.ELEMENT_NODE) {
+	if (subnodes[j].nodeType == Components.interfaces.nsIDOMNode.ELEMENT_NODE) {
 	  var ns = subnodes[j].namespaceURI;
 	  var tag = subnodes[j].localName;
 	  var privilege = "{" + ns + "}" + tag;
@@ -356,25 +318,60 @@ CalDAVAclManager.prototype = {
     return privileges;
   },
  xmlRequest: function xmlRequest(url, method, parameters, headers, data) {
-    var xmlRequest
+    var request
     = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
-    .createInstance(Components.interfaces.nsIXMLHttpRequest);
-
+    .createInstance(Components.interfaces.nsIJSXMLHttpRequest);
 //     dump("xmlrequest\n");
-    xmlRequest.open(method, url, true);
+    request.open(method, url, true);
     if (headers)
       for (var header in headers)
-	xmlRequest.setRequestHeader(header, headers[header]);
-    xmlRequest.url = fixURL(url);
-    xmlRequest.client = this;
-    xmlRequest.method = method;
-    xmlRequest.callbackData = data;
-    xmlRequest.onreadystatechange = function() {
-      onXMLRequestReadyStateChange(xmlRequest);
+	request.setRequestHeader(header, headers[header]);
+    request.url = fixURL(url);
+    request.client = this;
+    request.method = method;
+    request.callbackData = data;
+    request.onreadystatechange = function() {
+//       dump("method: " + request.method + "\n");
+//       dump("status code: " + request.status + "\n");
+      if (request.readyState == 4) {
+	if (request.client && request.status) {
+	  try {
+	    var responseText = request.responseText;
+	    // dump("response: "  + responseText + "\n");
+	
+	    var headers = {};
+	    var textHeaders = request.getAllResponseHeaders().split("\n");
+	    for (var i = 0; i < textHeaders.length; i++) {
+	      var line = textHeaders[i].replace(/\r$/, "", "g");
+	      if (line.length) {
+		var elems = line.split(":");
+		var key = elems[0].toLowerCase();
+		var value = elems[1].replace(/(^[ 	]+|[ 	]+$)/, "", "g");
+		headers[key] = value;
+	      }
+	    }
+
+	    request.client.onDAVQueryComplete(request.status,
+					      request.url,
+					      headers,
+					      responseText,
+					      request.callbackData);
+	  }
+	  catch(e) {
+	    dump("CAlDAVAclManager.js: an exception occured\n" + e + "\n"
+		 + e.fileName + ":" + e.lineNumber + "\n");
+	  }
+	}
+	request.client = null;
+	request.url = null;
+	request.callbackData = null;
+	request.onreadystatechange = null;
+	request = null;
+      }
     };
   
-    xmlRequest.send(parameters);
-//     dump("xmlrequest sent\n");
+    request.send(parameters);
+//     dump("xmlrequest sent: '" + method + "\n");
   },
 
  QueryInterface: function(aIID) {
@@ -392,13 +389,18 @@ function CalDAVAclCalendarEntry(uri) {
 CalDAVAclCalendarEntry.prototype = {
  uri: null,
  isCalendarReady: function isCalendarReady() {
+//     dump("ac1: " + typeof(this.hasAccessControl) + "\n");
+//     dump("ac2: " + typeof(this.userPrincipals) + "\n");
+//     dump("ac3: " + typeof(this.userPrivileges) + "\n");
+//     dump("ac4: " + typeof(this.userAddresses) + "\n");
+//     dump("ac5: " + typeof(this.identities) + "\n");
+//     dump("ac6: " + typeof(this.ownerPrincipal) + "\n");
     return (typeof(this.hasAccessControl) != "undefined"
 	    && typeof(this.userPrincipals) != "undefined"
 	    && typeof(this.userPrivileges) != "undefined"
-	    && typeof(this.identities) != "undefined"
 	    && typeof(this.userAddresses) != "undefined"
-	    && typeof(this.ownerPrincipal) != "undefined"
-	    && typeof(this.identities) != "undefined");
+	    && typeof(this.identities) != "undefined"
+	    && typeof(this.ownerPrincipal) != "undefined");
   },
  userIsOwner: function userIsOwner() {
     var result = false;
@@ -435,9 +437,10 @@ function CalDAVAclComponentEntry(url) {
 CalDAVAclComponentEntry.prototype = {
  parentCalendarEntry: null,
  url: null,
+ userPrivileges: null,
  isComponentReady: function isComponentReady() {
     return (this.parentCalendarEntry.isCalendarReady()
-	    && typeof(this.userPrivileges != "undefined"));
+	    && typeof(this.userPrivileges) != "undefined");
   },
  userIsOwner: function userIsOwner() {
     return this.parentCalendarEntry.userIsOwner();

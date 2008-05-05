@@ -1,16 +1,12 @@
 /* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 2 -*- */
 
-var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
-	.getService(Components.interfaces.mozIJSSubScriptLoader);
-loader.loadSubScript("chrome://sogo-connector/content/calendar/CalDAVAclManager.js");
-
-var mgr = new CalDAVAclManager();
 var initInterval = -1;
 var componentEntry = null;
 var component = null;
 
 function SCReadyCallback() {
 	var ready = componentEntry.isComponentReady();
+	dump("ready: " + ready + "\n");
 	if (ready) {
 		clearInterval(initInterval);
 		SCUpdateToolbars();
@@ -33,13 +29,17 @@ function SCOnLoadHandler(event) {
 
 	var calendar = window.arguments[0].calendar;
 	if (calendar.type == "caldav") {
+		var mgr = Components.classes["@inverse.ca/calendar/caldav-acl-manager;1"]
+			.getService(Components.interfaces.nsISupports)
+			.wrappedJSObject;
+
 		calendar = calendar.wrappedJSObject;
 		component = window.arguments[0].calendarEvent;
 		var componentURL = ((component.id)
 												? calendar.mItemInfoCache[component.id].locationPath
 												: null);
 		componentEntry = mgr.componentEntry(calendar.uri, componentURL);
-		initInterval = setInterval(SCReadyCallback, 100);
+		initInterval = setInterval(SCReadyCallback, 200);
 	}
 }
 
@@ -47,6 +47,19 @@ function eventHasAttendees() {
 	var attendees = component.getAttendees({});
 
 	return (attendees.length > 0);
+}
+
+function getWindowAttendeeById(attendeeID) {
+	var attendee = null;
+
+	var i = 0;
+	while (!attendee && i < window.attendees.length)
+		if (window.attendees[i].id.toLowerCase() == attendeeID)
+			attendee = window.attendees[i];
+		else
+			i++;
+
+	return attendee;
 }
 
 function getUserAsAttendee(delegated) {
@@ -58,7 +71,7 @@ function getUserAsAttendee(delegated) {
 											 : componentEntry.parentCalendarEntry.userAddresses);
 	while (!attendee && i < userAddresses.length) {
 		dump("test address: " + userAddresses[i] + "\n");
-		var curAttendee = component.getAttendeeById(userAddresses[i]);
+		var curAttendee = getWindowAttendeeById(userAddresses[i].toLowerCase());
 		if (curAttendee)
 			attendee = curAttendee;
 		else
@@ -102,18 +115,14 @@ function SCUpdateToolbars() {
 					&& userIsAttendee()
 					&& !userIsOrganizer()) {
 				var attendee = getUserAsAttendee(false);
-				if (attendee.rsvp) {
-					activeToolbar = "event-attendee-toolbar";
-					var status = attendee.icalProperty.getParameter("PARTSTAT");
-					if (status == "ACCEPTED")
-						document.getElementById("button-accept")
-							.setAttribute("collapsed", "true");
-					else if (status == "DECLINED")
-						document.getElementById("button-decline")
-							.setAttribute("collapsed", "true");
-				}
-				else
-					activeToolbar = "event-close-toolbar";
+				activeToolbar = "event-attendee-toolbar";
+				var status = attendee.icalProperty.getParameter("PARTSTAT");
+				if (status == "ACCEPTED")
+					document.getElementById("button-accept")
+						.setAttribute("collapsed", "true");
+				else if (status == "DECLINED")
+					document.getElementById("button-decline")
+						.setAttribute("collapsed", "true");
 			}
 			else
 				activeToolbar = "event-toolbar";
@@ -130,18 +139,14 @@ function SCUpdateToolbars() {
 									 && (componentEntry.userCanModify()
 											 || componentEntry.userCanRespond())) {
 						var attendee = getUserAsAttendee(true);
-						if (attendee.rsvp) {
-							activeToolbar = "event-attendee-toolbar";
-							var status = attendee.icalProperty.getParameter("PARTSTAT");
-							if (status == "ACCEPTED")
-								document.getElementById("button-accept")
-									.setAttribute("collapsed", "true");
-							else if (status == "DECLINED")
-								document.getElementById("button-decline")
-									.setAttribute("collapsed", "true");
-						}
-						else
-							activeToolbar = "event-close-toolbar";
+						activeToolbar = "event-attendee-toolbar";
+						var status = attendee.icalProperty.getParameter("PARTSTAT");
+						if (status == "ACCEPTED")
+							document.getElementById("button-accept")
+								.setAttribute("collapsed", "true");
+						else if (status == "DECLINED")
+							document.getElementById("button-decline")
+								.setAttribute("collapsed", "true");
 					}
 					else
 						activeToolbar = "event-close-toolbar";
@@ -163,6 +168,36 @@ function SCUpdateToolbars() {
 		closeToolbar.setAttribute("collapsed", "true");
 		var newToolbar = document.getElementById(activeToolbar);
 		newToolbar.setAttribute("collapsed", "false");
+	}
+	if (activeToolbar != "event-toolbar") {
+		dump("toolbar: " + activeToolbar + "\n");
+		SCMakeWidgetsReadOnly();
+	}
+}
+
+function SCMakeWidgetsReadOnly() {
+	var menuBar = document.getElementById("event-menubar");
+	menuBar.setAttribute("collapsed", "true");
+	var eventGrid = document.getElementById("event-grid");
+	_makeChildNodesReadOnly(eventGrid);
+	var attendeeList = document.getElementById("attendee-list");
+	attendeeList.removeAttribute("onclick");
+	attendeeList.setAttribute("class", "");
+}
+
+function _makeChildNodesReadOnly(node) {
+	if (node.nodeType
+			== Components.interfaces.nsIDOMNode.ELEMENT_NODE) {
+		if (node.localName == "textbox"
+				|| node.localName == "menulist"
+				|| node.localName == "datetimepicker"
+				|| node.localName == "checkbox")
+			node.setAttribute("disabled", "true");
+		else {
+			dump("node: " + node.localName + "\n");
+			for (var i = 0; i < node.childNodes.length; i++)
+				_makeChildNodesReadOnly(node.childNodes[i]);
+		}
 	}
 }
 
@@ -278,9 +313,8 @@ function SCUpdateOrganizers(organizers) {
 		existingOrganizer = document
 			.getElementById("event-grid-item-existing-organizer");
 	var organizer = component.organizer;
-	if (organizer
-			&& !(componentEntry.parentCalendarEntry.hasAccessControl
-					 && componentEntry.userIsOwner())) {
+
+	if (organizer) {
 		organizers.parentNode.removeChild(organizers);
 		var email = organizer.id.split(":")[1];
 		var fullname = organizer.commonName;
@@ -291,8 +325,14 @@ function SCUpdateOrganizers(organizers) {
 		window.organizer = organizer;
 	}
 	else {
-		if (!componentEntry.parentCalendarEntry.hasAccessControl
-				|| componentEntry.userIsOwner()) {
+		if (componentEntry.parentCalendarEntry.hasAccessControl) {
+			if (componentEntry.userIsOwner()) {
+				existingOrganizer.parentNode.removeChild(existingOrganizer);
+				SCFillOrganizers();
+				SCUpdateExistingOrganizer();
+			}
+		}
+		else {
 			existingOrganizer.parentNode.removeChild(existingOrganizer);
 			SCFillOrganizers();
 			SCUpdateExistingOrganizer();
@@ -328,33 +368,21 @@ function SCUpdateExistingOrganizer(event) {
 }
 
 function _imipUpdateStatus(type) {
-	var oldItem = component;
-	component = oldItem.clone();
+	component = component.clone();
 	var attendee = getUserAsAttendee(!componentEntry.userIsOwner());
-	attendee.setProperty("PARTSTAT", type);
+ 	attendee.setProperty("PARTSTAT", type);
+	window.calendarItem = component;
 
-	var saveListener = {
-	onOperationComplete: function(calendar, status, oType, id, detail) {
-			window.onCommandCancel = function() { return true; };
-			var dialog = document.getElementById("sun-calendar-event-dialog");
-			dialog.cancelDialog();
-		}
-	};
 	var calendar = window.arguments[0].calendar;
-	calendar.modifyItem(component, oldItem, saveListener);
-
-	var imipItemBase = component.clone();
-	imipItemBase.removeAllAttendees();
-	imipItemBase.addAttendee(attendee);
-	imipItemBase.setProperty("METHOD", "REQUEST");
 	var imipItem = Components.classes["@mozilla.org/calendar/itip-item;1"]
 		.createInstance(Components.interfaces.calIItipItem);
-	imipItem.init(imipItemBase.icalString);
-	dump("string:\n" + imipItemBase.icalString + "\n\n\n");
+	imipItem.init(component.icalString);
+	imipItem.setAttendeeStatus(attendee.id, type);
 	imipItem.receivedMethod = "REQUEST";
 	imipItem.responseMethod = "REPLY";
 	imipItem.isSend = true;
-	imipItem.targetCalendar = calendar;
+	if (type == "ACCEPTED")
+		imipItem.targetCalendar = calendar;
 	imipItem.autoResponse = Components.interfaces.calIItipItem.USER;
 
 	var emptyListener = {
@@ -368,9 +396,13 @@ function _imipUpdateStatus(type) {
 		.createInstance(Components.interfaces.calIItipProcessor);
 	itipProc.processItipItem(imipItem, emptyListener);
 
-// 	window.saveItem = function() { return component; };
-// 	var dialog = document.getElementById("sun-calendar-event-dialog");
-// 	dialog.acceptDialog();
+	var dialog = document.getElementById("sun-calendar-event-dialog");
+	if (type == "DECLINED")
+		dialog.acceptDialog();
+	else {
+		window.onCommandCancel = function() { return true; };
+		dialog.cancelDialog();
+	}
 }
 
 function SCAcceptEvent() {
