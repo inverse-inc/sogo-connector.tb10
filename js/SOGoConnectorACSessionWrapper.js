@@ -46,7 +46,6 @@ function SOGoConnectorACSessionWrapper() {
 SOGoConnectorACSessionWrapper.prototype = {
  sessions: null,
  listeners: null,
- mUrl: null,
 
  waiting: 0,
  running: false,
