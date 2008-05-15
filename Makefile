@@ -26,6 +26,7 @@ MANIFEST-pre:
 	@find -type f -name "*.xul" >> $@
 	@find -type f -name "*.xml" >> $@
 	@find -type f -name "*.dtd" >> $@
+	@find -type f -name "*.idl" >> $@
 	@find -type f -name "*.js" >> $@
 	@find -type f -name "*.css" >> $@
 	@find -type f -name "*.png" >> $@
@@ -49,4 +50,3 @@ clean:
 
 distclean: clean
 	rm -f MANIFEST
-
