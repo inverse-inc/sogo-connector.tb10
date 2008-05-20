@@ -153,7 +153,9 @@ function SCUpdateToolbars() {
 				}
 			}
 			else {
-				if (componentEntry.userCanModify())
+				if ((!componentEntry.url
+						 && componentEntry.parentCalendarEntry.userCanAddComponents())
+						|| componentEntry.userCanModify())
 					activeToolbar = "event-toolbar";
 				else
 					activeToolbar = "event-close-toolbar";
@@ -290,11 +292,9 @@ function SCFillOrganizers() {
 	var organizerList = document.getElementById("item-organizer");
 	if (!organizerList) /* Lightning 0.8 */
 		organizerList = document.getElementById("event-grid-item-organizer");
-	var organizers;
-	if (componentEntry.parentCalendarEntry.hasAccessControl)
-		organizers = SCLoadAclOrganizers();
-	else
-		organizer = SCLoadOrganizers();
+	var organizers = (componentEntry.parentCalendarEntry.hasAccessControl
+										? SCLoadAclOrganizers()
+										: SCLoadOrganizers());
 	var selectIndex = 0;
 	for (var i = 0; i < organizers.length; i++) {
 		var organizer = organizers[i];
@@ -337,9 +337,9 @@ function SCUpdateOrganizers(organizers) {
 										 || componentEntry.userIsOwner());
 
 	if (organizerMenu) {
-			existingOrganizer.parentNode.removeChild(existingOrganizer);
-			SCFillOrganizers();
-			SCUpdateExistingOrganizer();
+		existingOrganizer.parentNode.removeChild(existingOrganizer);
+		SCFillOrganizers();
+		SCUpdateExistingOrganizer();
 	}
 }
 
@@ -428,5 +428,44 @@ function SCShowAttendeePopup(event) {
 	_makeChildNodesReadOnly(popup);
 }
 
+function SCGetCalendarManager() {
+	var mgr = new SCCalendarManager();
+
+	return mgr;
+}
+
+this.SCOldGetCalendarManager = getCalendarManager;
+this.getCalendarManager = this.SCGetCalendarManager;
+
+function SCCalendarManager() {
+	this.realMgr = window.SCOldGetCalendarManager();
+}
+
+SCCalendarManager.prototype = {
+	realMgr: null,
+	getCalendars: function SCGetCalendars(arg) {
+		var calendars = this.realMgr.getCalendars(arg);
+		var aclMgr = Components.classes["@inverse.ca/calendar/caldav-acl-manager;1"]
+		.getService(Components.interfaces.nsISupports)
+		.wrappedJSObject;
+
+		var isNew = !(window.arguments[0].calendarEvent.id);
+
+		var result = [];
+		for (var i = 0; i < calendars.length; i++) {
+			var isIncluded = true;
+			if (calendars[i].type == "caldav") {
+				var entry = aclMgr.calendarEntry(calendars[i].uri);
+				isIncluded = entry.userCanAddComponents();
+			}
+
+			dump(calendars[i].name + ": " + isIncluded + "\n");
+			if (isIncluded)
+				result.push(calendars[i]);
+		}
+
+		return result;
+	}
+};
 
 window.addEventListener("load", SCOnLoadHandler, false);

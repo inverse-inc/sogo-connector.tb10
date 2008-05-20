@@ -29,7 +29,7 @@ function statusCode(status) {
     var words = status.split(" ");
     code = parseInt(words[1]);
   }
-  
+
   return code;
 }
 
@@ -43,9 +43,6 @@ CalDAVAclManager.prototype = {
  wrappedJSObject: null,
  calendarEntry: function calendarEntry(calendarURI) {
     var url = fixURL(calendarURI.spec);
-//     if (this.calendars[url])
-//       throw "Calendar with url '" + url + "' is already registered.";
-//     else {
     var entry = this.calendars[url];
     if (!entry) {
       entry = new CalDAVAclCalendarEntry(calendarURI);
@@ -54,7 +51,6 @@ CalDAVAclManager.prototype = {
     }
 
     return entry;
-//     }
   },
  componentEntry: function componentEntry(calendarURI, componentURL) {
     var calendarURL = fixURL(calendarURI.spec);
@@ -71,6 +67,7 @@ CalDAVAclManager.prototype = {
   },
  onDAVQueryComplete: function onDAVQueryComplete(status, url, headers,
 						 response, data) {
+    dump("callback for method: " + data.method + "\n");
     if (data.method == "acl-options")
       this._optionsCallback(status, url, headers, response, data);
     else if (data.method == "collection-set")
@@ -88,9 +85,13 @@ CalDAVAclManager.prototype = {
  _optionsCallback: function _optionsCallback(status, url, headers,
 					     response, data) {
    var dav = headers["dav"];
-//    dump("options callback\n");
-   if (dav.indexOf("access-control")) {
-     var calURL = fixURL(url);
+   dump("options callback: " + url +  " HTTP/1.1 " + status + "\n");
+   dump("headers:\n");
+   for (var k in headers)
+     dump("  " + k + ": " + headers[k] + "\n");
+   var calURL = fixURL(url);
+   dump("dav: " + dav + "\n");
+   if (dav && dav.indexOf("access-control") > -1) {
      this.calendars[calURL].hasAccessControl = true;
      var propfind = ("<?xml version='1.0' encoding='UTF-8'?>\n"
 		     + "<D:propfind xmlns:D='DAV:'><D:prop><D:principal-collection-set/><D:owner/><D:current-user-privilege-set/></D:prop></D:propfind>");
@@ -98,6 +99,14 @@ CalDAVAclManager.prototype = {
 		     {'content-type': "application/xml; charset=utf-8",
 			 'depth': "0"},
 		     {method: "collection-set"});
+   }
+   else {
+     this.calendars[calURL].hasAccessControl = false;
+     this.calendars[calURL].userPrincipals = null;
+     this.calendars[calURL].userPrivileges = null;
+     this.calendars[calURL].userAddresses = null;
+     this.calendars[calURL].identities = null;
+     this.calendars[calURL].ownerPrincipal = null;
    }
   },
  _collectionSetCallback: function _collectionSetCallback(status, url, headers,
@@ -112,7 +121,8 @@ CalDAVAclManager.prototype = {
 	var node = nodes[0];
 	var subnodes = node.childNodes;
 	for (var i = 0; i < subnodes.length; i++) {
-	  if (subnodes[i].nodeType == Components.interfaces.nsIDOMNode.ELEMENT_NODE) {
+	  if (subnodes[i].nodeType
+	      == Components.interfaces.nsIDOMNode.ELEMENT_NODE) {
 	    var value = subnodes[i].childNodes[0].nodeValue;
 	    if (value.indexOf("/") == 0) {
 	      var clone = this.calendars[url].uri.clone();
@@ -129,7 +139,8 @@ CalDAVAclManager.prototype = {
       if (nodes.length) {
 	var subnodes = nodes[0].childNodes;
 	for (var i = 0; i < subnodes.length; i++) {
-	  if (subnodes[i].nodeType == Components.interfaces.nsIDOMNode.ELEMENT_NODE) {
+	  if (subnodes[i].nodeType
+	      == Components.interfaces.nsIDOMNode.ELEMENT_NODE) {
 	    var value = subnodes[i].childNodes[0].nodeValue;
 	    if (value.indexOf("/") == 0) {
 	      var clone = this.calendars[url].uri.clone();
@@ -306,7 +317,8 @@ CalDAVAclManager.prototype = {
     for (var i = 0; i < nodes.length; i++) {
       var subnodes = nodes[i].childNodes;
       for (var j = 0; j < subnodes.length; j++)
-	if (subnodes[j].nodeType == Components.interfaces.nsIDOMNode.ELEMENT_NODE) {
+	if (subnodes[j].nodeType
+	    == Components.interfaces.nsIDOMNode.ELEMENT_NODE) {
 	  var ns = subnodes[j].namespaceURI;
 	  var tag = subnodes[j].localName;
 	  var privilege = "{" + ns + "}" + tag;
@@ -321,7 +333,6 @@ CalDAVAclManager.prototype = {
     var request
     = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
     .createInstance(Components.interfaces.nsIJSXMLHttpRequest);
-//     dump("xmlrequest\n");
     request.open(method, url, true);
     if (headers)
       for (var header in headers)
@@ -330,14 +341,14 @@ CalDAVAclManager.prototype = {
     request.client = this;
     request.method = method;
     request.callbackData = data;
+
+    dump("method: " + request.method + "\nurl: " + url + "\n");
     request.onreadystatechange = function() {
-//       dump("method: " + request.method + "\n");
-//       dump("status code: " + request.status + "\n");
       if (request.readyState == 4) {
-	if (request.client && request.status) {
-	  try {
+	try {
+	  if (request.client && request.status) {
 	    var responseText = request.responseText;
-	    // dump("response: "  + responseText + "\n");
+// 	    dump("response: "  + responseText + "\n");
 	
 	    var headers = {};
 	    var textHeaders = request.getAllResponseHeaders().split("\n");
@@ -357,10 +368,11 @@ CalDAVAclManager.prototype = {
 					      responseText,
 					      request.callbackData);
 	  }
-	  catch(e) {
-	    dump("CAlDAVAclManager.js: an exception occured\n" + e + "\n"
-		 + e.fileName + ":" + e.lineNumber + "\n");
-	  }
+	}
+	catch(e) {
+	  dump("CAlDAVAclManager.js: an exception occured\n" + e + "\n"
+	       + e.fileName + ":" + e.lineNumber + "\n"
+	       + "url: " + request.url + "\n");
 	}
 	request.client = null;
 	request.url = null;
@@ -389,12 +401,13 @@ function CalDAVAclCalendarEntry(uri) {
 CalDAVAclCalendarEntry.prototype = {
  uri: null,
  isCalendarReady: function isCalendarReady() {
-//     dump("ac1: " + typeof(this.hasAccessControl) + "\n");
-//     dump("ac2: " + typeof(this.userPrincipals) + "\n");
-//     dump("ac3: " + typeof(this.userPrivileges) + "\n");
-//     dump("ac4: " + typeof(this.userAddresses) + "\n");
-//     dump("ac5: " + typeof(this.identities) + "\n");
-//     dump("ac6: " + typeof(this.ownerPrincipal) + "\n");
+    var testnull = null;
+    dump (typeof(this.hasAccessControl)+ "\n"
+	  + typeof(this.userPrincipals)+ "\n"
+	  + typeof(this.userPrivileges)+ "\n"
+	  + typeof(this.userAddresses)+ "\n"
+	  + typeof(this.identities)+ "\n"
+	  + typeof(this.ownerPrincipal)+ "\n");
     return (typeof(this.hasAccessControl) != "undefined"
 	    && typeof(this.userPrincipals) != "undefined"
 	    && typeof(this.userPrivileges) != "undefined"
@@ -407,26 +420,30 @@ CalDAVAclCalendarEntry.prototype = {
 
     var i = 0;
 
-//     dump("owner: " + this.ownerPrincipal + "\n");
-    while (!result && i < this.userPrincipals.length) {
-//       dump("user: " + this.userPrincipals[i] + "\n");
-      if (this.userPrincipals[i] == this.ownerPrincipal)
-	result = true;
-      else
-	i++;
+    if (this.hasAccessControl) {
+      //     dump("owner: " + this.ownerPrincipal + "\n");
+      while (!result && i < this.userPrincipals.length) {
+	//       dump("user: " + this.userPrincipals[i] + "\n");
+	if (this.userPrincipals[i] == this.ownerPrincipal)
+	  result = true;
+	else
+	  i++;
+      }
     }
+    else
+      result = true;
 
     return result;
   },
  userCanAddComponents: function userCanAddComponents() {
-    return (this.userPrivileges
-	    .indexOf("{DAV:}bind")
-	    > -1);
+    return (!this.hasAccessControl
+	    || (this.userPrivileges.indexOf("{DAV:}bind")
+		> -1));
   },
  userCanDeleteComponents: function userCanAddComponents() {
-    return (this.userPrivileges
-	    .indexOf("{DAV:}unbind")
-	    > -1);
+    return (!this.hasAccessControl
+	    || (this.userPrivileges.indexOf("{DAV:}unbind")
+		> -1));
   }
 };
 
@@ -440,31 +457,46 @@ CalDAVAclComponentEntry.prototype = {
  userPrivileges: null,
  isComponentReady: function isComponentReady() {
     return (this.parentCalendarEntry.isCalendarReady()
-	    && typeof(this.userPrivileges) != "undefined");
+	    && !(this.parentCalendarEntry.hasAccessControl
+		 && typeof(this.userPrivileges) == "undefined"));
   },
  userIsOwner: function userIsOwner() {
     return this.parentCalendarEntry.userIsOwner();
   },
  userCanModify: function userCanModify() {
-    var privileges = (this.url
-		      ? this.userPrivileges
-		      : this.parentCalendarEntry.userPrivileges);
+//     dump("this.url: " + this.url + "\n");
+//     dump("this.userPrivileges: " + this.userPrivileges + "\n");
+//     dump("this.parentCalendarEntry.userPrivileges: "
+// 	 + this.parentCalendarEntry.userPrivileges + "\n");
 
-    return (privileges.indexOf("{DAV:}write") > -1);
+    var result;
+    if (this.parentCalendarEntry.hasAccessControl) {
+      var privileges = (this.url
+			? this.userPrivileges
+			: this.parentCalendarEntry.userPrivileges);
+      result = (privileges.indexOf("{DAV:}write") > -1);
+    }
+    else
+      result = true;
+
+    return result;
   },
  userCanRespond: function userCanRespond() {
-    return (this.userPrivileges
-	    .indexOf("{urn:inverse:params:xml:ns:inverse-dav}respond-to-component")
-	    > -1);
+    return (!this.parentCalendarEntry.hasAccessControl
+	    || (this.userPrivileges
+		.indexOf("{urn:inverse:params:xml:ns:inverse-dav}respond-to-component")
+		> -1));
   },
  userCanViewAll: function userCanViewAll() {
-    return (this.userPrivileges
-	    .indexOf("{urn:inverse:params:xml:ns:inverse-dav}view-whole-component")
-	    > -1);
+    return (!this.parentCalendarEntry.hasAccessControl
+	    ||  (this.userPrivileges
+		 .indexOf("{urn:inverse:params:xml:ns:inverse-dav}view-whole-component")
+		 > -1));
   },
  userCanViewDAndT: function userCanViewDAndT() {
-    return (this.userPrivileges
-	    .indexOf("{urn:inverse:params:xml:ns:inverse-dav}view-date-and-time")
-	    > -1);
+    return (!this.parentCalendarEntry.hasAccessControl
+	    || (this.userPrivileges
+		.indexOf("{urn:inverse:params:xml:ns:inverse-dav}view-date-and-time")
+		> -1));
   }
 };
