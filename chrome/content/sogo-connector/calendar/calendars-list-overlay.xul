@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<!--
+ Copyright:     Inverse groupe conseil, 2008
+ Author:        Wolfgang Sourdeau <wsourdeau@inverse.ca>
+ Email:         support@inverse.ca
+ URL:           http://inverse.ca
+  -->
+
+<?xml-stylesheet type="text/css" href="chrome://global/skin/global.css"?>
+
+<!DOCTYPE overlay SYSTEM "chrome://sogo-integrator/locale/calendar/calendars-list-overlay.dtd">
+
+<overlay id="inverseSCCalendarsListOverlay"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/x-javascript"
+    src="chrome://sogo-connector/content/calendar/calendars-list-overlay.js"/>
+</overlay>

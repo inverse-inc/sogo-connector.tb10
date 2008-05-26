@@ -83,21 +83,41 @@ function buildCardDavReportXML(filter) {
 	return xml;
 }
 
-// send WebDAV XML request
 function sendXMLRequestXPCOM(webdavURL,HTTPmethod,HTTPheaders,XMLreq) {
  	var retObj = { status : 0, response : "", responseHeaders: new Array() };
 
-	var request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
-		.createInstance(Components.interfaces.nsIXMLHttpRequest);
-	request.open(HTTPmethod, webdavURL, false);
-	for (var i = 0; i< HTTPheaders.length; i++)
-		request.setRequestHeader(HTTPheaders[i][0],HTTPheaders[i][1]);
-	request.setRequestHeader("Accept-Encoding", "");
-	request.send(XMLreq);
+	var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+		.getService(Components.interfaces.nsIIOService);
+	if (!ioService.offline) {
+		var request = Components
+			.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
+			.createInstance(Components.interfaces.nsIXMLHttpRequest);
+		request.open(HTTPmethod, webdavURL, false);
 
-	retObj.status = request.status;
-	retObj.response = request.responseXML;
-	retObj.responseHeaders = processHTTPHeaders(request.getAllResponseHeaders());
+// 	var timeoutCallback = {
+// 	notify: function nsITimerNotify(timer) {
+// 			dump("die\n");
+// 			request.abort();
+// 			dump("request.channel: " + request.channel + "\n");
+// 		}
+// 	}
+
+// 	var timer = Components.classes["@mozilla.org/timer;1"]
+// 		.createInstance(Components.interfaces.nsITimer);
+// 	timer.initWithCallback(timeoutCallback, 5000,
+// 												 Components.interfaces.nsITimer.TYPE_ONE_SHOT);
+
+		for (var i = 0; i< HTTPheaders.length; i++)
+			request.setRequestHeader(HTTPheaders[i][0], HTTPheaders[i][1]);
+		request.setRequestHeader("Accept-Encoding", "");
+		request.send(XMLreq);
+
+// 	timer.cancel();
+
+		retObj.status = request.status;
+		retObj.response = request.responseXML;
+		retObj.responseHeaders = processHTTPHeaders(request.getAllResponseHeaders());
+	}
 
   return retObj;
 }

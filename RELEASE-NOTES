@@ -5,6 +5,8 @@ Working on
 
 0.68
 	CardDAV addressbooks now appear in the compose window
+	Added support for DAV acls (+work-around for the incomplete implementation of the WebDAV ACL in davical)
+
 
 0.67
 	drag and dropping a card from a GroupDAV directory would not delete the card on the server

@@ -6,9 +6,6 @@
 
 <overlay id="inverseMessengerOverlaySidebar"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script type="application/x-javascript" src="chrome://sogo-connector/content/lightning/messenger-overlay-sidebar.js"/>
-
-  <splitter id="folderpaneCalendarSplitter">
-    <grippy/>
-  </splitter>
+  <script type="application/x-javascript"
+    src="chrome://sogo-connector/content/lightning/messenger-overlay-sidebar.js"/>
 </overlay>
