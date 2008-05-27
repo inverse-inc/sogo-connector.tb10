@@ -1,12 +1,10 @@
-Features
-========
-Working on 
-	Added Deleted on server feature. (low priority)
+NEWS
+====
 
 0.68
 	CardDAV addressbooks now appear in the compose window
-	Added support for DAV acls (+work-around for the incomplete implementation of the WebDAV ACL in davical)
-
+	Added support for DAV acls (with work-around for incomplete implementations of the WebDAV ACL)
+	A bug would attempt to synchronize the vcard of the user's signature to when created or modified
 
 0.67
 	drag and dropping a card from a GroupDAV directory would not delete the card on the server
