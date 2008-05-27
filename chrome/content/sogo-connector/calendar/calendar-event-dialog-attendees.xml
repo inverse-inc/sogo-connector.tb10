@@ -24,11 +24,11 @@
 				<body>
 					<![CDATA[
 					if (isAutoCompleteDirectoryServerCardDAV()) {
-					dump("isCardDAV\n");
+//					dump("isCardDAV\n");
 	          this.setupAutocompleteCardDAV();
 					}
 					else {
-					dump("NOT isCarDdav\n");
+//					dump("NOT isCarDdav\n");
 
 					  this.inverseParentSetupAutocomplete();
 					}

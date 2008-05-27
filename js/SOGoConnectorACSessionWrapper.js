@@ -78,7 +78,7 @@ SOGoConnectorACSessionWrapper.prototype = {
 		if (autocompleteLdap) {
 			var autocompleteDirectory = prefs.getCharPref("ldap_2.autoComplete.directoryServer");
 			if (isAutoCompleteDirectoryServerCardDAV()) {
-				dump("carddav\n");
+// 				dump("carddav\n");
 				serverURL = Components.classes["@mozilla.org/network/standard-url;1"]
 					.createInstance(Components.interfaces.nsIURI);
 				try {
@@ -94,7 +94,7 @@ SOGoConnectorACSessionWrapper.prototype = {
 				}
 			}
 			else {
-				dump("ldap\n");
+// 				dump("ldap\n");
 				serverURL = Components.classes["@mozilla.org/network/ldap-url;1"]
 					.createInstance(Components.interfaces.nsIURI);
 				try {
@@ -115,7 +115,7 @@ SOGoConnectorACSessionWrapper.prototype = {
 		var listeners = new Array();
 		for (var i = 0; i < names.length; i++) {
 			try {
- 				dump("session name: " + names[i] + "\n");
+//  				dump("session name: " + names[i] + "\n");
 				var session;
 				if (names[i] == "carddav") {
 					session = Components.classes["@mozilla.org/autocompleteSession;1?type=" + names[i]]
@@ -144,7 +144,7 @@ SOGoConnectorACSessionWrapper.prototype = {
 
  /* nsIAutoCompleteSession */
  onAutoComplete: function(searchString, previousSearchResult, listener) {
- 		dump("SOGoConnectorACSessionWrapper.prototype.onAutoComplete\n");
+//  		dump("SOGoConnectorACSessionWrapper.prototype.onAutoComplete\n");
 
 		for (var i = 0; i < this.sessions.length; i++) {
 			var session = this.sessions[i];
@@ -153,13 +153,14 @@ SOGoConnectorACSessionWrapper.prototype = {
 		}
 	},
  onStartLookup: function (searchString, previousSearchResult, listener) {
- 		dump("SOGoConnectorACSessionWrapper.prototype.onStartLookup\n");
+//  		dump("SOGoConnectorACSessionWrapper.prototype.onStartLookup\n");
 
 		this.waiting = this.sessions.length;
 		this.running = true;
 		this.listener = listener;
 		this.searchString = searchString;
 
+// 		dump("searching '" + searchString + "'\n");
 		for (var i = 0; i < this.sessions.length; i++) {
 			var session = this.sessions[i];
 			session.onStartLookup(searchString, previousSearchResult,
@@ -167,7 +168,7 @@ SOGoConnectorACSessionWrapper.prototype = {
 		}
 	},
  onStopLookup: function() {
- 		dump("SOGoConnectorACSessionWrapper.prototype.onStopLookup\n");
+//  		dump("SOGoConnectorACSessionWrapper.prototype.onStopLookup\n");
 
 		this._reset();
 		for (var i = 0; i < this.sessions.length; i++) {
