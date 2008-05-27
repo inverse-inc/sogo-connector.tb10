@@ -417,12 +417,12 @@ CalDAVAclCalendarEntry.prototype = {
  entries: null,
  isCalendarReady: function isCalendarReady() {
     var testnull = null;
-    dump (typeof(this.hasAccessControl)+ "\n"
-	  + typeof(this.userPrincipals)+ "\n"
-	  + typeof(this.userPrivileges)+ "\n"
-	  + typeof(this.userAddresses)+ "\n"
-	  + typeof(this.identities)+ "\n"
-	  + typeof(this.ownerPrincipal)+ "\n");
+//     dump (typeof(this.hasAccessControl)+ "\n"
+// 	  + typeof(this.userPrincipals)+ "\n"
+// 	  + typeof(this.userPrivileges)+ "\n"
+// 	  + typeof(this.userAddresses)+ "\n"
+// 	  + typeof(this.identities)+ "\n"
+// 	  + typeof(this.ownerPrincipal)+ "\n");
     return (typeof(this.hasAccessControl) != "undefined"
 	    && typeof(this.userPrincipals) != "undefined"
 	    && typeof(this.userPrivileges) != "undefined"

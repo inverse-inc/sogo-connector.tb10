@@ -14,6 +14,10 @@ function SCCalendarsListOverlayOnLoad() {
 	unifinderTreeView.SCOldSetSelectedItems
 		= unifinderTreeView.setSelectedItems;
 	unifinderTreeView.setSelectedItems = window.SCuTVSetSelectedItems;
+
+	var taskTreeView = document.getElementById("calendar-task-tree");
+	taskTreeView.SCOldOnTaskTreeViewSelect = taskTreeView.onselect;
+	taskTreeView.onselect = window.SCOnTaskTreeViewSelect;
 }
 
 function SCCalendarControllerIsCommandEnabled(command) {
@@ -48,15 +52,22 @@ function SCComputeEnableDelete(selectedItems) {
 }
 
 function SCOnSelectionChanged(event) {
+	dump("sconselectionchanged\n");
 	SCComputeEnableDelete(event.detail);
 	window.SCOldOnSelectionChanged(event);
 }
 
 function SCuTVSetSelectedItems(items) {
+	dump("scutvsetselecteditems\n");
 	items = items || currentView().getSelectedItems({});
 	SCComputeEnableDelete(items);
 	this.SCOldSetSelectedItems(items);
 	document.commandDispatcher.updateCommands("calendar_commands");
+}
+
+function SCOnTaskTreeViewSelect(event) {
+	SCComputeEnableDelete(this.selectedTasks);
+	return this.SCOldOnTaskTreeViewSelect(event);
 }
 
 window.addEventListener("load", SCCalendarsListOverlayOnLoad, false);

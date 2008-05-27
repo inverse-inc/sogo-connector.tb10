@@ -341,13 +341,17 @@ function SCUpdateOrganizers(organizers) {
 		SCFillOrganizers();
 		SCUpdateExistingOrganizer();
 	}
+	else {
+		var organizerRow = document.getElementById("event-grid-inverse-organizer-row");
+		organizerRow.setAttribute("collapsed", "true");
+	}
 }
 
 function SCUpdateExistingOrganizer(event) {
 	var organizerItem = document.getElementById("item-organizer");
 	if (!organizerItem) /* Lightning 0.8 */
-		organizerItem = document.getElementById("event-grid-item-organizer")
-			var menuItem = organizerItem.selectedItem;
+		organizerItem = document.getElementById("event-grid-item-organizer");
+	var menuItem = organizerItem.selectedItem;
 	var organizer = Components.classes["@mozilla.org/calendar/attendee;1"]
 		.createInstance(Components.interfaces.calIAttendee);
 	organizer.commonName = menuItem.organizer["name"];
@@ -456,7 +460,9 @@ SCCalendarManager.prototype = {
 			var isIncluded = true;
 			if (calendars[i].type == "caldav") {
 				var entry = aclMgr.calendarEntry(calendars[i].uri);
-				isIncluded = entry.userCanAddComponents();
+				isIncluded = (entry.userCanAddComponents()
+											|| (!isNew && window.arguments[0].calendar
+													== calendars[i]));
 			}
 
 // 			dump(calendars[i].name + ": " + isIncluded + "\n");
