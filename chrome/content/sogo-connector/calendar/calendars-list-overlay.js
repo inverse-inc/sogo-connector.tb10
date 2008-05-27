@@ -1,8 +1,16 @@
 /* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 2 -*- */
 
+gCalendarBundle = {
+ getString: function(a) {
+		return a;
+	}
+};
+
 var SCEnableDelete = false;
 
 function SCCalendarsListOverlayOnLoad() {
+	gCalendarBundle = document.getElementById("SCCalendarStringBundle");
+	dump("XXXXXXXXXXXXX bundle: " + gCalendarBundle + "\n");
 	calendarController.SCOldCalendarControllerIsCommandEnabled
 		= calendarController.isCommandEnabled;
 	calendarController.isCommandEnabled
@@ -52,13 +60,13 @@ function SCComputeEnableDelete(selectedItems) {
 }
 
 function SCOnSelectionChanged(event) {
-	dump("sconselectionchanged\n");
+// 	dump("sconselectionchanged\n");
 	SCComputeEnableDelete(event.detail);
 	window.SCOldOnSelectionChanged(event);
 }
 
 function SCuTVSetSelectedItems(items) {
-	dump("scutvsetselecteditems\n");
+// 	dump("scutvsetselecteditems\n");
 	items = items || currentView().getSelectedItems({});
 	SCComputeEnableDelete(items);
 	this.SCOldSetSelectedItems(items);

@@ -12,6 +12,10 @@
 
 <overlay id="inverseSCCalendarsListOverlay"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script type="application/x-javascript"
-    src="chrome://sogo-connector/content/calendar/calendars-list-overlay.js"/>
+  <vbox id="calendar-view-box">
+    <stringbundle id="SCCalendarStringBundle"
+      src="chrome://calendar/locale/calendar.properties"/>
+    <script type="application/x-javascript"
+      src="chrome://sogo-connector/content/calendar/calendars-list-overlay.js"/>
+  </vbox>
 </overlay>
