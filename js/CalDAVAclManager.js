@@ -56,13 +56,16 @@ CalDAVAclManager.prototype = {
     var calendarURL = fixURL(calendarURI.spec);
     var calendar = this.calendarEntry(calendarURI);
 
-    var entry = calendar.entries[componentURL];
+    var entry = null;
+    if (componentURL)
+      entry = calendar.entries[componentURL];
     if (!entry) {
       entry = new CalDAVAclComponentEntry(componentURL);
-      calendar.entries[componentURL] = entry;
       entry.parentCalendarEntry = calendar;
-      if (componentURL)
+      if (componentURL) {
+	calendar.entries[componentURL] = entry;
 	this._queryComponent(entry, calendarURI.spec + componentURL);
+      }
       else
 	entry.userPrivileges = [];
     }
@@ -71,7 +74,7 @@ CalDAVAclManager.prototype = {
   },
  onDAVQueryComplete: function onDAVQueryComplete(status, url, headers,
 						 response, data) {
-    dump("callback for method: " + data.method + "\n");
+//     dump("callback for method: " + data.method + "\n");
     if (data.method == "acl-options")
       this._optionsCallback(status, url, headers, response, data);
     else if (data.method == "collection-set")
@@ -304,10 +307,9 @@ CalDAVAclManager.prototype = {
 
  /* component controller */
  _queryComponent: function _queryComponent(entry, url) {
-    dump("queryCompoennt\n");
+//     dump("queryCompoennt\n");
     var propfind = ("<?xml version='1.0' encoding='UTF-8'?>\n"
 		    + "<D:propfind xmlns:D='DAV:'><D:prop><D:current-user-privilege-set/></D:prop></D:propfind>");
-    dump("url: " + url + "\n");
     this.xmlRequest(url, "PROPFIND", propfind,
   {'content-type': "application/xml; charset=utf-8",
       'depth': "0"},
@@ -353,7 +355,7 @@ CalDAVAclManager.prototype = {
     request.method = method;
     request.callbackData = data;
 
-    dump("method: " + request.method + "\nurl: " + url + "\n");
+//     dump("method: " + request.method + "\nurl: " + url + "\n");
     request.onreadystatechange = function() {
       if (request.readyState == 4) {
 	try {
@@ -469,9 +471,9 @@ CalDAVAclComponentEntry.prototype = {
  url: null,
  userPrivileges: null,
  isComponentReady: function isComponentReady() {
-    dump("parent ready: " + this.parentCalendarEntry.isCalendarReady() + "\n"
-	 + "this.userPrivileges: " + this.userPrivileges + "\n"
-	 + "ac: " + this.parentCalendarEntry.hasAccessControl + "\n");
+//     dump("parent ready: " + this.parentCalendarEntry.isCalendarReady() + "\n"
+// 	 + "this.userPrivileges: " + this.userPrivileges + "\n"
+// 	 + "ac: " + this.parentCalendarEntry.hasAccessControl + "\n");
     return (this.parentCalendarEntry.isCalendarReady()
 	    && (this.userPrivileges != null
 		|| !this.parentCalendarEntry.hasAccessControl));
@@ -487,16 +489,10 @@ CalDAVAclComponentEntry.prototype = {
 
     var result;
     if (this.parentCalendarEntry.hasAccessControl) {
-      try {
-	var privileges = (this.url
-			  ? this.userPrivileges
-			  : this.parentCalendarEntry.userPrivileges);
-	result = (privileges.indexOf("{DAV:}write") > -1);
-      }
-      catch(e) {
-	dump("exception: " + e + "\n"
-	     + backtrace());
-      }
+      var privileges = (this.url
+			? this.userPrivileges
+			: this.parentCalendarEntry.userPrivileges);
+      result = (privileges.indexOf("{DAV:}write") > -1);
     }
     else
       result = true;

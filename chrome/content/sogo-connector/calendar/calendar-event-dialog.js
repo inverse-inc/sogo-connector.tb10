@@ -6,7 +6,7 @@ var component = null;
 
 function SCReadyCallback() {
 	var ready = componentEntry.isComponentReady();
-	dump("ready: " + ready + "\n");
+// 	dump("ready: " + ready + "\n");
 	if (ready) {
 		clearInterval(initInterval);
 		SCUpdateToolbars();
@@ -70,7 +70,7 @@ function getUserAsAttendee(delegated) {
 											 ? componentEntry.parentCalendarEntry.ownerAddresses
 											 : componentEntry.parentCalendarEntry.userAddresses);
 	while (!attendee && i < userAddresses.length) {
-		dump("test address: " + userAddresses[i] + "\n");
+// 		dump("test address: " + userAddresses[i] + "\n");
 		var curAttendee = getWindowAttendeeById(userAddresses[i].toLowerCase());
 		if (curAttendee)
 			attendee = curAttendee;
@@ -79,8 +79,8 @@ function getUserAsAttendee(delegated) {
 	}
 
 	if (attendee) {
-		dump("delegated: " + delegated + "\n");
-		dump("attendee.id: " + attendee.id + "\n");
+// 		dump("delegated: " + delegated + "\n");
+// 		dump("attendee.id: " + attendee.id + "\n");
 	}
 
 	return attendee;
@@ -172,7 +172,7 @@ function SCUpdateToolbars() {
 		newToolbar.setAttribute("collapsed", "false");
 	}
 	if (activeToolbar != "event-toolbar") {
-		dump("toolbar: " + activeToolbar + "\n");
+// 		dump("toolbar: " + activeToolbar + "\n");
 		SCMakeWidgetsReadOnly();
 	}
 }
@@ -459,7 +459,7 @@ SCCalendarManager.prototype = {
 				isIncluded = entry.userCanAddComponents();
 			}
 
-			dump(calendars[i].name + ": " + isIncluded + "\n");
+// 			dump(calendars[i].name + ": " + isIncluded + "\n");
 			if (isIncluded)
 				result.push(calendars[i]);
 		}
