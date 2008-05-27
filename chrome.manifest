@@ -21,4 +21,4 @@ style chrome://sogo-connector/content/addressbook/addressbook.groupdav.overlay.x
 overlay	chrome://calendar/content/sun-calendar-event-dialog.xul chrome://sogo-connector/content/calendar/calendar-event-dialog.xul
 overlay	chrome://calendar/content/sun-calendar-event-dialog-attendees.xul chrome://sogo-connector/content/calendar/calendar-event-dialog-attendees.xul
 overlay chrome://calendar/content/calendar-calendars-list.xul chrome://sogo-connector/content/calendar/calendars-list-overlay.xul
-#overlay	chrome://lightning/content/messenger-overlay-sidebar.xul chrome://sogo-connector/content/lightning/messenger-overlay-sidebar.xul
+overlay	chrome://lightning/content/messenger-overlay-sidebar.xul chrome://sogo-connector/content/lightning/messenger-overlay-sidebar.xul

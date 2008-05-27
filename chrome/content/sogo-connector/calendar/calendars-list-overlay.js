@@ -8,6 +8,9 @@ function SCCalendarsListOverlayOnLoad() {
 	calendarController.isCommandEnabled
 		= window.SCCalendarControllerIsCommandEnabled;
 
+	window.SCOldOnSelectionChanged = window.onSelectionChanged;
+	window.onSelectionChanged = window.SCOnSelectionChanged;
+
 	unifinderTreeView.SCOldSetSelectedItems
 		= unifinderTreeView.setSelectedItems;
 	unifinderTreeView.setSelectedItems = window.SCuTVSetSelectedItems;
@@ -42,6 +45,11 @@ function SCComputeEnableDelete(selectedItems) {
 												&& calEntry.userCanDeleteComponents());
 		}
 	}
+}
+
+function SCOnSelectionChanged(event) {
+	SCComputeEnableDelete(event.detail);
+	window.SCOldOnSelectionChanged(event);
 }
 
 function SCuTVSetSelectedItems(items) {

@@ -6,9 +6,12 @@ function SIOnMessengerOverlaySidebarLoad() {
     .wrappedJSObject;
   var calMgr = getCalendarManager();
   var calendars = calMgr.getCalendars({});
-  for (var i = 0; i < calendars.length; i++)
-    if (calendars[i].type == "caldav")
-      aclMgr.calendarEntry(calendars[i].uri);
+  for (var i = 0; i < calendars.length; i++) {
+    if (calendars[i].type == "caldav") {
+      var entry = aclMgr.calendarEntry(calendars[i].uri);
+			dump("entry: " + entry + "\n");
+		}
+	}
 }
 
 window.addEventListener("load", SIOnMessengerOverlaySidebarLoad, false);
