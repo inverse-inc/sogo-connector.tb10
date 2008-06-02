@@ -361,7 +361,9 @@ GroupDavSynchronizer.prototype = {
  onVCardDownloadComplete: function(status, data, key) {
 		this.remainingDownloads--;
 		this.progressMgr.updateAddressBook(this.gURL);
-		if (Components.isSuccessCode(status)) {
+		if (Components.isSuccessCode(status)
+				&& data
+				&& (data.toLowerCase().indexOf("begin:vcard") == 0)) {
 			// 			logInfo("download data: " + data);
 			this.serverCardDataHash[key] = data;
 			this._importCard(key, data);
@@ -379,7 +381,9 @@ GroupDavSynchronizer.prototype = {
  onListDownloadComplete: function(status, data, key) {
 		this.remainingDownloads--;
 		this.progressMgr.updateAddressBook(this.gURL);
-		if (Components.isSuccessCode(status)) {
+		if (Components.isSuccessCode(status)
+				&& data
+				&& (data.toLowerCase().indexOf("begin:vlist") == 0)) {
 			// 			logInfo("download data: " + data);
 			this.serverListDataHash[key] = data;
 			this._importList(key, data);
@@ -425,22 +429,26 @@ GroupDavSynchronizer.prototype = {
 		if (status > 199 && status < 400) {
 			var mdbCard = card.QueryInterface(Components.interfaces.nsIAbMDBCard);
 			var cardURL = this.gURL + key;
-			var etag = response[cardURL]["DAV: getetag"];
+			if (response[cardURL]) {
+				var etag = response[cardURL]["DAV: getetag"];
 			// 			dump("etag: " + etag + "\n");
-			var oldKey = mdbCard.getStringAttribute("groupDavKey");
-			var isNew = (!oldKey || oldKey == "");
-			if (isNew)
-				mdbCard.setStringAttribute("groupDavKey", key);
+				var oldKey = mdbCard.getStringAttribute("groupDavKey");
+				var isNew = (!oldKey || oldKey == "");
+				if (isNew)
+					mdbCard.setStringAttribute("groupDavKey", key);
 			// 			dump("cardpfindcomplete: " + key + "; version: " + etag + "\n");
-			mdbCard.setStringAttribute("groupDavVersion", etag);
+				mdbCard.setStringAttribute("groupDavVersion", etag);
 			// 			card.copy(mdbCard);
 
 			// 			dump("new etag: " + card.getStringAttribute("groupDavVersion") + "\n");
 			// 			dump("new etag: " + card.getStringAttribute("groupDavKey") + "\n");
-			mdbCard.editCardToDatabase(this.gSelectedDirectoryURI);
-			this.serverCardVersionHash[key] = etag;
+				mdbCard.editCardToDatabase(this.gSelectedDirectoryURI);
+				this.serverCardVersionHash[key] = etag;
 			// 		dump("key: " + key + "; status: " + status + "; data: " + data +
 			// 		"\n");
+			}
+			else
+				dump("No etag returned for vcard uploaded at " + cardURL + ", ignored\n");
 		}
 		this.progressMgr.updateAddressBook(this.gURL);
 		this.remainingUploads--;
@@ -584,8 +592,7 @@ GroupDavSynchronizer.prototype = {
 		attributes.version = (listUpdated ? "-1" : this.serverListVersionHash[key]);
 	},
  onListUploadComplete: function(status, data, key, list) {
-		if (status > 199
-				&& status < 400) {
+		if (status > 199 && status < 400) {
 			var listURL = this.gURL + key;
 			var rqData = {query: "list-propfind", data: list, key: key};
 			var request = new sogoWebDAV(listURL, this, rqData, false);
@@ -607,15 +614,20 @@ GroupDavSynchronizer.prototype = {
 		if (status > 199 && status < 400) {
 			var listURL = this.gURL + key;
  			dump("listURL: " + listURL + "\n");
-			var etag = response[listURL]["DAV: getetag"];
-			// 			dump("etag: " + etag + "\n");
-			var attributes = new GroupDAVListAttributes(list);
-			var oldKey = attributes.key;
-			var isNew = (!oldKey || oldKey == "");
-			if (isNew)
-				attributes.key = key;
-			attributes.version = etag;
-			this.serverListVersionHash[key] = etag;
+
+			if (response[listURL]) {
+				var etag = response[listURL]["DAV: getetag"];
+				// 			dump("etag: " + etag + "\n");
+				var attributes = new GroupDAVListAttributes(list);
+				var oldKey = attributes.key;
+				var isNew = (!oldKey || oldKey == "");
+				if (isNew)
+					attributes.key = key;
+				attributes.version = etag;
+				this.serverListVersionHash[key] = etag;
+			}
+			else
+				dump("No etag returned for vlist uploaded at " + listURL + ", ignored\n");
 		}
 		this.progressMgr.updateAddressBook(this.gURL);
 		this.remainingUploads--;
@@ -632,7 +644,7 @@ GroupDavSynchronizer.prototype = {
 // 		dump("status: " + status + "\n");
 // 		dump("response: " + response + "\n");
 // 		dump("dump:" + dumpObject(response) + "\n");
-		if (status > 199 && status < 399) {
+		if (status > 199 && status < 400) {
 			for (var href in response) {
 				var davObject = response[href];
 				if (href[href.length-1] != '/')
@@ -660,68 +672,70 @@ GroupDavSynchronizer.prototype = {
  onServerHashQueryComplete: function(status, response, key) {
 		this.callbackCode = status;
 		this.pendingOperations = 0;
-		// 		dump("pendingOperations: " + this.pendingOperations + "\n");
 
-		// 		dump("onServerHashQueryComplete...: " + data + "\n");
-		switch (status) {
-		case 207:
-		case 200: // Added to support Open-Xchange   
+		if (response) {
+			switch (status) {
+			case 207:
+			case 200: // Added to support Open-Xchange   
 			// 		logDebug("=========Begin Server Cards List, url is: " + this.gURL);
 
-			for (var href in response) {
-				var davObject = response[href];
-				if (href != this.gURL) {
-					var contentType = "" + davObject["DAV: getcontenttype"];
-					if (contentType.indexOf("text/x-vcard") == 0
-							|| contentType.indexOf("text/vcard") == 0) {
-						var version = davObject["DAV: getetag"];
-						var cNameArray = href.split("/");
-						var cName = cNameArray[cNameArray.length - 1];
-						this.serverCardVersionHash[cName] = version;
-// 						dump(cName + " is vcard\n");
+				for (var href in response) {
+					var davObject = response[href];
+					if (href != this.gURL) {
+						var contentType = "" + davObject["DAV: getcontenttype"];
+						if (contentType.indexOf("text/x-vcard") == 0
+								|| contentType.indexOf("text/vcard") == 0) {
+							var version = davObject["DAV: getetag"];
+							var cNameArray = href.split("/");
+							var cName = cNameArray[cNameArray.length - 1];
+							this.serverCardVersionHash[cName] = version;
+							// 						dump(cName + " is vcard\n");
 						//  				logDebug("\tServer Card key = " + cName + "\tversion = " + version);
-					}
-					else if (contentType.indexOf("text/x-vlist") == 0) {
-						var version = davObject["DAV: getetag"];
-						var cNameArray = href.split("/");
-						var cName = cNameArray[cNameArray.length - 1];
-						this.serverListVersionHash[cName] = version;
-						//  				logDebug("\tServer Card key = " + cName + "\tversion = " + version);
-// 						dump(cName + " is vlist\n");
-					}
-					else {
-						dump("unknown content-type: " + contentType + "(ignored)\n");
+						}
+						else if (contentType.indexOf("text/x-vlist") == 0) {
+							var version = davObject["DAV: getetag"];
+							var cNameArray = href.split("/");
+							var cName = cNameArray[cNameArray.length - 1];
+							this.serverListVersionHash[cName] = version;
+							//  				logDebug("\tServer Card key = " + cName + "\tversion = " + version);
+							// 						dump(cName + " is vlist\n");
+						}
+						else {
+							dump("unknown content-type: " + contentType + "(ignored)\n");
+						}
 					}
 				}
-			}
-
+				
 			// 		logDebug("=========End Server Cards List");
-			if (this.validCollection) {
-				this.fillLocalHashes();
-				this.fillLocalListHashes();
-				this.compareCardVersions();//Has to be done first it modifies Local Hashes		
-				this.compareListVersions();//Has to be done first it modifies Local Hashes		
-				this.processCards();
-			}
-			break;
-		case 401:
-			this._checkCallback();
-			logWarn("Warning!\n\n You either pressed Cancel instead of providing user and password or the server responded 401 for another reason.");
+				if (this.validCollection) {
+					this.fillLocalHashes();
+					this.fillLocalListHashes();
+					this.compareCardVersions();//Has to be done first it modifies Local Hashes		
+					this.compareListVersions();//Has to be done first it modifies Local Hashes		
+					this.processCards();
+				}
+				break;
+			case 401:
+				this._checkCallback();
+				logWarn("Warning!\n\n You either pressed Cancel instead of providing user and password or the server responded 401 for another reason.");
 			//return;
-			break;
+				break;
 
-		case 403:
-			this._checkCallback();
-			var msg = "Authentification failed or the user does not have permission to access the specified Address Book.\n\n  You will have to restart Thunderbird to authenticate again!";
-			alert(msg);
-			logWarn(msg);
-			//return;
-			break;
-		
-		default:
-			this._checkCallback();
-			throw "Error connecting to GroupDAV Server; response status: " + status;      
+			case 403:
+				this._checkCallback();
+				var msg = "Authentification failed or the user does not have permission to access the specified Address Book.\n\n  You will have to restart Thunderbird to authenticate again!";
+				alert(msg);
+				logWarn(msg);
+				//return;
+				break;
+
+			default:
+				this._checkCallback();
+				throw "Error connecting to GroupDAV Server; response status: " + status;      
+			}
 		}
+		else
+			dump("onServerHashQueryComlete: the server returned an empty response\n");
 	},
  processCards: function() {
 		var total = (this.localCardAdditions.length

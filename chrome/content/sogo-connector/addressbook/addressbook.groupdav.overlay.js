@@ -602,4 +602,17 @@ function onLoadDAV() {
 												groupdavSynchronizationObserver);
 }
 
+function onUnloadDAV() {
+	var nmgr = Components.classes["@inverse.ca/notification-manager;1"]
+		.getService(Components.interfaces.inverseIJSNotificationManager)
+		.wrappedJSObject;
+	nmgr.unregisterObserver("groupdav.synchronization.start",
+													groupdavSynchronizationObserver);
+	nmgr.unregisterObserver("groupdav.synchronization.stop",
+													groupdavSynchronizationObserver);
+	nmgr.unregisterObserver("groupdav.synchronization.addressbook.updated",
+													groupdavSynchronizationObserver);
+}
+
 window.addEventListener("load", onLoadDAV, false);
+window.addEventListener("unload", onUnloadDAV, false);
