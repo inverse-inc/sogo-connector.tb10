@@ -1,7 +1,10 @@
 NEWS
 ====
 
-0.8
+0.80.1
+	Check the response from the server to avoid inconsistencies and loss of data
+
+0.80
 	Added support for Lightning 0.8
 	CardDAV addressbooks now appear in the compose window
 	Added support for DAV acls (with work-around for incomplete implementations of the WebDAV ACL)
