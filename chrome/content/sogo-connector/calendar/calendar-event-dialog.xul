@@ -53,17 +53,6 @@
     </toolbar>
   </toolbox>
 
-  <row id="attendee-row" position="1">
-    <label id="fixedConfidentialLabel" collapsed="true"
-      value="&event.menu.options.privacy.confidential.label;"/>
-    <!-- Organizer -->
-    <row id="inverse-organizer-row" align="center">
-      <label value="&event.organizers.label;" disable-on-readonly="true"/>
-      <menulist id="item-organizer" flex="1" disable-on-readonly="true"/>
-      <label id="item-existing-organizer"
-        crop="right"/>
-    </row>
-  </row>
   <row id="event-grid-attendee-row" position="1">
     <label id="event-grid-fixedConfidentialLabel" collapsed="true"
       value="&event.menu.options.privacy.confidential.label;"/>

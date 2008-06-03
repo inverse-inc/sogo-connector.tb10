@@ -4,6 +4,8 @@ var initInterval = -1;
 var componentEntry = null;
 var component = null;
 
+var thunderbirdOrganizers = null;
+
 function SCReadyCallback() {
 	var ready = componentEntry.isComponentReady();
 // 	dump("ready: " + ready + "\n");
@@ -27,20 +29,35 @@ function fixCloseButton() {
 function SCOnLoadHandler(event) {
 	fixCloseButton();
 
-	var calendar = window.arguments[0].calendar;
+	var calendar = window.arguments[0].calendar.wrappedJSObject;
+	component = window.arguments[0].calendarEvent;
+
 	if (calendar.type == "caldav") {
 		var mgr = Components.classes["@inverse.ca/calendar/caldav-acl-manager;1"]
 			.getService(Components.interfaces.nsISupports)
 			.wrappedJSObject;
 
-		calendar = calendar.wrappedJSObject;
-		component = window.arguments[0].calendarEvent;
 		var componentURL = ((component.id)
 												? calendar.mItemInfoCache[component.id].locationPath
 												: null);
 		componentEntry = mgr.componentEntry(calendar.uri, componentURL);
 		initInterval = setInterval(SCReadyCallback, 200);
 	}
+	else {
+		SCUpdateToolbars();
+		SCUpdateCustomFields();
+	}
+
+	if (!window.arguments[0].calendarEvent.id) {
+		var calendarList = document.getElementById("item-calendar");
+		calendarList.addEventListener("command",
+																	SCOnChangeCalendar,
+																	false);
+	}
+	var organizers = document.getElementById("event-grid-item-organizer");
+	organizers.addEventListener("command",
+															SCUpdateExistingOrganizer,
+															false);
 }
 
 function eventHasAttendees() {
@@ -109,11 +126,11 @@ function userIsOrganizer(delegated) {
 
 function SCUpdateToolbars() {
 	var activeToolbar;
-	if (componentEntry) {
+
+	if (componentEntry
+			&& window.arguments[0].calendarEvent.id) {
 		if (componentEntry.userIsOwner()) {
-			if (eventHasAttendees()
-					&& userIsAttendee()
-					&& !userIsOrganizer()) {
+			if (eventHasAttendees() && userIsAttendee() && !userIsOrganizer()) {
 				var attendee = getUserAsAttendee(false);
 				activeToolbar = "event-attendee-toolbar";
 				var status = attendee.icalProperty.getParameter("PARTSTAT");
@@ -205,66 +222,65 @@ function _makeChildNodesReadOnly(node) {
 }
 
 function SCUpdateCustomFields() {
-	var attendees = document.getElementById("attendee-row");
-	var row = document.getElementById("inverse-organizer-row");
-	var fixedLabel = document.getElementById("fixedConfidentialLabel");
-	var organizers = document.getElementById("item-organizer");
-
-	if (!attendees) {
-		/* Lightning 0.8 */
-		attendees = document.getElementById("event-grid-attendee-row");
-		row = document.getElementById("event-grid-inverse-organizer-row");
-		fixedLabel = document.getElementById("event-grid-fixedConfidentialLabel");
-		organizers = document.getElementById("event-grid-item-organizer");
+// 	dump("update custom blabla\n");
+	var attendees = document.getElementById("event-grid-attendee-row");
+	var row = document.getElementById("event-grid-inverse-organizer-row");
+	if (row.parentNode == attendees) {
+		attendees.removeChild(row);
+		attendees.parentNode.insertBefore(row, attendees);
 	}
-	attendees.removeChild(row);
-	attendees.parentNode.insertBefore(row, attendees);
 
+	var organizers = document.getElementById("event-grid-item-organizer");
 	SCUpdateOrganizers(organizers);
-	organizers.addEventListener("command",
-															SCUpdateExistingOrganizer,
-															false);
 
-	var buttonPrivacy = document.getElementById("button-privacy");
-	var nodes = buttonPrivacy.getElementsByTagName("menuitem");
+	var fixedLabel = document.getElementById("event-grid-fixedConfidentialLabel");
+	var nodes = document
+		.getElementById("button-privacy")
+		.getElementsByTagName("menuitem");
 	nodes[1].label = fixedLabel.value;
 }
 
 function SCLoadOrganizers() {
-	var organizers = [];
+	if (!thunderbirdOrganizers) {
+		thunderbirdOrganizers = [];
 
-	var composeService = Components.classes["@mozilla.org/messengercompose;1"]
-		.getService(Components.interfaces.nsIMsgComposeService);
+		var composeService = Components.classes["@mozilla.org/messengercompose;1"]
+			.getService(Components.interfaces.nsIMsgComposeService);
 
-	var manager = Components
-		.classes["@mozilla.org/messenger/account-manager;1"]
-		.getService(Components.interfaces.nsIMsgAccountManager);
-	for (var i = 0; i < manager.allIdentities.Count(); i++) {
-		var currentIdentity = manager.allIdentities.GetElementAt(i)
-			.QueryInterface(Components.interfaces.nsIMsgIdentity);
-		var server = manager
-			.GetServersForIdentity(currentIdentity).GetElementAt(0)
-			.QueryInterface(Components.interfaces.nsIMsgIncomingServer);
-		if (server.realUsername) {
-			var email = server.realUsername;
-			var name = currentIdentity.fullName;
-			if (server.realUsername.indexOf("@") < 0) {
-				var domain = currentIdentity.email.split("@")[1];
-				if (domain)
-					email += "@" + domain;
-			}
-			if (email && email.indexOf("@") > -1) {
-				if (!name)
-					name = email.split("@")[0];
-				var currentOrganizer = { name: name, email: email };
-				if (composeService.defaultIdentity == currentIdentity)
-					currentOrganizer["default"] = true;
-				organizers.push(currentOrganizer);
+		var manager = Components
+			.classes["@mozilla.org/messenger/account-manager;1"]
+			.getService(Components.interfaces.nsIMsgAccountManager);
+		for (var i = 0; i < manager.allIdentities.Count(); i++) {
+			var currentIdentity = manager.allIdentities.GetElementAt(i)
+				.QueryInterface(Components.interfaces.nsIMsgIdentity);
+			var server = manager
+				.GetServersForIdentity(currentIdentity).GetElementAt(0)
+				.QueryInterface(Components.interfaces.nsIMsgIncomingServer);
+			if (server.realUsername) {
+				var email = server.realUsername;
+				var name = currentIdentity.fullName;
+				if (server.realUsername.indexOf("@") < 0) {
+					var domain = currentIdentity.email.split("@")[1];
+					if (domain)
+						email += "@" + domain;
+				}
+				if (email && email.indexOf("@") > -1) {
+					if (!name)
+						name = email.split("@")[0];
+					var currentOrganizer = { name: name, email: email };
+					if (composeService.defaultIdentity == currentIdentity)
+						currentOrganizer["default"] = true;
+					thunderbirdOrganizers.push(currentOrganizer);
+// 					dump("tbird organizer: " + currentOrganizer.name
+// 							 + " <" + currentOrganizer.email + "\n");
+				}
 			}
 		}
 	}
 
-	return organizers;
+// 	dump("tbird org: " + thunderbirdOrganizers.length + "\n");
+
+	return thunderbirdOrganizers;
 }
 
 function SCLoadAclOrganizers() {
@@ -288,11 +304,13 @@ function SCLoadAclOrganizers() {
 }
 
 function SCFillOrganizers() {
+// 	dump("fill organizers\n");
 	// add organizers to the organizer menulist
-	var organizerList = document.getElementById("item-organizer");
-	if (!organizerList) /* Lightning 0.8 */
-		organizerList = document.getElementById("event-grid-item-organizer");
-	var organizers = (componentEntry.parentCalendarEntry.hasAccessControl
+	var organizerList = document.getElementById("event-grid-item-organizer");
+	for (var i = organizerList.childNodes.length - 1; i > -1; i--)
+		organizerList.removeChild(organizerList.childNodes[i]);
+	var organizers = ((componentEntry
+										 && componentEntry.parentCalendarEntry.hasAccessControl)
 										? SCLoadAclOrganizers()
 										: SCLoadOrganizers());
 	var selectIndex = 0;
@@ -308,11 +326,8 @@ function SCFillOrganizers() {
 }
 
 function SCUpdateOrganizers(organizers) {
-	var existingOrganizer
-		= document.getElementById("item-existing-organizer");
-	if (!existingOrganizer) /* Lightning 0.8 */
-		existingOrganizer = document
-			.getElementById("event-grid-item-existing-organizer");
+	var existingOrganizer = document
+		.getElementById("event-grid-item-existing-organizer");
 	var organizer = component.organizer;
 
 	var organizerMenu = false;
@@ -322,35 +337,56 @@ function SCUpdateOrganizers(organizers) {
 				&& !eventHasAttendees())
 			organizerMenu = true;
 		else {
-			organizers.parentNode.removeChild(organizers);
 			var email = organizer.id.split(":")[1];
 			var fullname = organizer.commonName;
 			if (!fullname)
 				fullname = email.split("@")[0];
 			var organizerName = fullname + " <" + email + ">";
 			existingOrganizer.setAttribute('value', organizerName);
+			existingOrganizer.setAttribute("collapsed", "false");
 			window.organizer = organizer;
 		}
 	}
 	else
-		organizerMenu = (!componentEntry.parentCalendarEntry.hasAccessControl
+		organizerMenu = (!componentEntry
+										 || !componentEntry.parentCalendarEntry.hasAccessControl
 										 || componentEntry.userIsOwner());
 
+// 	dump("menu: " + organizerMenu + "\n");
+	var organizerRow
+		= document.getElementById("event-grid-inverse-organizer-row");
 	if (organizerMenu) {
-		existingOrganizer.parentNode.removeChild(existingOrganizer);
+		organizerRow.setAttribute("collapsed", "false");
+		existingOrganizer.setAttribute("collapsed", "true");
 		SCFillOrganizers();
 		SCUpdateExistingOrganizer();
 	}
-	else {
-		var organizerRow = document.getElementById("event-grid-inverse-organizer-row");
+	else
 		organizerRow.setAttribute("collapsed", "true");
+}
+
+function SCOnChangeCalendar(event) {
+	var calendarList = document.getElementById("item-calendar");
+	var calendar = calendarList.selectedItem.calendar;
+
+	componentEntry = null;
+// 	dump("calendar: " + calendar + "\n");
+// 	dump("calendar.name: " + calendar.name + "\n");
+	if (calendar.type == "caldav") {
+		var mgr = Components.classes["@inverse.ca/calendar/caldav-acl-manager;1"]
+			.getService(Components.interfaces.nsISupports)
+			.wrappedJSObject;
+		componentEntry = mgr.componentEntry(calendar.uri, null);
+		initInterval = setInterval(SCReadyCallback, 200);
+	}
+	else {
+		var organizers = document.getElementById("event-grid-item-organizer");
+		SCUpdateOrganizers(organizers);
 	}
 }
 
 function SCUpdateExistingOrganizer(event) {
-	var organizerItem = document.getElementById("item-organizer");
-	if (!organizerItem) /* Lightning 0.8 */
-		organizerItem = document.getElementById("event-grid-item-organizer");
+	var organizerItem = document.getElementById("event-grid-item-organizer");
 	var menuItem = organizerItem.selectedItem;
 	var organizer = Components.classes["@mozilla.org/calendar/attendee;1"]
 		.createInstance(Components.interfaces.calIAttendee);
@@ -459,10 +495,15 @@ SCCalendarManager.prototype = {
 		for (var i = 0; i < calendars.length; i++) {
 			var isIncluded = true;
 			if (calendars[i].type == "caldav") {
+// 				dump("{ ");
 				var entry = aclMgr.calendarEntry(calendars[i].uri);
 				isIncluded = (entry.userCanAddComponents()
 											|| (!isNew && window.arguments[0].calendar
 													== calendars[i]));
+// 				dump(calendars[i].name + ": " + isIncluded);
+// 				if (entry.userPrivileges)
+// 					dump("\n  privileges: " + entry.userPrivileges.join(", "));
+// 				dump(" }\n");
 			}
 
 // 			dump(calendars[i].name + ": " + isIncluded + "\n");

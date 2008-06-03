@@ -87,6 +87,7 @@ CalDAVAclManager.prototype = {
       this._componentPrivilegeSetCallback(status, url, headers, response, data);
   },
  _markWithNoAccessControl: function _markWithNoAccessControl(url) {
+//     dump(url + " marked without access control\n");
     var calendar = this.calendars[url];
     calendar.hasAccessControl = false;
     calendar.userPrincipals = null;
@@ -451,6 +452,7 @@ CalDAVAclCalendarEntry.prototype = {
     return result;
   },
  userCanAddComponents: function userCanAddComponents() {
+//     dump("has access control: " + this.hasAccessControl + "\n");
     return (!this.hasAccessControl
 	    || (this.userPrivileges.indexOf("{DAV:}bind")
 		> -1));
