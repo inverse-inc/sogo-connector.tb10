@@ -301,10 +301,10 @@ SOGoConnectorVolatileABCard.prototype = {
  },
 
  equals: function(otherCard) {
-	 dump("equals\n");
-	 for (var x in this) {
-		 dump(x + ": " + typeof(this[x]) + "\n");
-	 }
+// 	 dump("equals\n");
+// 	 for (var x in this) {
+// 		 dump(x + ": " + typeof(this[x]) + "\n");
+// 	 }
 	 return false;
  },
 // PRBool  equals ( nsIAbCard card )
