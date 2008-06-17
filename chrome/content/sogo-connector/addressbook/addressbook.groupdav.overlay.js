@@ -202,8 +202,11 @@ abDirTreeObserver.SCOnDrop = function(row, or) {
 		if (isGroupdavDirectory(targetURI))
 			SynchronizeGroupdavAddressbookDrop(targetURI);
 
-		dump("cardKeys: " + cardKeys.length + "  to delete\n");
-		if (proceed) {
+		if (cardKeys)
+			dump("cardKeys: " + cardKeys.length + " to delete\n");
+		else
+			dump("cardKeys: nothing to delete\n");
+		if (proceed && cardKeys) {
 			var prefService = new GroupdavPreferenceService(sourceDirectory.dirPrefId);
 			for (var i = 0; i < cardKeys.length; i++) {
 				dump("deleting " + cardKeys[i] + "\n");

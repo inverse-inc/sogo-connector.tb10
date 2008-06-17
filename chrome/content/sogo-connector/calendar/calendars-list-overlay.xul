@@ -8,8 +8,6 @@
 
 <?xml-stylesheet type="text/css" href="chrome://global/skin/global.css"?>
 
-<!DOCTYPE overlay SYSTEM "chrome://sogo-integrator/locale/calendar/calendars-list-overlay.dtd">
-
 <overlay id="inverseSCCalendarsListOverlay"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <vbox id="calendar-view-box">

@@ -1,3 +1,5 @@
+/* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 2 -*- */
+
 var loader = Components .classes["@mozilla.org/moz/jssubscript-loader;1"]
   .getService(Components.interfaces.mozIJSSubScriptLoader);
 loader.loadSubScript("chrome://sogo-connector/content/general/mozilla.utils.inverse.ca.js");

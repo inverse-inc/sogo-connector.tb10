@@ -575,8 +575,10 @@ function updateListFromVList(list, vListString, cards) {
 function _findCardWithEmail(cards, email) {
 	var card = null;
 
+	var cmpEmail = email.toLowerCase();
+
 	for (var k in cards) {
-		if (cards[k].primaryEmail == email)
+		if (cards[k].primaryEmail.toLowerCase() == cmpEmail)
 			card = cards[k];
 	}
 

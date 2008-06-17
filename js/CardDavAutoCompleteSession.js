@@ -52,7 +52,8 @@ CardDavAutoCompleteSession.prototype = {
  set serverURL(value) { this.mUrl = value },
 
  onAutoComplete: function(searchString, previousSearchResult, listener) {
-	 dump("CardDavAutoCompleteSession.prototype.onAutoComplete\n");
+	 dump("CardDavAutoCompleteSession.prototype.onAutoComplete: " + searchString
+				+ "\n");
  },
  onStartLookup: function (searchString, previousSearchResult, listener) {
 	 dump("CardDavAutoCompleteSession.onStartLookup\n");
@@ -86,6 +87,7 @@ CardDavAutoCompleteSession.prototype = {
  },
  onDAVQueryComplete: function(status, result, data) {
 	 if (this.active && data == this.lastRequest && result) {
+		 dump("on dav query complete... " + new Date() + "\n");
 		 var resultArray = Components.classes["@mozilla.org/supports-array;1"]
 		 .createInstance(Components.interfaces.nsISupportsArray);
 
@@ -116,6 +118,7 @@ CardDavAutoCompleteSession.prototype = {
 			 results.defaultItemIndex = 0;
 			 results.searchString = this.searchString;
 
+			 dump("sending result: " + new Date () + "\n");
 			 this.listener.onAutoComplete(results, matchFound);
 		 }
 		 else {

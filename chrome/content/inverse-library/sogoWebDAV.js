@@ -162,6 +162,7 @@ function onXMLRequestReadyStateChange(request) {
 				}
 				else
 					responseText = request.responseText;
+				dump("op1 done\n");
 				request.client.target.onDAVQueryComplete(request.status,
 																								 responseText,
 																								 request.client.cbData);
@@ -218,6 +219,7 @@ sogoWebDAV.prototype = {
 	},
 
  load: function(operation, parameters) {
+		dump("operation: " + operation + "\n");
 //  realLoad: function(operation, parameters) {
 // 		dump("dav operation: " + operation + " on " + this.url + "\n");
     var webdavSvc = Components.classes['@mozilla.org/webdav/service;1']
@@ -254,12 +256,14 @@ sogoWebDAV.prototype = {
 			webdavSvc.put(resource, parameters.contentType, stream,
 										listener, requestor, ourClosure);
 		}
-    else if (operation == "PROPFIND")
+    else if (operation == "PROPFIND") {
+			dump("propfind\n");
       webdavSvc.getResourceProperties(resource,
 																			parameters.props.length,
 																			parameters.props,
 																			parameters.deep, listener,
 																			requestor, ourClosure);
+		}
     else if (operation == "REPORT") {
 // 			webdavSvc.report(resource, parameters, false,
 //  											 listener, requestor, ourClosure);
@@ -400,6 +404,7 @@ sogoWebDAVListener.prototype = {
 // 			dump("OnOPerationComplete... " + aStatusCode + "\n");
 			if (this.target) {
 				try {
+					dump("op2 done\n");
 					this.target.onDAVQueryComplete(aStatusCode, this.result,
 																				 this.cbData);
 				}

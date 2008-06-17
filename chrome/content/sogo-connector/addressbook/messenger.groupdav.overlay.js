@@ -55,18 +55,21 @@ var groupdavSynchronizationObserver = {
  handleNotification: function(notification, data) {
 		var active = (this.count > 0);
 		var throbber = document.getElementById("navigator-throbber");
+		/* Throbber may not exist, thus we need to check the returned value. */
 		if (notification == "groupdav.synchronization.start") {
 			this.count++;
 			if (!active) {
 				dump("GETTING BUSY\n");
-				throbber.setAttribute("busy", true);
+				if (throbber)
+					throbber.setAttribute("busy", true);
 			}
 		}
 		else if (notification == "groupdav.synchronization.stop") {
 			this.count--;
 			if (active) {
 				dump("RESTING\n");
-				throbber.setAttribute("busy", false);
+				if (throbber)
+					throbber.setAttribute("busy", false);
 			}
 		}
 	}

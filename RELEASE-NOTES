@@ -3,6 +3,8 @@ NEWS
 
 0.80.1
 	Check the response from the server to avoid inconsistencies and loss of data
+	Take the ACL into account when changing the calendar of the edited event
+	Accept local calendars
 
 0.80
 	Added support for Lightning 0.8
