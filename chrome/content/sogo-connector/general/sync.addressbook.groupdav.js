@@ -641,17 +641,19 @@ GroupDavSynchronizer.prototype = {
 		this.callbackCode = status;
 		this.pendingOperations = 0;
 		// 		dump("pendingOperations: " + this.pendingOperations + "\n");
-// 		dump("status: " + status + "\n");
-// 		dump("response: " + response + "\n");
-// 		dump("dump:" + dumpObject(response) + "\n");
+		dump("status: " + status + "\n");
+		dump("response: " + response + "\n");
+		dump("dump:" + dumpObject(response) + "\n");
 		if (status > 199 && status < 400) {
 			for (var href in response) {
+				dump("href: " + href + "\n");
 				var davObject = response[href];
 				if (href[href.length-1] != '/')
 					href += '/';
 				if (href == this.gURL) {
 					// 					dump("+++ href: " + href + "\n");
 					var rsrcType = "" + davObject["DAV: resourcetype"];
+					dump("rsrcType: " + rsrcType + "\n");
 					if (rsrcType.indexOf("vcard-collection") > 0
 							|| rsrcType.indexOf("addressbook") > 0) {
 						this.validCollection = true;

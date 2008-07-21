@@ -27,6 +27,10 @@ function fixCloseButton() {
 }
 
 function SCOnLoadHandler(event) {
+	var fbhandler = Components.classes["@inverse.ca/calendar/fburl-freebusy-provider;1"]
+		.getService()
+		.wrappedJSObject;
+	fbhandler.register();
 	fixCloseButton();
 
 	var calendar = window.arguments[0].calendar.wrappedJSObject;

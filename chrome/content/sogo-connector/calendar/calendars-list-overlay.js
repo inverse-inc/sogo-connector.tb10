@@ -75,7 +75,9 @@ function SCuTVSetSelectedItems(items) {
 
 function SCOnTaskTreeViewSelect(event) {
 	SCComputeEnableDelete(this.selectedTasks);
-	return this.SCOldOnTaskTreeViewSelect(event);
+	return (this.SCOldOnTaskTreeViewSelect
+					? this.SCOldOnTaskTreeViewSelect(event)
+					: true);
 }
 
 window.addEventListener("load", SCCalendarsListOverlayOnLoad, false);

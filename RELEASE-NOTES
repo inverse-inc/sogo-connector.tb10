@@ -1,7 +1,10 @@
 NEWS
 ====
 
-0.80.1
+0.90
+	Added a new provider for freebusy over HTTP (fburl)
+
+0.81
 	Check the response from the server to avoid inconsistencies and loss of data
 	Take the ACL into account when changing the calendar of the edited event
 	Accept local calendars

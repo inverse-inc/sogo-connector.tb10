@@ -25,9 +25,9 @@ ContextManager.prototype = {
   },
  QueryInterface: function(aIID) {
     if (!aIID.equals(Components.interfaces.inverseIJSContextManager)
-	&& !aIID.equals(Components.interfaces.nsISupports))
+				&& !aIID.equals(Components.interfaces.nsISupports))
       throw Components.results.NS_ERROR_NO_INTERFACE;
     
     return this;
- }
+	}
 }
