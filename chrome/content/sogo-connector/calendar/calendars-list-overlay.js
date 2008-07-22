@@ -10,14 +10,14 @@ var SCEnableDelete = false;
 
 function SCCalendarsListOverlayOnLoad() {
 	gCalendarBundle = document.getElementById("SCCalendarStringBundle");
-	dump("XXXXXXXXXXXXX bundle: " + gCalendarBundle + "\n");
+
 	calendarController.SCOldCalendarControllerIsCommandEnabled
 		= calendarController.isCommandEnabled;
 	calendarController.isCommandEnabled
 		= window.SCCalendarControllerIsCommandEnabled;
 
-	window.SCOldOnSelectionChanged = window.onSelectionChanged;
-	window.onSelectionChanged = window.SCOnSelectionChanged;
+	window.SCOldOnSelectionChanged = calendarController.onSelectionChanged;
+	calendarController.onSelectionChanged = window.SCOnSelectionChanged;
 
 	unifinderTreeView.SCOldSetSelectedItems
 		= unifinderTreeView.setSelectedItems;
@@ -32,7 +32,9 @@ function SCCalendarControllerIsCommandEnabled(command) {
 	var result;
 
 	if (command == "calendar_delete_event_command"
-			|| command == "calendar_delete_todo_command") {
+			|| command == "calendar_delete_todo_command"
+			|| command == "button_delete"
+			|| command == "cmd_delete") {
 		result = (SCEnableDelete
 							&& this.SCOldCalendarControllerIsCommandEnabled(command));
 	}
@@ -43,6 +45,7 @@ function SCCalendarControllerIsCommandEnabled(command) {
 };
 
 function SCComputeEnableDelete(selectedItems) {
+	var firstState = SCEnableDelete;
 	SCEnableDelete = (selectedItems.length > 0);
 
 	var aclMgr = Components.classes["@inverse.ca/calendar/caldav-acl-manager;1"]
@@ -57,16 +60,21 @@ function SCComputeEnableDelete(selectedItems) {
 												&& calEntry.userCanDeleteComponents());
 		}
 	}
+
+	if (SCEnableDelete != firstState) {
+		goUpdateCommand("calendar_delete_event_command");
+		goUpdateCommand("calendar_delete_todo_command");
+		goUpdateCommand("button_delete");
+		goUpdateCommand("cmd_delete");
+	}
 }
 
 function SCOnSelectionChanged(event) {
-// 	dump("sconselectionchanged\n");
 	SCComputeEnableDelete(event.detail);
 	window.SCOldOnSelectionChanged(event);
 }
 
 function SCuTVSetSelectedItems(items) {
-// 	dump("scutvsetselecteditems\n");
 	items = items || currentView().getSelectedItems({});
 	SCComputeEnableDelete(items);
 	this.SCOldSetSelectedItems(items);
@@ -77,7 +85,7 @@ function SCOnTaskTreeViewSelect(event) {
 	SCComputeEnableDelete(this.selectedTasks);
 	return (this.SCOldOnTaskTreeViewSelect
 					? this.SCOldOnTaskTreeViewSelect(event)
-					: true);
+					: false);
 }
 
 window.addEventListener("load", SCCalendarsListOverlayOnLoad, false);

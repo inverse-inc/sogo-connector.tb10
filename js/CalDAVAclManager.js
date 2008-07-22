@@ -466,6 +466,10 @@ CalDAVAclCalendarEntry.prototype = {
 								> -1));
   },
  userCanDeleteComponents: function userCanAddComponents() {
+//  		dump("has access control: " + this.hasAccessControl + "\n");
+// 		if (this.userPrivileges)
+// 			dump("indexof unbind: "
+// 					 + this.userPrivileges.indexOf("{DAV:}unbind") + "\n");
     return (!this.hasAccessControl
 						|| (this.userPrivileges.indexOf("{DAV:}unbind")
 								> -1));
