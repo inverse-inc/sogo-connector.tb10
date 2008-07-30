@@ -85,7 +85,7 @@ CardDavAutoCompleteSession.prototype = {
 	 this.active = false;
 // 	 dump("CardDavAutoCompleteSession.prototype.onStopLookup\n");
  },
- onDAVQueryComplete: function(status, result, data) {
+ onDAVQueryComplete: function(status, result, headers, data) {
 	 if (this.active && data == this.lastRequest && result) {
 		 dump("on dav query complete... " + new Date() + "\n");
 		 var resultArray = Components.classes["@mozilla.org/supports-array;1"]

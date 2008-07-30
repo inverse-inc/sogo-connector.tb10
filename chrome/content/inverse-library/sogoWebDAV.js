@@ -115,6 +115,7 @@ multiStatusParser.prototype = {
 		if (node) {
 			data = true;
 			var nodes = node.childNodes;
+// 			dump("node: " + node.tagName + "; length: " + nodes.length + "\n");
 			if (nodes.length > 0) {
 				if (nodes[0].nodeType
 						== Components.interfaces.nsIDOMNode.ELEMENT_NODE) {
@@ -147,24 +148,54 @@ function xmlUnescape(text) {
 	return s;
 }
 
+function _parseHeaders(rawHeaders) {
+	var headers = {};
+
+	if (rawHeaders) {
+		var lines = rawHeaders.split("\n");
+		var currentKey = null;
+
+		for each (var line in lines) {
+				if (line.length) {
+					var firstChar = line.charCodeAt(0);
+					if (firstChar != 32 && firstChar != 9) {
+						var keyEnd = line.indexOf(":");
+						currentKey = line.substr(0, keyEnd).toLowerCase();
+						var values = headers[currentKey];
+						if (!values) {
+							values = [];
+							headers[currentKey] = values;
+						}
+						values.push(line.substr(keyEnd + 2));
+					}
+				}
+			}
+	}
+
+	return headers;
+}
+
 function onXMLRequestReadyStateChange(request) {
 	// 	dump("xmlreadystatechange: " + request.readyState + "\n");
 	if (request.readyState == 4) {
 		if (request.client.target) {
 			try {
-// 				dump("method: " + request.method + "\n");
-// 				dump("status code: " + request.status + "\n");
+//  				dump("method: " + request.method + "\n");
+//  				dump("status code: " + request.status + "\n");
 				var response;
-				var responseText;
-				if (request.method == "PROPPATCH") {
+				
+				if (request.method == "PROPPATCH"
+						|| request.method == "PROPFIND") {
 					var parser = new multiStatusParser(request.responseXML);
-					responseText = parser.responses();
+					response = parser.responses();
 				}
 				else
-					responseText = request.responseText;
-				dump("op1 done\n");
+					response = request.responseText;
+
+				var headers = _parseHeaders(request.getAllResponseHeaders());
 				request.client.target.onDAVQueryComplete(request.status,
-																								 responseText,
+																								 response,
+																								 headers,
 																								 request.client.cbData);
 			}
 			catch(e) {
@@ -178,24 +209,13 @@ function onXMLRequestReadyStateChange(request) {
 }
 
 function sogoWebDAV(url, target, data, asynchronous) {
-	this.context = null;
-	this.closure = "" + new UUID();
   this.url = url;
   this.target = target;
   this.cbData = data;
   this.asynchronous = true; /* FIXME */
-	this.testWebDAV();
 }
 
 sogoWebDAV.prototype = {
- context: null,
- _initContext: function() {
-		var handler = Components.classes['@inverse.ca/context-manager;1']
-		.getService(Components.interfaces.inverseIJSContextManager)
-		.wrappedJSObject;
-		this.context = handler.getContext("inverse.ca/sogoWebDAV");
-	},
-
  _sendHTTPRequest: function(method, parameters, headers) {
 		var xmlRequest = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
 		.createInstance(Components.interfaces.nsIXMLHttpRequest);
@@ -211,58 +231,60 @@ sogoWebDAV.prototype = {
 		xmlRequest.url = this.url;
 		xmlRequest.client = this;
 		xmlRequest.method = method;
+
+		var thisRequest = xmlRequest;
 		xmlRequest.onreadystatechange = function() {
-			onXMLRequestReadyStateChange(xmlRequest);
+			onXMLRequestReadyStateChange(thisRequest);
 		};
 
 		xmlRequest.send(parameters);
 	},
 
  load: function(operation, parameters) {
-		dump("operation: " + operation + "\n");
+// 		dump("operation: " + operation + "\n");
 //  realLoad: function(operation, parameters) {
 // 		dump("dav operation: " + operation + " on " + this.url + "\n");
-    var webdavSvc = Components.classes['@mozilla.org/webdav/service;1']
-    .getService(Components.interfaces.nsIWebDAVService);
-    var requestor = new InterfaceRequestor();
+//     var webdavSvc = Components.classes['@mozilla.org/webdav/service;1']
+//     .getService(Components.interfaces.nsIWebDAVService);
+//     var requestor = new InterfaceRequestor();
     
-    var url = Components.classes['@mozilla.org/network/standard-url;1']
-    .createInstance(Components.interfaces.nsIURI);
-    url.spec = this.url;
+//     var url = Components.classes['@mozilla.org/network/standard-url;1']
+//     .createInstance(Components.interfaces.nsIURI);
+//     url.spec = this.url;
 
-		var ourClosure = Components.classes['@mozilla.org/supports-string;1']
-		.createInstance(Components.interfaces.nsISupportsString);
-		ourClosure.data = this.closure;
+//     var listener = new sogoWebDAVListener(this.target, this);
+// 		listener.cbData = this.cbData;
 
-    var listener = new sogoWebDAVListener(this.target, this);
-		listener.cbData = this.cbData;
-		listener.closure = this.closure;
-
-    var resource = new sogoWebDAVResource(url.QueryInterface(Components.interfaces.nsIURL));
-		resource.mClosure = this.closure;
-
-    if (operation == "GET")
-      webdavSvc.getToString(resource, listener,
-														requestor, ourClosure);
+    if (operation == "GET") {
+			this._sendHTTPRequest(operation);
+		}
 		else if (operation == "PUT") {
-			var stream = Components.classes['@mozilla.org/io/string-input-stream;1']
-				.createInstance(Components.interfaces.nsIStringInputStream);
-			var converter = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
-				.createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
-			converter.charset = "UTF-8";
-			var stringUTF8 = converter.ConvertFromUnicode(parameters.data);
-			stream.setData(stringUTF8, stringUTF8.length);
+			this._sendHTTPRequest(operation, parameters.data,
+	{ "content-type": parameters.contentType });
+// 		this.load("PUT", {data: data, contentType: contentType});
 
-			webdavSvc.put(resource, parameters.contentType, stream,
-										listener, requestor, ourClosure);
+// 			var stream = Components.classes['@mozilla.org/io/string-input-stream;1']
+// 				.createInstance(Components.interfaces.nsIStringInputStream);
+// 			var converter = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
+// 				.createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
+// 			converter.charset = "UTF-8";
+// 			var stringUTF8 = converter.ConvertFromUnicode(parameters.data);
+// 			stream.setData(stringUTF8, stringUTF8.length);
+
+// 			webdavSvc.put(resource, parameters.contentType, stream,
+// 										listener, requestor, ourClosure);
 		}
     else if (operation == "PROPFIND") {
-			dump("propfind\n");
-      webdavSvc.getResourceProperties(resource,
-																			parameters.props.length,
-																			parameters.props,
-																			parameters.deep, listener,
-																			requestor, ourClosure);
+			var headers = { "depth": (parameters.deep
+																? "1": "0"),
+											"content-type": "application/xml; charset=utf8" };
+			var query = this._propfindQuery(parameters.props);
+			this._sendHTTPRequest(operation, query, headers);
+//       webdavSvc.getResourceProperties(resource,
+// 																			parameters.props.length,
+// 																			parameters.props,
+// 																			parameters.deep, listener,
+// 																			requestor, ourClosure);
 		}
     else if (operation == "REPORT") {
 // 			webdavSvc.report(resource, parameters, false,
@@ -276,11 +298,13 @@ sogoWebDAV.prototype = {
 			this._sendHTTPRequest(operation, parameters);
 		}
 		else if (operation == "MKCOL") {
+			this._sendHTTPRequest(operation, parameters);
 // 			dump("make collection\n");
-			webdavSvc.makeCollection(resource, listener, requestor, ourClosure);
+// 			webdavSvc.makeCollection(resource, listener, requestor, ourClosure);
 		}
 		else if (operation == "DELETE") {
-			webdavSvc.remove(resource, listener, requestor, ourClosure);
+			this._sendHTTPRequest(operation, parameters);
+// 			webdavSvc.remove(resource, listener, requestor, ourClosure);
 		}
 		else if (operation == "PROPPATCH") {
 			this._sendHTTPRequest(operation, parameters);
@@ -288,17 +312,40 @@ sogoWebDAV.prototype = {
     else
       throw ("operation '" + operation + "' is not currently supported");
   },
- propfind: function(props, deep) {
-		if (typeof deep == "undefined")
-			deep = true;
-    this.load("PROPFIND", {props: props, deep: deep});
-  },
  get: function() {
     this.load("GET");
   },
  put: function(data, contentType) {
 		this.load("PUT", {data: data, contentType: contentType});
 	},
+ _propfindQuery: function(props) {
+		var nsDict = { "DAV:": "D" };
+		var propPart = "";
+		var nsCount = 0;
+		for each (var prop in props) {
+				var propParts = prop.split(" ");
+				var ns = propParts[0];
+				var nsS = nsDict[ns];
+				if (!nsS) {
+					nsS = "x" + nsCount;
+					nsDict[ns] = nsS;
+					nsCount++;
+				}
+				propPart += "<" + nsS + ":" + propParts[1] + "/>";
+			}
+		var query = ("<?xml version=\"1.0\"?>\n"
+								 + "<D:propfind");
+		for (var ns in nsDict)
+			query += " xmlns:" + nsDict[ns] + "=\"" + ns + "\"";
+		query += ("><D:prop>" + propPart + "</D:prop></D:propfind>");
+
+		return query;
+	},
+ propfind: function(props, deep) {
+		if (typeof deep == "undefined")
+			deep = true;
+    this.load("PROPFIND", {props: props, deep: deep});
+  },
  mkcol: function() {
 		this.load("MKCOL");
   },
@@ -320,231 +367,169 @@ sogoWebDAV.prototype = {
   },
  proppatch: function(query) {
 		this._loadXMLQuery("PROPPATCH", query);
-	},
-
- testWebDAV: function() {
-		if (!this.context)
-			this._initContext();
-
-		if (!this.context.webdavAvailability) {
-			try {
-				var webdavSvc = Components.classes['@mozilla.org/webdav/service;1']
-					.getService(Components.interfaces.nsIWebDAVService);
-				this.context.webdavAvailability = "available";
-			}
-			catch(e) {
-				this.context.webdavAvailability = "unavailable";
-			}
-		}
-
-		if (this.context.webdavAvailability == "unavailable")
-			throw "@mozilla.org/webdav/service;1 is unavailable";
 	}
 };
 
-function sogoWebDAVResource(url) {
-	this.mResourceURL = url;
-	this.mClosure = null;
-}
+// function sogoWebDAVListener(target, client) {
+//   this.target = target;
+// 	this.client = client;
+//   this.result = null;
+// }
 
-sogoWebDAVResource.prototype = {
- mResourceURL: {},
- mClosure: null,
- get lockToken() {
-	 return this.mClosure;
- },
- get resourceURL() {
-   return this.mResourceURL;
- },
- QueryInterface: function(iid) {
-   if (iid.equals(Components.interfaces.nsIWebDAVResource)
-			 || iid.equals(Components.interfaces.nsIWebDAVResourceWithLock)
-			 || iid.equals(Components.interfaces.nsISupports)) {
-     return this;
-   }
-   throw Components.interfaces.NS_ERROR_NO_INTERFACE;
- }
-};
+// sogoWebDAVListener.prototype = {
+//  closure: null,
+//  QueryInterface: function (aIID) {
+//     if (!aIID.equals(Components.interfaces.nsISupports)
+// 				&& !aIID.equals(Components.interfaces.nsIWebDAVOperationListener)) {
+//       throw Components.results.NS_ERROR_NO_INTERFACE;
+//     }
+//     return this;
+//   },
+//  onOperationComplete: function(aStatusCode, aResource, aOperation,
+// 															 aClosure) {
+// 		// 			dump("OnOPerationComplete... " + aStatusCode + "\n");
+// 		if (this.target) {
+// 			try {
+// 				dump("op2 done\n");
+// 				this.target.onDAVQueryComplete(aStatusCode, this.result,
+// 																			 this.cbData);
+// 			}
+// 			catch(e) {
+// 				dump("sogoWebDAV.js 3: an exception occured\n" + e + "\n"
+// 						 + e.fileName + ":" + e.lineNumber + "\n");
+// 			}
+// 		}
+// 		this.result = null;
+// // 		else
+// // 			dump("skipping operation complete\n");
+//   },
+//  _isOurClosure: function(closure) {
+// 		var isOurs = false;
+// 		var newClosure;
+// 		try {
+// 			newClosure
+// 				= closure.QueryInterface(Components.interfaces.nsISupportsString);
+// 			isOurs = (newClosure.toString() == this.closure);
+// 		}
+// 		catch(e) {
+// 			dump("e: " + e + "\n");
+// 		};
 
-function sogoWebDAVListener(target, client) {
-  this.target = target;
-	this.client = client;
-  this.result = null;
-	this.closure = null;
-}
+// 		return isOurs;
+// 	},
+//  onOperationDetail: function(aStatusCode, aResource, aOperation, aDetail,
+// 														 aClosure) {
+// 		if (this._isOurClosure(aClosure)) {
+// 			// 			dump("detail resource: " + aResource.spec + "\n");
+// 			var url = aResource.spec;
+// 			// 		dump("status: " + aStatusCode + "; operation: " + aOperation + "\n");
+// 			if (aStatusCode > 199 && aStatusCode < 300) {
+// 				switch (aOperation) {
+// 				case Components.interfaces.nsIWebDAVOperationListener.GET_TO_STRING:
+// 					if (!this.result)
+// 						this.result = "";
+// 					var utf8String = "";
+// 					var converter = Components.classes["@mozilla.org/intl/utf8converterservice;1"]
+// 						.getService(Components.interfaces.nsIUTF8ConverterService);
+// 					utf8String = converter.convertStringToUTF8(aDetail.QueryInterface(Components.interfaces.nsISupportsCString).toString(),
+// 																										 "iso-8859-1", false);
+// 					this.result += utf8String;
+// 					break;
+// 				case Components.interfaces.nsIWebDAVOperationListener.GET_PROPERTIES:
+// 					// 					dump("GET_PROPERTIES\n");
+// 					if (!this.result)
+// 						this.result = {};
+// 					if (!this.result[url])
+// 						this.result[url] = {};
+// 					this.getProperties(this.result[url], aDetail);
+// 					break;
+// 				case Components.interfaces.nsIWebDAVOperationListener.REPORT:
+// 					if (!this.result)
+// 						this.result = new Array();
+// 					this.result.push(aDetail);
+// 					break;
+// 				case Components.interfaces.nsIWebDAVOperationListener.PUT:
+// 					this.result = aDetail;
+// 					break;
+// 				}
+// 			}
+//     }
+// // 		else
+// // 			dump("skipping operation detail\n");
+//   },
+//  getProperties: function(hash, aDetail) {
+//     var text = "";
 
-sogoWebDAVListener.prototype = {
- closure: null,
- QueryInterface: function (aIID) {
-    if (!aIID.equals(Components.interfaces.nsISupports)
-				&& !aIID.equals(Components.interfaces.nsIWebDAVOperationListener)) {
-      throw Components.results.NS_ERROR_NO_INTERFACE;
-    }
-    return this;
-  },
- _isOurResource: function(resource) {
-		var isOurs = false;
-		var newrsrc;
+//     var properties
+//     = aDetail.QueryInterface(Components.interfaces.nsIProperties);
+//     var count = {};
+//     var keys = properties.getKeys(count);
+//     for (var i = 0; i < keys.length; i++) {
+//       var key = keys[i];
+//       var value
+// 				= properties.get(key, Components.interfaces.nsISupportsString);
+//       hash[key] = value;
+//     }
+//   }
+// };
 
-		try {
-			newrsrc
-				= resource.QueryInterface(Components.interfaces.nsIWebDAVResourceWithLock);
-			isOurs = (newrsrc.lockToken.toString() == this.closure);
-// 			dump("isOurs: " + isOurs + "\n");
-// 			dump("locktk: " + newrsrc.lockToken + "\n");
-// 			dump("closure: " + this.closure + "\n");
-		}
-		catch(e) {};
+// function InterfaceRequestor() {
+// }
 
-		return isOurs;
-	},
- onOperationComplete: function(aStatusCode, aResource, aOperation,
-															 aClosure) {
-		if (this._isOurResource(aResource)) {
-// 			dump("OnOPerationComplete... " + aStatusCode + "\n");
-			if (this.target) {
-				try {
-					dump("op2 done\n");
-					this.target.onDAVQueryComplete(aStatusCode, this.result,
-																				 this.cbData);
-				}
-				catch(e) {
-					dump("sogoWebDAV.js 3: an exception occured\n" + e + "\n"
-							 + e.fileName + ":" + e.lineNumber + "\n");
-				}
-			}
-			this.result = null;
-		}
-// 		else
-// 			dump("skipping operation complete\n");
-  },
- _isOurClosure: function(closure) {
-		var isOurs = false;
-		var newClosure;
-		try {
-			newClosure
-				= closure.QueryInterface(Components.interfaces.nsISupportsString);
-			isOurs = (newClosure.toString() == this.closure);
-		}
-		catch(e) {
-			dump("e: " + e + "\n");
-		};
+// InterfaceRequestor.prototype = { 
+//  QueryInterface: function (aIID) {
+//     if (!aIID.equals(Components.interfaces.nsISupports) &&
+// 				!aIID.equals(Components.interfaces.nsIInterfaceRequestor)) {
+//       throw Components.results.NS_ERROR_NO_INTERFACE;
+//     }
 
-		return isOurs;
-	},
- onOperationDetail: function(aStatusCode, aResource, aOperation, aDetail,
-														 aClosure) {
-		if (this._isOurClosure(aClosure)) {
-			// 			dump("detail resource: " + aResource.spec + "\n");
-			var url = aResource.spec;
-			// 		dump("status: " + aStatusCode + "; operation: " + aOperation + "\n");
-			if (aStatusCode > 199 && aStatusCode < 300) {
-				switch (aOperation) {
-				case Components.interfaces.nsIWebDAVOperationListener.GET_TO_STRING:
-					if (!this.result)
-						this.result = "";
-					var utf8String = "";
-					var converter = Components.classes["@mozilla.org/intl/utf8converterservice;1"]
-						.getService(Components.interfaces.nsIUTF8ConverterService);
-					utf8String = converter.convertStringToUTF8(aDetail.QueryInterface(Components.interfaces.nsISupportsCString).toString(),
-																										 "iso-8859-1", false);
-					this.result += utf8String;
-					break;
-				case Components.interfaces.nsIWebDAVOperationListener.GET_PROPERTIES:
-					// 					dump("GET_PROPERTIES\n");
-					if (!this.result)
-						this.result = {};
-					if (!this.result[url])
-						this.result[url] = {};
-					this.getProperties(this.result[url], aDetail);
-					break;
-				case Components.interfaces.nsIWebDAVOperationListener.REPORT:
-					if (!this.result)
-						this.result = new Array();
-					this.result.push(aDetail);
-					break;
-				case Components.interfaces.nsIWebDAVOperationListener.PUT:
-					this.result = aDetail;
-					break;
-				}
-			}
-    }
-// 		else
-// 			dump("skipping operation detail\n");
-  },
- getProperties: function(hash, aDetail) {
-    var text = "";
+//     return this;
+//   },
+//  getInterface: function(iid) {
+// 		// 		dump("Components: " + Components + "\n");
+//     if (iid.equals(Components.interfaces.nsISupports)
+// 				|| iid.equals(Components.interfaces.nsIAuthPrompt)
+// 				|| (iid.equals(Components.interfaces.nsIAuthPrompt2) && !isOnBranch)) {
+//       return Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+//       .getService(Components.interfaces.nsIWindowWatcher)
+//       .getNewAuthPrompter(null);
+//     }
+//     else if (iid.equals(Components.interfaces.nsIProgressEventSink)
+// 						 || iid.equals(Components.interfaces.nsIChannelEventSink)
+// 						 || iid.equals(Components.interfaces.nsIHttpEventSink)
+// 						 || iid.equals(Components.interfaces.nsIDocShellTreeItem)) {
+//       return this;
+//     }
+//     else if (iid.equals(Components.interfaces.nsIPrompt)
+// 						 || iid.equals(Components.interfaces.nsIAuthPromptProvider)) {
+//       // use the window watcher service to get a nsIPrompt impl
+//       return Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+//       .getService(Components.interfaces.nsIWindowWatcher)
+//       .getNewPrompter(null);
+//     }
+// 		else if (iid.equals(Components.interfaces.nsIBadCertListener)) {
+// 			return Components.classes["@mozilla.org/nsTokenDialogs;1"]
+// 			.createInstance(Components.interfaces.nsIBadCertListener);
+// 		}
+//     dump ("sogoWebDAV.js: no interface in requestor: " + iid + "\n");
+//     throw Components.results.NS_ERROR_NO_INTERFACE;
+//   },
 
-    var properties
-    = aDetail.QueryInterface(Components.interfaces.nsIProperties);
-    var count = {};
-    var keys = properties.getKeys(count);
-    for (var i = 0; i < keys.length; i++) {
-      var key = keys[i];
-      var value
-				= properties.get(key, Components.interfaces.nsISupportsString);
-      hash[key] = value;
-    }
-  }
-};
-
-function InterfaceRequestor() {
-}
-
-InterfaceRequestor.prototype = { 
- QueryInterface: function (aIID) {
-    if (!aIID.equals(Components.interfaces.nsISupports) &&
-				!aIID.equals(Components.interfaces.nsIInterfaceRequestor)) {
-      throw Components.results.NS_ERROR_NO_INTERFACE;
-    }
-
-    return this;
-  },
- getInterface: function(iid) {
-		// 		dump("Components: " + Components + "\n");
-    if (iid.equals(Components.interfaces.nsISupports)
-				|| iid.equals(Components.interfaces.nsIAuthPrompt)
-				|| (iid.equals(Components.interfaces.nsIAuthPrompt2) && !isOnBranch)) {
-      return Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-      .getService(Components.interfaces.nsIWindowWatcher)
-      .getNewAuthPrompter(null);
-    }
-    else if (iid.equals(Components.interfaces.nsIProgressEventSink)
-						 || iid.equals(Components.interfaces.nsIChannelEventSink)
-						 || iid.equals(Components.interfaces.nsIHttpEventSink)
-						 || iid.equals(Components.interfaces.nsIDocShellTreeItem)) {
-      return this;
-    }
-    else if (iid.equals(Components.interfaces.nsIPrompt)
-						 || iid.equals(Components.interfaces.nsIAuthPromptProvider)) {
-      // use the window watcher service to get a nsIPrompt impl
-      return Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-      .getService(Components.interfaces.nsIWindowWatcher)
-      .getNewPrompter(null);
-    }
-		else if (iid.equals(Components.interfaces.nsIBadCertListener)) {
-			return Components.classes["@mozilla.org/nsTokenDialogs;1"]
-			.createInstance(Components.interfaces.nsIBadCertListener);
-		}
-    dump ("sogoWebDAV.js: no interface in requestor: " + iid + "\n");
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-  },
-
- /* stubs */
- // nsIProgressEventSink
- onProgress: function onProgress(aRequest, aContext, aProgress, aProgressMax) {},
- onStatus: function onStatus(aRequest, aContext, aStatus, aStatusArg) {},
- // nsIDocShellTreeItem
- findItemWithName: function findItemWithName(name, aRequestor,
-																						 aOriginalRequestor) {},
+//  /* stubs */
+//  // nsIProgressEventSink
+//  onProgress: function onProgress(aRequest, aContext, aProgress, aProgressMax) {},
+//  onStatus: function onStatus(aRequest, aContext, aStatus, aStatusArg) {},
+//  // nsIDocShellTreeItem
+//  findItemWithName: function findItemWithName(name, aRequestor,
+// 																						 aOriginalRequestor) {},
  
- // nsIHttpEventSink
- onRedirect: function(oldChannel, newChannel) {
-		dump("sogoWebDAV.js: onRedirect...\n");
-	},
+//  // nsIHttpEventSink
+//  onRedirect: function(oldChannel, newChannel) {
+// 		dump("sogoWebDAV.js: onRedirect...\n");
+// 	},
 
- // nsIChannelEventSink
- onChannelRedirect: function(oldChannel, newChannel, flags) {
-		dump("sogoWebDAV.js: onChannelRedirect...\n");
-	}
-};
+//  // nsIChannelEventSink
+//  onChannelRedirect: function(oldChannel, newChannel, flags) {
+// 		dump("sogoWebDAV.js: onChannelRedirect...\n");
+// 	}
+// };

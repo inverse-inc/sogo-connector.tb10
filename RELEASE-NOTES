@@ -3,6 +3,7 @@ NEWS
 
 0.90
 	Added a new provider for freebusy over HTTP (fburl)
+	Searches on CardDAV addressbooks would see their spaces "url-escaped".
 
 0.81
 	Check the response from the server to avoid inconsistencies and loss of data

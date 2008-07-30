@@ -312,7 +312,7 @@ var deleteManager = {
 			SCOpenDeleteFailureDialog(this.mDirectory);
 		this.mDirectory = null;
 	},
- onDAVQueryComplete: function(code, result, data) {
+ onDAVQueryComplete: function(code, result, headers, data) {
 		if (data.deleteLocally
 				&& ((code > 199 && code < 400)
 						|| code == 404
@@ -386,7 +386,7 @@ function _deleteGroupDAVComponentWithKey(prefService, key,
 		// 				dump("webdav_delete on '" + href + "'\n");
 	}
 	else /* 604 = "not found locally" */
-		deleteManager.onDAVQueryComplete(604, null,
+		deleteManager.onDAVQueryComplete(604, null, null,
 																		 {directory: directory,
 																				 component: component});
 }

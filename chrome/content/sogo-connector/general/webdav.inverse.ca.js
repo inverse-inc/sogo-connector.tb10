@@ -131,7 +131,8 @@ function AsyncCardDavReport(webdavURL, filter, target) {
 }
 
 function cardDavReport(webdavURL, filter) {
-//   dump("cardDavReport(webdavURL, filter): " + webdavURL + "\n");
+//    dump("cardDavReport(webdavURL, filter): " + webdavURL
+// 				+ ", " + filter + "\n");
   var xmlReq = buildCardDavReportXML(filter);
 
   //var HTTPheaders=[["Connection","TE"],["TE","trailers, deflate, gzip, compress"],["Depth","1"],["Translate","f"],["Content-type","text/xml"]];

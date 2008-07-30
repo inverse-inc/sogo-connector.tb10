@@ -222,9 +222,8 @@ AbDAVDirectory.prototype = {
 	 
 	 reg = new RegExp(/\?\(.*\(.*,.*,(.*)\).*\)\)/);
 	 if (reg.test(this.mQuery)) {
-		 var criteria = RegExp.$1;	
-// 		 dump("abdavdirectory.js: criteria: " + criteria + "\n");
-		 
+		 var criteria = unescape(RegExp.$1);
+
 		 var cardDavPrefix = "carddav://";
 		 var uri = this.mDirectoryProperties.URI;
 		 var httpURL = "";

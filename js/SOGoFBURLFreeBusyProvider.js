@@ -345,7 +345,7 @@ SOGoFBURLFreeBusyProvider.prototype = {
 		listener.onResult(null, ranges);
 	},
  
- onDAVQueryComplete: function(aStatusCode, fbText, data) {
+ onDAVQueryComplete: function(aStatusCode, fbText, headers, data) {
 		if (aStatusCode > 199 && aStatusCode < 300) {
 			fbText = this._preparse(this._joinLines(fbText));
 			var ics = Components.classes["@mozilla.org/calendar/ics-service;1"]

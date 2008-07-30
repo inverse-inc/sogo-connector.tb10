@@ -337,7 +337,7 @@ GroupDavSynchronizer.prototype = {
 		var request = new sogoWebDAV(fileUrl, this, data);
 		request.get();
 	},
- onDAVQueryComplete: function(status, data, cbdata) {
+ onDAVQueryComplete: function(status, data, headers, cbdata) {
 		//  		dump("onDavQueryComplete: " + cbdata.query + "\n");
 		if (cbdata.query == "vcard-download")
 			this.onVCardDownloadComplete(status, data, cbdata.data);
@@ -429,9 +429,11 @@ GroupDavSynchronizer.prototype = {
 		if (status > 199 && status < 400) {
 			var mdbCard = card.QueryInterface(Components.interfaces.nsIAbMDBCard);
 			var cardURL = this.gURL + key;
-			if (response[cardURL]) {
-				var etag = response[cardURL]["DAV: getetag"];
-			// 			dump("etag: " + etag + "\n");
+			// FIXME: 200 change
+			var cardResponse = response[cardURL][200];
+			if (cardResponse) {
+				var etag = cardResponse["getetag"];
+				dump("card etag: " + etag + "\n");
 				var oldKey = mdbCard.getStringAttribute("groupDavKey");
 				var isNew = (!oldKey || oldKey == "");
 				if (isNew)
@@ -466,10 +468,11 @@ GroupDavSynchronizer.prototype = {
 		else
 			prefId = this.gAddressBook.directoryProperties.prefName;
 
+		dump("PrefId: " + prefId + "\n");
 		var prefService = (Components.classes["@mozilla.org/preferences-service;1"]
 											 .getService(Components.interfaces.nsIPrefBranch));
 		var fileName = prefService.getCharPref(prefId + ".filename");
-		// 		dump("commit: " + fileName + "\n");
+		dump("commit: " + fileName + "\n");
 		var ab = Components.classes["@mozilla.org/addressbook;1"]
 		.createInstance(Components.interfaces.nsIAddressBook);
 		var abDb = ab.getAbDatabaseFromURI("moz-abmdbdirectory://" + fileName);
@@ -615,8 +618,9 @@ GroupDavSynchronizer.prototype = {
 			var listURL = this.gURL + key;
  			dump("listURL: " + listURL + "\n");
 
-			if (response[listURL]) {
-				var etag = response[listURL]["DAV: getetag"];
+			var listResponse = response[listURL][200];
+			if (listResponse) {
+				var etag = listResponse["getetag"];
 				// 			dump("etag: " + etag + "\n");
 				var attributes = new GroupDAVListAttributes(list);
 				var oldKey = attributes.key;
@@ -647,12 +651,15 @@ GroupDavSynchronizer.prototype = {
 		if (status > 199 && status < 400) {
 			for (var href in response) {
 				dump("href: " + href + "\n");
-				var davObject = response[href];
+				// FIXME: 200 change
+				var davObject = response[href][200];
 				if (href[href.length-1] != '/')
 					href += '/';
 				if (href == this.gURL) {
 					// 					dump("+++ href: " + href + "\n");
-					var rsrcType = "" + davObject["DAV: resourcetype"];
+					var rsrcType = [];
+					for (var k in davObject["resourcetype"])
+						rsrcType.push(k);
 					dump("rsrcType: " + rsrcType + "\n");
 					if (rsrcType.indexOf("vcard-collection") > 0
 							|| rsrcType.indexOf("addressbook") > 0) {
@@ -682,12 +689,13 @@ GroupDavSynchronizer.prototype = {
 			// 		logDebug("=========Begin Server Cards List, url is: " + this.gURL);
 
 				for (var href in response) {
-					var davObject = response[href];
+					// FIXME: 200 change
+					var davObject = response[href][200];
 					if (href != this.gURL) {
-						var contentType = "" + davObject["DAV: getcontenttype"];
+						var contentType = davObject["getcontenttype"];
 						if (contentType.indexOf("text/x-vcard") == 0
 								|| contentType.indexOf("text/vcard") == 0) {
-							var version = davObject["DAV: getetag"];
+							var version = davObject["getetag"];
 							var cNameArray = href.split("/");
 							var cName = cNameArray[cNameArray.length - 1];
 							this.serverCardVersionHash[cName] = version;
@@ -695,7 +703,7 @@ GroupDavSynchronizer.prototype = {
 						//  				logDebug("\tServer Card key = " + cName + "\tversion = " + version);
 						}
 						else if (contentType.indexOf("text/x-vlist") == 0) {
-							var version = davObject["DAV: getetag"];
+							var version = davObject["getetag"];
 							var cNameArray = href.split("/");
 							var cName = cNameArray[cNameArray.length - 1];
 							this.serverListVersionHash[cName] = version;
