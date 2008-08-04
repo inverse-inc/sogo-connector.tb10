@@ -180,7 +180,8 @@ CalDAVAclManager.prototype = {
 					var report = ("<?xml version='1.0' encoding='UTF-8'?>\n"
 												+ "<D:principal-match xmlns:D='DAV:'><D:self/></D:principal-match>");
 					this.xmlRequest(address, "REPORT", report,
-													{'content-type': "application/xml; charset=utf-8" },
+													{'depth': "0",
+													 'content-type': "application/xml; charset=utf-8" },
 													{ method: "principal-match", calendar: url});
 
 					this.calendars[url].userPrivileges

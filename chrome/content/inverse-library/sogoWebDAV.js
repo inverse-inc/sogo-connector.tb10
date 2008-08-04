@@ -287,12 +287,12 @@ sogoWebDAV.prototype = {
 // 																			requestor, ourClosure);
 		}
     else if (operation == "REPORT") {
-// 			webdavSvc.report(resource, parameters, false,
-//  											 listener, requestor, ourClosure);
-			this._sendHTTPRequest(operation, parameters,
-														{"Connection": "TE",
-																"TE": "trailers",
-																"Content-Type": "text/xml"});
+			var headers = { "depth": (parameters.deep
+																? "1": "0"),
+											"Connection": "TE",
+											"TE": "trailers",
+											"content-type": "application/xml; charset=utf8" };
+			this._sendHTTPRequest(operation, parameters.query, headers);
 		}
 		else if (operation == "POST") {
 			this._sendHTTPRequest(operation, parameters);
@@ -358,9 +358,10 @@ sogoWebDAV.prototype = {
 		var queryDoc = xParser.parseFromString(query, "application/xml");
 		this.load(operation, queryDoc);
 	},
- report: function(query) {
-// 		dump("xxxxxxxx doREPORT: " + query + "\n");
-		this._loadXMLQuery("REPORT", query);
+ report: function(query, deep) {
+		if (typeof deep == "undefined")
+			deep = true;
+		this._loadXMLQuery("REPORT", {query: query, deep: deep});
   },
  post: function(query) {
 		this._loadXMLQuery("POST", query);

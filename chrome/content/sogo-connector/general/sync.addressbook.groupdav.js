@@ -645,12 +645,12 @@ GroupDavSynchronizer.prototype = {
 		this.callbackCode = status;
 		this.pendingOperations = 0;
 		// 		dump("pendingOperations: " + this.pendingOperations + "\n");
-		dump("status: " + status + "\n");
-		dump("response: " + response + "\n");
-		dump("dump:" + dumpObject(response) + "\n");
+// 		dump("status: " + status + "\n");
+// 		dump("response: " + response + "\n");
+// 		dump("dump:" + dumpObject(response) + "\n");
 		if (status > 199 && status < 400) {
 			for (var href in response) {
-				dump("href: " + href + "\n");
+// 				dump("href: " + href + "\n");
 				// FIXME: 200 change
 				var davObject = response[href][200];
 				if (href[href.length-1] != '/')
@@ -660,7 +660,7 @@ GroupDavSynchronizer.prototype = {
 					var rsrcType = [];
 					for (var k in davObject["resourcetype"])
 						rsrcType.push(k);
-					dump("rsrcType: " + rsrcType + "\n");
+// 					dump("rsrcType: " + rsrcType + "\n");
 					if (rsrcType.indexOf("vcard-collection") > 0
 							|| rsrcType.indexOf("addressbook") > 0) {
 						this.validCollection = true;
