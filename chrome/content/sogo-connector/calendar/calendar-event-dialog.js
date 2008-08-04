@@ -41,9 +41,19 @@ function SCOnLoadHandler(event) {
 			.getService(Components.interfaces.nsISupports)
 			.wrappedJSObject;
 
-		var componentURL = ((component.id)
-												? calendar.mItemInfoCache[component.id].locationPath
-												: null);
+		var componentURL = null;
+		if (component.id) {
+			var cache = calendar.mItemInfoCache;
+			if (!cache)
+				cache = calendar.mUncachedCalendar.wrappedJSObject.mItemInfoCache;
+			if (cache) {
+				componentURL = cache[component.id].locationPath;
+				dump("componentURL: " + componentURL + "\n");
+			}
+			else
+				dump("no cache found\n");
+		}
+
 		componentEntry = mgr.componentEntry(calendar.uri, componentURL);
 		initInterval = setInterval(SCReadyCallback, 200);
 	}
