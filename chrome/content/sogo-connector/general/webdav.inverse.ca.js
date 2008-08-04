@@ -136,7 +136,9 @@ function cardDavReport(webdavURL, filter) {
   var xmlReq = buildCardDavReportXML(filter);
 
   //var HTTPheaders=[["Connection","TE"],["TE","trailers, deflate, gzip, compress"],["Depth","1"],["Translate","f"],["Content-type","text/xml"]];
-  var HTTPheaders=[["Connection","TE"],["TE","trailers"],["Content-type","text/xml"]];
+	var HTTPheaders=[["Connection","TE"],["TE","trailers"],
+									 ["Content-type","text/xml; charset=utf8"],
+									 ["Depth", "1"]];
 	// send out the XML request
 	var responseObj = sendXMLRequestXPCOM(webdavURL, "REPORT", HTTPheaders, xmlReq, null, null);
 	switch(responseObj.status) {

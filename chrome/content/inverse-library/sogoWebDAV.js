@@ -287,6 +287,7 @@ sogoWebDAV.prototype = {
 // 																			requestor, ourClosure);
 		}
     else if (operation == "REPORT") {
+			dump("REPORT: " + parameters.deep);
 			var headers = { "depth": (parameters.deep
 																? "1": "0"),
 											"Connection": "TE",
@@ -352,22 +353,22 @@ sogoWebDAV.prototype = {
  delete: function() {
 		this.load("DELETE");
 	},
- _loadXMLQuery: function(operation, query) {
-		var xParser = Components.classes['@mozilla.org/xmlextras/domparser;1']
-		.getService(Components.interfaces.nsIDOMParser);
-		var queryDoc = xParser.parseFromString(query, "application/xml");
-		this.load(operation, queryDoc);
-	},
+//  _loadXMLQuery: function(operation, query) {
+// 		var xParser = Components.classes['@mozilla.org/xmlextras/domparser;1']
+// 		.getService(Components.interfaces.nsIDOMParser);
+// 		var queryDoc = xParser.parseFromString(query, "application/xml");
+// 		this.load(operation, queryDoc);
+// 	},
  report: function(query, deep) {
 		if (typeof deep == "undefined")
 			deep = true;
-		this._loadXMLQuery("REPORT", {query: query, deep: deep});
+		this.load("REPORT", {query: query, deep: deep});
   },
  post: function(query) {
-		this._loadXMLQuery("POST", query);
+		this.load("POST", query);
   },
  proppatch: function(query) {
-		this._loadXMLQuery("PROPPATCH", query);
+		this.load("PROPPATCH", query);
 	}
 };
 
