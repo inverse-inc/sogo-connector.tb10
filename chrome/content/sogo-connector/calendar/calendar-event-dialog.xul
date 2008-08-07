@@ -19,40 +19,6 @@
     <command id="cmd_SCClose" oncommand="SCCloseEvent();"/>
   </commandset>
 
-  <toolbox id="event-toolbox" visible="false">
-    <toolbar id="event-toolbar" collapsed="true"/>
-    <toolbar id="event-attendee-toolbar"
-      defaultset="button-accept,button-decline"
-      class="chromeclass-toolbar"
-      collapsed="true"
-      customizable="false">
-      <toolbarbutton id="button-accept"
-	mode="dialog"
-	class="cal-attendee-button"
-	label="&attendee.toolbar.accept.label;"
-	command="cmd_SCAccept"
-	disable-on-readonly="true"/>
-      <toolbarbutton id="button-decline"
-	mode="dialog"
-	class="cal-attendee-button"
-	label="&attendee.toolbar.decline.label;"
-	command="cmd_SCDecline"
-	disable-on-readonly="true"/>
-    </toolbar>
-    <toolbar id="event-close-toolbar"
-      defaultset="button-close"
-      class="chromeclass-toolbar"
-      collapsed="false"
-      customizable="false">
-      <toolbarbutton id="button-close"
-	mode="dialog"
-	class="cal-attendee-button"
-	label="&attendee.toolbar.close.label;"
-	command="cmd_SCClose"
-	disable-on-readonly="true"/>
-    </toolbar>
-  </toolbox>
-
   <row id="event-grid-attendee-row" position="1">
     <label id="event-grid-fixedConfidentialLabel" collapsed="true"
       value="&event.menu.options.privacy.confidential.label;"/>

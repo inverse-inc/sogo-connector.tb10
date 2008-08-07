@@ -179,21 +179,33 @@ function onXMLRequestReadyStateChange(request) {
 	// 	dump("xmlreadystatechange: " + request.readyState + "\n");
 	if (request.readyState == 4) {
 		if (request.client.target) {
+			var status = 499;
 			try {
-//  				dump("method: " + request.method + "\n");
-//  				dump("status code: " + request.status + "\n");
-				var response;
-				
-				if (request.method == "PROPPATCH"
-						|| request.method == "PROPFIND") {
-					var parser = new multiStatusParser(request.responseXML);
-					response = parser.responses();
-				}
-				else
-					response = request.responseText;
+				status = request.status;
+			}
+			catch(e) {}
 
-				var headers = _parseHeaders(request.getAllResponseHeaders());
-				request.client.target.onDAVQueryComplete(request.status,
+			try {
+// 				dump("method: " + request.method + "\n");
+// 				dump("status code: " + request.readyState + "\n");
+				var headers;
+				var response;
+				if (status == 499) {
+					headers = {};
+					response = "";
+				}
+				else {
+					headers = _parseHeaders(request.getAllResponseHeaders());
+					if (request.method == "PROPPATCH"
+							|| request.method == "PROPFIND") {
+						var parser = new multiStatusParser(request.responseXML);
+						response = parser.responses();
+					}
+					else
+						response = request.responseText;
+				}
+
+				request.client.target.onDAVQueryComplete(status,
 																								 response,
 																								 headers,
 																								 request.client.cbData);
