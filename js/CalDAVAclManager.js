@@ -36,11 +36,15 @@ function statusCode(status) {
 function CalDAVAclManager() {
     this.calendars = {};
     this.wrappedJSObject = this;
+    this.identityCount = 0;
+    this.accountMgr = null;
 }
 
 CalDAVAclManager.prototype = {
     calendars: null,
     wrappedJSObject: null,
+    identityCount: 0,
+    accountMgr: null,
     calendarEntry: function calendarEntry(calendarURI) {
         var url = fixURL(calendarURI.spec);
         var entry = this.calendars[url];
@@ -74,7 +78,7 @@ CalDAVAclManager.prototype = {
     },
     onDAVQueryComplete: function onDAVQueryComplete(status, url, headers,
                                                     response, data) {
-        //                 dump("callback for method: " + data.method + "\n");
+        // dump("callback for method: " + data.method + "\n");
         if (data.method == "acl-options")
             this._optionsCallback(status, url, headers, response, data);
         else if (data.method == "collection-set")
@@ -87,13 +91,14 @@ CalDAVAclManager.prototype = {
             this._componentPrivilegeSetCallback(status, url, headers, response, data);
     },
     _markWithNoAccessControl: function _markWithNoAccessControl(url) {
-        //                 dump(url + " marked without access control\n");
+        // dump(url + " marked without access control\n");
         var calendar = this.calendars[url];
         calendar.hasAccessControl = false;
         calendar.userPrincipals = null;
         calendar.userPrivileges = null;
         calendar.userAddresses = null;
-        calendar.identities = null;
+        calendar.userIdentities = null;
+        calendar.ownerIdentities = null;
         calendar.ownerPrincipal = null;
     },
     _queryCalendar: function _queryCalendar(url) {
@@ -102,12 +107,12 @@ CalDAVAclManager.prototype = {
     _optionsCallback: function _optionsCallback(status, url, headers,
                                                 response, data) {
         var dav = headers["dav"];
-        //                 dump("options callback: " + url +  " HTTP/1.1 " + status + "\n");
-        //                 dump("headers:\n");
-        //                 for (var k in headers)
-        //                         dump("  " + k + ": " + headers[k] + "\n");
+        // dump("options callback: " + url +  " HTTP/1.1 " + status + "\n");
+        // dump("headers:\n");
+        // for (var k in headers)
+        // dump("  " + k + ": " + headers[k] + "\n");
         var calURL = fixURL(url);
-        //                 dump("dav: " + dav + "\n");
+        // dump("dav: " + dav + "\n");
         if (dav && dav.indexOf("access-control") > -1) {
             this.calendars[calURL].hasAccessControl = true;
             var propfind = ("<?xml version='1.0' encoding='UTF-8'?>\n"
@@ -165,7 +170,7 @@ CalDAVAclManager.prototype = {
                             var fixedURL = fixURL(owner);
                             this.calendars[calURL].ownerPrincipal = fixedURL;
                             var propfind = ("<?xml version='1.0' encoding='UTF-8'?>\n"
-                                            + "<D:propfind xmlns:D='DAV:' xmlns:C='urn:ietf:params:xml:ns:caldav'><D:prop><C:calendar-user-address-set/></D:prop></D:propfind>");
+                                            + "<D:propfind xmlns:D='DAV:' xmlns:C='urn:ietf:params:xml:ns:caldav'><D:prop><C:calendar-user-address-set/><D:displayname/></D:prop></D:propfind>");
                             this.xmlRequest(fixedURL, "PROPFIND", propfind,
                                             {'content-type': "application/xml; charset=utf-8",
                                                     'depth': "0"},
@@ -231,48 +236,107 @@ CalDAVAclManager.prototype = {
             .getService(Components.interfaces.nsIDOMParser);
             var queryDoc = xParser.parseFromString(response, "application/xml");
 
-            var values = this._parseCalendarUserAddressSet(queryDoc, data.calendar);
+            var addressValues = this._parseCalendarUserAddressSet(queryDoc, data.calendar);
 
-            var addresses;
-            if (data.who == "user") {
-                addresses = this.calendars[data.calendar].userAddresses;
-                if (!addresses) {
-                    addresses = [];
-                    this.calendars[data.calendar].userAddresses = addresses;
-                }
+            var addressesKey = data.who + "Addresses";
+            var identitiesKey = data.who + "Identities";
 
-                var displayName = this._parsePrincipalDisplayName(queryDoc);
-                if (displayName)
-                    this._addUserIdentity(displayName, values, data.calendar);
+            var addresses = this.calendars[data.calendar][addressesKey];
+            if (!addresses) {
+                addresses = [];
+                this.calendars[data.calendar][addressesKey] = addresses;
             }
-            else if (data.who == "owner") {
-                dump("owner addresses\n");
-                addresses = this.calendars[data.calendar].ownerAddresses;
-                if (!addresses) {
-                    addresses = [];
-                    this.calendars[data.calendar].ownerAddresses = addresses;
-                }
-            }
-
-            for (var address in values)
+            for (var address in addressValues)
                 if (addresses.indexOf(address) == -1) {
                     addresses.push(address);
-                    dump("added address: " + address + "\n");
+                    dump("added address to '" + addressesKey + "': " + address + "\n");
                 }
+
+            var identities = this.calendars[data.calendar][identitiesKey];
+            if (!identities) {
+                identities = [];
+                this.calendars[data.calendar][identitiesKey] = identities;
+            }
+            var displayName = this._parsePrincipalDisplayName(queryDoc);
+            if (displayName) {
+                for (var address in addressValues)
+                    if (address.search("mailto:", "i") == 0)
+                        this._appendIdentity(identities, displayName,
+                                             address.substr(7));
+            }
         }
     },
-    _addUserIdentity: function _addUserIdentity(displayName, values, calendar) {
-        var identities = this.calendars[calendar].identities;
-        if (!identities) {
-            identities = [];
-            this.calendars[calendar].identities = identities;
+    _initAccountMgr: function _initAccountMgr() {
+        this.accountMgr = Components
+                          .classes["@mozilla.org/messenger/account-manager;1"]
+                          .getService(Components.interfaces.nsIMsgAccountManager);
+        var identities = this.accountMgr.allIdentities.QueryInterface(Components.interfaces.nsICollection);
+        dump("identities length: " + identities.Count() + "\n");
+        for (var i = 0; i < identities.Count(); i++) {
+            var identity = identities.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgIdentity);
+            dump("key: " + identity.key + "\n");
+            dump("name: " + identity.identityName + "\n");
+            if (identity.key.indexOf("caldav_") == 0)
+                this.accountMgr.removeIdentity(identity);
         }
-        for (var address in values)
-            if (address.search("mailto:", "i") == 0)
-                identities.push({ cn: displayName, email: address.substr(7) });
+    },
+    _findIdentityByEmail: function _findIdentityByEmail(email) {
+        var identity = null;
+        var lowEmail = email.toLowerCase();
+
+        var identities = this.accountMgr.allIdentities.QueryInterface(Components.interfaces.nsICollection);
+        var i = 0;
+        while (!identity && i < identities.Count()) {
+            var currentIdentity = identities.GetElementAt(i)
+                                  .QueryInterface(Components.interfaces.nsIMsgIdentity);
+// dump("id email: " + currentIdentity.email + "\n");
+            if (currentIdentity.email.toLowerCase() == lowEmail)
+                identity = currentIdentity;
+            else
+                i++;
+        }
+
+        return identity;
+    },
+    _identitiesHaveEmail: function _identitiesHaveEmail(identities, email) {
+        var haveEmail = false;
+        var lowEmail = email.toLowerCase();
+
+        var i = 0;
+        while (!haveEmail && i < identities.length) {
+            if (identities[i].email.toLowerCase() == lowEmail)
+                haveEmail = true;
+            else
+                i++;
+        }
+
+        return haveEmail;
+    },
+    _appendIdentity: function _appendIdentity(identities, displayName, email) {
+        if (!this.accountMgr)
+            this._initAccountMgr();
+// dump("adding identity: " + displayName + " <" +
+// email + ">\n");
+        var newIdentity = this._findIdentityByEmail(email);
+        if (!newIdentity) {
+            var newIdentity = Components
+                .classes["@mozilla.org/messenger/identity;1"]
+                .createInstance(Components
+                                .interfaces.nsIMsgIdentity);
+            newIdentity.key = "caldav_" + this.identityCount;
+            newIdentity.identityName = String(displayName + " <" + email + ">");
+            newIdentity.fullName = String(displayName);
+            newIdentity.email = String(email);
+            this.accountMgr.defaultAccount.addIdentity(newIdentity);
+            this.identityCount++;
+        }
+        if (!this._identitiesHaveEmail(identities, email))
+            identities.push(newIdentity);
+// dump("identity key: " + newIdentity + "\n");
     },
     _parseCalendarUserAddressSet: function
-    _parseCalendarUserAddressSet(queryDoc, calendarURL) {
+                                  _parseCalendarUserAddressSet(queryDoc,
+                                                               calendarURL) {
         var values = {};
         var nodes = queryDoc.getElementsByTagName("calendar-user-address-set");
         for (var i = 0; i < nodes.length; i++) {
@@ -302,7 +366,7 @@ CalDAVAclManager.prototype = {
         if (nodes.length) {
             displayName = "";
             var childNodes = nodes[0].childNodes;
-            //                         dump ( "childNodes: " + childNodes.length + "\n");
+            // dump ( "childNodes: " + childNodes.length + "\n");
             for (var i = 0; i < childNodes.length; i++) {
                 if (childNodes[i].nodeType
                     == Components.interfaces.nsIDOMNode.TEXT_NODE)
@@ -317,7 +381,7 @@ CalDAVAclManager.prototype = {
 
     /* component controller */
     _queryComponent: function _queryComponent(entry, url) {
-        //                 dump("queryCompoennt\n");
+        // dump("queryCompoennt\n");
         var propfind = ("<?xml version='1.0' encoding='UTF-8'?>\n"
                         + "<D:propfind xmlns:D='DAV:'><D:prop><D:current-user-privilege-set/></D:prop></D:propfind>");
         this.xmlRequest(url, "PROPFIND", propfind,
@@ -330,7 +394,7 @@ CalDAVAclManager.prototype = {
         var xParser = Components.classes['@mozilla.org/xmlextras/domparser;1']
         .getService(Components.interfaces.nsIDOMParser);
         var queryDoc = xParser.parseFromString(response, "application/xml");
-        //                 dump("\n\n\ncomponent-privilege-set:\n" + response + "\n\n\n");
+        // dump("\n\n\ncomponent-privilege-set:\n" + response + "\n\n\n");
     
         data.entry.userPrivileges = this._parsePrivileges(queryDoc);
     },
@@ -345,7 +409,7 @@ CalDAVAclManager.prototype = {
                     var ns = subnodes[j].namespaceURI;
                     var tag = subnodes[j].localName;
                     var privilege = "{" + ns + "}" + tag;
-                    //                                         dump(arguments.callee.caller.name + " privilege: " + privilege + "\n");
+                    // dump(arguments.callee.caller.name + " privilege: " + privilege + "\n");
                     privileges.push(privilege);
                 }
         }
@@ -355,8 +419,8 @@ CalDAVAclManager.prototype = {
     xmlRequest: function xmlRequest(url, method, parameters, headers, data) {
         var request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
         .createInstance(Components.interfaces.nsIJSXMLHttpRequest);
-        //                 dump("method: " + method + "\n");
-        //                 dump("url: " + url + "\n");
+        // dump("method: " + method + "\n");
+        // dump("url: " + url + "\n");
         request.open(method, url, true);
         if (headers)
             for (var header in headers)
@@ -366,13 +430,13 @@ CalDAVAclManager.prototype = {
         request.method = method;
         request.callbackData = data;
 
-        //                 dump("method: " + request.method + "\nurl: " + url + "\n");
+        // dump("method: " + request.method + "\nurl: " + url + "\n");
         request.onreadystatechange = function() {
             if (request.readyState == 4) {
                 try {
                     if (request.client && request.status) {
                         var responseText = request.responseText;
-                        //                                                 dump("response: "  + responseText + "\n");
+                        // dump("response: "  + responseText + "\n");
         
                         var headers = {};
                         var textHeaders = request.getAllResponseHeaders().split("\n");
@@ -407,7 +471,7 @@ CalDAVAclManager.prototype = {
         };
   
         request.send(parameters);
-        //                 dump("xmlrequest sent: '" + method + "\n");
+        // dump("xmlrequest sent: '" + method + "\n");
     },
 
     QueryInterface: function(aIID) {
@@ -428,17 +492,19 @@ CalDAVAclCalendarEntry.prototype = {
     entries: null,
     isCalendarReady: function isCalendarReady() {
         var testnull = null;
-        //                 dump (typeof(this.hasAccessControl)+ "\n"
-        //                                         + typeof(this.userPrincipals)+ "\n"
-        //                                         + typeof(this.userPrivileges)+ "\n"
-        //                                         + typeof(this.userAddresses)+ "\n"
-        //                                         + typeof(this.identities)+ "\n"
-        //                                         + typeof(this.ownerPrincipal)+ "\n");
+        // dump (typeof(this.hasAccessControl)+ "\n"
+        // + typeof(this.userPrincipals)+ "\n"
+        // + typeof(this.userPrivileges)+ "\n"
+        // + typeof(this.userAddresses)+ "\n"
+        // + typeof(this.identities)+ "\n"
+        // + typeof(this.ownerPrincipal)+ "\n");
         return (typeof(this.hasAccessControl) != "undefined"
                 && typeof(this.userPrincipals) != "undefined"
                 && typeof(this.userPrivileges) != "undefined"
                 && typeof(this.userAddresses) != "undefined"
-                && typeof(this.identities) != "undefined"
+                && typeof(this.ownerAddresses) != "undefined"
+                && typeof(this.userIdentities) != "undefined"
+                && typeof(this.ownerIdentities) != "undefined"
                 && typeof(this.ownerPrincipal) != "undefined");
     },
     userIsOwner: function userIsOwner() {
@@ -447,9 +513,9 @@ CalDAVAclCalendarEntry.prototype = {
         var i = 0;
 
         if (this.hasAccessControl) {
-            //                         dump("owner: " + this.ownerPrincipal + "\n");
+            // dump("owner: " + this.ownerPrincipal + "\n");
             while (!result && i < this.userPrincipals.length) {
-                //                                 dump("user: " + this.userPrincipals[i] + "\n");
+                // dump("user: " + this.userPrincipals[i] + "\n");
                 if (this.userPrincipals[i] == this.ownerPrincipal)
                     result = true;
                 else
@@ -462,16 +528,16 @@ CalDAVAclCalendarEntry.prototype = {
         return result;
     },
     userCanAddComponents: function userCanAddComponents() {
-        //                 dump("has access control: " + this.hasAccessControl + "\n");
+        // dump("has access control: " + this.hasAccessControl + "\n");
         return (!this.hasAccessControl
                 || (this.userPrivileges.indexOf("{DAV:}bind")
                     > -1));
     },
     userCanDeleteComponents: function userCanAddComponents() {
-        //                  dump("has access control: " + this.hasAccessControl + "\n");
-        //                 if (this.userPrivileges)
-        //                         dump("indexof unbind: "
-        //                                          + this.userPrivileges.indexOf("{DAV:}unbind") + "\n");
+        // dump("has access control: " + this.hasAccessControl + "\n");
+        // if (this.userPrivileges)
+        // dump("indexof unbind: "
+        // + this.userPrivileges.indexOf("{DAV:}unbind") + "\n");
         return (!this.hasAccessControl
                 || (this.userPrivileges.indexOf("{DAV:}unbind")
                     > -1));
@@ -487,9 +553,9 @@ CalDAVAclComponentEntry.prototype = {
     url: null,
     userPrivileges: null,
     isComponentReady: function isComponentReady() {
-        //                 dump("parent ready: " + this.parentCalendarEntry.isCalendarReady() + "\n"
-        //                                  + "this.userPrivileges: " + this.userPrivileges + "\n"
-        //                                  + "ac: " + this.parentCalendarEntry.hasAccessControl + "\n");
+        // dump("parent ready: " + this.parentCalendarEntry.isCalendarReady() + "\n"
+        // + "this.userPrivileges: " + this.userPrivileges + "\n"
+        // + "ac: " + this.parentCalendarEntry.hasAccessControl + "\n");
         return (this.parentCalendarEntry.isCalendarReady()
                 && (this.userPrivileges != null
                     || !this.parentCalendarEntry.hasAccessControl));
@@ -498,10 +564,10 @@ CalDAVAclComponentEntry.prototype = {
         return this.parentCalendarEntry.userIsOwner();
     },
     userCanModify: function userCanModify() {
-        //                 dump("this.url: " + this.url + "\n");
-        //                 dump("this.userPrivileges: " + this.userPrivileges + "\n");
-        //                 dump("this.parentCalendarEntry.userPrivileges: "
-        //                                  + this.parentCalendarEntry.userPrivileges + "\n");
+        // dump("this.url: " + this.url + "\n");
+        // dump("this.userPrivileges: " + this.userPrivileges + "\n");
+        // dump("this.parentCalendarEntry.userPrivileges: "
+        // + this.parentCalendarEntry.userPrivileges + "\n");
 
         var result;
         if (this.parentCalendarEntry.hasAccessControl) {

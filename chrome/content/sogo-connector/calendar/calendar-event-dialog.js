@@ -213,10 +213,10 @@ function SCLoadOrganizers() {
 function SCLoadAclOrganizers() {
     var organizers = [];
 
-    var identities = componentEntry.parentCalendarEntry.identities;
+    var identities = componentEntry.parentCalendarEntry.ownerIdentities;
     for (var i = 0; i < identities.length; i++) {
         var email = identities[i].email;
-        var name = identities[i].cn;
+        var name = identities[i].fullName;
         if (email && email.indexOf("@") > -1) {
             if (!(name && name.length))
                 name = email.split("@")[0];
