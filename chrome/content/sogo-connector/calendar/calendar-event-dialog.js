@@ -366,11 +366,14 @@ SCCalendarManager.prototype = {
 
         var isNew = !(window.arguments[0].calendarEvent.id);
 
+//         dump("this url: " + window.arguments[0].calendar.uri.spec + "\n");
+
         var result = [];
         for (var i = 0; i < calendars.length; i++) {
             var isIncluded = true;
             if (calendars[i].type == "caldav") {
                 //                                 dump("{ ");
+//                 dump("current url: " + calendars[i].uri.spec + "\n");
                 var entry = aclMgr.calendarEntry(calendars[i].uri);
                 isIncluded = (entry.userCanAddComponents()
                               || (!isNew && window.arguments[0].calendar

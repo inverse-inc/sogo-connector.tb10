@@ -299,7 +299,7 @@ sogoWebDAV.prototype = {
 // 																			requestor, ourClosure);
 		}
     else if (operation == "REPORT") {
-			dump("REPORT: " + parameters.deep);
+// 			dump("REPORT: " + parameters.deep);
 			var headers = { "depth": (parameters.deep
 																? "1": "0"),
 											"Connection": "TE",
