@@ -249,7 +249,7 @@ CalDAVAclManager.prototype = {
             for (var address in addressValues)
                 if (addresses.indexOf(address) == -1) {
                     addresses.push(address);
-                    dump("added address to '" + addressesKey + "': " + address + "\n");
+//                     dump("added address to '" + addressesKey + "': " + address + "\n");
                 }
 
             var identities = this.calendars[data.calendar][identitiesKey];

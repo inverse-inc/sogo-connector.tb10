@@ -1,12 +1,11 @@
-/* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 2 -*- */
-
 window.gCalendarBundle = {
- getString: function(a) {
+    getString: function(a) {
 		return a;
 	}
 };
 
 var SCEnableDelete = false;
+var SCEnableNewItems = true;
 
 function SCCalendarsListOverlayOnLoad() {
 	gCalendarBundle = document.getElementById("SCCalendarStringBundle");
@@ -19,6 +18,9 @@ function SCCalendarsListOverlayOnLoad() {
 	window.SCOldOnSelectionChanged = calendarController.onSelectionChanged;
 	calendarController.onSelectionChanged = window.SCOnSelectionChanged;
 
+    window.SCOldOnCalendarSelect = calendarListTreeView.onSelect;
+    calendarListTreeView.onSelect = window.SCOnCalendarSelect;
+
 	unifinderTreeView.SCOldSetSelectedItems
 		= unifinderTreeView.setSelectedItems;
 	unifinderTreeView.setSelectedItems = window.SCuTVSetSelectedItems;
@@ -26,18 +28,25 @@ function SCCalendarsListOverlayOnLoad() {
 	var taskTreeView = document.getElementById("calendar-task-tree");
 	taskTreeView.SCOldOnTaskTreeViewSelect = taskTreeView.onselect;
 	taskTreeView.onselect = window.SCOnTaskTreeViewSelect;
+
+    SCComputeEnableNewItems();
 }
 
 function SCCalendarControllerIsCommandEnabled(command) {
 	var result;
 
 	if (command == "calendar_delete_event_command"
-			|| command == "calendar_delete_todo_command"
-			|| command == "button_delete"
-			|| command == "cmd_delete") {
+        || command == "calendar_delete_todo_command"
+        || command == "button_delete"
+        || command == "cmd_delete") {
 		result = (SCEnableDelete
-							&& this.SCOldCalendarControllerIsCommandEnabled(command));
+                  && this.SCOldCalendarControllerIsCommandEnabled(command));
 	}
+    else if (command == "calendar_new_event_command"
+             || command == "calendar_new_todo_command") {
+        result = (SCEnableNewItems
+                  && this.SCOldCalendarControllerIsCommandEnabled(command));
+    }
 	else
 		result = this.SCOldCalendarControllerIsCommandEnabled(command);
 
@@ -57,7 +66,7 @@ function SCComputeEnableDelete(selectedItems) {
 		if (calendar.type == "caldav") {
 			var calEntry = aclMgr.calendarEntry(calendar.uri);
 			SCEnableDelete = (calEntry.isCalendarReady()
-												&& calEntry.userCanDeleteComponents());
+                              && calEntry.userCanDeleteComponents());
 		}
 	}
 
@@ -69,9 +78,39 @@ function SCComputeEnableDelete(selectedItems) {
 	}
 }
 
+function SCComputeEnableNewItems() {
+    var oldValue = SCEnableNewItems;
+
+    var cal = getSelectedCalendar();
+    if (cal && cal.type == "caldav") {
+        dump("cal: " + cal.name + "\n");
+        var aclMgr = Components.classes["@inverse.ca/calendar/caldav-acl-manager;1"]
+            .getService(Components.interfaces.nsISupports)
+            .wrappedJSObject;
+        var entry = aclMgr.calendarEntry(cal.uri);
+        SCEnableNewItems = (entry.isCalendarReady()
+                            && entry.userCanAddComponents());
+    }
+    else
+        SCEnableNewItems = true;
+
+    dump("enable new items: " + SCEnableNewItems + "\n");
+    if (SCEnableNewItems != oldValue) {
+        dump("updating new commands\n");
+		goUpdateCommand("calendar_new_event_command");
+		goUpdateCommand("calendar_new_todo_command");
+    }
+}
+
 function SCOnSelectionChanged(event) {
 	SCComputeEnableDelete(event.detail);
 	window.SCOldOnSelectionChanged(event);
+}
+
+function SCOnCalendarSelect(event) {
+    dump("onselectionchanged\n");
+    SCComputeEnableNewItems();
+    window.SCOldOnCalendarSelect(event);
 }
 
 function SCuTVSetSelectedItems(items) {
@@ -84,8 +123,8 @@ function SCuTVSetSelectedItems(items) {
 function SCOnTaskTreeViewSelect(event) {
 	SCComputeEnableDelete(this.selectedTasks);
 	return (this.SCOldOnTaskTreeViewSelect
-					? this.SCOldOnTaskTreeViewSelect(event)
-					: false);
+            ? this.SCOldOnTaskTreeViewSelect(event)
+            : false);
 }
 
 window.addEventListener("load", SCCalendarsListOverlayOnLoad, false);

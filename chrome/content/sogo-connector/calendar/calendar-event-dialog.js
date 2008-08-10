@@ -2,8 +2,6 @@ var initInterval = -1;
 var componentEntry = null;
 var component = null;
 
-var thunderbirdOrganizers = null;
-
 function SCReadyCallback() {
     var ready = componentEntry.isComponentReady();
     //         dump("ready: " + ready + "\n");
@@ -52,10 +50,6 @@ function SCOnLoadHandler(event) {
                                       SCOnChangeCalendar,
                                       false);
     }
-    var organizers = document.getElementById("event-grid-item-organizer");
-    organizers.addEventListener("command",
-                                SCUpdateExistingOrganizer,
-                                false);
 }
 
 function eventHasAttendees() {
@@ -105,33 +99,6 @@ function userIsAttendee(delegated) {
     return (getUserAsAttendee(delegated) != null);
 }
 
-function userIsOrganizer(delegated) {
-    var isOrganizer = false;
-
-    var i = 0;
-    var userAddresses = (delegated
-                         ? componentEntry.parentCalendarEntry.ownerAddresses
-                         : componentEntry.parentCalendarEntry.userAddresses);
-    var organizerID = component.organizer.id.toLowerCase();
-    while (!isOrganizer && i < userAddresses.length)
-        if (userAddresses[i].toLowerCase() == organizerID)
-            isOrganizer = true;
-        else
-            i++;
-
-    return isOrganizer;
-}
-
-function SCMakeWidgetsReadOnly() {
-    var menuBar = document.getElementById("event-menubar");
-    menuBar.setAttribute("collapsed", "true");
-    var eventGrid = document.getElementById("event-grid");
-    _makeChildNodesReadOnly(eventGrid);
-
-    this.SCOldShowAttendeePopup = this.showAttendeePopup;
-    this.showAttendeePopup = SCShowAttendeePopup;
-}
-
 function _makeChildNodesReadOnly(node) {
     if (node.nodeType
         == Components.interfaces.nsIDOMNode.ELEMENT_NODE) {
@@ -150,146 +117,11 @@ function _makeChildNodesReadOnly(node) {
 }
 
 function SCUpdateCustomFields() {
-    var attendees = document.getElementById("event-grid-attendee-row");
-    var row = document.getElementById("event-grid-inverse-organizer-row");
-    if (row.parentNode == attendees) {
-        attendees.removeChild(row);
-        attendees.parentNode.insertBefore(row, attendees);
-    }
-
-    var organizers = document.getElementById("event-grid-item-organizer");
-    SCUpdateOrganizers(organizers);
-
     var fixedLabel = document.getElementById("event-grid-fixedConfidentialLabel");
     var nodes = document
         .getElementById("button-privacy")
         .getElementsByTagName("menuitem");
     nodes[1].label = fixedLabel.value;
-}
-
-function SCLoadOrganizers() {
-    if (!thunderbirdOrganizers) {
-        thunderbirdOrganizers = [];
-
-        var composeService = Components.classes["@mozilla.org/messengercompose;1"]
-            .getService(Components.interfaces.nsIMsgComposeService);
-
-        var manager = Components
-            .classes["@mozilla.org/messenger/account-manager;1"]
-            .getService(Components.interfaces.nsIMsgAccountManager);
-        for (var i = 0; i < manager.allIdentities.Count(); i++) {
-            var currentIdentity = manager.allIdentities.GetElementAt(i)
-                .QueryInterface(Components.interfaces.nsIMsgIdentity);
-            var server = manager
-                .GetServersForIdentity(currentIdentity).GetElementAt(0)
-                .QueryInterface(Components.interfaces.nsIMsgIncomingServer);
-            if (server.realUsername) {
-                var email = server.realUsername;
-                var name = currentIdentity.fullName;
-                if (server.realUsername.indexOf("@") < 0) {
-                    var domain = currentIdentity.email.split("@")[1];
-                    if (domain)
-                        email += "@" + domain;
-                }
-                if (email && email.indexOf("@") > -1) {
-                    if (!name)
-                        name = email.split("@")[0];
-                    var currentOrganizer = { name: name, email: email };
-                    if (composeService.defaultIdentity == currentIdentity)
-                        currentOrganizer["default"] = true;
-                    thunderbirdOrganizers.push(currentOrganizer);
-                    //                                         dump("tbird organizer: " + currentOrganizer.name
-                    //                                                          + " <" + currentOrganizer.email + "\n");
-                }
-            }
-        }
-    }
-
-    //         dump("tbird org: " + thunderbirdOrganizers.length + "\n");
-
-    return thunderbirdOrganizers;
-}
-
-function SCLoadAclOrganizers() {
-    var organizers = [];
-
-    var identities = componentEntry.parentCalendarEntry.ownerIdentities;
-    for (var i = 0; i < identities.length; i++) {
-        var email = identities[i].email;
-        var name = identities[i].fullName;
-        if (email && email.indexOf("@") > -1) {
-            if (!(name && name.length))
-                name = email.split("@")[0];
-            var currentOrganizer = { name: name, email: email };
-            if (i == 0)
-                currentOrganizer["default"] = true;
-            organizers.push(currentOrganizer);
-        }
-    }
-
-    return organizers;
-}
-
-function SCFillOrganizers() {
-    //         dump("fill organizers\n");
-    // add organizers to the organizer menulist
-    var organizerList = document.getElementById("event-grid-item-organizer");
-    for (var i = organizerList.childNodes.length - 1; i > -1; i--)
-        organizerList.removeChild(organizerList.childNodes[i]);
-    var organizers = ((componentEntry
-                       && componentEntry.parentCalendarEntry.hasAccessControl)
-                      ? SCLoadAclOrganizers()
-                      : SCLoadOrganizers());
-    var selectIndex = 0;
-    for (var i = 0; i < organizers.length; i++) {
-        var organizer = organizers[i];
-        var name = organizer["name"] + " <" + organizer["email"] + ">";
-        var menuitem = organizerList.appendItem(name, i);
-        menuitem.organizer = organizer;
-        if (organizer["default"])
-            selectIndex = i;
-    }
-    organizerList.selectedIndex = selectIndex;
-}
-
-function SCUpdateOrganizers(organizers) {
-    var existingOrganizer = document
-        .getElementById("event-grid-item-existing-organizer");
-    var organizer = component.organizer;
-
-    var organizerMenu = false;
-    if (organizer) {
-        if (componentEntry.parentCalendarEntry.hasAccessControl
-            && componentEntry.userIsOwner()
-            && !eventHasAttendees())
-            organizerMenu = true;
-        else {
-            var email = organizer.id.split(":")[1];
-            var fullname = organizer.commonName;
-            if (!fullname)
-                fullname = email.split("@")[0];
-            var organizerName = fullname + " <" + email + ">";
-            existingOrganizer.setAttribute('value', organizerName);
-            existingOrganizer.setAttribute("collapsed", "false");
-            window.organizer = organizer;
-        }
-    }
-    else
-        organizerMenu = (!componentEntry
-                         || !componentEntry.parentCalendarEntry.hasAccessControl
-                         || componentEntry.userIsOwner());
-
-    //         dump("menu: " + organizerMenu + "\n");
-    var organizerRow
-        = document.getElementById("event-grid-inverse-organizer-row");
-    if (organizerMenu) {
-        organizerRow.setAttribute("collapsed", "false");
-        existingOrganizer.setAttribute("collapsed", "true");
-        SCFillOrganizers();
-        SCUpdateExistingOrganizer();
-    }
-    else
-        organizerRow.setAttribute("collapsed", "true");
 }
 
 function SCOnChangeCalendar(event) {
@@ -306,41 +138,6 @@ function SCOnChangeCalendar(event) {
         componentEntry = mgr.componentEntry(calendar.uri, null);
         initInterval = setInterval(SCReadyCallback, 200);
     }
-    else {
-        var organizers = document.getElementById("event-grid-item-organizer");
-        SCUpdateOrganizers(organizers);
-    }
-}
-
-function SCUpdateExistingOrganizer(event) {
-    var organizerItem = document.getElementById("event-grid-item-organizer");
-    var menuItem = organizerItem.selectedItem;
-    var organizer = Components.classes["@mozilla.org/calendar/attendee;1"]
-        .createInstance(Components.interfaces.calIAttendee);
-    organizer.commonName = menuItem.organizer["name"];
-    organizer.id = "MAILTO:" + menuItem.organizer["email"];
-    organizer.isOrganizer = true;
-    organizer.role = "REQ-PARTICIPANT";
-    organizer.participationStatus = "ACCEPTED";
-
-    if (window.organizer && window.attendees) {
-        for (var i = 0; i < window.attendees.length; i++) {
-            var attendee = window.attendees[i];
-            if (attendee.id.toLowerCase() == window.organizer.id.toLowerCase()) {
-                var newAttendee = window.organizer.clone();
-                newAttendee.isOrganizer = false;
-                window.attendees.splice(i, 1, newAttendee);
-            }
-        }
-    }
-
-    window.organizer = organizer;
-}
-
-function SCShowAttendeePopup(event) {
-    SCOldShowAttendeePopup(event);
-    var popup = document.getElementById("attendee-popup");
-    _makeChildNodesReadOnly(popup);
 }
 
 function SCGetCalendarManager() {
