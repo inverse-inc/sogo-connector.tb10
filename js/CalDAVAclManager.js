@@ -271,11 +271,11 @@ CalDAVAclManager.prototype = {
                           .classes["@mozilla.org/messenger/account-manager;1"]
                           .getService(Components.interfaces.nsIMsgAccountManager);
         var identities = this.accountMgr.allIdentities.QueryInterface(Components.interfaces.nsICollection);
-        dump("identities length: " + identities.Count() + "\n");
+//         dump("identities length: " + identities.Count() + "\n");
         for (var i = 0; i < identities.Count(); i++) {
             var identity = identities.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgIdentity);
-            dump("key: " + identity.key + "\n");
-            dump("name: " + identity.identityName + "\n");
+//             dump("key: " + identity.key + "\n");
+//             dump("name: " + identity.identityName + "\n");
             if (identity.key.indexOf("caldav_") == 0)
                 this.accountMgr.removeIdentity(identity);
         }
@@ -419,8 +419,8 @@ CalDAVAclManager.prototype = {
     xmlRequest: function xmlRequest(url, method, parameters, headers, data) {
         var request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
         .createInstance(Components.interfaces.nsIJSXMLHttpRequest);
-        // dump("method: " + method + "\n");
-        // dump("url: " + url + "\n");
+//         dump("method: " + method + "\n");
+//         dump("url: " + url + "\n");
         request.open(method, url, true);
         if (headers)
             for (var header in headers)
@@ -491,7 +491,6 @@ CalDAVAclCalendarEntry.prototype = {
     uri: null,
     entries: null,
     isCalendarReady: function isCalendarReady() {
-        var testnull = null;
         // dump (typeof(this.hasAccessControl)+ "\n"
         // + typeof(this.userPrincipals)+ "\n"
         // + typeof(this.userPrivileges)+ "\n"
