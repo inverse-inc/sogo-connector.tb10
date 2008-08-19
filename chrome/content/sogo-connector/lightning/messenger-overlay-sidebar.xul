@@ -1,9 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE overlay>
 
-<?xml-stylesheet
-  href="chrome://sogo-connector/content/lightning/messenger-overlay-sidebar.css" ?>
-
 <overlay id="inverseMessengerOverlaySidebar"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/x-javascript"

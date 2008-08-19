@@ -30,8 +30,10 @@ function SCOnLoadHandler(event) {
             if (!cache)
                 cache = calendar.mUncachedCalendar.wrappedJSObject.mItemInfoCache;
             if (cache) {
-                componentURL = cache[component.id].locationPath;
-                dump("componentURL: " + componentURL + "\n");
+                if (cache[component.id]) {
+                    componentURL = cache[component.id].locationPath;
+                    dump("componentURL: " + componentURL + "\n");
+                }
             }
             else
                 dump("no cache found\n");

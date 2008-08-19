@@ -168,7 +168,7 @@ SCItipSentByManager.prototype = {
 };
 
 function SCCheckAndSendItipMessage(aItem, aOpType, aOriginalItem) {
-//     dump("SCCheckAndSentItipMessage\n");
+    dump("SCCheckAndSentItipMessage\n");
     var mgr = new SCItipSentByManager();
     var newItem = mgr.preparedItipItem(aItem);
     window.SCOldCheckAndSendItipMessage(newItem, aOpType, aOriginalItem);
