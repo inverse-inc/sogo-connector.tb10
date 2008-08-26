@@ -11,17 +11,31 @@
 
       <constructor>
         <![CDATA[
-				var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
-				.getService(Components.interfaces.mozIJSSubScriptLoader);
-				loader.loadSubScript("chrome://sogo-connector/content/common/common-dav.js");
+		 var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+			      .getService(Components.interfaces.mozIJSSubScriptLoader);
+		 loader.loadSubScript("chrome://sogo-connector/content/common/common-dav.js");
 
-				this.inverseParentSetupAutocomplete = this.setupAutocomplete;
-				this.setupAutocomplete = this.inverseSetupAutocomplete;
+		 this.inverseParentSetupAutocomplete = this.setupAutocomplete;
+		 this.setupAutocomplete = this.inverseSetupAutocomplete;
 
-				var template = document.getAnonymousElementByAttribute(
-				               this, "anonid", "input");
-				template.setAttribute("searchSessions", "sogo-connector");
-				]]>
+		 var template = document
+		   .getAnonymousElementByAttribute(this, "anonid", "input");
+		 template.setAttribute("searchSessions", "sogo-connector");
+
+		 var showComment = false;
+		 var prefService = Components
+		   .classes["@mozilla.org/preferences-service;1"]
+		   .getService(Components.interfaces.nsIPrefBranch);
+		 try {
+		   var attribute = prefService
+		     .getCharPref("sogo-connector.autoComplete.commentAttribute");
+		   if (attribute && attribute.length > 0)
+		     template.showCommentColumn = true;
+		 }
+		 catch(e) {
+		 }
+
+		 ]]>
       </constructor>
 
       <method name="inverseSetupAutocomplete">

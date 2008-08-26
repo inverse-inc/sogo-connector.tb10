@@ -97,12 +97,26 @@ function setupCardDavAutoCompleteSession() {
 				// if we make it here, we know that session initialization has
 				// succeeded; add the session for all recipients, and 
 				// remember that we've done so
+				var showComment = false;
+				var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+					.getService(Components.interfaces.nsIPrefBranch);
+				try {
+					var attribute = prefService
+            .getCharPref("sogo-connector.autoComplete.commentAttribute");
+					if (attribute && attribute.length > 0)
+						showComment = true;
+				}
+				catch(e) {
+				}
+
 				for (var i = 1; i <= awGetMaxRecipients(); i++) {
 //  					dump("i: " + i + "\n");
-					var autoCompleteWidget = document.getElementById(autocompleteWidgetPrefix + "#" + i);
+					var autoCompleteWidget
+						= document.getElementById(autocompleteWidgetPrefix + "#" + i);
 					if (autoCompleteWidget) {
 //  						dump("widget found\n");
 						autoCompleteWidget.addSession(cardDAVSession);
+						autoCompleteWidget.showCommentColumn = showComment;
 
 						// ldap searches don't insert a default entry with the default domain appended to it
 						// so reduce the minimum results for a popup to 2 in this case. 

@@ -226,6 +226,7 @@ SOGoConnectorACSessionWrapper.prototype = {
 						if (!data
 								|| (!data.hasFN && hasFN))
 							this.results[key] = {value: item.value,
+																	 comment: item.comment,
 																	 hasFN: hasFN};
 					}
 					else {
@@ -246,7 +247,7 @@ SOGoConnectorACSessionWrapper.prototype = {
 			var item = Components.classes["@mozilla.org/autocomplete/item;1"]
 				.createInstance(Components.interfaces.nsIAutoCompleteItem);
 			item.className = "remote-abook";
-			item.comment = value;
+			item.comment = this.results[key].comment;
 			item.value = value;
 			resultsArray.AppendElement(item);
 		}
