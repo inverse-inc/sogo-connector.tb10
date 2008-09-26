@@ -60,8 +60,8 @@ function SIOnMessengerOverlaySidebarLoad() {
     window.SCOldOpenEventDialog = window.openEventDialog;
     window.openEventDialog = window.SCOpenEventDialog;
 
-    window.SCOldCheckAndSendItipMessage = window.checkAndSendItipMessage;
-    window.checkAndSendItipMessage = window.SCCheckAndSendItipMessage;
+//     window.SCOldCheckAndSendItipMessage = window.checkAndSendItipMessage;
+//     window.checkAndSendItipMessage = window.SCCheckAndSendItipMessage;
 }
 
 function SCItipSentByManager() {

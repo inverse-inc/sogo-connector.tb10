@@ -183,7 +183,7 @@ function onXMLRequestReadyStateChange(request) {
 			try {
 				status = request.status;
 			}
-			catch(e) {}
+			catch(e) { dump("trapped exception: " + e + "\n"); }
 
 			try {
 // 				dump("method: " + request.method + "\n");
@@ -193,6 +193,7 @@ function onXMLRequestReadyStateChange(request) {
 				if (status == 499) {
 					headers = {};
 					response = "";
+					dump("received status 499 for url: " + request.client.url + "\n");
 				}
 				else {
 					headers = _parseHeaders(request.getAllResponseHeaders());
