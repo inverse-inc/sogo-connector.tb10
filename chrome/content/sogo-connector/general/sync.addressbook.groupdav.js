@@ -2,7 +2,7 @@
 /*******************************************************************************
  sync.addressbook.groupdav.js
  
- Copyright:	Inverse groupe conseil, 2006-2007
+ Copyright:	Inverse inc., 2006-2007
  Author: 	Robert Bolduc
  Email:		support@inverse.ca 
  URL:			http://inverse.ca

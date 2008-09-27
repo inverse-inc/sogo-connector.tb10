@@ -1,6 +1,6 @@
 /* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 2 -*- */
 /*********************************************************************************
-Copyright:	Inverse groupe conseil, 2006-2008
+Copyright:	Inverse inc., 2006-2008
 Authors: 		Robert Bolduc <rbolduc@inverse.ca>
 						Wolfgang Sourdeau <wsourdeau@inverse.ca>
 Email:		  support@inverse.ca

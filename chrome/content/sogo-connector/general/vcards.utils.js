@@ -403,7 +403,7 @@ function card2vcard(oldCard) {
 	var data ="";
 	var vCard = ("BEGIN:VCARD\r\n"
 							 + "VERSION:3.0\r\n"
-							 + "PRODID:-//Inverse groupe conseil//SOGo Connector 1.0//EN\r\n");
+							 + "PRODID:-//Inverse inc.//SOGo Connector 1.0//EN\r\n");
 	var uid = card.getStringAttribute("groupDavKey");
 	if (!uid || uid == "")
 		uid = new UUID();
@@ -588,7 +588,7 @@ function _findCardWithEmail(cards, email) {
 function list2vlist(uid, list) {
 	list = list.QueryInterface(Components.interfaces.nsIAbDirectory);
 	var vList = ("BEGIN:VLIST\r\n"
-							 + "PRODID:-//Inverse groupe conseil//SOGo Connector 1.0//EN\r\n"
+							 + "PRODID:-//Inverse inc.//SOGo Connector 1.0//EN\r\n"
 							 + "VERSION:1.0\r\n"
 							 + "UID:" + uid + "\r\n");
 	vList += "FN:" + list.dirName + "\r\n";

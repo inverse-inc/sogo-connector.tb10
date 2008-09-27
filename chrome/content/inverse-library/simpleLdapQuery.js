@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * Translation to Javascript Copyright (C) 2007 by Inverse groupe conseil
+ * Translation to Javascript Copyright (C) 2007 by Inverse inc.
  *
  * The Original Code is mozilla.org code.
  *
