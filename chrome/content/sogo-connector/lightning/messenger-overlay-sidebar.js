@@ -197,7 +197,7 @@ function SCOpenEventReadyCallback() {
 // FIXME: handle offline mode
 function SCOpenEventDialog(calendarItem, calendar, mode, callback, job) {
 //     dump("callback: " + callback + "\n");
-    if (calendar.type == "caldav") {
+    if (calendar && calendar.type == "caldav") {
         calendar = calendar.wrappedJSObject;
         var mgr = Components.classes["@inverse.ca/calendar/caldav-acl-manager;1"]
             .getService(Components.interfaces.nsISupports)
