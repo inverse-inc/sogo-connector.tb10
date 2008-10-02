@@ -177,8 +177,8 @@ abDirTreeObserver.SCOnDrop = function(row, or) {
 			.QueryInterface(Components.interfaces.nsIRDFResource)
 			.Value;
 
-		var dirTree = document.getElementById("dirTree");
-		var targetResource = dirTree.builderView.getResourceAtIndex(row);
+		var aDirTree = document.getElementById("dirTree");
+		var targetResource = aDirTree.builderView.getResourceAtIndex(row);
 		var targetURI = targetResource.Value;
 
 		var cardKeys;
@@ -420,7 +420,6 @@ function SCAbConfirmDelete(types) {
 
 function SCAbDelete() {
 	if (isGroupdavDirectory(gSelectedDir)) {
-		dump("test\n");
 		var types = GetSelectedCardTypes();
 		if (types != kNothingSelected && SCAbConfirmDelete(types)) {
 			var cards = GetSelectedAbCards();
@@ -579,10 +578,10 @@ function onLoadDAV() {
 
 	var ctlOvl = new dirPaneControllerOverlay();
 	// dir pane
-	var dirTree = document.getElementById("dirTree");
-	if (dirTree) {
-		dirTree.controllers.appendController(ctlOvl);
-// 		dirTree.controllers.appendController(DirPaneController);
+	var aDirTree = document.getElementById("dirTree");
+	if (aDirTree) {
+		aDirTree.controllers.appendController(ctlOvl);
+// 		aDirTree.controllers.appendController(DirPaneController);
 	}
 	// results pane
 	if (gAbResultsTree) {

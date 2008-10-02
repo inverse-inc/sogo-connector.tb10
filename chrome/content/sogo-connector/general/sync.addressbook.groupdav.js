@@ -348,13 +348,9 @@ GroupDavSynchronizer.prototype = {
 		else if (cbdata.query == "server-propfind")
 			this.onServerHashQueryComplete(status, data, cbdata.data);
 		else if (cbdata.query == "card-upload")
-			this.onCardUploadComplete(status, data, cbdata.key, cbdata.data);
-		else if (cbdata.query == "card-propfind")
-			this.onCardPropfindComplete(status, data, cbdata.key, cbdata.data);
+			this.onCardUploadComplete(status, data, cbdata.key, cbdata.data, headers);
 		else if (cbdata.query == "list-upload")
-			this.onListUploadComplete(status, data, cbdata.key, cbdata.data);
-		else if (cbdata.query == "list-propfind")
-			this.onListPropfindComplete(status, data, cbdata.key, cbdata.data);
+			this.onListUploadComplete(status, data, cbdata.key, cbdata.data, headers);
 		else
 			throw("unknown query: " + cbdata.query);
 	},
@@ -396,68 +392,39 @@ GroupDavSynchronizer.prototype = {
 			this._checkCallback();
 		}
 	},
- onCardUploadComplete: function(status, data, key, card) {
-		if (status > 199
-				&& status < 400) {
-			var cardURL = this.gURL + key;
-			var rqData = {query: "card-propfind",
-										data: card,
-										key: key};
-			var request = new sogoWebDAV(cardURL, this, rqData, false);
-			request.propfind(["DAV: getetag"]);
-		}
-		else {
-			this.progressMgr.updateAddressBook(this.gURL);
-			this.remainingUploads--;
-			dump("Upload failure, the server could not process the card (google the HTTP status code for more information).\n\n\n"  + "Server HTTP Status Code:"+ status );
-			// 			if (isNew) {	// for new cards check if we got a location header
-			// 				var location = httpChannel.getResponseHeader("location");
-			// 				if (location && location.lastIndexOf('/') >= 0) {	// new url/key via location header
-			// 					state += "<location>" + location.substr(location.lastIndexOf('/')+1) + "</location>";
-			// 				}
-			// 			}
-		}
-		if (this.remainingUploads == 0) {
-			this._commitAddrDB();
-			this.pendingOperations--;
-			//  			dump("decreasing 5 pendingOperations...\n");
-			this._checkCallback();
-		}
-	},
- onCardPropfindComplete: function(status, response, key, card) {
-		// 		dump("oncardpropfindcomplete: " + key + "\n");
+ onCardUploadComplete: function(status, data, key, card, headers) {
+		var cardURL = this.gURL + key;
+
 		if (status > 199 && status < 400) {
-			var mdbCard = card.QueryInterface(Components.interfaces.nsIAbMDBCard);
-			var cardURL = this.gURL + key;
-			// FIXME: 200 change
-			var cardResponse = response[cardURL][200];
-			if (cardResponse) {
-				var etag = cardResponse["getetag"];
-				dump("card etag: " + etag + "\n");
+			var etag = headers["etag"];
+			if (etag && etag.length) {
+				var mdbCard = card.QueryInterface(Components.interfaces.nsIAbMDBCard);
 				var oldKey = mdbCard.getStringAttribute("groupDavKey");
 				var isNew = (!oldKey || oldKey == "");
-				if (isNew)
+				if (isNew) {
+					var location = headers["location"];
+					if (location) {
+						var parts = location.split("/");
+						key = parts[parts.length-1];
+					}
 					mdbCard.setStringAttribute("groupDavKey", key);
-			// 			dump("cardpfindcomplete: " + key + "; version: " + etag + "\n");
+				}
 				mdbCard.setStringAttribute("groupDavVersion", etag);
-			// 			card.copy(mdbCard);
-
-			// 			dump("new etag: " + card.getStringAttribute("groupDavVersion") + "\n");
-			// 			dump("new etag: " + card.getStringAttribute("groupDavKey") + "\n");
 				mdbCard.editCardToDatabase(this.gSelectedDirectoryURI);
 				this.serverCardVersionHash[key] = etag;
-			// 		dump("key: " + key + "; status: " + status + "; data: " + data +
-			// 		"\n");
 			}
 			else
 				dump("No etag returned for vcard uploaded at " + cardURL + ", ignored\n");
 		}
+		else
+			dump("Upload failure uploading card: " + cardURL
+					 + ".\nHTTP Status Code:" + status + "\n");
+
 		this.progressMgr.updateAddressBook(this.gURL);
 		this.remainingUploads--;
 		if (this.remainingUploads == 0) {
 			this._commitAddrDB();
 			this.pendingOperations--;
-			//  			dump("decreasing 6 pendingOperations...\n");
 			this._checkCallback();
 		}
 	},
@@ -594,34 +561,12 @@ GroupDavSynchronizer.prototype = {
 			attributes.key = key;
 		attributes.version = (listUpdated ? "-1" : this.serverListVersionHash[key]);
 	},
- onListUploadComplete: function(status, data, key, list) {
-		if (status > 199 && status < 400) {
-			var listURL = this.gURL + key;
-			var rqData = {query: "list-propfind", data: list, key: key};
-			var request = new sogoWebDAV(listURL, this, rqData, false);
-			request.propfind(["DAV: getetag"]);
-		}
-		else {
-			this.progressMgr.updateAddressBook(this.gURL);
-			this.remainingUploads--;
-			dump("Upload failure, the server could not process the list (google the HTTP status code for more information).\n\n\n"  + "Server HTTP Status Code:"+ status );
-		}
-		if (this.remainingUploads == 0) {
-			this.pendingOperations--;
-			//  			dump("decreasing 7 pendingOperations...\n");
-			this._checkCallback();
-		}
-	},
- onListPropfindComplete: function(status, response, key, list) {
-		// 		dump("onlistpropfindcomplete: " + key + "\n");
-		if (status > 199 && status < 400) {
-			var listURL = this.gURL + key;
- 			dump("listURL: " + listURL + "\n");
+ onListUploadComplete: function(status, data, key, list, headers) {
+		var listURL = this.gURL + key;
 
-			var listResponse = response[listURL][200];
-			if (listResponse) {
-				var etag = listResponse["getetag"];
-				// 			dump("etag: " + etag + "\n");
+		if (status > 199 && status < 400) {
+			var etag = headers["etag"];
+			if (etag && etag.length) {
 				var attributes = new GroupDAVListAttributes(list);
 				var oldKey = attributes.key;
 				var isNew = (!oldKey || oldKey == "");
@@ -633,11 +578,14 @@ GroupDavSynchronizer.prototype = {
 			else
 				dump("No etag returned for vlist uploaded at " + listURL + ", ignored\n");
 		}
+		else
+			dump("Upload failure uploading list: " + listURL
+					 + ".\nHTTP Status Code:" + status + "\n");
+
 		this.progressMgr.updateAddressBook(this.gURL);
 		this.remainingUploads--;
 		if (this.remainingUploads == 0) {
 			this.pendingOperations--;
-			//  			dump("decreasing 8 pendingOperations...\n");
 			this._checkCallback();
 		}
 	},

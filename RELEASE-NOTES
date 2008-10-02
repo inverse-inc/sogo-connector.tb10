@@ -5,6 +5,8 @@ NEWS
 	Added a new provider for freebusy over HTTP (fburl)
 	Searches on CardDAV addressbooks would see their spaces "url-escaped".
 	Added support for returning a pre-configurable comment to put on autocomplete records
+	Removed dependency on Lightning
+	Restored support for the GroupDAV PUT "location" header
 
 0.81
 	Check the response from the server to avoid inconsistencies and loss of data
