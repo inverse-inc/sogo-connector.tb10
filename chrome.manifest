@@ -3,6 +3,7 @@ skin	sogo-connector	classic/1.0	chrome/skin/classic/sogo-connector/
 locale	sogo-connector	en-US		chrome/locale/en-US/sogo-connector/
 locale	sogo-connector	fr-FR		chrome/locale/fr-FR/sogo-connector/
 locale	sogo-connector	de-DE		chrome/locale/de-DE/sogo-connector/
+locale	sogo-connector	nl-NL		chrome/locale/nl-NL/sogo-connector/
 
 content inverse-library chrome/content/inverse-library/
 

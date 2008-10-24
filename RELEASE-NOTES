@@ -7,6 +7,8 @@ NEWS
 	Added support for returning a pre-configurable comment to put on autocomplete records
 	Removed dependency on Lightning
 	Restored support for the GroupDAV PUT "location" header
+	Added dutch translation from roel.van.os@humanitech.nl
+	Fixed many bugs there and there
 
 0.81
 	Check the response from the server to avoid inconsistencies and loss of data

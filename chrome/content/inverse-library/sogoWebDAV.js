@@ -263,6 +263,7 @@ sogoWebDAV.prototype = {
 																? "1": "0"),
 											"content-type": "application/xml; charset=utf8" };
 			var query = this._propfindQuery(parameters.props);
+			dump("PROPFIND query: " + query);
 			this._sendHTTPRequest(operation, query, headers);
 		}
     else if (operation == "REPORT") {

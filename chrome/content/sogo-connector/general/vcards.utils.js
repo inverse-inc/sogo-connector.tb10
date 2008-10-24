@@ -378,8 +378,10 @@ function decodedValues(values, charset, encoding) {
 		if (encoding) {
 			if (encoding == "quoted-printable")
 				decodedValue = decoder.decode(values[i]);
-			else
-				throw "Unsupported encoding for vcard value: " + encoding;
+			else {
+				dump("Unsupported encoding for vcard value: " + encoding);
+				decodedValue = values[i];
+			}
 		}
 		else
 			decodedValue = values[i];

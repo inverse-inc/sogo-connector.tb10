@@ -121,10 +121,15 @@ function saveCard(isNewCard) {
 			var version = mdbCard.getStringAttribute("groupDavVersion");
 			if (version && version != "")
 				mdbCard.setStringAttribute("groupDavVersion", "-1");
- 			window.opener.SCSynchronizeFromChildWindow(parentURI);
-// 			abWindow.UploadCard(gEditCard.card
-// 													.QueryInterface(Components.interfaces.nsIAbMDBCard),
-// 													getUri());
+
+			// We make sure we try the messenger window and if it's closed, the address book
+			// window. It might fail if both of them are closed and we still have a composition
+			// window open and we try to modify the card from there (from the contacts sidebar)
+			if (messengerWindow)
+				messengerWindow.SCSynchronizeFromChildWindow(parentURI);
+			else
+				abWindow.SCSynchronizeFromChildWindow(parentURI);
+
 			setDocumentDirty(false);
 		}
 		if (abWindow)

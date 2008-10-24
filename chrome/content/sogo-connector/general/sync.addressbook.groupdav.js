@@ -403,8 +403,8 @@ GroupDavSynchronizer.prototype = {
 				var isNew = (!oldKey || oldKey == "");
 				if (isNew) {
 					var location = headers["location"];
-					if (location) {
-						var parts = location.split("/");
+					if (location && location.length) {
+						var parts = location[0].split("/");
 						key = parts[parts.length-1];
 					}
 					mdbCard.setStringAttribute("groupDavKey", key);
@@ -592,23 +592,54 @@ GroupDavSynchronizer.prototype = {
  onServerCheckComplete: function(status, response, key) {
 		this.callbackCode = status;
 		this.pendingOperations = 0;
-		// 		dump("pendingOperations: " + this.pendingOperations + "\n");
-// 		dump("status: " + status + "\n");
-// 		dump("response: " + response + "\n");
-// 		dump("dump:" + dumpObject(response) + "\n");
+		dump("pendingOperations: " + this.pendingOperations + "\n");
+ 		dump("status: " + status + "\n");
+ 		dump("response: " + response + "\n");
+ 		dump("dump:" + dumpObject(response) + "\n");
 		if (status > 199 && status < 400) {
 			for (var href in response) {
-// 				dump("href: " + href + "\n");
+ 				dump("href: " + href + "\n");
 				// FIXME: 200 change
 				var davObject = response[href][200];
 				if (href[href.length-1] != '/')
 					href += '/';
+
+				// href might be something like: http://foo:80/bar while this.gURL might
+				// be something like: http://foo/bar so we strip the port value if the URLs
+				// don't match. eGroupWare sends back such data.
+				if (href != this.gURL) {
+					var hrefArray = href.split("/");
+					var noprefix = false;
+					dump("hrefArray: " + hrefArray + "\n");
+
+					if (hrefArray[0].substr(0,5) == "https" && hrefArray[2].indexOf(":443") > 0) {
+						hrefArray[2] = hrefArray[2].substring(0, hrefArray[2].length-4);
+					}
+					else if (hrefArray[0].substr(0,4) == "http" && hrefArray[2].indexOf(":80") > 0) {
+						hrefArray[2] = hrefArray[2].substring(0, hrefArray[2].length-3);
+					} else {
+						noprefix = true;
+					}
+					href = hrefArray.join("/");
+
+					// We also check if this.gURL begins with http{s}:// but NOT href. If that's the
+					// case, with servers such as OpenGroupware.org (OGo), we prepend the relevant part.
+					//
+					// For exemple, this.gURL could be: http://foo.bar/zidestore/dav/fred/public/Contacts/
+					// while href is:                   /dav/fred/public/Contacts/
+					//
+ 					if (noprefix && this.gURL.substr(0,4) == "http") {
+						var gURLArray = this.gURL.split("/");
+						href = gURLArray[0] + "//" + gURLArray[2] + href;
+					}
+					dump("Cleaned href: " + href + "\n");
+				}
+				
 				if (href == this.gURL) {
-					// 					dump("+++ href: " + href + "\n");
 					var rsrcType = [];
 					for (var k in davObject["resourcetype"])
 						rsrcType.push(k);
-// 					dump("rsrcType: " + rsrcType + "\n");
+ 					dump("rsrcType: " + rsrcType + "\n");
 					if (rsrcType.indexOf("vcard-collection") > 0
 							|| rsrcType.indexOf("addressbook") > 0) {
 						this.validCollection = true;
@@ -620,8 +651,10 @@ GroupDavSynchronizer.prototype = {
 						this.validCollection = false;
 						this.context.requests[this.gURL] = null;
 						this._checkCallback();
-						throw ("server '" + this.gURL + "' is not a valid groupdav collection");
+						dump("server '" + this.gURL + "' is not a valid groupdav collection");
 					}
+				} else {
+					dump("URLs don't match: " + href + " vs. " + this.gURL  + "\n");
 				}
 			}
 		}
