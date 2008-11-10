@@ -8,6 +8,9 @@ NEWS
 	Removed dependency on Lightning
 	Restored support for the GroupDAV PUT "location" header
 	Added dutch translation from roel.van.os@humanitech.nl
+	Overwritten the isCalendarWritble() fonction in Lighting to consider WebDAV ACLs
+	We now properly manage identities of CalDAV calendars vs. identities within Thunderbird
+	We now properly handle servers that don't support ACLs
 	Fixed many bugs there and there
 
 0.81

@@ -1,3 +1,5 @@
+/* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 2 -*- */
+
 var loader = Components .classes["@mozilla.org/moz/jssubscript-loader;1"]
     .getService(Components.interfaces.mozIJSSubScriptLoader);
 loader.loadSubScript("chrome://sogo-connector/content/general/mozilla.utils.inverse.ca.js");
@@ -199,15 +201,16 @@ CalDAVAclManager.prototype = {
     },
     _principalMatchCallback: function _principalMatchCallback(status, url, headers,
                                                               response, data) {
+
+    		var calendar = this.calendars[data.calendar];
+
         if (status == 207) {
             var xParser = Components.classes['@mozilla.org/xmlextras/domparser;1']
             .getService(Components.interfaces.nsIDOMParser);
             var queryDoc = xParser.parseFromString(response, "application/xml");
             var hrefs = queryDoc.getElementsByTagName("href");
-
-            var calendar = this.calendars[data.calendar];
-
             var principals = [];
+
             for (var i = 0; i < hrefs.length; i++) {
                 var href = "" + hrefs[i].childNodes[0].nodeValue;
                 if (href.indexOf("/") == 0) {
@@ -228,6 +231,11 @@ CalDAVAclManager.prototype = {
             }
             calendar.userPrincipals = principals;
         }
+				else if (status == 501) {
+					dump("CalDAV: Server does not support ACLs\n");
+					calendar.supportsACL = false;
+				}
+				
     },
     _userAddressSetCallback: function _collectionSetCallback(status, url, headers,
                                                              response, data) {
@@ -240,6 +248,8 @@ CalDAVAclManager.prototype = {
 
             var addressesKey = data.who + "Addresses";
             var identitiesKey = data.who + "Identities";
+
+						//dump("url: " + url + " addressesKey: " + addressesKey + " identitiesKey: " + identitiesKey + "\n");
 
             var addresses = this.calendars[data.calendar][addressesKey];
             if (!addresses) {
@@ -258,14 +268,19 @@ CalDAVAclManager.prototype = {
                 this.calendars[data.calendar][identitiesKey] = identities;
             }
             var displayName = this._parsePrincipalDisplayName(queryDoc);
+						//dump("about to append: " + displayName + " identitiesKey: " + identitiesKey + "\n");
             if (displayName) {
-                for (var address in addressValues)
-                    if (address.search("mailto:", "i") == 0)
-                        this._appendIdentity(identities, displayName,
-                                             address.substr(7));
-            }
-        }
-    },
+							for (var address in addressValues) {
+								//dump("address: " + address + "\n");
+								if (address.search("mailto:", "i") == 0) {
+									//dump("calling appendIdentity... \n");
+									this._appendIdentity(identities, displayName,
+																			 address.substr(7), this.calendars[data.calendar]);
+								}
+							}
+						}
+				}
+  },
     _initAccountMgr: function _initAccountMgr() {
         this.accountMgr = Components
                           .classes["@mozilla.org/messenger/account-manager;1"]
@@ -274,13 +289,14 @@ CalDAVAclManager.prototype = {
 //         dump("identities length: " + identities.Count() + "\n");
         for (var i = 0; i < identities.Count(); i++) {
             var identity = identities.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgIdentity);
-//             dump("key: " + identity.key + "\n");
-//             dump("name: " + identity.identityName + "\n");
-            if (identity.key.indexOf("caldav_") == 0)
-                this.accountMgr.removeIdentity(identity);
+             dump("key: " + identity.key + " name: " + identity.identityName + "\n");
+						 if (identity.key.indexOf("caldav_") == 0) {
+							 dump("removing identity wth key: " + identity.key + "\n");
+							 this.accountMgr.removeIdentity(identity);
+						 }
         }
     },
-    _findIdentityByEmail: function _findIdentityByEmail(email) {
+    _findIdentity: function _findIdentity(email, displayName) {
         var identity = null;
         var lowEmail = email.toLowerCase();
 
@@ -289,8 +305,8 @@ CalDAVAclManager.prototype = {
         while (!identity && i < identities.Count()) {
             var currentIdentity = identities.GetElementAt(i)
                                   .QueryInterface(Components.interfaces.nsIMsgIdentity);
-// dump("id email: " + currentIdentity.email + "\n");
-            if (currentIdentity.email.toLowerCase() == lowEmail)
+            if (currentIdentity.email.toLowerCase() == lowEmail &&
+								currentIdentity.fullName == displayName)
                 identity = currentIdentity;
             else
                 i++;
@@ -312,28 +328,33 @@ CalDAVAclManager.prototype = {
 
         return haveEmail;
     },
-    _appendIdentity: function _appendIdentity(identities, displayName, email) {
-        if (!this.accountMgr)
-            this._initAccountMgr();
-// dump("adding identity: " + displayName + " <" +
-// email + ">\n");
-        var newIdentity = this._findIdentityByEmail(email);
-        if (!newIdentity) {
-            var newIdentity = Components
-                .classes["@mozilla.org/messenger/identity;1"]
-                .createInstance(Components
-                                .interfaces.nsIMsgIdentity);
-            newIdentity.key = "caldav_" + this.identityCount;
-            newIdentity.identityName = String(displayName + " <" + email + ">");
-            newIdentity.fullName = String(displayName);
-            newIdentity.email = String(email);
-            this.accountMgr.defaultAccount.addIdentity(newIdentity);
-            this.identityCount++;
-        }
-        if (!this._identitiesHaveEmail(identities, email))
-            identities.push(newIdentity);
-// dump("identity key: " + newIdentity + "\n");
-    },
+    _appendIdentity: function _appendIdentity(identities, displayName, email, calendar) {
+		if (!this.accountMgr)
+			this._initAccountMgr();
+		//dump("adding identity: " + displayName + " <" + email + "\n");
+		
+ 		var newIdentity = this._findIdentity(email, displayName);
+		if (!newIdentity) {
+			var newIdentity = Components
+				.classes["@mozilla.org/messenger/identity;1"]
+				.createInstance(Components
+												.interfaces.nsIMsgIdentity);
+			newIdentity.key = "caldav_" + this.identityCount;
+			newIdentity.identityName = String(displayName + " <" + email + ">");
+			newIdentity.fullName = String(displayName);
+			newIdentity.email = String(email);
+			
+			dump("about to add identity: " + displayName + " " + email + " calendar: " + calendar.name + "\n");
+			if (calendar.userIsOwner()) {// || calendar.userCanAddComponents()) {
+				dump("added identity - we are the owner for: " + displayName + " " + email + " calendar: " + calendar.name + " uri: " + calendar.uri + "\n");
+				this.accountMgr.defaultAccount.addIdentity(newIdentity);
+			}
+			this.identityCount++;
+		}
+		
+		if (!this._identitiesHaveEmail(identities, email))
+			identities.push(newIdentity);
+	},
     _parseCalendarUserAddressSet: function
                                   _parseCalendarUserAddressSet(queryDoc,
                                                                calendarURL) {
@@ -485,11 +506,13 @@ CalDAVAclManager.prototype = {
 function CalDAVAclCalendarEntry(uri) {
     this.uri = uri;
     this.entries = {};
+		this.supportsACL = true;
 }
 
 CalDAVAclCalendarEntry.prototype = {
     uri: null,
     entries: null,
+		supportsACLs: true,
     isCalendarReady: function isCalendarReady() {
         // dump (typeof(this.hasAccessControl)+ "\n"
         // + typeof(this.userPrincipals)+ "\n"
@@ -497,6 +520,8 @@ CalDAVAclCalendarEntry.prototype = {
         // + typeof(this.userAddresses)+ "\n"
         // + typeof(this.identities)+ "\n"
         // + typeof(this.ownerPrincipal)+ "\n");
+		    if (this.supportsACLs == false) return true;
+
         return (typeof(this.hasAccessControl) != "undefined"
                 && typeof(this.userPrincipals) != "undefined"
                 && typeof(this.userPrivileges) != "undefined"
@@ -511,14 +536,14 @@ CalDAVAclCalendarEntry.prototype = {
 
         var i = 0;
 
-        if (this.hasAccessControl) {
-            // dump("owner: " + this.ownerPrincipal + "\n");
-            while (!result && i < this.userPrincipals.length) {
-                // dump("user: " + this.userPrincipals[i] + "\n");
-                if (this.userPrincipals[i] == this.ownerPrincipal)
-                    result = true;
-                else
-                    i++;
+        if (this.supportsACLs && this.hasAccessControl) {
+					  dump("owner: " + this.ownerPrincipal + "\n");
+            while (!result && typeof(this.userPrincipals) != "undefined" && i < this.userPrincipals.length) {
+							dump("user: " + this.userPrincipals[i] + "\n");
+							if (this.userPrincipals[i] == this.ownerPrincipal) 
+								result = true;
+							else
+								i++;
             }
         }
         else
@@ -527,6 +552,7 @@ CalDAVAclCalendarEntry.prototype = {
         return result;
     },
     userCanAddComponents: function userCanAddComponents() {
+				if (this.supportsACLs == false) return true;
         // dump("has access control: " + this.hasAccessControl + "\n");
         return (!this.hasAccessControl
                 || (this.userPrivileges.indexOf("{DAV:}bind")

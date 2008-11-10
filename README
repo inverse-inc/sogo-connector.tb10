@@ -19,3 +19,14 @@ in UserProfileDirectory/prefs.js
 user_pref("extensions.ca.inverse.logLevel", 3);
 
 log file is UserProfileDirectory/extensions.ca.inverse.addressbook.groupdav.log
+
+
+========================================================
+	Lightning Modifications
+========================================================
+
+Modifications to Lightning (such as methods overwrite) are done within
+
+// INVERSE - BEGIN
+
+// INVERSE - END

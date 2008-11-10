@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!--
+ Copyright:     Inverse inc., 2009
+ Author:        Ludovic Marcotte <lmarcotte@inverse.ca>
+ Email:         support@inverse.ca
+ URL:           http://inverse.ca
+  -->
+
+<overlay id="SCCalendarPropertiesOverlay"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/x-javascript"
+          src="chrome://sogo-connector/content/lightning/lightning-calendar-properties-overlay.js"/>
+</overlay>

@@ -1,3 +1,25 @@
+/* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 2 -*- */
+
+function jsInclude(files, target) {
+        var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+                .getService(Components.interfaces.mozIJSSubScriptLoader);
+        for (var i = 0; i < files.length; i++) {
+                try {   
+                        loader.loadSubScript(files[i], target);
+                }
+                catch(e) {
+                        dump("folder-handling.js: failed to include '" + files[i] +
+                                         "'\n" + e);
+                        if (e.fileName)
+                                dump ("\nFile: " + e.fileName
+                                                        + "\nLine: " + e.lineNumber
+                                                        + "\n\n Stack:\n\n" + e.stack);
+                }
+        }
+}
+
+jsInclude(["chrome://sogo-connector/content/calendar/utils.js"]);
+
 window.addEventListener("load", SIOnMessengerOverlaySidebarLoad, false);
 
 var SCMessengerOverlayData = {
@@ -40,6 +62,8 @@ function SIOnMessengerOverlaySidebarLoad() {
         .wrappedJSObject;
     var calMgr = getCalendarManager();
     var calendars = calMgr.getCalendars({});
+		
+		if (true) return;
 
     var identityData = [];
     for (var i = 0; i < calendars.length; i++) {
@@ -60,8 +84,8 @@ function SIOnMessengerOverlaySidebarLoad() {
     window.SCOldOpenEventDialog = window.openEventDialog;
     window.openEventDialog = window.SCOpenEventDialog;
 
-//     window.SCOldCheckAndSendItipMessage = window.checkAndSendItipMessage;
-//     window.checkAndSendItipMessage = window.SCCheckAndSendItipMessage;
+		//window.SCOldCheckAndSendItipMessage = window.checkAndSendItipMessage;
+		//window.checkAndSendItipMessage = window.SCCheckAndSendItipMessage;
 }
 
 function SCItipSentByManager() {
@@ -82,7 +106,7 @@ SCItipSentByManager.prototype = {
                 cache = calendar.mUncachedCalendar.wrappedJSObject.mItemInfoCache;
             if (cache) {
                 itemURL = cache[item.id].locationPath;
-//                 dump("itemURL: " + itemURL + "\n");
+                 dump("itemURL: " + itemURL + "\n");
             }
             else
                 dump("no cache found\n");
@@ -150,12 +174,12 @@ SCItipSentByManager.prototype = {
                     var attendee = schedulingCal.getInvitedAttendee(newItem);
                     var proxyEntry = this._proxyUserEntry(calendar, attendee);
                     if (attendee) {
-//                         dump("is attendee\n");
+											dump("is attendee\n");
                         newItem.removeAllAttendees();
                         newItem.addAttendee(proxyEntry);
                     }
                     else if (this._userIsOrganizer(newItem)) {
-//                         dump("is organizer\n");
+                         dump("is organizer\n");
                         proxyEntry.isOrganizer = true;
                         newItem.organizer = proxyEntry;
                     }
@@ -164,7 +188,7 @@ SCItipSentByManager.prototype = {
         }
 
         return newItem;
-    },
+    }
 };
 
 function SCCheckAndSendItipMessage(aItem, aOpType, aOriginalItem) {
