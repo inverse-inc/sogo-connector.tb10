@@ -60,6 +60,9 @@ function SCEditListOKButton() {
 	var rc = this.SCOldEditListOKButton();
 
 	if (rc) {
+		var abWindow = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+			.getService(Components.interfaces.nsIWindowMediator)
+			.getMostRecentWindow("mail:addressbook");
 		var listURI = window.arguments[0].listURI;
 		var parentURI = GetParentDirectoryFromMailingListURI(listURI);
 
@@ -67,7 +70,7 @@ function SCEditListOKButton() {
 			var list = SCGetDirectoryFromURI(listURI);
 			var attributes = new GroupDAVListAttributes(list);
 			attributes.version = "-1";
- 			window.opener.SCSynchronizeFromChildWindow(parentURI);
+ 			abWindow.SCSynchronizeFromChildWindow(parentURI);
 		}
 	}
 

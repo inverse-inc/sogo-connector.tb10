@@ -3,3 +3,6 @@
 	* /content/sogo-connector/addressbook/addressbook.groupdav.overlay.js
 	Replaced calls to deleteCards() / deleteDirector() with
 	deleteSelectedCards() to avoid refresh problems
+	* chrome/content/sogo-connector/addressbook/edit-list-overlay.js
+	We really get the address book window before trying to perform
+	a DAV operation.
