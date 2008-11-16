@@ -537,9 +537,9 @@ CalDAVAclCalendarEntry.prototype = {
         var i = 0;
 
         if (this.supportsACLs && this.hasAccessControl) {
-					  dump("owner: " + this.ownerPrincipal + "\n");
+					  //dump("owner: " + this.ownerPrincipal + "\n");
             while (!result && typeof(this.userPrincipals) != "undefined" && i < this.userPrincipals.length) {
-							dump("user: " + this.userPrincipals[i] + "\n");
+							//dump("user: " + this.userPrincipals[i] + "\n");
 							if (this.userPrincipals[i] == this.ownerPrincipal) 
 								result = true;
 							else

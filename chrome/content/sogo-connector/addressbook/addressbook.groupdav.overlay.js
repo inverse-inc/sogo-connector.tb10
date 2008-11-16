@@ -318,15 +318,12 @@ var deleteManager = {
 						|| code == 404
 						|| code == 604)) {
 			if (data.component instanceof Components.interfaces.nsIAbCard) {
-				var cards = Components.classes["@mozilla.org/supports-array;1"]
-				.createInstance(Components.interfaces.nsISupportsArray);
-				cards.AppendElement(data.component);
-				data.directory.deleteCards(cards);
+				GetAbView().deleteSelectedCards();
 			}
 			else if (data.component instanceof Components.interfaces.nsIAbDirectory) {
-				data.directory.deleteDirectory(data.component);
 				var attributes = new GroupDAVListAttributes(data.component);
 				attributes.deleteRecord();
+				GetAbView().deleteSelectedCards();
 			}
 			else
 				dump("component is of unknown type: " + data.component + "\n");
@@ -375,7 +372,7 @@ function DeleteGroupDAVCards(directory, cards, deleteLocally) {
 function _deleteGroupDAVComponentWithKey(prefService, key,
 																				 directory, component,
 																				 deleteLocally) {
-// 	dump("\n\nwe delete: " + key + "\n\n\n");
+ 	//dump("\n\nwe delete: " + key + "\n\n\n");
 	if (key && key.length) {
 		var href = prefService.getURL() + key;
 		var deleteOp = new sogoWebDAV(href, deleteManager,
@@ -383,7 +380,7 @@ function _deleteGroupDAVComponentWithKey(prefService, key,
 																	 component: component,
 																	 deleteLocally: deleteLocally});
 		deleteOp.delete();
-		// 				dump("webdav_delete on '" + href + "'\n");
+		//dump("webdav_delete on '" + href + "'\n");
 	}
 	else /* 604 = "not found locally" */
 		deleteManager.onDAVQueryComplete(604, null, null,

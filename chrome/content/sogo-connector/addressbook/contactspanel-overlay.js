@@ -91,7 +91,7 @@ function SCListenerOnItemRemoved(parentDir, item) {
     if (menu.selectedItem)
       selectedURL = menu.selectedItem.id;
   }
-  var shouldRefreshResults = (menu.selectedItem.id != selectedURL);
+  var shouldRefreshResults = (menu.selectedItem.id != selectedURL);      
   var menupopup = document.getElementById("addressbookList-menupopup");
   _SCClearMenuPopup(menupopup);
   window.setTimeout(_SCUpdateMenuPopup, 100, menupopup, selectedURL, true);
