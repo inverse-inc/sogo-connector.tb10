@@ -318,11 +318,15 @@ var deleteManager = {
 						|| code == 404
 						|| code == 604)) {
 			if (data.component instanceof Components.interfaces.nsIAbCard) {
-				GetAbView().deleteSelectedCards();
+				var cards = Components.classes["@mozilla.org/supports-array;1"]
+				.createInstance(Components.interfaces.nsISupportsArray);
+				cards.AppendElement(data.component);
+				data.directory.deleteCards(cards); 
 			}
 			else if (data.component instanceof Components.interfaces.nsIAbDirectory) {
 				var attributes = new GroupDAVListAttributes(data.component);
 				attributes.deleteRecord();
+				// See bug #462364
 				GetAbView().deleteSelectedCards();
 			}
 			else
