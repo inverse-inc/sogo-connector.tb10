@@ -19,7 +19,8 @@ onLoad = function ltn_onLoad() {
 	addMenuItem(menuPopup, ltnGetString("lightning", "imipNoIdentity"), "none");
       }
       
-      menuPopup.selectedIndex = 0;
+      var menuList = document.getElementById("email-identity-menulist");
+      menuList.selectedIndex = 0;
     
     } else {
       ltnInitMailIdentitiesRow();

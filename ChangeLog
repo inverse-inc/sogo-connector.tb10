@@ -1,3 +1,9 @@
+2008-11-23  Ludovic Marcotte  <lmarcotte@inverse.ca>	
+
+	* chrome/content/sogo-connector/lightning/lightning-calendar-properties-overlay.js
+	We now correctly select the menupopup item (first one)
+	* Bumped the version number to 0.90pre19
+
 2008-11-16  Ludovic Marcotte  <lmarcotte@inverse.ca>
 
 	* /content/sogo-connector/addressbook/addressbook.groupdav.overlay.js
