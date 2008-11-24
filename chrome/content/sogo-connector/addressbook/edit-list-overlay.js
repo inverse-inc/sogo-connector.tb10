@@ -60,17 +60,23 @@ function SCEditListOKButton() {
 	var rc = this.SCOldEditListOKButton();
 
 	if (rc) {
-		var abWindow = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-			.getService(Components.interfaces.nsIWindowMediator)
-			.getMostRecentWindow("mail:addressbook");
 		var listURI = window.arguments[0].listURI;
 		var parentURI = GetParentDirectoryFromMailingListURI(listURI);
 
 		if (isGroupdavDirectory(parentURI)) {
+			var w = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+				.getService(Components.interfaces.nsIWindowMediator)
+				.getMostRecentWindow("mail:addressbook");
+
+			if (!w)
+				var w = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+					.getService(Components.interfaces.nsIWindowMediator)
+					.getMostRecentWindow("mail:3pane");
+			
 			var list = SCGetDirectoryFromURI(listURI);
 			var attributes = new GroupDAVListAttributes(list);
 			attributes.version = "-1";
- 			abWindow.SCSynchronizeFromChildWindow(parentURI);
+ 			w.SCSynchronizeFromChildWindow(parentURI);
 		}
 	}
 
