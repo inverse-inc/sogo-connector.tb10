@@ -271,10 +271,14 @@ CalDAVAclManager.prototype = {
 							for (var address in addressValues) {
 								if (address.search("mailto:", "i") == 0) {
 									this._appendIdentity(identities, displayName,
-																			 address.substr(7), this.calendars[data.calendar], url);
+																			 address.substr(7), this.calendars[data.calendar]);
 								}
 							}
 						}
+
+						var observerService = Components.classes["@mozilla.org/observer-service;1"]
+						.getService(Components.interfaces.nsIObserverService);
+						observerService.notifyObservers(null, "caldav-acl-loaded", this.calendars[data.calendar].uri.spec);
 				}
   },
     _initAccountMgr: function _initAccountMgr() {
@@ -282,12 +286,9 @@ CalDAVAclManager.prototype = {
                           .classes["@mozilla.org/messenger/account-manager;1"]
                           .getService(Components.interfaces.nsIMsgAccountManager);
         var identities = this.accountMgr.allIdentities.QueryInterface(Components.interfaces.nsICollection);
-//         dump("identities length: " + identities.Count() + "\n");
         for (var i = 0; i < identities.Count(); i++) {
             var identity = identities.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgIdentity);
-             dump("key: " + identity.key + " name: " + identity.identityName + "\n");
 						 if (identity.key.indexOf("caldav_") == 0) {
-							 dump("removing identity wth key: " + identity.key + "\n");
 							 this.accountMgr.removeIdentity(identity);
 						 }
         }
@@ -324,6 +325,7 @@ CalDAVAclManager.prototype = {
 
         return haveEmail;
     },
+		
     _appendIdentity: function _appendIdentity(identities, displayName, email, calendar) {
 		if (!this.accountMgr)
 			this._initAccountMgr();
@@ -339,26 +341,29 @@ CalDAVAclManager.prototype = {
 			newIdentity.fullName = String(displayName);
 			newIdentity.email = String(email);
 			
-			if (calendar.userIsOwner()) {// || calendar.userCanAddComponents()) {
+			// We added identity associated to this calendar to Thunderbird's
+			// list of identities only if we are actually the owner of the calendar.
+			if (calendar.userIsOwner()) {
 				this.accountMgr.defaultAccount.addIdentity(newIdentity);
-			} else {
-				// We find CalDAV calendar associated with the URl and 
-				// we update, if needed the imip.identity property
-				var manager = Components.classes["@mozilla.org/calendar/manager;1"]
-					.getService(Components.interfaces.calICalendarManager)
+			}
+			
+			// We find CalDAV calendar associated with the URl and 
+			// we update, if needed the imip.identity property
+			var manager = Components.classes["@mozilla.org/calendar/manager;1"]
+				.getService(Components.interfaces.calICalendarManager)
 				var calendars = manager.getCalendars({});
-				var cal = null;
-				
-				for (var i = 0; i < calendars.length ; i++) {
-					cal = calendars[i];
-					if (cal.uri == calendar.uri)
-						break;
-					cal = null;
-				}
-				if (cal && !cal.getProperty("imip.identity")) {
-					cal.setProperty("imip.identity.key", newIdentity.key);
-					cal.setProperty("imip.identity", newIdentity);
-				}
+			var cal = null;
+			
+			for (var i = 0; i < calendars.length ; i++) {
+				cal = calendars[i];
+				if (cal.uri == calendar.uri)
+					break;
+				cal = null;
+			}
+			if (cal && !cal.getProperty("imip.identity")) {
+				dump("setting identity to " + newIdentity.fullName + " " + newIdentity.email + " for cal: " + cal.uri.spec + "\n");
+				cal.setProperty("imip.identity.key", newIdentity.key);
+				cal.setProperty("imip.identity", newIdentity);
 			}
 			this.identityCount++;
 		}

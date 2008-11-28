@@ -1,3 +1,15 @@
+2008-11-28  Ludovic Marcotte  <lmarcotte@inverse.ca>
+
+	* chrome/content/sogo-connector/calendar/calendars-list-overlay.js
+	We now correctly enable the new task / event upon startup
+	once the ACLs are loaded.
+	* chrome/content/sogo-connector/lightning/messenger-overlay-sidebar.js
+	Removed all the unused code. The whole overlay should be
+	eventually removed.
+	* js/CalDAVAclManager.js 
+	We now force them imip.identity once the ACLs are loaded.
+	* Bumped the version number to to.90pre22.
+
 2008-11-26  Ludovic Marcotte  <lmarcotte@inverse.ca>
 
         * js/CalDAVAclManager.js remove unnecessary calls
