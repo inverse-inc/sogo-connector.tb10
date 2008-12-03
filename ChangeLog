@@ -1,3 +1,9 @@
+2008-12-03  Ludovic Marcotte  <lmarcotte@inverse.ca>	
+
+	* Added the possibility to refresh CalDAV ACLs
+	* Removed the "supportsACLs" variable - we now
+	entirely use hasAccessControl.
+
 2008-11-28  Ludovic Marcotte  <lmarcotte@inverse.ca>
 
 	* chrome/content/sogo-connector/calendar/calendars-list-overlay.js

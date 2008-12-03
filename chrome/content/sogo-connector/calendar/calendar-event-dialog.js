@@ -174,9 +174,9 @@ SCCalendarManager.prototype = {
                 //                                 dump("{ ");
 //                 dump("current url: " + calendars[i].uri.spec + "\n");
                 var entry = aclMgr.calendarEntry(calendars[i].uri);
-                isIncluded = (entry.userCanAddComponents()
+                isIncluded = (entry.isCalendarReady() && (entry.userCanAddComponents()
                               || (!isNew && window.arguments[0].calendar
-                                  == calendars[i]));
+                                  == calendars[i])));
                 //                                 dump(calendars[i].name + ": " + isIncluded);
                 //                                 if (entry.userPrivileges)
                 //                                         dump("\n  privileges: " + entry.userPrivileges.join(", "));

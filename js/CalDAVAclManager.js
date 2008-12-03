@@ -78,6 +78,11 @@ CalDAVAclManager.prototype = {
 
         return entry;
     },
+		refresh: function refresh(calendarURI) {
+			 var url = fixURL(calendarURI.spec);
+			 if (this.calendars[url])
+				 this._queryCalendar(url);
+	  },
     onDAVQueryComplete: function onDAVQueryComplete(status, url, headers,
                                                     response, data) {
         // dump("callback for method: " + data.method + "\n");
@@ -233,7 +238,7 @@ CalDAVAclManager.prototype = {
         }
 				else if (status == 501) {
 					dump("CalDAV: Server does not support ACLs\n");
-					calendar.supportsACL = false;
+					calendar.hasAccessControl = false;
 				}
 				
     },
@@ -522,13 +527,13 @@ CalDAVAclManager.prototype = {
 function CalDAVAclCalendarEntry(uri) {
     this.uri = uri;
     this.entries = {};
-		this.supportsACL = true;
+		this.hasAccessControl = true;
 }
 
 CalDAVAclCalendarEntry.prototype = {
     uri: null,
     entries: null,
-		supportsACLs: true,
+		
     isCalendarReady: function isCalendarReady() {
         // dump (typeof(this.hasAccessControl)+ "\n"
         // + typeof(this.userPrincipals)+ "\n"
@@ -536,7 +541,6 @@ CalDAVAclCalendarEntry.prototype = {
         // + typeof(this.userAddresses)+ "\n"
         // + typeof(this.identities)+ "\n"
         // + typeof(this.ownerPrincipal)+ "\n");
-		    if (this.supportsACLs == false) return true;
 
         return (typeof(this.hasAccessControl) != "undefined"
                 && typeof(this.userPrincipals) != "undefined"
@@ -552,7 +556,7 @@ CalDAVAclCalendarEntry.prototype = {
 
         var i = 0;
 
-        if (this.supportsACLs && this.hasAccessControl) {
+        if (this.hasAccessControl) {
 					  //dump("owner: " + this.ownerPrincipal + "\n");
             while (!result && typeof(this.userPrincipals) != "undefined" && i < this.userPrincipals.length) {
 							//dump("user: " + this.userPrincipals[i] + "\n");
@@ -568,7 +572,6 @@ CalDAVAclCalendarEntry.prototype = {
         return result;
     },
     userCanAddComponents: function userCanAddComponents() {
-				if (this.supportsACLs == false) return true;
         // dump("has access control: " + this.hasAccessControl + "\n");
         return (!this.hasAccessControl
                 || (this.userPrivileges.indexOf("{DAV:}bind")
