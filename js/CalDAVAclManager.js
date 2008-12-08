@@ -1,4 +1,4 @@
-/* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 2 -*- */
+/* -*- Mode: javascript; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
 var loader = Components .classes["@mozilla.org/moz/jssubscript-loader;1"]
     .getService(Components.interfaces.mozIJSSubScriptLoader);
@@ -78,11 +78,11 @@ CalDAVAclManager.prototype = {
 
         return entry;
     },
-		refresh: function refresh(calendarURI) {
-			 var url = fixURL(calendarURI.spec);
-			 if (this.calendars[url])
-				 this._queryCalendar(url);
-	  },
+    refresh: function refresh(calendarURI) {
+        var url = fixURL(calendarURI.spec);
+        if (this.calendars[url])
+            this._queryCalendar(url);
+    },
     onDAVQueryComplete: function onDAVQueryComplete(status, url, headers,
                                                     response, data) {
         // dump("callback for method: " + data.method + "\n");
