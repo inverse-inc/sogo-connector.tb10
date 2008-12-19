@@ -22,7 +22,6 @@
 		   .getAnonymousElementByAttribute(this, "anonid", "input");
 		 template.setAttribute("searchSessions", "sogo-connector");
 
-		 var showComment = false;
 		 var prefService = Components
 		   .classes["@mozilla.org/preferences-service;1"]
 		   .getService(Components.interfaces.nsIPrefBranch);

@@ -110,11 +110,9 @@ function setupCardDavAutoCompleteSession() {
 				}
 
 				for (var i = 1; i <= awGetMaxRecipients(); i++) {
-//  					dump("i: " + i + "\n");
 					var autoCompleteWidget
 						= document.getElementById(autocompleteWidgetPrefix + "#" + i);
 					if (autoCompleteWidget) {
-//  						dump("widget found\n");
 						autoCompleteWidget.addSession(cardDAVSession);
 						autoCompleteWidget.showCommentColumn = showComment;
 
@@ -170,6 +168,23 @@ function SISetupLdapAutoCompleteSession() {
 		setupCardDavAutoCompleteSession();
 	else
 		SISetupLdapAutoCompleteSessionOld();
+}
+
+// See the ComposeLoad() function in Thunderbird 2.0. It warns
+// you about the showComment kungfu.
+function SIComposeLoad() {
+	try {
+		var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+			.getService(Components.interfaces.nsIPrefBranch);
+		var attribute = prefService
+			.getCharPref("sogo-connector.autoComplete.commentAttribute");
+		if (attribute && attribute.length > 0)
+			document.getElementById('addressCol2#1').showCommentColumn = true;
+	}
+	catch(e) {
+	}
+	
+	ComposeLoad();
 }
 
 function SIOnAutoCompleteLoadListener() {

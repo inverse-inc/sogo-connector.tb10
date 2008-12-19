@@ -1,3 +1,16 @@
+2008-12-19  Ludovic Marcotte  <lmarcotte@inverse.ca>
+
+	* js/CalDAVAclManager.js
+	Reidented the code. Also modified _appendIdentity()
+	to NOT set any imip.identity to the corresponding
+	calendar. This is not reliable and the code has
+	been moved directly to getProperty() in
+	calDavCalendar.js from Lightning.
+	* chrome/content/sogo-connector/addressbook/autocomplete-common.js
+	We now override ComposeLoad() so that we correctly show
+	the "comment" field even when we first compose a message
+	See https://bugzilla.mozilla.org/show_bug.cgi?id=227903.
+
 2008-12-03  Ludovic Marcotte  <lmarcotte@inverse.ca>	
 
 	* Added the possibility to refresh CalDAV ACLs
