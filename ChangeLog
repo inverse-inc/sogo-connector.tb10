@@ -1,3 +1,11 @@
+2009-01-13  Ludovic Marcotte  <lmarcotte@inverse.ca>
+
+        * js/CalDAVAclManager.js
+	We now correctly handle the deletion of identities
+	with the "caldav_*" key from the user's preferences. 
+	We also correctly reinitialize our ivars prior
+	to perform a refresh of the ACLs.
+
 2008-12-19  Ludovic Marcotte  <lmarcotte@inverse.ca>
 
 	* js/CalDAVAclManager.js

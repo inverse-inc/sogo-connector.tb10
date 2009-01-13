@@ -80,8 +80,16 @@ CalDAVAclManager.prototype = {
     },
  refresh: function refresh(calendarURI) {
         var url = fixURL(calendarURI.spec);
-        if (this.calendars[url])
+        var calendar = this.calendars[url];
+        if (calendar) {
+            calendar.userPrincipals = [];
+            calendar.userPrivileges = [];
+            calendar.userAddresses = [];
+            calendar.userIdentities = [];
+            calendar.ownerIdentities = [];
+            calendar.ownerPrincipal = null;
             this._queryCalendar(url);
+        }
     },
  onDAVQueryComplete: function onDAVQueryComplete(status, url, headers,
                                                  response, data) {
@@ -287,16 +295,42 @@ CalDAVAclManager.prototype = {
         }
     },
  _initAccountMgr: function _initAccountMgr() {
-        this.accountMgr = Components
-        .classes["@mozilla.org/messenger/account-manager;1"]
+        this.accountMgr = Components.classes["@mozilla.org/messenger/account-manager;1"]
         .getService(Components.interfaces.nsIMsgAccountManager);
+       
         var identities = this.accountMgr.allIdentities.QueryInterface(Components.interfaces.nsICollection);
-        for (var i = 0; i < identities.Count(); i++) {
+        var values = [];
+        var current = 0;
+        var max = 0;
+        
+        // We get the identities we use for mail accounts. We also
+        // get the highest key which will be used as the basis when
+        // adding new identities (so we don't overwrite keys...)
+        for (var i = identities.Count()-1; i >= 0; i--) {
             var identity = identities.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgIdentity);
             if (identity.key.indexOf("caldav_") == 0) {
-                this.accountMgr.removeIdentity(identity);
+                values.push(identity.key);
+                current = parseInt(identity.key.substring(7));
+                if (current > max)
+                    max = current;
             }
         }
+
+        // We now remove every other caldav_ pref other than the ones we 
+        // use in our mail accounts.
+        var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+        .getService(Components.interfaces.nsIPrefService);
+        var prefBranch = prefService.getBranch("mail.identity.");
+        var prefs = prefBranch.getChildList("", {});
+        for each (var pref in prefs) {
+            if (pref.indexOf("caldav_") == 0) {
+                var key = pref.substring(0, pref.indexOf("."));
+                if (values.indexOf(key) < 0) {
+                    prefBranch.deleteBranch(key);
+                }
+            }
+        }
+        this.identityCount = max + 1;
     },
  _findIdentity: function _findIdentity(email, displayName) {
         var identity = null;
@@ -334,8 +368,8 @@ CalDAVAclManager.prototype = {
  _appendIdentity: function _appendIdentity(identities, displayName, email, calendar) {
         if (!this.accountMgr)
             this._initAccountMgr();
-		
-        var newIdentity = this._findIdentity(email, displayName);
+
+	var newIdentity = this._findIdentity(email, displayName);
         if (!newIdentity) {
             var newIdentity = Components
                 .classes["@mozilla.org/messenger/identity;1"]
@@ -346,7 +380,7 @@ CalDAVAclManager.prototype = {
             newIdentity.fullName = String(displayName);
             newIdentity.email = String(email);
 			
-            // We added identity associated to this calendar to Thunderbird's
+            // We add identities associated to this calendar to Thunderbird's
             // list of identities only if we are actually the owner of the calendar.
             if (calendar.userIsOwner()) {
                 this.accountMgr.defaultAccount.addIdentity(newIdentity);
