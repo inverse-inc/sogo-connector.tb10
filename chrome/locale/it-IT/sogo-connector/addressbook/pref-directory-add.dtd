@@ -1,11 +1,9 @@
 <!--
- Copyright:	Inverse inc., 2006-2007 
- Author: 	Robert Bolduc
- Email:		support@inverse.ca 
- URL:			http://inverse.ca
-
- Translated to German by Raffael Luthiger
-	
+ Copyright:		Infoporto La Spezia Srl, 2008
+ Author: 		Marco Lertora
+ Email:			marco.lertora@infoporto.it
+ URL:			http://www.infoporto.it
+  
  This file is part of "SOGo Connector" a Thunderbird extension.
 
     "SOGo Connector" is free software; you can redistribute it and/or modify
@@ -22,41 +20,44 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA	
 -->
 
-<!ENTITY newDirectoryTitle.label          "Remote-Adressbuch Einstellungen">
-<!ENTITY groupdavName.label               "Verbindungs-Name: ">
+<!ENTITY newDirectoryTitle.label          "Proprietà della rubrica remota">
+<!ENTITY groupdavName.label               "Nome: ">
 <!ENTITY groupdavName.accesskey           "n">
 <!ENTITY groupdavURL.label                "URL: ">
 <!ENTITY groupdavURL.accesskey            "l">
-<!ENTITY groupdavHostname.label           "host: ">
+<!ENTITY groupdavHostname.label           "Host: ">
 <!ENTITY groupdavHostname.accesskey       "h">
-<!ENTITY groupdavSecure.label             "Sichere Verbindung verwenden (SSL)">
+<!ENTITY groupdavSecure.label             "Usa connessione sicura (SSL)">
 <!ENTITY groupdavSecure.accesskey         "S">
 
-<!ENTITY groupdavUser.label               "Benutzer:">
+<!ENTITY groupdavUser.label               "Utente:">
 <!ENTITY groupdavUser.accesskey           "r">
 
-<!ENTITY groupdavPassword.label            "Passwort:">
+<!ENTITY groupdavPassword.label           "Password:">
 <!ENTITY groupdavPassword.accesskey       "p">
 
-<!ENTITY groupDavServerType.label         "GroupDAV Server Typus:">
+<!ENTITY groupDavServerType.label         "Tipo del server remoto:">
 <!ENTITY groupDavServerType.accesskey     "G">
 
 
-<!ENTITY General.tab                       "Allgemein">
+<!ENTITY General.tab                       "Generale">
 <!ENTITY Offline.tab                       "Offline">
-<!ENTITY offlineText.label                 "Sie können eine lokale Kopie von diesem Verzeichnis erstellen. Dann ist es auch verfügbar, wenn Sie offline arbeiten.">
+<!ENTITY offlineText.label                 "Puoi scaricare una copia locale di questa rubrica in modo da renderla disponibile anche quando lavori offline.">
 
-<!ENTITY downloadNowButton.label           "Jetzt herunterladen">
+<!ENTITY downloadNowButton.label           "Scarica ora">
 <!ENTITY downloadNowButton.accesskey       "D">
 <!-- Localization note: this is here because the width of the dialog 
      is determined by the width of the base DN box; and that is likely
      to vary somewhat with the language.
 -->
-<!ENTITY newDirectoryWidth                 "40em">
+<!ENTITY newDirectoryWidth                 "36em">
 
-<!ENTITY DisplaySyncCompleted.label      "Statusmeldung anzeigen, nachdem die Synchronisierung beendet ist">
+<!ENTITY DisplaySyncCompleted.label      "Mostra finestra una volta che la sincronia è completata">
 <!ENTITY DisplaySyncCompleted.accesskey  "Z">
-<!ENTITY AutoDeleteFromServer.label       "Automatisch Karten löschen, die vom Server gelöscht wurden">
+<!ENTITY AutoDeleteFromServer.label       "Elimina automaticamente i contatti non più presenti sul server">
 <!ENTITY AutoDeleteFromServer.accesskey   "A">
-<!ENTITY ReadOnly.label                   "Nur lesbar">
-<!ENTITY ReadOnly.accesskey           		"N">
+<!ENTITY ReadOnly.label               		"Sola lettura">
+<!ENTITY ReadOnly.accesskey           		"R">
+
+
+

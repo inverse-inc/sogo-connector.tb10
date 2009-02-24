@@ -1,3 +1,10 @@
+2009-02-23  Ludovic Marcotte <lmarcotte@inverse.ca>
+
+        * Updated German translation. Patch from
+	Alexander Greiner-Baer <sogo-algb@freenet.de>
+	* Added Italian translation. Patch from
+	Marco Lertora <marco.lertora@infoporto.it>
+
 2009-01-13  Ludovic Marcotte  <lmarcotte@inverse.ca>
 
         * js/CalDAVAclManager.js
