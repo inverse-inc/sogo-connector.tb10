@@ -100,6 +100,21 @@ function versitParse(versitString) {
 						value = "";
 						type = 2;
 					}
+					else if (character == "\r" && versitString[currentChar+1] == "\n") {
+						/* some implementations do not comply and fold their lines
+							 qp-style but without escaping their crlf... */
+						var lastLine = parseResult[parseResult.length-1];
+						var values = lastLine["values"];
+						var lastValue = values[values.length-1];
+						if (lastValue[lastValue.length-1] == "=") {
+							values[values.length-1]
+								= lastValue.substr(0, lastValue.length-1) + tag;
+							tag = "";
+							currentChar++;
+						}
+						else
+							tag+=character;
+					}
 					else
 						tag += character;
 				}
@@ -138,6 +153,8 @@ function versitParse(versitString) {
 							if (typeof nextChar != "undefined" && nextChar == " ")
 								currentChar++;
 							else {
+// 								dump("tag: ^" + currentLine["tag"] + "$\n");
+// 								dump("value: ^" + value + "$\n");
 								values.push(value);
 								currentLine["values"] = values;
 								parseResult.push(currentLine);
@@ -172,10 +189,11 @@ function importFromVcard(vCardString, customFields) {
 		dump("'vCardString' is empty\n" + backtrace() + "\n");
 	else {
 		var vcard = versitParse(vCardString);
-	// 	var cardDump = dumpObject(vcard);
-	// 	logInfo("vcard dump:\n" + cardDump);
-
+		// 	var cardDump = dumpObject(vcard);
+		// 	logInfo("vcard dump:\n" + cardDump);
 		card = CreateCardFromVCF(vcard, customFields);
+
+		// dump("card content:\n" + vCardString + "\n");
 	}
 
 	return card;
@@ -376,7 +394,8 @@ function decodedValues(values, charset, encoding) {
 	for (var i = 0; i < values.length; i++) {
 		var decodedValue = null;
 		if (encoding) {
-// 			dump("encoding: " + encoding + "\n");
+//  			dump("encoding: " + encoding + "\n");
+//  			dump("initial value: ^" + values[i] + "$\n");
 			if (encoding == "quoted-printable")
 				decodedValue = decoder.decode(values[i]);
 			else if (encoding == "base64")
@@ -385,7 +404,7 @@ function decodedValues(values, charset, encoding) {
 				dump("Unsupported encoding for vcard value: " + encoding);
 				decodedValue = values[i];
 			}
-// 			dump("decoded: " + decodedValue + "\n");
+//  			dump("decoded: " + decodedValue + "\n");
 		}
 		else
 			decodedValue = values[i];

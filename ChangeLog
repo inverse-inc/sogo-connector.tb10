@@ -1,7 +1,9 @@
 2009-03-16  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
-	* chrome/content/sogo-connector/general/vcards.utils.js: propertly
+	* chrome/content/sogo-connector/general/vcards.utils.js: property
 	decode fields with base64 encoding.
+	Work-around a bug of qp encoders which fold lines without escaping
+	their crlf.
 
 2009-02-23  Ludovic Marcotte <lmarcotte@inverse.ca>
 
