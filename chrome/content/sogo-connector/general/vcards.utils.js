@@ -376,12 +376,16 @@ function decodedValues(values, charset, encoding) {
 	for (var i = 0; i < values.length; i++) {
 		var decodedValue = null;
 		if (encoding) {
+// 			dump("encoding: " + encoding + "\n");
 			if (encoding == "quoted-printable")
 				decodedValue = decoder.decode(values[i]);
+			else if (encoding == "base64")
+				decodedValue = window.atob(values[i]);
 			else {
 				dump("Unsupported encoding for vcard value: " + encoding);
 				decodedValue = values[i];
 			}
+// 			dump("decoded: " + decodedValue + "\n");
 		}
 		else
 			decodedValue = values[i];

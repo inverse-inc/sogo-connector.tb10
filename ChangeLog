@@ -1,3 +1,8 @@
+2009-03-16  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* chrome/content/sogo-connector/general/vcards.utils.js: propertly
+	decode fields with base64 encoding.
+
 2009-02-23  Ludovic Marcotte <lmarcotte@inverse.ca>
 
         * Updated German translation. Patch from
