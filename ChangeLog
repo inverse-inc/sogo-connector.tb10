@@ -1,3 +1,9 @@
+2009-03-17  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* chrome/content/sogo-connector/addressbook/addressbook.groupdav.overlay.js
+	(deleteManager): we invoke "deleteDirectory" after
+	deletedSelectedCards, to ensure the list is deleted properly.
+
 2009-03-16  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* chrome/content/sogo-connector/general/vcards.utils.js: property

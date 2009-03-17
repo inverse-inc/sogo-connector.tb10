@@ -203,7 +203,7 @@ abDirTreeObserver.SCOnDrop = function(row, or) {
 		if (proceed && cardKeys) {
 			var prefService = new GroupdavPreferenceService(sourceDirectory.dirPrefId);
 			for (var i = 0; i < cardKeys.length; i++) {
-				dump("deleting " + cardKeys[i] + "\n");
+// 				dump("deleting " + cardKeys[i] + "\n");
 				_deleteGroupDAVComponentWithKey(prefService, cardKeys[i]);
 			}
 		}
@@ -307,21 +307,25 @@ var deleteManager = {
 		this.mDirectory = null;
 	},
  onDAVQueryComplete: function(code, result, headers, data) {
+// 		dump("on davquerycompplete\n");
 		if (data.deleteLocally
 				&& ((code > 199 && code < 400)
 						|| code == 404
 						|| code == 604)) {
+// 			dump("code: " + code + "\n");
 			if (data.component instanceof Components.interfaces.nsIAbCard) {
 				var cards = Components.classes["@mozilla.org/supports-array;1"]
 				.createInstance(Components.interfaces.nsISupportsArray);
 				cards.AppendElement(data.component);
-				data.directory.deleteCards(cards); 
+				data.directory.deleteCards(cards);
 			}
-			else if (data.component instanceof Components.interfaces.nsIAbDirectory) {
+			else if (data.component
+							 instanceof Components.interfaces.nsIAbDirectory) {
+// 				dump("deleting list\n");
 				var attributes = new GroupDAVListAttributes(data.component);
 				attributes.deleteRecord();
-				// See bug #462364
-				GetAbView().deleteSelectedCards();
+ 				GetAbView().deleteSelectedCards();
+				data.directory.deleteDirectory(data.component);
 			}
 			else
 				dump("component is of unknown type: " + data.component + "\n");
@@ -370,7 +374,7 @@ function DeleteGroupDAVCards(directory, cards, deleteLocally) {
 function _deleteGroupDAVComponentWithKey(prefService, key,
 																				 directory, component,
 																				 deleteLocally) {
- 	//dump("\n\nwe delete: " + key + "\n\n\n");
+// 	dump("\n\nwe delete: " + key + "\n\n\n");
 	if (key && key.length) {
 		var href = prefService.getURL() + key;
 		var deleteOp = new sogoWebDAV(href, deleteManager,
@@ -378,7 +382,7 @@ function _deleteGroupDAVComponentWithKey(prefService, key,
 																	 component: component,
 																	 deleteLocally: deleteLocally});
 		deleteOp.delete();
-		//dump("webdav_delete on '" + href + "'\n");
+// 		dump("webdav_delete on '" + href + "'\n");
 	}
 	else /* 604 = "not found locally" */
 		deleteManager.onDAVQueryComplete(604, null, null,
@@ -414,6 +418,7 @@ function SCAbConfirmDelete(types) {
 }
 
 function SCAbDelete() {
+// 	dump("ScAbDelete\n");
 	if (isGroupdavDirectory(gSelectedDir)) {
 		var types = GetSelectedCardTypes();
 		if (types != kNothingSelected && SCAbConfirmDelete(types)) {
@@ -430,13 +435,17 @@ function SCAbDelete() {
 function SCAbDeleteDirectory() {
 	var result = false;
 
+// 	dump("ScAbDeleteDirectory\n");
 	var selectedDir = GetSelectedDirectory();
 	if (selectedDir) {
 		if (isGroupdavDirectory(selectedDir)
-				|| isCardDavDirectory(selectedDir))
+				|| isCardDavDirectory(selectedDir)) {
+// 			dump("pouet\n");
 			result = (SCAbConfirmDeleteDirectory(selectedDir)
 								&& SCDeleteDAVDirectory(selectedDir));
+		}
 		else {
+// 			dump("pouet dasdsa\n");
 			var directory = SCGetDirectoryFromURI(selectedDir);
 			if (!(directory.isMailList
 						&& _SCDeleteListAsDirectory(directory, selectedDir)))
@@ -450,13 +459,18 @@ function SCAbDeleteDirectory() {
 function _SCDeleteListAsDirectory(directory, selectedDir) {
 	var result = false;
 
+// 	dump("_SCDeleteListAsDirectory\n");
 	var uriParts = selectedDir.split("/");
 	var parentDirURI = uriParts[0] + "//" + uriParts[2];
 	if (isGroupdavDirectory(parentDirURI)) {
+// 		dump("_SCDeleteListAsDirectory 2\n");
 		var attributes = new GroupDAVListAttributes(directory);
 		if (attributes.key) {
+// 			dump("_SCDeleteListAsDirectory 3\n");
+
 			result = true;
 			if (SCAbConfirmDelete(kSingleListOnly)) {
+// 				dump("_SCDeleteListAsDirectory 4\n");
 				var parentDir = SCGetDirectoryFromURI(parentDirURI);
 				var prefService = new GroupdavPreferenceService(parentDir.dirPrefId);
 				deleteManager.begin(parentDirURI, 1);
