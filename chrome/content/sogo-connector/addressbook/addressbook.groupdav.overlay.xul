@@ -39,7 +39,8 @@
     src="chrome://sogo-connector/content/addressbook/addressbook.groupdav.overlay.js"/>
 
   <commandset id="addressBook">
-    <command id="cmd_syncGroupdav" oncommand="SynchronizeGroupdavAddressbook(GetSelectedDirectory());"/>
+    <command id="cmd_syncGroupdav"
+      oncommand="SynchronizeGroupdavAddressbook(GetSelectedDirectory(), synchronizationCallback);"/>
   </commandset>
 
   <!--Add the GroupDAV synchronize button to the toolbar -->

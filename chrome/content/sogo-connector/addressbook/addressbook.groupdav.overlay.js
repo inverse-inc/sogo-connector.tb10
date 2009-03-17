@@ -156,13 +156,7 @@ dirPaneControllerOverlay.prototype = {
 	},
 
  doCommand: function(command){
-// 		dump("doCommand: " + command + "\n");
-		switch (command){
-		case "cmd_syncGroupdav":
-		SynchronizeGroupdavAddressbook(null);
-		break;
-		}
-
+		throw("Unexpected doCommand: " + command);
 	},
 
  onEvent: function(event) {}
@@ -615,6 +609,14 @@ function onUnloadDAV() {
 													groupdavSynchronizationObserver);
 	nmgr.unregisterObserver("groupdav.synchronization.addressbook.updated",
 													groupdavSynchronizationObserver);
+}
+
+function synchronizationCallback(url, code, failures) {
+	dump("url: " + url + "\n");
+	dump("code: " + code + "\n");
+	for (var i in failures) {
+		dump("failure: " + i + "\n");
+	}
 }
 
 window.addEventListener("load", onLoadDAV, false);

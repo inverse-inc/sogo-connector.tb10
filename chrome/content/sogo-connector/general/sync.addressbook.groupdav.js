@@ -67,7 +67,7 @@ function GroupDavSynchronizer(uri, isDrop) {
 		.getService(Components.interfaces.nsIWindowMediator)
 		.getMostRecentWindow("mail:3pane");
 	this.callbackCode = 0;
-	this.callbackFailures = [];
+	this.callbackFailures = {};
 	this.callback = null;
 	this.callbackData = null;
 	this.context = this._initGroupDAVContext();
@@ -174,6 +174,8 @@ GroupDavSynchronizer.prototype = {
 		this.conflictHash = {};
 		this.localCardPointerHash = {};
 		this.localListPointerHash = {};
+
+		this.callbackFailures = {};
 	},
  // Fill the Local Directory data structures for the syncronization
  fillLocalHashes: function() {
@@ -354,6 +356,16 @@ GroupDavSynchronizer.prototype = {
 		else
 			throw("unknown query: " + cbdata.query);
 	},
+
+ _appendFailure: function(status, data) {
+		var failures = this.callbackFailures[status];
+		if (!failures) {
+			failures = [];
+			this.callbackFailures[status] = failures;
+		}
+		failures.push(data);
+	},
+
  onVCardDownloadComplete: function(status, data, key) {
 		this.remainingDownloads--;
 		this.progressMgr.updateAddressBook(this.gURL);
@@ -365,7 +377,7 @@ GroupDavSynchronizer.prototype = {
 			this._importCard(key, data);
 		}
 		else
-			this.callbackFailures.push(key);
+			this._appendFailure(status, key);
 
 		if (this.remainingDownloads == 0) {
 			this._commitAddrDB();
@@ -385,7 +397,7 @@ GroupDavSynchronizer.prototype = {
 			this._importList(key, data);
 		}
 		else
-			this.callbackFailures.push(key);
+			this._appendFailure(status, key);
 		if (this.remainingDownloads == 0) {
 			this.pendingOperations--;
 			//  			dump("decreasing 4 pendingOperations...\n");
@@ -416,9 +428,11 @@ GroupDavSynchronizer.prototype = {
 			else
 				dump("No etag returned for vcard uploaded at " + cardURL + ", ignored\n");
 		}
-		else
+		else {
+			this._appendFailure(status, card);
 			dump("Upload failure uploading card: " + cardURL
 					 + ".\nHTTP Status Code:" + status + "\n");
+		}
 
 		this.progressMgr.updateAddressBook(this.gURL);
 		this.remainingUploads--;
@@ -578,9 +592,11 @@ GroupDavSynchronizer.prototype = {
 			else
 				dump("No etag returned for vlist uploaded at " + listURL + ", ignored\n");
 		}
-		else
+		else {
+			this._appendFailure(status, card);
 			dump("Upload failure uploading list: " + listURL
 					 + ".\nHTTP Status Code:" + status + "\n");
+		}
 
 		this.progressMgr.updateAddressBook(this.gURL);
 		this.remainingUploads--;
@@ -984,7 +1000,7 @@ GroupDavSynchronizer.prototype = {
 			else if (this.processMode == 1) {
 				if (this.callback) {
 // 					dump("this.callback: " + this.callback + "\n");
-					this.callback(this.callbackCode, this.callbackFailures,
+					this.callback(this.gURL, this.callbackCode, this.callbackFailures,
 												this.callbackData);
 				}
 
