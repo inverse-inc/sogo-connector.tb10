@@ -1,6 +1,9 @@
 NEWS
 ====
 
+0.92
+	Fixed unescaping of special characters (\r, \n, ...) from VCARD content
+
 0.90
 	Added a new provider for freebusy over HTTP (fburl)
 	Searches on CardDAV addressbooks would see their spaces "url-escaped".
