@@ -74,6 +74,16 @@ function versitParse(versitString) {
 	while (currentChar < versitString.length) {
 		var character = versitString[currentChar];
 		if (isEscaped) {
+			var lowerChar = character.toLowerCase();
+			if (lowerChar == "n")
+ 				character = "\n";
+			else if (lowerChar == "r")
+ 				character = "\r";
+			else if (lowerChar == "t")
+ 				character = "\t";
+			else if (lowerChar == "b")
+ 				character = "\b";
+
 			if (type == 0)
 				tag += character;
 			else if (type == 1)
