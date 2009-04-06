@@ -1,3 +1,7 @@
+2009-04-06  Ludovic Marcotte <lmarcotte@inverse.ca>
+
+        * Bumped version number to 0.93
+
 2009-03-17  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* chrome/content/sogo-connector/addressbook/addressbook.groupdav.overlay.js
@@ -6,7 +10,7 @@
 
 2009-03-16  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
-	* chrome/content/sogo-connector/general/vcards.utils.js: property
+	* chrome/content/sogo-connector/general/vcards.utils.js: properly
 	decode fields with base64 encoding.
 	Work-around a bug of qp encoders which fold lines without escaping
 	their crlf.
