@@ -1,7 +1,18 @@
+<<<<<<< variant A
 2009-04-06  Ludovic Marcotte <lmarcotte@inverse.ca>
 
         * Bumped version number to 0.93
 
+>>>>>>> variant B
+2009-03-18  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	*
+	chrome/content/sogo-connector/general/sync.addressbook.groupdav.js:
+	reset the status of pending connections if an error occurs during
+	a collection operation.
+
+####### Ancestor
+======= end
 2009-03-17  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* chrome/content/sogo-connector/addressbook/addressbook.groupdav.overlay.js

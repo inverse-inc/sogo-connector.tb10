@@ -340,7 +340,7 @@ GroupDavSynchronizer.prototype = {
 		request.get();
 	},
  onDAVQueryComplete: function(status, data, headers, cbdata) {
-		//  		dump("onDavQueryComplete: " + cbdata.query + "\n");
+		this.callbackCode = status;
 		if (cbdata.query == "vcard-download")
 			this.onVCardDownloadComplete(status, data, cbdata.data);
 		else if (cbdata.query == "list-download")
@@ -355,6 +355,12 @@ GroupDavSynchronizer.prototype = {
 			this.onListUploadComplete(status, data, cbdata.key, cbdata.data, headers);
 		else
 			throw("unknown query: " + cbdata.query);
+	},
+ _abort: function() {
+		dump("Unacceptable status code: " + this.callbackCode + ". We abort.\n");
+		this.pendingOperations = 0;
+		this.processMode = 1;
+		this._checkCallback();
 	},
 
  _appendFailure: function(status, data) {
@@ -606,7 +612,6 @@ GroupDavSynchronizer.prototype = {
 		}
 	},
  onServerCheckComplete: function(status, response, key) {
-		this.callbackCode = status;
 		this.pendingOperations = 0;
 		dump("pendingOperations: " + this.pendingOperations + "\n");
  		dump("status: " + status + "\n");
@@ -674,9 +679,10 @@ GroupDavSynchronizer.prototype = {
 				}
 			}
 		}
+		else
+			this._abort();
 	},
  onServerHashQueryComplete: function(status, response, key) {
-		this.callbackCode = status;
 		this.pendingOperations = 0;
 
 		if (response) {
@@ -737,8 +743,7 @@ GroupDavSynchronizer.prototype = {
 				break;
 
 			default:
-				this._checkCallback();
-				throw "Error connecting to GroupDAV Server; response status: " + status;      
+				this._abort();
 			}
 		}
 		else
