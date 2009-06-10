@@ -1,3 +1,8 @@
+2009-06-10  Francis Lachapelle  <flachapelle@inverse.ca>
+
+	* chrome/content/sogo-connector/general/vcards.utils.js: fixed the
+	telephone attribute mapping.
+
 2009-04-06  Ludovic Marcotte <lmarcotte@inverse.ca>
 
         * Bumped version number to 0.93

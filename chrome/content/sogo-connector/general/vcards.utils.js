@@ -273,27 +273,37 @@ var _insertCardMethods = {
 			card.department = values[1];
 	},
  tel: function(card, parameters, values) {
-		var types = new Array();
-		var preTypes = parameters["type"];
+		var preTypes = parameters["type"].join(",").split(",");
+		var knownType = false;
 		if (preTypes)
-			for (var i = 0; i < preTypes.length; i++)
-				types[i] = preTypes[i].toUpperCase();
-		if (types.indexOf("HOME") > -1)
-			card.homePhone = values[0];
-		else if (types.indexOf("CELL") > -1)
-			card.cellularNumber = values[0];
-		else if (types.indexOf("FAX") > -1)
-			card.faxNumber = values[0];
-		else if (types.indexOf("WORK") > -1)
-			card.workPhone = values[0];
-		else if (types.indexOf("PAGER") > -1)
-			card.pagerNumber = values[0];
-		else {
+			for (var i = 0; i < preTypes.length; i++) {
+				var type = preTypes[i].toUpperCase();
+				if (type == "HOME") {
+					card.homePhone = values[0];
+					knownType = true;
+				}
+				else if (type == "CELL") {
+					card.cellularNumber = values[0];
+					knownType = true;
+				}
+				else if (type == "FAX") {
+					card.faxNumber = values[0];
+					knownType = true;
+				}
+				else if (type == "WORK") {
+					card.workPhone = values[0];
+					knownType = true;
+				}
+				else if (type == "PAGER") {
+					card.pagerNumber = values[0];
+					knownType = true;
+				}
+			}
+		if (!knownType)
 			if (card.workPhone.length == 0)
 				card.workPhone = values[0];
 			else if (card.homePhone.length == 0)
 				card.homePhone = values[0];
-		}
 	},
  adr: function(card, parameters, values) {
 		var types = new Array();
