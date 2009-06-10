@@ -1,15 +1,4 @@
 /* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 2 -*- */
-/*    Orginal code from morescols extension vcardTools.js
- 
-  		<em:id>{3e17310d-82e8-4a43-bd2f-7c3055bfe589}</em:id>
-			<em:name>MoreColsForAddressBook</em:name>
-			<em:version>0.3.4.1</em:version>
-			<em:description>Add some functions to the Addressbook</em:description>
-			<em:creator>Paolo Kaosmos</em:creator>
-			<em:homepageURL>https://nic-nac-project.de/~kaosmos/index-en.html</em:homepageURL>
-
-			Contributors: Ralf Becker, RalfBecker@outdoor-training.de
-*/
 
 function jsInclude(files, target) {
 	var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
@@ -19,7 +8,7 @@ function jsInclude(files, target) {
 			loader.loadSubScript(files[i], target);
 		}
 		catch(e) {
-			dump("implementors.addressbook.groupdav.js: failed to include '" + files[i] +
+			dump("vcards.utils.js: failed to include '" + files[i] +
 					 "'\n" + e
 					 + "\nFile: " + e.fileName
 					 + "\nLine: " + e.lineNumber + "\n\n Stack:\n\n" + e.stack);
