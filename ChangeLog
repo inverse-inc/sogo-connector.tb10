@@ -1,5 +1,11 @@
 2009-06-10  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* chrome/content/sogo-connector/general/sync.addressbook.groupdav.js:
+	refactored the code and added support for ctag-based synchronisation.
+
+	* chrome/content/sogo-connector/general/preference.service.addressbook.groupdav.js:
+	added methods for saving and retrieving the ctag of ab collections.
+
 	* chrome/content/sogo-connector/general/implementors.addressbook.groupdav.js:
 	removed obsolete module.
 
