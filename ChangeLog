@@ -1,5 +1,9 @@
 2009-06-10  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* chrome/content/sogo-connector/addressbook/addressbook.groupdav.overlay.js:
+	restored the ability to synchronize addressbook while the
+	selection is currently in the results pane (right list).
+
 	* chrome/content/sogo-connector/general/sync.addressbook.groupdav.js:
 	refactored the code and added support for ctag-based synchronisation.
 
