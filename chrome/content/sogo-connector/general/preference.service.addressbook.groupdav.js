@@ -223,6 +223,22 @@ GroupdavPreferenceService.prototype = {
 	},
 	setMigrationDone: function(value) {
 		this._setBoolPref("migrationDone", value);
+	},
+
+	getCTag: function() {
+		var cTag;
+		try {
+			cTag = this._getPref("ctag");
+			if (!cTag)
+				cTag = "";
+		}
+		catch(e) {
+			cTag = "";
+		}
+		return cTag;
+	},
+	setCTag: function(value) {
+		this._setPref("ctag", value);
 	}
 };
 

@@ -21,16 +21,6 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  ********************************************************************************/
 
-/* <!--  <script type="application/x-javascript"
-    src="chrome://sogo-connector/content/general/mozilla.utils.inverse.ca.js"/>
- <!== <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abCardOverlay.js"/> ==>
-  <script type="application/x-javascript"
-    src="chrome://sogo-connector/content/general/implementors.addressbook.groupdav.js"/>
-  <script type="application/x-javascript"
-    src="chrome://sogo-connector/content/general/constants.addressbook.groupdav.js"/>
-  <script type="application/x-javascript"
-  src="chrome://sogo-connector/content/general/webdav_lib/webdavAPI.js"/> --> */
-
 function jsInclude(files, target) {
 	var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
 		.getService(Components.interfaces.mozIJSSubScriptLoader);
@@ -45,8 +35,7 @@ function jsInclude(files, target) {
 }
 
 jsInclude(["chrome://sogo-connector/content/general/sync.addressbook.groupdav.js",
-					 "chrome://sogo-connector/content/general/preference.service.addressbook.groupdav.js",
-					 "chrome://sogo-connector/content/general/implementors.addressbook.groupdav.js"]);
+					 "chrome://sogo-connector/content/general/preference.service.addressbook.groupdav.js"]);
 
 /**********************************************************************************************
  *
@@ -83,20 +72,6 @@ function getUri() {
 function setDocumentDirty(boolValue) {
 	documentDirty = boolValue;
 }
-
-// function setGroupDavFields() {
-// 	var card = gEditCard.card.QueryInterface(Components.interfaces.nsIAbMDBCard);
-// 	var version = card.getStringAttribute("groupDavVersion");
-// 	if (version && version != "")
-// 		card.setStringAttribute("groupDavVersion", "-1");
-// 	else {
-// 		card.setStringAttribute("groupDavVersion"," ");
-// 	}
-// 	if (!card.getStringAttribute("groupDavKey")){
-// 	// New Card, create key
-// 		card.setStringAttribute("groupDavKey",GroupdavServerFactory.get(groupdavTypes.GroupDAV_Generic).getNewCardKey());
-// 	}
-// }
 
 function saveCard(isNewCard) {
 	try {

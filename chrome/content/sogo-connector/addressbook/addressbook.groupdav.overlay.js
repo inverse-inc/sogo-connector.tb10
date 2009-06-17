@@ -85,8 +85,8 @@ function SCOpenDeleteFailureDialog(directory) {
  ********************************************************************************************/
 function SCGoUpdateGlobalEditMenuItems() {
 	try {
-// 		dump("connector\n");
 		gSelectedDir = GetSelectedDirectory();
+//  		dump("SCGoUpdateGlobalEditMenuItems\n  gSelectedDir" + gSelectedDir + "\n");
 		goUpdateCommand("cmd_syncGroupdav");
 		this.SCGoUpdateGlobalEditMenuItemsOld();
 	}
@@ -97,8 +97,8 @@ function SCGoUpdateGlobalEditMenuItems() {
 
 function SCCommandUpdate_AddressBook() {
 	try {
-// 		dump("connector\n");
 		gSelectedDir = GetSelectedDirectory();
+//  		dump("SCCommandUpdate_AddressBook  gSelectedDir" + gSelectedDir + "\n");
 		goUpdateCommand('cmd_syncGroupdav');
 		this.SCCommandUpdate_AddressBookOld();
 	}
@@ -110,6 +110,7 @@ function SCCommandUpdate_AddressBook() {
 function SCGoUpdateSelectEditMenuItems() {
 	try {
 		gSelectedDir = GetSelectedDirectory();
+//  		dump("SCGoUpdateSelectEditMenuItems  gSelectedDir" + gSelectedDir + "\n");
 		goUpdateCommand('cmd_syncGroupdav');
 		this.SCGoUpdateSelectEditMenuItemsOld();
 	}
@@ -131,6 +132,8 @@ dirPaneControllerOverlay.prototype = {
 
  isCommandEnabled: function(command) {
 		var result = false;
+
+// 		dump("isCommandEnabled\n  command: " + command + "\n");
 
 		if (gSelectedDir && gSelectedDir != "") {
 			try {
@@ -194,7 +197,7 @@ abDirTreeObserver.SCOnDrop = function(row, or) {
 		}
 
 		if (isGroupdavDirectory(targetURI))
-			SynchronizeGroupdavAddressbookDrop(targetURI);
+			SynchronizeGroupdavAddressbook(targetURI);
 
 		if (cardKeys)
 			dump("cardKeys: " + cardKeys.length + " to delete\n");
@@ -592,7 +595,9 @@ function onLoadDAV() {
 		aDirTree.controllers.appendController(ctlOvl);
 // 		aDirTree.controllers.appendController(DirPaneController);
 	}
+
 	// results pane
+	var gAbResultsTree = document.getElementById("abResultsTree");
 	if (gAbResultsTree) {
 // 		gAbResultsTree.controllers.appendController(ResultsPaneController);
 		gAbResultsTree.controllers.appendController(ctlOvl);
@@ -625,11 +630,16 @@ function onUnloadDAV() {
 													groupdavSynchronizationObserver);
 }
 
-function synchronizationCallback(url, code, failures) {
-	dump("url: " + url + "\n");
-	dump("code: " + code + "\n");
+function SCCommandSynchronize() {
+	SynchronizeGroupdavAddressbook(gSelectedDir, SCCommandSynchronizeCallback);
+}
+
+function SCCommandSynchronizeCallback(url, code, failures) {
+	dump("SCCommandSynchronizeCallback\n");
+	dump("  url: " + url + "\n");
+	dump("  code: " + code + "\n");
 	for (var i in failures) {
-		dump("failure: " + i + "\n");
+		dump("  failure: " + i + "\n");
 	}
 }
 

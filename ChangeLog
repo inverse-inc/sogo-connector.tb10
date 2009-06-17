@@ -1,8 +1,27 @@
+<<<<<<< variant A
 2009-06-10  Francis Lachapelle  <flachapelle@inverse.ca>
 
 	* chrome/content/sogo-connector/general/vcards.utils.js: fixed the
 	telephone attribute mapping.
 
+>>>>>>> variant B
+2009-06-10  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* chrome/content/sogo-connector/addressbook/addressbook.groupdav.overlay.js:
+	restored the ability to synchronize addressbook while the
+	selection is currently in the results pane (right list).
+
+	* chrome/content/sogo-connector/general/sync.addressbook.groupdav.js:
+	refactored the code and added support for ctag-based synchronisation.
+
+	* chrome/content/sogo-connector/general/preference.service.addressbook.groupdav.js:
+	added methods for saving and retrieving the ctag of ab collections.
+
+	* chrome/content/sogo-connector/general/implementors.addressbook.groupdav.js:
+	removed obsolete module.
+
+####### Ancestor
+======= end
 2009-04-06  Ludovic Marcotte <lmarcotte@inverse.ca>
 
         * Bumped version number to 0.93
