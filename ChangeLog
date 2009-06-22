@@ -1,3 +1,9 @@
+2009-06-22  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* chrome/content/inverse-library/sogoWebDAV.js: modified to
+	convert a result set returned as XML to a javascript structure of
+	objects.
+
 2009-06-10  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* chrome/content/sogo-connector/addressbook/addressbook.groupdav.overlay.js:

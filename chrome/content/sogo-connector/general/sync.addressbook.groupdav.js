@@ -280,7 +280,7 @@ GroupDavSynchronizer.prototype = {
 		var data = {query: "server-check-propfind"};
 		// 		dump("fillServerHashes (url): " + this.gURL + "\n");
 		var request = new sogoWebDAV(this.gURL, this, data);
-		request.propfind(["DAV: resourcetype", "http://calendarserver.org/ns/ getctag"], false);
+		request.propfind(["DAV: resourcetype", "DAV: supported-report-set", "http://calendarserver.org/ns/ getctag"], false);
 	},
  compareCardVersions: function() {
 		// 		dump("compareCardVersions\n");
@@ -676,57 +676,62 @@ GroupDavSynchronizer.prototype = {
 		
 		return href;
 	},
- onServerCheckComplete: function(status, response) {
+ onServerCheckComplete: function(status, jsonResponse) {
 		this.pendingOperations = 0;
-		dump("pendingOperations: " + this.pendingOperations + "\n");
- 		dump("status: " + status + "\n");
+// 		dump("pendingOperations: " + this.pendingOperations + "\n");
+//  		dump("status: " + status + "\n");
 //  		dump("response: " + response + "\n");
- 		dump("dump:" + dumpObject(response) + "\n");
+
+ 		dump("dump:" + dumpObject(jsonResponse) + "\n");
 		if (status > 199 && status < 400) {
-			for (var href in response) {
+      var responses = jsonResponse["multistatus"]["response"];
+			for (var i = 0; i < responses.length; i++) {
+        var href = responses[i]["href"][0];
  				dump("href: " + href + "\n");
-				// FIXME: 200 change
-				var davObject = response[href][200];
-				if (href[href.length-1] != '/')
-					href += '/';
+        var propstats = responses[i]["propstat"];
+        for (var j = 0; j < propstats.length; j++) {
+          if (propstats[j]["status"][0].indexOf("HTTP/1.1 200") == 0) {
+            if (href[href.length-1] != '/')
+              href += '/';
+            if (href != this.gURL)
+              href = this.cleanedUpHref(href);
 
-				if (href != this.gURL)
-					href = this.cleanedUpHref(href);
+            var prop = propstats[j]["prop"][0];
+            if (href == this.gURL) {
+              var rsrcType = prop["resourcetype"][0];
+              if (rsrcType["vcard-collection"]
+                  || rsrcType.indexOf["addressbook"]) {
+                this.validCollection = true;
+                var reportSet = prop["supported-report-set"][0]["report"];
+//                 dump("reportSet: " + dumpObject(reportSet) + "\n");
 
-				if (href == this.gURL) {
-					var rsrcType = [];
-					for (var k in davObject["resourcetype"])
-						rsrcType.push(k);
-//  					dump("rsrcType: " + rsrcType + "\n");
-					if (rsrcType.indexOf("vcard-collection") > 0
-							|| rsrcType.indexOf("addressbook") > 0) {
-						this.validCollection = true;
-
-						var newCTag = davObject["getctag"];
-						if (newCTag && newCTag == this.gCTag) {
-							dump("ctag matches or drop operation\n");
-							this.processUpdates();
-						}
-						else {
-							dump("ctag does not match\n");
-							this.updatesStatus = SOGOC_UPDATES_SERVERSIDE;
-							this.gNewCTag = newCTag;
-							var data = {query: "server-propfind"};
-							var request = new sogoWebDAV(this.gURL, this, data);
-							request.propfind(["DAV: getcontenttype", "DAV: getetag"]);
-						}
-					}
-					else {
-						this.validCollection = false;
-						this.context.requests[this.gURL] = null;
-						this.checkCallback();
-						dump("server '" + this.gURL
-								 + "' is not a valid groupdav collection");
-					}
-				} else {
-					dump("URLs don't match: " + href + " vs. " + this.gURL  + "\n");
-				}
-			}
+                var newCTag = prop["getctag"][0];
+                if (newCTag && newCTag == this.gCTag) {
+                  dump("ctag matches or drop operation\n");
+                  this.processUpdates();
+                }
+                else {
+                  dump("ctag does not match\n");
+                  this.updatesStatus = SOGOC_UPDATES_SERVERSIDE;
+                  this.gNewCTag = newCTag;
+                  var data = {query: "server-propfind"};
+                  var request = new sogoWebDAV(this.gURL, this, data);
+                  request.propfind(["DAV: getcontenttype", "DAV: getetag"]);
+                }
+              }
+              else {
+                this.validCollection = false;
+                this.context.requests[this.gURL] = null;
+                this.checkCallback();
+                dump("server '" + this.gURL
+                     + "' is not a valid groupdav collection");
+              }
+            } else {
+              dump("URLs don't match: " + href + " vs. " + this.gURL  + "\n");
+            }
+          }
+        }
+      }
 		}
 		else {
 			this.abort();
@@ -743,47 +748,52 @@ GroupDavSynchronizer.prototype = {
 		}
 		this.processCards();
 	},
- onServerHashQueryComplete: function(status, response) {
+ onServerHashQueryComplete: function(status, jsonResponse) {
     dump("onServerHashQueryComplete\n");
 		this.pendingOperations = 0;
 
-		if (response) {
+		if (jsonResponse) {
 			switch (status) {
 			case 207:
 			case 200: // Added to support Open-Xchange   
 			// 		logDebug("=========Begin Server Cards List, url is: " + this.gURL);
-
-				for (var href in response) {
-					// FIXME: 200 change
-					var davObject = response[href][200];
-					if (href != this.gURL) {
-						var contentType = davObject["getcontenttype"];
-						if (contentType.indexOf("text/x-vcard") == 0
-								|| contentType.indexOf("text/vcard") == 0) {
-							var version = davObject["getetag"];
-							var cNameArray = href.split("/");
-							var cName = cNameArray[cNameArray.length - 1];
-							this.serverCardVersionHash[cName] = version;
+        var responses = jsonResponse["multistatus"]["response"];
+        for (var i = 0; i < responses.length; i++) {
+          var href = responses[i]["href"][0];
+          var propstats = responses[i]["propstat"];
+          for (var j = 0; j < propstats.length; j++) {
+            if (propstats[j]["status"][0].indexOf("HTTP/1.1 200") == 0) {
+              var prop = propstats[j]["prop"][0];
+              if (href != this.gURL) {
+                var contType = prop["getcontenttype"][0];
+                if (contType == "text/x-vcard"
+                    || contType == "text/vcard") {
+                  var version = prop["getetag"][0];
+                  var cNameArray = href.split("/");
+                  var cName = cNameArray[cNameArray.length - 1];
+                  this.serverCardVersionHash[cName] = version;
 							// 						dump(cName + " is vcard\n");
 						//  				logDebug("\tServer Card key = " + cName + "\tversion = " + version);
-						}
-						else if (contentType.indexOf("text/x-vlist") == 0) {
-							var version = davObject["getetag"];
-							var cNameArray = href.split("/");
-							var cName = cNameArray[cNameArray.length - 1];
-							this.serverListVersionHash[cName] = version;
+                }
+                else if (contType == "text/x-vlist") {
+                  var version = prop["getetag"][0];
+                  var cNameArray = href.split("/");
+                  var cName = cNameArray[cNameArray.length - 1];
+                  this.serverListVersionHash[cName] = version;
 							//  				logDebug("\tServer Card key = " + cName + "\tversion = " + version);
 							// 						dump(cName + " is vlist\n");
-						}
-						else {
-							dump("unknown content-type: " + contentType + "(ignored)\n");
-						}
-					}
-				}
+                }
+                else {
+                  dump("unknown content-type: " + contType + "(ignored)\n");
+                }
+              }
+            }
+          }
+        }
 
-			// 		logDebug("=========End Server Cards List");
-				if (this.validCollection)
-					this.processUpdates();
+        // 		logDebug("=========End Server Cards List");
+        if (this.validCollection)
+          this.processUpdates();
 				break;
 			case 401:
 				this.checkCallback();
@@ -1067,28 +1077,35 @@ GroupDavSynchronizer.prototype = {
 			this.checkCallback();
 		}
 	},
- onServerFinalizeComplete: function(status, response) {
+ onServerFinalizeComplete: function(status, jsonResponse) {
 		if (status > 199 && status < 400) {
-			for (var href in response) {
-				// FIXME: 200 change
-				var davObject = response[href][200];
-				if (href[href.length-1] != '/')
-					href += '/';
+      var responses = jsonResponse["multistatus"]["response"];
+			for (var i = 0; i < responses.length; i++) {
+        var href = responses[i]["href"][0];
+ 				dump("href: " + href + "\n");
+        var propstats = responses[i]["propstat"];
+        for (var j = 0; j < propstats.length; j++) {
+          if (propstats[j]["status"][0].indexOf("HTTP/1.1 200") == 0) {
+            if (href[href.length-1] != '/')
+              href += '/';
+            if (href != this.gURL)
+              href = this.cleanedUpHref(href);
 
-				if (href != this.gURL)
-					href = this.cleanedUpHref(href);
+            var prop = propstats[j]["prop"][0];
+            if (href == this.gURL) {
+              var newCTag = prop["getctag"][0];
+              if (newCTag) {
+                var groupdavPrefService = this.prefService();
+                groupdavPrefService.setCTag(newCTag);
+              }
+            } else {
+              dump("URLs don't match: " + href + " vs. " + this.gURL + "\n");
+            }
+          }
+        }
+      }
 
-				if (href == this.gURL) {
-					var newCTag = davObject["getctag"];
-					if (newCTag) {
-						var groupdavPrefService = this.prefService();
-						groupdavPrefService.setCTag(newCTag);
-					}
-				} else {
-					dump("URLs don't match: " + href + " vs. " + this.gURL + "\n");
-				}
-			}
-			this.checkCallback();
+      this.checkCallback();
 		}
 		else {
 			this.abort();

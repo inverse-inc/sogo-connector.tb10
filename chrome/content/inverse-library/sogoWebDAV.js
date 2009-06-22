@@ -31,108 +31,42 @@ function backtrace(aDepth) {
 	return stack;
 }
 
-function multiStatusParser(doc) {
-	this.document = doc;
+function XMLToJSONParser(doc) {
+	this._buildTree(doc);
 }
 
-multiStatusParser.prototype = {
- document: null,
- responses: function() {
-		var responses = null;
-		if (this.document) {
-			responses = {};
-			var nodes = this._getNodes(this.document, "multistatus");
-			if (nodes && nodes.length > 0) {
-				nodes = this._getNodes(nodes[0], "response");
-				for (var i = 0; i < nodes.length; i++) {
-					var hrefNodes = this._getNodes(nodes[i], "href");
-					var href = this._parseNode(hrefNodes[0]);
-					var propstats = this._getPropstats(nodes[i]);
+XMLToJSONParser.prototype = {
+ _buildTree: function XMLToJSONParser_buildTree(doc) {
+		var nodeName = doc.documentElement.localName;
+		this[nodeName] = this._translateNode(doc.documentElement);
 
-					responses[href] = propstats;
-				}
-			}
-		}
-
-		return responses;
+// 		dump("Parsed XMLToJSON object: " + dumpObject(this) + "\n");
 	},
- _getNodes: function(topNode, tag) {
-		var nodes = new Array();
-
-		for (var i = 0; i < topNode.childNodes.length; i++) {
-			var currentNode = topNode.childNodes[i];
+ _translateNode: function XMLToJSONParser_translateNode(node) {
+		var textValue = "";
+		var dictValue = {};
+		for (var i = 0; i < node.childNodes.length; i++) {
+			var currentNode = node.childNodes[i];
+			var nodeName = currentNode.localName;
 			if (currentNode.nodeType
-					== Components.interfaces.nsIDOMNode.ELEMENT_NODE
-					&& currentNode.localName == tag)
-				nodes.push(currentNode);
-		}
-
-		// 		dump("returning " + nodes.length + " nodes for tag '" + tag + "'\n");
-
-		return nodes;
-	},
- _getPropstats: function(topNode) {
-		var propstats = {};
-		var nodes = this._getNodes(topNode, "propstat");
-		for (var i = 0; i < nodes.length; i++) {
-			var rawStatus = this._getNodes(nodes[i], "status")[0]
-				.childNodes[0].nodeValue;
-			var status = this._parseStatus("" + rawStatus);
-			var props = this._getProps(nodes[i]);
-			if (propstats[status])
-				for (var prop in props)
-					propstats[status][prop] = props[prop];
-			else
-				propstats[status] = props;
-		}
-
-		return propstats;
-	},
- _parseStatus: function(status) {
-		var code = -1;
-
-		if (status.indexOf("HTTP/1.1") == 0) {
-			var words = status.split(" ");
-			code = parseInt(words[1]);
-		}
-
-		return code;
-	},
- _getProps: function(topNode) {
-		var props = {};
-
-		var nodes = this._getNodes(topNode, "prop")[0].childNodes;
-		for (var i = 0; i < nodes.length; i++) {
-			if (nodes[i].nodeType == 1
-					== Components.interfaces.nsIDOMNode.ELEMENT_NODE)
-				props[nodes[i].localName] = this._parseNode(nodes[i]);
-		}
-
-		return props;
-	},
- _parseNode: function(node) {
-		var data;
-		if (node) {
-			data = true;
-			var nodes = node.childNodes;
-// 			dump("node: " + node.tagName + "; length: " + nodes.length + "\n");
-			if (nodes.length > 0) {
-				if (nodes[0].nodeType
-						== Components.interfaces.nsIDOMNode.ELEMENT_NODE) {
-					data = {};
-					for (var i = 0; i < nodes.length; i++)
-						data[nodes[i].localName] = this._parseNode(nodes[i]);
-				}
-				else
-					if (nodes[0].nodeType
-							== Components.interfaces.nsIDOMNode.TEXT_NODE)
-						data = nodes[0].nodeValue;
+					== Components.interfaces.nsIDOMNode.TEXT_NODE)
+				textValue += currentNode.nodeValue;
+			else if (currentNode.nodeType
+							 == Components.interfaces.nsIDOMNode.ELEMENT_NODE) {
+				var nodeValue = this._translateNode(currentNode);
+				if (!dictValue[nodeName])
+					dictValue[nodeName] = [];
+				dictValue[nodeName].push(nodeValue);
 			}
 		}
-		else
-			data = false;
 
-		return data;
+		var value;
+		if (textValue.length)
+			value = textValue;
+		else
+			value = dictValue;
+
+		return value;
 	}
 };
 
@@ -199,8 +133,8 @@ function onXMLRequestReadyStateChange(request) {
 					headers = _parseHeaders(request.getAllResponseHeaders());
 					if (request.method == "PROPPATCH"
 							|| request.method == "PROPFIND") {
-						var parser = new multiStatusParser(request.responseXML);
-						response = parser.responses();
+						var parser = new XMLToJSONParser(request.responseXML);
+						response = parser;
 					}
 					else
 						response = request.responseText;
