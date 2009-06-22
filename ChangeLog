@@ -4,6 +4,11 @@
 	convert a result set returned as XML to a javascript structure of
 	objects.
 
+2009-06-10  Francis Lachapelle  <flachapelle@inverse.ca>
+
+	* chrome/content/sogo-connector/general/vcards.utils.js: fixed the
+	telephone attribute mapping.
+
 2009-06-10  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* chrome/content/sogo-connector/addressbook/addressbook.groupdav.overlay.js:
