@@ -43,28 +43,31 @@ XMLToJSONParser.prototype = {
 // 		dump("Parsed XMLToJSON object: " + dumpObject(this) + "\n");
 	},
  _translateNode: function XMLToJSONParser_translateNode(node) {
-		var textValue = "";
-		var dictValue = {};
-		for (var i = 0; i < node.childNodes.length; i++) {
-			var currentNode = node.childNodes[i];
-			var nodeName = currentNode.localName;
-			if (currentNode.nodeType
-					== Components.interfaces.nsIDOMNode.TEXT_NODE)
-				textValue += currentNode.nodeValue;
-			else if (currentNode.nodeType
-							 == Components.interfaces.nsIDOMNode.ELEMENT_NODE) {
-				var nodeValue = this._translateNode(currentNode);
-				if (!dictValue[nodeName])
-					dictValue[nodeName] = [];
-				dictValue[nodeName].push(nodeValue);
-			}
-		}
+		var value = null;
 
-		var value;
-		if (textValue.length)
-			value = textValue;
-		else
-			value = dictValue;
+		if (node.childNodes.length) {
+			var textValue = "";
+			var dictValue = {};
+			for (var i = 0; i < node.childNodes.length; i++) {
+				var currentNode = node.childNodes[i];
+				var nodeName = currentNode.localName;
+				if (currentNode.nodeType
+						== Components.interfaces.nsIDOMNode.TEXT_NODE)
+					textValue += currentNode.nodeValue;
+				else if (currentNode.nodeType
+								 == Components.interfaces.nsIDOMNode.ELEMENT_NODE) {
+					var nodeValue = this._translateNode(currentNode);
+					if (!dictValue[nodeName])
+						dictValue[nodeName] = [];
+					dictValue[nodeName].push(nodeValue);
+				}
+			}
+
+			if (textValue.length)
+				value = textValue;
+			else
+				value = dictValue;
+		}
 
 		return value;
 	}
