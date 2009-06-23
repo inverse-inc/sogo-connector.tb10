@@ -38,7 +38,7 @@ function XMLToJSONParser(doc) {
 XMLToJSONParser.prototype = {
  _buildTree: function XMLToJSONParser_buildTree(doc) {
 		var nodeName = doc.documentElement.localName;
-		this[nodeName] = this._translateNode(doc.documentElement);
+		this[nodeName] = [this._translateNode(doc.documentElement)];
 
 // 		dump("Parsed XMLToJSON object: " + dumpObject(this) + "\n");
 	},

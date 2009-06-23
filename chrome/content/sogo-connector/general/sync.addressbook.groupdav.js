@@ -684,7 +684,7 @@ GroupDavSynchronizer.prototype = {
 
  		dump("dump:" + dumpObject(jsonResponse) + "\n");
 		if (status > 199 && status < 400) {
-      var responses = jsonResponse["multistatus"]["response"];
+      var responses = jsonResponse["multistatus"][0]["response"];
 			for (var i = 0; i < responses.length; i++) {
         var href = responses[i]["href"][0];
  				dump("href: " + href + "\n");
@@ -757,7 +757,7 @@ GroupDavSynchronizer.prototype = {
 			case 207:
 			case 200: // Added to support Open-Xchange   
 			// 		logDebug("=========Begin Server Cards List, url is: " + this.gURL);
-        var responses = jsonResponse["multistatus"]["response"];
+        var responses = jsonResponse["multistatus"][0]["response"];
         for (var i = 0; i < responses.length; i++) {
           var href = responses[i]["href"][0];
           var propstats = responses[i]["propstat"];
@@ -1079,7 +1079,7 @@ GroupDavSynchronizer.prototype = {
 	},
  onServerFinalizeComplete: function(status, jsonResponse) {
 		if (status > 199 && status < 400) {
-      var responses = jsonResponse["multistatus"]["response"];
+      var responses = jsonResponse["multistatus"][0]["response"];
 			for (var i = 0; i < responses.length; i++) {
         var href = responses[i]["href"][0];
  				dump("href: " + href + "\n");
