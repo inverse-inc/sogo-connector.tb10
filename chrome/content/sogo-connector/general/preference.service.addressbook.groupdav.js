@@ -126,6 +126,22 @@ GroupdavPreferenceService.prototype = {
 
 		return value;
 	},
+	_getPrefWithDefault: function(prefName, defaultValue) {
+		var value = defaultValue;
+
+// 		dump("getPref: " + this.prefPath + prefName + "\n");
+
+		try {
+			var newValue = this.mPreferencesService
+										 .getCharPref(this.prefPath + prefName);
+			if (newValue)
+				value = newValue;
+		}
+		catch(e) {}
+
+		return value;
+	},
+
 	_setPref: function(prefName, value) {
 // 		dump("setPref: " + this.prefPath + prefName + " to: " + value + "\n");
 		try {
@@ -226,19 +242,17 @@ GroupdavPreferenceService.prototype = {
 	},
 
 	getCTag: function() {
-		var cTag;
-		try {
-			cTag = this._getPref("ctag");
-			if (!cTag)
-				cTag = "";
-		}
-		catch(e) {
-			cTag = "";
-		}
-		return cTag;
+		return this._getPrefWithDefault("ctag", "");
 	},
 	setCTag: function(value) {
 		this._setPref("ctag", value);
+	},
+
+	getWebdavSyncToken: function() {
+		return this._getPrefWithDefault("sync-token", "");
+	},
+	setWebdavSyncToken: function(value) {
+		this._setPref("sync-token", value);
 	}
 };
 

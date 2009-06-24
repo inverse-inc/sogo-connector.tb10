@@ -134,8 +134,7 @@ function onXMLRequestReadyStateChange(request) {
 				}
 				else {
 					headers = _parseHeaders(request.getAllResponseHeaders());
-					if (request.method == "PROPPATCH"
-							|| request.method == "PROPFIND") {
+					if (request.client.requestJSONResponse) {
 						var parser = new XMLToJSONParser(request.responseXML);
 						response = parser;
 					}
@@ -162,6 +161,7 @@ function sogoWebDAV(url, target, data, asynchronous) {
   this.url = url;
   this.target = target;
   this.cbData = data;
+	this.requestJSONResponse = false;
   this.asynchronous = true; /* FIXME */
 }
 
@@ -257,6 +257,7 @@ sogoWebDAV.prototype = {
 		return query;
 	},
  propfind: function(props, deep) {
+		this.requestJSONResponse = true;
 		if (typeof deep == "undefined")
 			deep = true;
     this.load("PROPFIND", {props: props, deep: deep});
@@ -276,6 +277,7 @@ sogoWebDAV.prototype = {
 		this.load("POST", query);
   },
  proppatch: function(query) {
+		this.requestJSONResponse = true;
 		this.load("PROPPATCH", query);
 	}
 };

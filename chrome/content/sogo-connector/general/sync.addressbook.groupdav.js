@@ -101,25 +101,23 @@ GroupDavSynchronizer.prototype = {
  pendingOperations: -1,
  messengerWindow: null,
 
- serverCardVersionHash: null,
- serverCardDataHash: null,
- localCardAdditions: null,
  localCardPointerHash: null,
  localCardVersionHash: null,    // stores the version no of the local cards
-
- serverListVersionHash: null,
- serverListDataHash: null,
- localListAdditions: null,
  localListPointerHash: null,
  localListVersionHash: null,
 
- conflictHash: null,			// store keys of conflicts
+ serverDownloadsCount: 0,
+ serverDownloads: null,
+ serverDeletes: null,
 
  gURL: null,
  gDisplaySyncDialog: null,
  gSelectedDirectoryURI: null, // gAddressBook to synchronize
  gAddressBook: null,
  validCollection: false,     /* is addressbook a vcard-collection? */
+
+ hasWebdavSync: false,
+ webdavSyncToken: null,
 
  initGroupDAVContext: function() {
 		var handler = Components.classes['@inverse.ca/context-manager;1']
@@ -160,29 +158,20 @@ GroupDavSynchronizer.prototype = {
 		var groupdavPrefService = this.prefService();
 		this.gURL = groupdavPrefService.getURL();
 		this.gCTag = groupdavPrefService.getCTag();
+		this.webdavSyncToken = groupdavPrefService.getWebdavSyncToken();
 		this.gDisplaySyncDialog = groupdavPrefService.getDisplayDialog() == "true";
-	
-		// 		logDebug("function initSyncVariables()\n\t\t\turl:[" + this.gURL
-		// 						 + "] \n\t\t\thost:[" + groupdavPrefService.getHostName() +"]");
 
-		this.serverCardVersionHash = {};
 		this.localCardVersionHash = {};
-		this.serverListVersionHash = {};
 		this.localListVersionHash = {};
 
-		this.serverCardDataHash = {};
-		this.serverCardDataHash.size = 0;
-		this.serverListDataHash = {};
-		this.serverListDataHash.size = 0;
+    this.serverDownloadsCount = 0;
+    this.serverDownloads = {};
+    this.serverDeletes = [],
 
-		this.localCardAdditions = [];
-		this.localCardUpdates = [];
-		this.localListAdditions = [];
-		this.localListUpdates = [];
-		//	localDeleteHash = {};
-		//	localDeleteHash.size = 0;
-		//	serverDeleteHash.size = 0;
-		this.conflictHash = {};
+    this.localUploads = 0;
+		this.localCardUploads = {};
+		this.localListUploads = {};
+
 		this.localCardPointerHash = {};
 		this.localListPointerHash = {};
 
@@ -191,8 +180,7 @@ GroupDavSynchronizer.prototype = {
  // Fill the Local Directory data structures for the syncronization
  fillLocalCardHashes: function() {
 		// 		dump("fillLocalCardHashes\n");
-		var uploads = 0;
-
+    var uploads = 0;
 		var cards = SCGetChildCards(this.gAddressBook);
 		for (var i = 0; i < cards.length; i++) {
 			var card = cards[i].QueryInterface(Components.interfaces.nsIAbCard);
@@ -200,35 +188,33 @@ GroupDavSynchronizer.prototype = {
 			var key = mdbCard.getStringAttribute("groupDavKey");
 			if (key && key != "") {
 // 				dump("card '" + card.displayName + "' will be updated\n");
-				// Cards that exist locally and on the server
-				// Later, the function compareCardVersions() will use this information to determine 
-				// if the cards needs to be uploaded or if there is a conflict
 				this.localCardPointerHash[key] = card;
 				var version = mdbCard.getStringAttribute("groupDavVersion");
 				this.localCardVersionHash[key] = version;
 				if (version == "-1") {
-					this.serverCardVersionHash[key] = version;
-					this.localCardUpdates.push(this.localCardPointerHash[key]);
-					uploads++;
+					this.localCardUploads[key] = card;
+          uploads++;
 				}
 				// dump("xxxx localcard: " + key + "; version: " + version + "\n");
 			}
 			else {
 // 				dump("card '" + card.displayName + "' will be added\n");
 				//   				dump("xxxx local addition....\n");
-				this.localCardAdditions.push(card);
-				uploads++;
+				var key = new UUID() + ".vcf";
+				this.localCardUploads[key] = card;
+        uploads++;
 			}
 		}
 
-		if (uploads > 0)
+		if (uploads > 0) {
+      this.localUploads += uploads;
 			this.updatesStatus |= SOGOC_UPDATES_CLIENTSIDE;
-		//	logDebug("=========End Local Cards List");
+    }
 	},
  fillLocalListHashes: function() {
-		var uploads = 0;
 //  		dump("fillLocalListHashes\n");
 		var lists = this.gAddressBook.childNodes;
+    var uploads = 0;
 		var count = 0;
 		while (lists.hasMoreElements()) {
 			count++;
@@ -239,29 +225,31 @@ GroupDavSynchronizer.prototype = {
 				if (key) {
 					this.localListPointerHash[key] = list;
 					this.localListVersionHash[key] = attributes.version;
-// 					dump("found old list: " + key
-// 							 + "; version: " + attributes.version
-// 							 + "\n");
+					dump("found old list: " + key
+							 + "; version: " + attributes.version
+							 + "\n");
 					if (attributes.version == "-1") {
 						dump("list '" + list.dirName + "' will be updated (" + key + ")\n");
-						this.serverListVersionHash[key] = "-1";
-						this.localListUpdates.push(this.localListPointerHash[key]);
-						uploads++;
+						this.localListUploads[key] = list;
+            uploads++;
 					}
 				}
 				else {
  					dump("list '" + list.dirName + "' will be added\n");
-					this.localListAdditions.push(list);
-					uploads++;
+          var key = new UUID() + ".vlf"
+          this.localListUploads[key] = list;
+          uploads++;
 				}
 			}
 			else
 				dump("strange: " + list + " is not a list!?\n");
 		}
 		dump("found " + count + " list\n");
-
-		if (uploads > 0)
-			this.updatesStatus |= SOGOC_UPDATES_CLIENTSIDE;
+    
+		if (uploads > 0) {
+      this.localUploads += uploads;
+      this.updatesStatus |= SOGOC_UPDATES_CLIENTSIDE;
+    }
 	},
 
  /***********************************************************
@@ -280,88 +268,55 @@ GroupDavSynchronizer.prototype = {
 		var data = {query: "server-check-propfind"};
 		// 		dump("fillServerHashes (url): " + this.gURL + "\n");
 		var request = new sogoWebDAV(this.gURL, this, data);
-		request.propfind(["DAV: resourcetype", "DAV: supported-report-set", "http://calendarserver.org/ns/ getctag"], false);
-	},
- compareCardVersions: function() {
-		// 		dump("compareCardVersions\n");
-		for (var key in this.serverCardVersionHash) {
-			// 			dump("comparing key '" + key + "', local: " + this.localCardVersionHash[key]
-			// 					 + "; server: " + this.serverCardVersionHash[key] + "\n");
-			var serverVersion = this.serverCardVersionHash[key];
-			var localVersion = 0;
-			if (typeof(this.localCardVersionHash[key]) != "undefined")
-				localVersion = this.localCardVersionHash[key];
-
-			if (localVersion != serverVersion
-					&& localVersion != "-1") {
-				this.serverCardDataHash[key] = "";
-				this.serverCardDataHash.size++;
-			}
-		}
-	},
- compareListVersions: function() {
-		// 		dump("compareListVersions\n");
-		for (var key in this.serverListVersionHash) {
-			// 			dump("comparing key '" + key + "', local: " + this.localCardVersionHash[key]
-			// 					 + "; server: " + this.serverCardVersionHash[key] + "\n");
-			var serverVersion = this.serverListVersionHash[key];
-			var localVersion = 0;
-			if (typeof(this.localListVersionHash[key]) != "undefined")
-				localVersion = this.localListVersionHash[key];
-
-			if (localVersion != serverVersion
-					&& localVersion != "-1") {
-				this.serverListDataHash[key] = "";
-				this.serverListDataHash.size++;
-			}
-		}
+		request.propfind(["DAV: resourcetype", "DAV: supported-report-set",
+                      "http://calendarserver.org/ns/ getctag"], false);
 	},
  downloadVcards: function() {
 		dump("downloadVcards\n");
 		this.remainingDownloads = 0;
-		if (this.serverCardDataHash.size > 0) {
-			for (var key in this.serverCardDataHash)
-				if (key != "size")
-					this.downloadVcardAsync(key);
-		}
-		else {
+    var hasDownloads = false;
+
+    for (var key in this.serverDownloads) {
+      var itemDict = this.serverDownloads[key];
+      if (itemDict.type == "text/x-vcard"
+          || itemDict.type == "text/vcard") {
+        hasDownloads = true;
+        var fileUrl = this.gURL + key;
+        var data = {query: "vcard-download", data: key};
+        this.remainingDownloads++;
+        var request = new sogoWebDAV(fileUrl, this, data);
+        request.get();
+      }
+    }
+
+    if (!hasDownloads) {
 			this.pendingOperations--;
 			//  			dump("decreasing 1 pendingOperations...\n");
 			this.checkCallback();
 		}
 	},
- // Downloads asyncronously a vcard from the GroupDAV server and stores it in serverCardDataHash
- downloadVcardAsync: function(key) {
-		var fileUrl = this.gURL + key;
-		var data = {query: "vcard-download",
-								data: key};
-		this.remainingDownloads++;
-		var request = new sogoWebDAV(fileUrl, this, data);
-		request.get();
-	},
  downloadLists: function() {
- 		dump("downloadLists\n");
+		dump("downloadLists\n");
 		this.remainingDownloads = 0;
-		if (this.serverListDataHash.size > 0) {
-			for (var key in this.serverListDataHash)
-				if (key != "size")
-					this.downloadListAsync(key);
-		}
-		else {
+    var hasDownloads = false;
+
+    for (var key in this.serverDownloads) {
+      var itemDict = this.serverDownloads[key];
+      if (itemDict.type == "text/x-vlist") {
+        hasDownloads = true;
+        var fileUrl = this.gURL + key;
+        var data = {query: "vcard-download", data: key};
+        this.remainingDownloads++;
+        var request = new sogoWebDAV(fileUrl, this, data);
+        request.get();
+      }
+    }
+
+    if (!hasDownloads) {
 			this.pendingOperations--;
-			//  			dump("decreasing 2 pendingOperations...\n");
+			//  			dump("decreasing 1 pendingOperations...\n");
 			this.checkCallback();
 		}
-	},
- // Downloads asyncronously a vcard from the GroupDAV server and stores it in serverCardDataHash
- downloadListAsync: function(key) {
-		dump("downloadListAsync: " + key + "\n");
-		var fileUrl = this.gURL + key;
-		var data = {query: "list-download",
-								data: key};
-		this.remainingDownloads++;
-		var request = new sogoWebDAV(fileUrl, this, data);
-		request.get();
 	},
  onDAVQueryComplete: function(status, response, headers, data) {
 		this.callbackCode = status;
@@ -374,6 +329,8 @@ GroupDavSynchronizer.prototype = {
 			this.onServerCheckComplete(status, response);
 		else if (data.query == "server-propfind")
 			this.onServerHashQueryComplete(status, response);
+		else if (data.query == "server-sync-query")
+			this.onServerSyncQueryComplete(status, response);
 		else if (data.query == "card-upload")
 			this.onCardUploadComplete(status, response, data.key, data.data, headers);
 		else if (data.query == "list-upload")
@@ -403,11 +360,8 @@ GroupDavSynchronizer.prototype = {
 		this.progressMgr.updateAddressBook(this.gURL);
 		if (Components.isSuccessCode(status)
 				&& data
-				&& (data.toLowerCase().indexOf("begin:vcard") == 0)) {
-			// 			logInfo("download data: " + data);
-			this.serverCardDataHash[key] = data;
+				&& (data.toLowerCase().indexOf("begin:vcard") == 0))
 			this.importCard(key, data);
-		}
 		else
 			this.appendFailure(status, key);
 
@@ -423,11 +377,8 @@ GroupDavSynchronizer.prototype = {
 		this.progressMgr.updateAddressBook(this.gURL);
 		if (Components.isSuccessCode(status)
 				&& data
-				&& (data.toLowerCase().indexOf("begin:vlist") == 0)) {
-			// 			logInfo("download data: " + data);
-			this.serverListDataHash[key] = data;
+				&& (data.toLowerCase().indexOf("begin:vlist") == 0))
 			this.importList(key, data);
-		}
 		else
 			this.appendFailure(status, key);
 		if (this.remainingDownloads == 0) {
@@ -455,7 +406,6 @@ GroupDavSynchronizer.prototype = {
 				}
 				mdbCard.setStringAttribute("groupDavVersion", etag);
 				mdbCard.editCardToDatabase(this.gSelectedDirectoryURI);
-				this.serverCardVersionHash[key] = etag;
 			}
 			else
 				dump("No etag returned for vcard uploaded at " + cardURL + ", ignored\n");
@@ -495,22 +445,20 @@ GroupDavSynchronizer.prototype = {
 		var vcardFieldsArray = {};  //To handle fbURL from SOGo(freebusy) and vcards fields that have no equivalent in Thunderbird.
 		vcardFieldsArray["groupDavVcardCompatibility"] = "";
 
-		if (!this.serverCardVersionHash[key]) {
+		if (!this.serverDownloads[key]) {
 			var string = ("Missing card key '" + key + "' from hash"
-										+ " 'this.serverCardVersionHash'.\n"
+										+ " 'this.serverDownloads'.\n"
 										+ "Valid keys are:\n");
-			for (var validKey in this.serverCardVersionHash)
+			for (var validKey in this.serverDownloads)
 				string += "  " + validKey;
 			throw string;
 		}
 
 		var card = importFromVcard(data, vcardFieldsArray);
 		var savedCard;
-		// 		logDebug("groupDavVcardCompatibility value:\n" + vcardFieldsArray["groupDavVcardCompatibility"]);
 		card.setStringAttribute("groupDavKey", key);
 		card.setStringAttribute("groupDavVersion",
-														this.serverCardVersionHash[key]);
-		// 			logInfo("vcardFieldsArray: " + dumpObject(vcardFieldsArray));
+														this.serverDownloads[key].etag);
 		card.setStringAttribute("calFBURL", vcardFieldsArray["fburl"]);
 		card.setStringAttribute("groupDavVcardCompatibility",
 														vcardFieldsArray["groupDavVcardCompatibility"]);
@@ -540,28 +488,20 @@ GroupDavSynchronizer.prototype = {
 			.QueryInterface(Components.interfaces.nsIAbMDBCard);
 			this.localCardPointerHash[key] = savedCard;
 		}
+    /* TODO: remove this? */
 		savedCard.setStringAttribute("groupDavKey", key);
 		savedCard.setStringAttribute("groupDavVersion",
-																 this.serverCardVersionHash[key]);
-		// 			logInfo("vcardFieldsArray: " + dumpObject(vcardFieldsArray));
+																 this.serverDownloads[key].etag);
 		savedCard.setStringAttribute("calFBURL", vcardFieldsArray["fburl"]);
 		savedCard.setStringAttribute("groupDavVcardCompatibility",
 																 vcardFieldsArray["groupDavVcardCompatibility"]);
+
 		savedCard.editCardToDatabase(this.gSelectedDirectoryURI);
-		// 			savedCard.setStringAttribute("groupDavVersion",
-		// 																	 this.serverCardVersionHash[key]);
-		// 			savedCard.setStringAttribute("groupDavKey", key);
-		// 			savedCard.editCardToDatabase(this.gSelectedDirectoryURI);
-		// 			.QueryInterface(Components.interfaces.nsIAbMDBCard);
-		// 			savedCard.editCardToDatabase(this.gSelectedDirectoryURI);
 		// 			dump("new test: "
 		// 					 + savedCard.getStringAttribute("groupDavKey")
 		// 					 + "; server key: " + key + "\n");
 		// 			dump("version: " + savedCard.getStringAttribute("groupDavVersion") + "\n");
 		// 		}
-
-		// 		logDebug("importFromVcard() completed");
-		// 		logDebug("//TODO: do a propfind to make sure the version no. (etag) has not changed.");
 	},
  getLastMailingList: function() {
 		var last = null;
@@ -573,11 +513,11 @@ GroupDavSynchronizer.prototype = {
 		return last;
 	},
  importList: function(key, data) {
-		if (!this.serverListVersionHash[key]) {
+		if (!this.serverDownloads[key]) {
 			var string = ("Missing list key '" + key + "' from hash"
-										+ " 'this.serverListVersionHash'.\n"
+										+ " 'this.serverDownloads'.\n"
 										+ "Valid keys are:\n");
-			for (var validKey in this.serverListVersionHash)
+			for (var validKey in this.serverDownloads)
 				string += "  " + validKey;
 			throw string;
 		}
@@ -600,12 +540,13 @@ GroupDavSynchronizer.prototype = {
 			list = this.getLastMailingList();
 			listCards = [];
 		}
-		var listUpdated = updateListFromVList(list, data, this.localCardPointerHash);
+		var listUpdated = updateListFromVList(list, data,
+                                          this.localCardPointerHash);
 
 		var attributes = new GroupDAVListAttributes(list);
 		if (isNew)
 			attributes.key = key;
-		attributes.version = (listUpdated ? "-1" : this.serverListVersionHash[key]);
+		attributes.version = (listUpdated ? "-1" : this.serverDownloads[key].etag);
 	},
  onListUploadComplete: function(status, data, key, list, headers) {
 		var listURL = this.gURL + key;
@@ -619,7 +560,6 @@ GroupDavSynchronizer.prototype = {
 				if (isNew)
 					attributes.key = key;
 				attributes.version = etag;
-				this.serverListVersionHash[key] = etag;
 			}
 			else
 				dump("No etag returned for vlist uploaded at " + listURL + ", ignored\n");
@@ -673,8 +613,8 @@ GroupDavSynchronizer.prototype = {
 		}
 
 		dump("Cleaned up href: " + href + "\n");
-		
-		return href;
+
+    return href;
 	},
  onServerCheckComplete: function(status, jsonResponse) {
 		this.pendingOperations = 0;
@@ -682,41 +622,48 @@ GroupDavSynchronizer.prototype = {
 //  		dump("status: " + status + "\n");
 //  		dump("response: " + response + "\n");
 
- 		dump("dump:" + dumpObject(jsonResponse) + "\n");
 		if (status > 199 && status < 400) {
       var responses = jsonResponse["multistatus"][0]["response"];
-			for (var i = 0; i < responses.length; i++) {
-        var href = responses[i]["href"][0];
- 				dump("href: " + href + "\n");
-        var propstats = responses[i]["propstat"];
-        for (var j = 0; j < propstats.length; j++) {
-          if (propstats[j]["status"][0].indexOf("HTTP/1.1 200") == 0) {
+      for each (var response in responses) {
+        var href = response["href"][0];
+        var propstats = response["propstat"];
+        for each (var propstat in propstats) {
+          if (propstat["status"][0].indexOf("HTTP/1.1 200") == 0) {
             if (href[href.length-1] != '/')
               href += '/';
             if (href != this.gURL)
               href = this.cleanedUpHref(href);
 
-            var prop = propstats[j]["prop"][0];
+            var prop = propstat["prop"][0];
             if (href == this.gURL) {
               var rsrcType = prop["resourcetype"][0];
               if (rsrcType["vcard-collection"]
                   || rsrcType.indexOf["addressbook"]) {
                 this.validCollection = true;
-                var reportSet = prop["supported-report-set"][0]["report"];
-//                 dump("reportSet: " + dumpObject(reportSet) + "\n");
+
+                var reports = prop["supported-report-set"][0]["report"];
+                var i = 0;
+                while (!this.hasWebdavSync && i < reports.length) {
+                  if (reports[i]["sync-collection"])
+                    this.hasWebdavSync = true;
+                  else
+                    i++;
+                }
+
+                /* we "load" the local card keys and etags here */
+                this.fillLocalCardHashes();
+                this.fillLocalListHashes();
 
                 var newCTag = prop["getctag"][0];
                 if (newCTag && newCTag == this.gCTag) {
                   dump("ctag matches or drop operation\n");
-                  this.processUpdates();
+                  this.processCards();
                 }
                 else {
                   dump("ctag does not match\n");
                   this.updatesStatus = SOGOC_UPDATES_SERVERSIDE;
-                  this.gNewCTag = newCTag;
-                  var data = {query: "server-propfind"};
-                  var request = new sogoWebDAV(this.gURL, this, data);
-                  request.propfind(["DAV: getcontenttype", "DAV: getetag"]);
+                  this.newCTag = newCTag;
+                  this.checkServerUpdates();
                 }
               }
               else {
@@ -737,51 +684,76 @@ GroupDavSynchronizer.prototype = {
 			this.abort();
 		}
 	},
- processUpdates: function() {
-    dump("processUpdates\n");
-		this.fillLocalCardHashes();
-		this.fillLocalListHashes();
-		if ((this.updatesStatus & SOGOC_UPDATES_SERVERSIDE)) {
-      dump("has server side updates\n");
-			this.compareCardVersions();
-			this.compareListVersions();
-		}
-		this.processCards();
-	},
+ checkServerUpdates: function() {
+    if (this.hasWebdavSync) {
+      var syncQuery = ('<?xml version="1.0"?>'
+                       + '<sync-collection xmlns="DAV:">'
+                       + ((this.webdavSyncToken.length)
+                          ? ('<sync-token>'
+                             + this.webdavSyncToken
+                             + '</sync-token>')
+                          : '<sync-token/>')
+                       + '<prop><getetag/><getcontenttype/></prop>'
+                       + '</sync-collection>');
+      var data = {query: "server-sync-query"};
+      var request = new sogoWebDAV(this.gURL, this, data);
+      request.requestJSONResponse = true;
+      request.report(syncQuery, true);
+    }
+    else {
+      var data = {query: "server-propfind"};
+      var request = new sogoWebDAV(this.gURL, this, data);
+      request.propfind(["DAV: getcontenttype", "DAV: getetag"]);
+    }
+  },
  onServerHashQueryComplete: function(status, jsonResponse) {
     dump("onServerHashQueryComplete\n");
 		this.pendingOperations = 0;
 
+    var reportedKeys = {};
+
 		if (jsonResponse) {
-			switch (status) {
-			case 207:
-			case 200: // Added to support Open-Xchange   
-			// 		logDebug("=========Begin Server Cards List, url is: " + this.gURL);
+      if (status > 199 && status < 400) {
         var responses = jsonResponse["multistatus"][0]["response"];
-        for (var i = 0; i < responses.length; i++) {
-          var href = responses[i]["href"][0];
-          var propstats = responses[i]["propstat"];
-          for (var j = 0; j < propstats.length; j++) {
-            if (propstats[j]["status"][0].indexOf("HTTP/1.1 200") == 0) {
-              var prop = propstats[j]["prop"][0];
+        for each (var response in responses) {
+          var href = response["href"][0];
+          var propstats = response["propstat"];
+          for each (var propstat in propstats) {
+            if (propstat["status"][0].indexOf("HTTP/1.1 200") == 0) {
+              var prop = propstat["prop"][0];
               if (href != this.gURL) {
                 var contType = prop["getcontenttype"][0];
                 if (contType == "text/x-vcard"
-                    || contType == "text/vcard") {
+                    || contType == "text/vcard"
+                    || contType == "text/x-vlist") {
+							// 						dump(key + " is vcard\n");
                   var version = prop["getetag"][0];
-                  var cNameArray = href.split("/");
-                  var cName = cNameArray[cNameArray.length - 1];
-                  this.serverCardVersionHash[cName] = version;
-							// 						dump(cName + " is vcard\n");
-						//  				logDebug("\tServer Card key = " + cName + "\tversion = " + version);
-                }
-                else if (contType == "text/x-vlist") {
-                  var version = prop["getetag"][0];
-                  var cNameArray = href.split("/");
-                  var cName = cNameArray[cNameArray.length - 1];
-                  this.serverListVersionHash[cName] = version;
-							//  				logDebug("\tServer Card key = " + cName + "\tversion = " + version);
-							// 						dump(cName + " is vlist\n");
+                  var keyArray = href.split("/");
+                  var key = keyArray[keyArray.length - 1];
+
+                  reportedKeys[key] = true;
+
+                  var itemDict = { etag: version, type: contType };
+                  if (this.localCardPointerHash[key]
+                      || this.localListPointerHash[key]) {
+                    var localVersion = this.localCardVersionHash[key];
+                    if (!localVersion)
+                      localVersion = this.localListVersionHash[key];
+                    /* the local version has precedence over server */
+                    dump("[sogo-connector] local version: " + localVersion
+                         + "\n");
+                    if (localVersion != "-1" && localVersion != version) {
+                      dump("  added to downloads\n");
+                      this.serverDownloads[key] = itemDict;
+                      this.serverDownloadsCount++;
+                    }
+                  }
+                  else {
+                    dump("[sogo-connector] new card added to downloads: " +
+                         key + "\n");
+                    this.serverDownloads[key] = itemDict;
+                    this.serverDownloadsCount++;
+                  }
                 }
                 else {
                   dump("unknown content-type: " + contType + "(ignored)\n");
@@ -791,39 +763,122 @@ GroupDavSynchronizer.prototype = {
           }
         }
 
-        // 		logDebug("=========End Server Cards List");
-        if (this.validCollection)
-          this.processUpdates();
-				break;
-			case 401:
-				this.checkCallback();
-				logWarn("Warning!\n\n You either pressed Cancel instead of providing user and password or the server responded 401 for another reason.");
-			//return;
-				break;
-
-			case 403:
-				this.checkCallback();
-				var msg = "Authentification failed or the user does not have permission to access the specified Address Book.\n\n  You will have to restart Thunderbird to authenticate again!";
-				alert(msg);
-				logWarn(msg);
-				//return;
-				break;
-
-			default:
+        if (this.validCollection) {
+          /* all keys that were not reported and that were not "modified",
+             must be deleted. */
+          for (var key in this.localCardVersionHash) {
+            var localVersion = this.localCardVersionHash[key];
+            if (localVersion != "-1" && !reportedKeys[key])
+              this.serverDeletes.push(key);
+          }
+          for (var key in this.localListVersionHash) {
+            var localVersion = this.localListVersionHash[key];
+            if (localVersion != "-1" && !reportedKeys[key])
+              this.serverDeletes.push(key);
+          }
+          this.processCards();
+        }
+      }
+      else
 				this.abort();
-			}
 		}
 		else
 			dump("onServerHashQueryComlete: the server returned an empty response\n");
 	},
+
+ onServerSyncQueryComplete: function(status, jsonResponse) {
+    dump("onServerSyncQueryComplete\n");
+		this.pendingOperations = 0;
+
+		if (jsonResponse) {
+      if (status > 199 && status < 400) {
+        this.newWebdavSyncToken
+          = jsonResponse["multistatus"][0]["sync-token"][0];
+        var responses = jsonResponse["multistatus"][0]["sync-response"];
+        for each (var response in responses) {
+          var href = response["href"][0];
+          var keyArray = href.split("/");
+          var key = keyArray[keyArray.length - 1];
+
+          var itemStatus = response["status"][0].substr(9, 3);
+          if (itemStatus == "200" || itemStatus == "201") {
+            var propstats = response["propstat"];
+            for each (var propstat in propstats) {
+              var propStatus = propstat["status"][0].substr(9, 3);
+              if (propStatus == "200") {
+                var prop = propstat["prop"][0];
+                if (href != this.gURL) {
+                  var contType = prop["getcontenttype"][0];
+                  if (contType == "text/x-vcard"
+                      || contType == "text/vcard"
+                      || contType == "text/x-vlist") {
+                    var version = prop["getetag"][0];
+                    var itemDict = { etag: version, type: contType };
+                    dump("item: " + key + "; etag: " + version + "; type: "
+                         + contType + "\n");
+                    if (itemStatus == "201") {
+                      /* we won't download "new" cards if we already have them,
+                         otherwise we will end up with duplicated instances. */
+                      if (!(this.localCardPointerHash[key]
+                            || this.localListPointerHash[key])) {
+                        this.serverDownloads[key] = itemDict;
+                        this.serverDownloadsCount++;
+                      }
+                    }
+                    else {
+                      var localVersion = this.localCardVersionHash[key];
+                      if (!localVersion)
+                        localVersion = this.localListVersionHash[key];
+                      if (localVersion) {
+                        /* If the local version already matches the server
+                           version, we skip its update. */
+                        dump("[sogo-connector] local version: " + localVersion
+                             + "\n");
+                        if (localVersion != "-1" && localVersion != version) {
+                          dump("  added to downloads\n");
+                          this.serverDownloads[key] = itemDict;
+                          this.serverDownloadsCount++;
+                        }
+                      }
+                      else {
+                        /* If the local version of the card doesn't even
+                           exist, which should never happen, we download the card
+                           anew. */
+                        this.serverDownloads[key] = itemDict;
+                        this.serverDownloadsCount++;
+                        dump("[sogo-connector] a card considered updated"
+                             + " was not found locally.\n");
+                      }
+                    }
+                  }
+                  else
+                    dump("unknown content-type: " + contType + "(ignored)\n");
+                }
+              }
+            }
+          }
+          else if (itemStatus == "404") {
+            if (this.localCardPointerHash[key]
+                || this.localListPointerHash[key])
+              this.serverDeletes.push(key);
+          }
+        }
+
+        if (this.validCollection)
+          this.processCards();
+      }
+      else
+				this.abort();
+		}
+		else
+			dump("onServerHashQueryComlete: the server returned an empty response\n");
+	},
+
  processCards: function() {
 		dump("processCards...\n");
-		var total = (this.localCardAdditions.length
-								 + this.localCardUpdates.length
-								 + this.localListAdditions.length
-								 + this.localListUpdates.length
-								 + this.serverCardDataHash.size
-								 + this.serverListDataHash.size);
+    var total = (this.localUploads
+                 + this.serverDownloadsCount
+                 + this.serverDeletes.length);
 		if (total > 0)
 			this.progressMgr.registerAddressBook(this.gURL, total);
 
@@ -844,6 +899,37 @@ GroupDavSynchronizer.prototype = {
 		else
 			this.checkCallback();
 	},
+ uploadCards: function() {
+		dump("uploadCards\n");
+		this.remainingUploads = 0;
+
+    for (var key in this.localCardUploads) {
+      var card = this.localCardUploads[key]
+                 .QueryInterface(Components.interfaces.nsIAbCard);
+      var mdbCard = card.QueryInterface(Components.interfaces.nsIAbMDBCard);
+      var vcard = card2vcard(card);
+      if (vcard) {
+        var cardURL = this.gURL + key;
+        var data = {query: "card-upload", data: card, key: key};
+        dump("upload new/updated card: " + cardURL + "\n");
+        this.remainingUploads++;
+        var request = new sogoWebDAV(cardURL, this, data);
+        request.put(vcard, "text/x-vcard; charset=utf-8");
+      }
+      else {
+        dump("new vcard could not be generated for update\n");
+        this.progressMgr.updateAddressBook(this.gURL);
+      }
+		}
+
+		if (this.remainingUploads == 0) {
+			this.commitAddrDB();
+			this.pendingOperations--;
+			//  			dump("decreasing 11 pendingOperations...\n");
+			this.checkCallback();
+		}
+	},
+
  processLists: function() {
     dump("processLists\n");
 		if (this.updatesStatus == SOGOC_UPDATES_CLIENTSIDE) {
@@ -861,86 +947,27 @@ GroupDavSynchronizer.prototype = {
 		else
 			this.checkCallback();
 	},
- uploadCards: function() {
-		dump("uploadCards\n");
+ uploadLists: function() {
+		// 		dump("uploadLists\n");
 		this.remainingUploads = 0;
-		if (this.localCardUpdates.length
-				+ this.localCardAdditions.length > 0) {
-			this.uploadLocalCardAdditions(); //asyncronuous
-			this.uploadLocalCardUpdates(); // asyncronuous
-		}
-		// 		else {
-		// 			this.pendingOperations--;
-		// 			dump("decreasing 10 pendingOperations...\n");
-		// 			this.checkCallback();
-		// 		}
 
-		if (this.remainingUploads == 0) {
-			this.commitAddrDB();
-			this.pendingOperations--;
-			//  			dump("decreasing 11 pendingOperations...\n");
-			this.checkCallback();
-		}
-	},
- /* FIXME: the two next methods share some code that probably could be put in
-		a common intermediary method */
- uploadLocalCardAdditions: function() {
-		// 		dump("uploadLocalCardAdditions\n");
-		this.remainingUploads += this.localCardAdditions.length;
-		for (var i = 0; i < this.localCardAdditions.length; i++) {
-			var vcard = card2vcard(this.localCardAdditions[i]);
-			if (vcard) {
-				var key = new UUID() + ".vcf";
-				var cardURL = this.gURL + key;
-				var data = {query: "card-upload",
-										data: this.localCardAdditions[i],
+    for (var key in this.localListUploads) {
+			var vlist = list2vlist(key, this.localListUploads[key]);
+			if (vlist) {
+				var listURL = this.gURL + key;
+				dump("upload updated list: " + listURL + "\n");
+				var data = {query: "list-upload",
+										data: this.localListUploads[key],
 										key: key};
-				dump("upload new card: " + cardURL + "\n");
-				var request = new sogoWebDAV(cardURL, this, data);
-				request.put(vcard, "text/x-vcard; charset=utf-8");
-			}
-			else {
- 				dump("new vcard could not be generated\n");
-				this.progressMgr.updateAddressBook(this.gURL);
-				this.remainingUploads--;
-			}
-		}
-	},
- uploadLocalCardUpdates: function() {
-		// 		dump("uploadLocalCardUpdates\n");
-		this.remainingUploads += this.localCardUpdates.length;
-		for (var i = 0; i < this.localCardUpdates.length; i++) {
-			var card = this.localCardUpdates[i];
-			var mdbCard = card.QueryInterface(Components.interfaces.nsIAbMDBCard);
-			var vcard = card2vcard(card);
-			if (vcard) {
-				var key = mdbCard.getStringAttribute("groupDavKey");
-				var cardURL = this.gURL + key;
-				var data = {query: "card-upload", data: card, key: key};
-				dump("upload updated card: " + cardURL + "\n");
-				var request = new sogoWebDAV(cardURL, this, data);
-				request.put(vcard, "text/x-vcard; charset=utf-8");
+        this.remainingUploads++;
+				var request = new sogoWebDAV(listURL, this, data);
+				request.put(vlist, "text/x-vlist; charset=utf-8");
 			}
 			else {
  				dump("new vcard could not be generated for update\n");
 				this.progressMgr.updateAddressBook(this.gURL);
-				this.remainingUploads--;
 			}
 		}
-	},
- uploadLists: function() {
-		// 		dump("uploadLists\n");
-		this.remainingUploads = 0;
-		if (this.localListUpdates.length
-				+ this.localListAdditions.length > 0) {
-			this.uploadLocalListAdditions(); //asyncronuous
-			this.uploadLocalListUpdates(); // asyncronuous
-		}
-		// 		else {
-		// 			this.pendingOperations--;
-		// 			dump("decreasing 12 pendingOperations...\n");
-		// 			this.checkCallback();
-		// 		}
 
 		if (this.remainingUploads == 0) {
 			this.pendingOperations--;
@@ -948,80 +975,15 @@ GroupDavSynchronizer.prototype = {
 			this.checkCallback();
 		}
 	},
- /* FIXME: the two next methods share some code that probably could be put in
-		a common intermediary method */
- uploadLocalListAdditions: function() {
-		// 		dump("uploadLocalCardAdditions\n");
-		this.remainingUploads += this.localListAdditions.length;
-		dump("uploading " + this.localListAdditions.length + " new lists\n");
-		for (var i = 0; i < this.localListAdditions.length; i++) {
-			var key = new UUID() + ".vlf"
-			var vlist = list2vlist(key, this.localListAdditions[i]);
-			if (vlist) {
-				var listURL = this.gURL + key;
-				var data = {query: "list-upload",
-										data: this.localListAdditions[i],
-										key: key};
-				dump("upload new list: " + listURL + "\n");
-				var request = new sogoWebDAV(listURL, this, data);
-				request.put(vlist, "text/x-vlist; charset=utf-8");
-			}
-			else {
- 				dump("new vlist could not be generated\n");
-				this.progressMgr.updateAddressBook(this.gURL);
-				this.remainingUploads--;
-			}
-		}
-		dump("\n\n\n");
-	},
- uploadLocalListUpdates: function() {
-		// 		dump("uploadLocalCardUpdates\n");
-		this.remainingUploads += this.localListUpdates.length;
-		dump("uploading " + this.localListUpdates.length + " updated lists\n");
-		for (var i = 0; i < this.localListUpdates.length; i++) {
-			var attributes = new GroupDAVListAttributes(this.localListUpdates[i]);
-			var key = attributes.key;
-			var vlist = list2vlist(key, this.localListUpdates[i]);
-			if (vlist) {
-				var listURL = this.gURL + key;
-				var data = {query: "list-upload",
-										data: this.localListUpdates[i],
-										key: key};
-				dump("upload updated list: " + listURL + "\n");
-				var request = new sogoWebDAV(listURL, this, data);
-				request.put(vlist, "text/x-vlist; charset=utf-8");
-			}
-			else {
- 				dump("new vcard could not be generated for update\n");
-				this.progressMgr.updateAddressBook(this.gURL);
-				this.remainingUploads--;
-			}
-		}
-		dump("\n\n\n");
-	},
- //  processConflicts: function() {
- // // 		dump("processConflicts\n");
- // // 		for (var key in this.conflictHash) {
- // // 			importFromVcard(this.serverCardDataHash[key], key, this.serverCardVersionHash[key],
- // // 											this.gSelectedDirectoryURI);
- // // 			//this.gAddressBook.dropCard(this.localCardPointerHash[key],false);
- // // 		}
- // 		this.processDeletes();
- // 		logWarn("TODO:\tCurrently, conflicts are simply overwritten by the server version.\n\t\t\t\t\t\t\tDeletes on the server are simply ignored at this point.");
- // 		this.pendingOperations--;
- // 		this.checkCallback();
- // 	},
+
  processCardDeletes: function() {
 		dump("processCardDeletes\n");
 		var deletes = [];
-		// 		var deleteListStringForTestPurposes = "";
-		//Filling the Server deleted cards Hash
-		for (var key in this.localCardPointerHash) {
-			if (key != "size"
-					&& this.serverCardVersionHash[key] == null)
-				deletes.push(key);
-		}
 		//	if (groupdavPrefService.getAutoDeleteFromServer()){
+    for each (var key in this.serverDeletes) {
+      if (this.localCardPointerHash[key])
+        deletes.push(key);
+    }
 		this.deleteCards(deletes);
 		this.pendingOperations--;
 		//  		dump("decreasing 14 pendingOperations...\n");
@@ -1044,14 +1006,13 @@ GroupDavSynchronizer.prototype = {
  processListDeletes: function() {
 		// 		var deleteListStringForTestPurposes = "";
 		//Filling the Server deleted cards Hash
-		for (var key in this.localListPointerHash) {
-			if (key != "size"
-					&& this.serverListVersionHash[key] == null) {
-				var list = this.localListPointerHash[key];
+
+		for each (var key in this.serverDeletes) {
+			var list = this.localListPointerHash[key];
+      if (list) {
 				var attributes = new GroupDAVListAttributes(list);
 				attributes.deleteRecord();
 				dump("deleting list: " + key
-						 + "; " + this.serverListVersionHash[key]
 						 + "; " + this.localListVersionHash[key] + "\n");
 				this.gAddressBook.deleteDirectory(list);
 			}
@@ -1069,10 +1030,11 @@ GroupDavSynchronizer.prototype = {
 		}
 		else {
 			if (this.updatesStatus == SOGOC_UPDATES_SERVERSIDE) {
- 				if (this.gNewCTag) {
- 					var groupdavPrefService = this.prefService();
- 					groupdavPrefService.setCTag(this.gNewCTag);
- 				}
+        var groupdavPrefService = this.prefService();
+ 				if (this.newCTag)
+ 					groupdavPrefService.setCTag(this.newCTag);
+        if (this.newWebdavSyncToken)
+ 					groupdavPrefService.setWebdavSyncToken(this.newWebdavSyncToken);
 			}
 			this.checkCallback();
 		}
@@ -1080,18 +1042,18 @@ GroupDavSynchronizer.prototype = {
  onServerFinalizeComplete: function(status, jsonResponse) {
 		if (status > 199 && status < 400) {
       var responses = jsonResponse["multistatus"][0]["response"];
-			for (var i = 0; i < responses.length; i++) {
-        var href = responses[i]["href"][0];
+			for each (var response in responses) {
+        var href = response["href"][0];
  				dump("href: " + href + "\n");
-        var propstats = responses[i]["propstat"];
-        for (var j = 0; j < propstats.length; j++) {
-          if (propstats[j]["status"][0].indexOf("HTTP/1.1 200") == 0) {
+        var propstats = response["propstat"];
+        for each (var propstat in propstats) {
+          if (propstat["status"][0].indexOf("HTTP/1.1 200") == 0) {
             if (href[href.length-1] != '/')
               href += '/';
             if (href != this.gURL)
               href = this.cleanedUpHref(href);
 
-            var prop = propstats[j]["prop"][0];
+            var prop = propstat["prop"][0];
             if (href == this.gURL) {
               var newCTag = prop["getctag"][0];
               if (newCTag) {
@@ -1135,32 +1097,22 @@ GroupDavSynchronizer.prototype = {
 				this.finalize();
 			}
 			else if (this.processMode == SOGOC_PROCESS_FINALIZE) {
-// 				if (this.gNewCTag) {
-// 					var groupdavPrefService = this.prefService();
-// 					groupdavPrefService.setCTag(this.gNewCTag);
-// 				}
-
-				if (this.callback) {
-// 					dump("this.callback: " + this.callback + "\n");
+				if (this.callback)
 					this.callback(this.gURL, this.callbackCode, this.callbackFailures,
 												this.callbackData);
-				}
 
-				var total = (this.localCardAdditions.length
-										 + this.localCardUpdates.length
-										 + this.localListAdditions.length
-										 + this.localListUpdates.length
-										 + this.serverCardDataHash.size
-										 + this.serverListDataHash.size);
-				if (total > 0)
-					this.progressMgr.unregisterAddressBook(this.gURL);
-				dump(this.mCounter +"/sync with " + this.gURL + " has ended.\n");
-				this.context.requests[this.gURL] = null;
-			}
-			else
-				throw "Buggy situation (processMode )!";
-		}
-	}
+        var total = (this.localUploads
+                     + this.serverDownloadsCount
+                     + this.serverDeletes.length);
+        if (total > 0)
+          this.progressMgr.unregisterAddressBook(this.gURL);
+        dump(this.mCounter +"/sync with " + this.gURL + " has ended.\n");
+        this.context.requests[this.gURL] = null;
+      }
+      else
+        throw "Buggy situation (processMode )!";
+    }
+  }
 };
 
 function SynchronizeGroupdavAddressbook(uri, callback, callbackData) {

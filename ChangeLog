@@ -1,3 +1,8 @@
+2009-06-23  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* chrome/content/sogo-connector/general/sync.addressbook.groupdav.js:
+	refactored code and added support for webdav sync spec.
+
 2009-06-22  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* chrome/content/inverse-library/sogoWebDAV.js: modified to
