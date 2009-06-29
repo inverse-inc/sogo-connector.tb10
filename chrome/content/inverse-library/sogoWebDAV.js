@@ -135,8 +135,12 @@ function onXMLRequestReadyStateChange(request) {
 				else {
 					headers = _parseHeaders(request.getAllResponseHeaders());
 					if (request.client.requestJSONResponse) {
-						var parser = new XMLToJSONParser(request.responseXML);
-						response = parser;
+						if (request.responseXML) {
+							var parser = new XMLToJSONParser(request.responseXML);
+							response = parser;
+						}
+						else
+							response = null;
 					}
 					else
 						response = request.responseText;
