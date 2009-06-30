@@ -1,3 +1,11 @@
+2009-06-30  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	*
+	chrome/content/sogo-connector/general/sync.addressbook.groupdav.js:
+	fixed a bug where list downloads would tranmis the tag
+	"vcard-download" instead of "list-download", preventing the
+	downloaded lists from being created or updated.
+
 2009-06-23  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* chrome/content/sogo-connector/general/sync.addressbook.groupdav.js:

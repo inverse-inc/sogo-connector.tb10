@@ -303,9 +303,10 @@ GroupDavSynchronizer.prototype = {
     for (var key in this.serverDownloads) {
       var itemDict = this.serverDownloads[key];
       if (itemDict.type == "text/x-vlist") {
+        dump(key + " is a list to download\n");
         hasDownloads = true;
         var fileUrl = this.gURL + key;
-        var data = {query: "vcard-download", data: key};
+        var data = {query: "list-download", data: key};
         this.remainingDownloads++;
         var request = new sogoWebDAV(fileUrl, this, data);
         request.get();
@@ -529,11 +530,11 @@ GroupDavSynchronizer.prototype = {
 		if (list) {
 			isNew = false;
 			listCards = SCGetChildCards(list);
-			dump("updating list '" + key + "'\n");
+			dump("updating local list '" + key + "'\n");
 		}
 		else {
 			isNew = true;
-			dump("creating list '" + key + "'\n");
+			dump("creating local list '" + key + "'\n");
 			list = Components.classes["@mozilla.org/addressbook/directoryproperty;1"]
 			.createInstance(Components.interfaces.nsIAbDirectory);
 			this.gAddressBook.addMailList(list);
@@ -821,9 +822,12 @@ GroupDavSynchronizer.prototype = {
                          otherwise we will end up with duplicated instances. */
                       if (!(this.localCardPointerHash[key]
                             || this.localListPointerHash[key])) {
+                        dump("adopting: " + key + "\n");
                         this.serverDownloads[key] = itemDict;
                         this.serverDownloadsCount++;
                       }
+                      else
+                        dump("skipped " + key + "\n");
                     }
                     else {
                       var localVersion = this.localCardVersionHash[key];
@@ -839,6 +843,8 @@ GroupDavSynchronizer.prototype = {
                           this.serverDownloads[key] = itemDict;
                           this.serverDownloadsCount++;
                         }
+                        else
+                          dump("  skipped\n");
                       }
                       else {
                         /* If the local version of the card doesn't even
