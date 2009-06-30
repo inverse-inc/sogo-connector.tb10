@@ -130,8 +130,6 @@ function onAcceptWebDAV(){
 	var groupdavPrefService = new GroupdavPreferenceService(properties.prefName);
 	groupdavPrefService.setURL(document.getElementById("groupdavURL").value);
 	groupdavPrefService.setDirectoryName(description);
-	groupdavPrefService.setDisplayDialog(document.getElementById("displaySyncCompleted").checked);
-	//groupdavPrefService.setAutoDeleteFromServer(document.getElementById("autoDeleteFromServer").getAttribute("checked"));
 }
 
 function SCGetCurrentDirectoryURI() {
@@ -147,13 +145,6 @@ function SCGetCurrentDirectoryURI() {
 
 function onLoad() {
 	// TODO	add download now for cardDAV, the tab is currently hidden
-// 	document.getElementById("offlineTabId").hidden = true;	
-	
-// 	dump("dirstring: " + window.arguments[0].selectedDirectoryString + "\n");
-
-	//Read only checkbox event listener
-	document.getElementById("readOnly").addEventListener("CheckboxStateChange",
-																											 onReadOnlyUpdate, true);
 
 	var uri = SCGetCurrentDirectoryURI();
 	if (uri) {
@@ -166,7 +157,6 @@ function onLoad() {
 
 			var description = "";
 			var url = "";
-			var displaySync = false;
 
 			if (readOnly) {
 				description = directory.dirName;
@@ -174,26 +164,14 @@ function onLoad() {
 				var dUrl = directory.directoryProperties.URI;
 				if (dUrl.indexOf(cardDavPrefix) == 0)
 					url = dUrl.substr(cardDavPrefix.length);
-				document.getElementById("displaySyncCompleted").disabled = true;			 
-				//			document.getElementById("autoDeleteFromServer").disabled = true;
 			}
 			else {
 				var groupdavPrefService = new GroupdavPreferenceService(directory.directoryProperties.prefName);
 				description = directory.dirName;
 				url = groupdavPrefService.getURL();
-				displaySync = groupdavPrefService.getDisplayDialog();
-				//document.getElementById("offlineTabId").disabled = true;
-				//			document.getElementById("downloadButton").disabled = true;
-				//			document.getElementById("autoDeleteFromServer").setAttribute("checked", groupdavPrefService.getAutoDeleteFromServer());									
 			}
 			document.getElementById("description").value = description;
 			document.getElementById("groupdavURL").value = url;
-			document.getElementById("displaySyncCompleted").checked = displaySync;
-			// 	else {
-			//			document.getElementById("offlineTabId").disabled = true;
-			//			document.getElementById("downloadPanel").disabled = true;
-			//			document.getElementById("downloadButton").disabled = true;
-			// 	}
 		}
 		else
 			throw("invalid WebDAV directory: " + uri + "\n");
@@ -208,11 +186,6 @@ function onCancel() {
 
 // Handle readOnly checkbox updates
 
-
-function onReadOnlyUpdate() {
-	document.getElementById("displaySyncCompleted").disabled
-		= document.getElementById("readOnly").checked;
-}
 
 function DownloadNow(){
 	

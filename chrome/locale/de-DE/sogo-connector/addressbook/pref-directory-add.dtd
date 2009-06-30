@@ -54,9 +54,5 @@
 -->
 <!ENTITY newDirectoryWidth                 "40em">
 
-<!ENTITY DisplaySyncCompleted.label      "Statusmeldung anzeigen, nachdem die Synchronisierung beendet ist">
-<!ENTITY DisplaySyncCompleted.accesskey  "Z">
-<!ENTITY AutoDeleteFromServer.label       "Automatisch Karten löschen, die vom Server gelöscht wurden">
-<!ENTITY AutoDeleteFromServer.accesskey   "A">
 <!ENTITY ReadOnly.label                   "Nur lesbar">
 <!ENTITY ReadOnly.accesskey           		"N">

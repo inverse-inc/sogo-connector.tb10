@@ -52,10 +52,6 @@
 -->
 <!ENTITY newDirectoryWidth                 "36em">
 
-<!ENTITY DisplaySyncCompleted.label      "Mostra finestra una volta che la sincronia è completata">
-<!ENTITY DisplaySyncCompleted.accesskey  "Z">
-<!ENTITY AutoDeleteFromServer.label       "Elimina automaticamente i contatti non più presenti sul server">
-<!ENTITY AutoDeleteFromServer.accesskey   "A">
 <!ENTITY ReadOnly.label               		"Sola lettura">
 <!ENTITY ReadOnly.accesskey           		"R">
 

@@ -118,8 +118,6 @@ Modifications by
     </grid>
     <separator/>
     <checkbox id="readOnly" label="&ReadOnly.label;" accesskey="&ReadOnly.accesskey;"/>
-    <checkbox id="displaySyncCompleted" label="&DisplaySyncCompleted.label;" accesskey="&DisplaySyncCompleted.accesskey;"/>
-    <!--				 <checkbox id="autoDeleteFromServer" label="&AutoDeleteFromServer.label;" accesskey="&AutoDeleteFromServer.accesskey;"/>-->				 
   </vbox>
   <!--			</tabpanel>
   <tabpanel id="downloadPanel">

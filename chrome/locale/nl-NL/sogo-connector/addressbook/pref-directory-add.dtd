@@ -87,10 +87,6 @@ Modifications to original file pref-directory-add.xul by:
 -->
 <!ENTITY newDirectoryWidth                 "36em">
 
-<!ENTITY DisplaySyncCompleted.label      "Toon dialoogvenster wanneer synchronisatie voltooid">
-<!ENTITY DisplaySyncCompleted.accesskey  "T">
-<!ENTITY AutoDeleteFromServer.label       "Ingangen die op de server zijn verwijderd automatisch verwijderen">
-<!ENTITY AutoDeleteFromServer.accesskey   "A">
 <!ENTITY ReadOnly.label               		"Alleen-lezen">
 <!ENTITY ReadOnly.accesskey           		"A">
 

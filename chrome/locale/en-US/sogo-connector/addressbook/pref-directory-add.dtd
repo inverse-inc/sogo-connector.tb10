@@ -87,10 +87,6 @@ Modifications to original file pref-directory-add.xul by:
 -->
 <!ENTITY newDirectoryWidth                 "36em">
 
-<!ENTITY DisplaySyncCompleted.label      "Display Synchronization Completed Dialog">
-<!ENTITY DisplaySyncCompleted.accesskey  "Z">
-<!ENTITY AutoDeleteFromServer.label       "Automatically delete cards that were deleted on the server">
-<!ENTITY AutoDeleteFromServer.accesskey   "A">
 <!ENTITY ReadOnly.label               		"Read Only">
 <!ENTITY ReadOnly.accesskey           		"R">
 
