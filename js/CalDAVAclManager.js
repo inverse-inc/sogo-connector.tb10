@@ -1,4 +1,4 @@
-/* -*- Mode: javascript; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
 var loader = Components .classes["@mozilla.org/moz/jssubscript-loader;1"]
     .getService(Components.interfaces.mozIJSSubScriptLoader);
@@ -94,16 +94,26 @@ CalDAVAclManager.prototype = {
  onDAVQueryComplete: function onDAVQueryComplete(status, url, headers,
                                                  response, data) {
         // dump("callback for method: " + data.method + "\n");
-        if (data.method == "acl-options")
-            this._optionsCallback(status, url, headers, response, data);
-        else if (data.method == "collection-set")
-            this._collectionSetCallback(status, url, headers, response, data);
-        else if (data.method == "principal-match")
-            this._principalMatchCallback(status, url, headers, response, data);
-        else if (data.method == "user-address-set")
-            this._userAddressSetCallback(status, url, headers, response, data);
-        else if (data.method == "component-privilege-set")
-            this._componentPrivilegeSetCallback(status, url, headers, response, data);
+        if (status == 499) {
+            dump("an anomally occured during request '" + data.method + "'.\n"
+                 + "We remove the calendar entry to give it a chance of"
+                 + " succeeding later.\n");
+            var fixedURL = fixURL(url);
+            delete this.calendars[fixedURL];
+        }
+        else {
+            if (data.method == "acl-options")
+                this._optionsCallback(status, url, headers, response, data);
+            else if (data.method == "collection-set")
+                this._collectionSetCallback(status, url, headers, response, data);
+            else if (data.method == "principal-match")
+                this._principalMatchCallback(status, url, headers, response, data);
+            else if (data.method == "user-address-set")
+                this._userAddressSetCallback(status, url, headers, response, data);
+            else if (data.method == "component-privilege-set")
+                this._componentPrivilegeSetCallback(status, url, headers,
+                                                    response, data);
+        }
     },
  _markWithNoAccessControl: function _markWithNoAccessControl(url) {
         // dump(url + " marked without access control\n");
@@ -144,7 +154,6 @@ CalDAVAclManager.prototype = {
                                                          response, data) {
         if (status == 207) {
             var calURL = fixURL(url);
-
             var xParser = Components.classes['@mozilla.org/xmlextras/domparser;1']
             .getService(Components.interfaces.nsIDOMParser);
             var queryDoc = xParser.parseFromString(response, "application/xml");
@@ -166,9 +175,10 @@ CalDAVAclManager.prototype = {
                             address = value;
                     }
                 }
-
+                
                 nodes = queryDoc.getElementsByTagName("owner");
                 if (nodes.length) {
+//                     dump("owner nodes: " + nodes.length + "\n");
                     var subnodes = nodes[0].childNodes;
                     for (var i = 0; i < subnodes.length; i++) {
                         if (subnodes[i].nodeType
@@ -181,7 +191,7 @@ CalDAVAclManager.prototype = {
                             }
                             else
                                 owner = value;
-
+//                             dump("acl owner: " + owner + "\n");
                             var fixedURL = fixURL(owner);
                             this.calendars[calURL].ownerPrincipal = fixedURL;
                             var propfind = ("<?xml version='1.0' encoding='UTF-8'?>\n"
@@ -490,34 +500,46 @@ CalDAVAclManager.prototype = {
         // dump("method: " + request.method + "\nurl: " + url + "\n");
         request.onreadystatechange = function() {
             if (request.readyState == 4) {
-                try {
-                    if (request.client && request.status) {
-                        var responseText = request.responseText;
-                        // dump("response: "  + responseText + "\n");
-        
-                        var headers = {};
-                        var textHeaders = request.getAllResponseHeaders().split("\n");
-                        for (var i = 0; i < textHeaders.length; i++) {
-                            var line = textHeaders[i].replace(/\r$/, "", "g");
-                            if (line.length) {
-                                var elems = line.split(":");
-                                var key = elems[0].toLowerCase();
-                                var value = elems[1].replace(/(^[         ]+|[         ]+$)/, "", "g");
-                                headers[key] = value;
+                if (request.client) {
+                    var status = 499;
+                    try {
+                        status = request.status;
+                    }
+                    catch(e) { dump("CalDAVAclManager: trapped exception: "
+                                    + e + "\n"); }
+
+                    var responseText;
+                    var headers = {};
+                    try {
+                        if (status == 499) {
+                            responseText = "";
+                            dump("xmlRequest: received status 499 for url: "
+                                 + request.url + "; method: " + method + "\n");
+                        }
+                        else {
+                            responseText = request.responseText;
+                            var textHeaders = request.getAllResponseHeaders().split("\n");
+                            for (var i = 0; i < textHeaders.length; i++) {
+                                var line = textHeaders[i].replace(/\r$/, "", "g");
+                                if (line.length) {
+                                    var elems = line.split(":");
+                                    var key = elems[0].toLowerCase();
+                                    var value = elems[1].replace(/(^[         ]+|[         ]+$)/, "", "g");
+                                    headers[key] = value;
+                                }
                             }
                         }
-
-                        request.client.onDAVQueryComplete(request.status,
-                                                          request.url,
-                                                          headers,
-                                                          responseText,
-                                                          request.callbackData);
                     }
-                }
-                catch(e) {
-                    dump("CAlDAVAclManager.js: an exception occured\n" + e + "\n"
-                         + e.fileName + ":" + e.lineNumber + "\n"
-                         + "url: " + request.url + "\n");
+                    catch(e) {
+                        dump("CAlDAVAclManager.js: an exception occured\n" + e + "\n"
+                             + e.fileName + ":" + e.lineNumber + "\n"
+                             + "url: " + request.url + "\n");
+                    }
+                    request.client.onDAVQueryComplete(status,
+                                                      request.url,
+                                                      headers,
+                                                      responseText,
+                                                      request.callbackData);
                 }
                 request.client = null;
                 request.url = null;
@@ -548,7 +570,7 @@ function CalDAVAclCalendarEntry(uri) {
 CalDAVAclCalendarEntry.prototype = {
  uri: null,
  entries: null,
-		
+
  isCalendarReady: function isCalendarReady() {
         // dump (typeof(this.hasAccessControl)+ "\n"
         // + typeof(this.userPrincipals)+ "\n"
@@ -572,9 +594,8 @@ CalDAVAclCalendarEntry.prototype = {
         var i = 0;
 
         if (this.hasAccessControl) {
-            //dump("owner: " + this.ownerPrincipal + "\n");
             while (!result && typeof(this.userPrincipals) != "undefined" && i < this.userPrincipals.length) {
-                //dump("user: " + this.userPrincipals[i] + "\n");
+//                 dump("user: " + this.userPrincipals[i] + "\n");
                 if (this.userPrincipals[i] == this.ownerPrincipal) 
                     result = true;
                 else
@@ -583,6 +604,8 @@ CalDAVAclCalendarEntry.prototype = {
         }
         else
             result = true;
+
+//         dump("user is owner: " + result + "\n");
 
         return result;
     },
