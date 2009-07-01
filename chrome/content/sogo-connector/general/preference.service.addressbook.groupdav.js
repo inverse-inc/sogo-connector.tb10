@@ -109,7 +109,7 @@ GroupdavPreferenceService.prototype = {
 	mPreferencesService: null,
 	prefPath: null,
 
-	_getPref: function(prefName) {
+	_getPref: function GdPSvc__getPref(prefName) {
 		var value = null;
 
 // 		dump("getPref: " + this.prefPath + prefName + "\n");
@@ -118,15 +118,16 @@ GroupdavPreferenceService.prototype = {
 			value = this.mPreferencesService.getCharPref(this.prefPath + prefName);
 		}
 		catch(e) {
-// 			dump("exception getting pref '" + this.prefPath + prefName
-// 					 + "': \n" + e + " (" + e.lineNumber + ")\n");
-// 			dump("stack: " + backtrace() + "\n");
+			dump("exception getting pref '" + this.prefPath + prefName
+ 					 + "': \n" + e + " (" + e.lineNumber + ")\n");
+ 			dump("  stack:\n" + backtrace() + "\n");
 			throw("unacceptable condition: " + e);
 		}
 
 		return value;
 	},
-	_getPrefWithDefault: function(prefName, defaultValue) {
+	_getPrefWithDefault:
+	function GdPSvc__getPrefWithDefault(prefName, defaultValue) {
 		var value = defaultValue;
 
 // 		dump("getPref: " + this.prefPath + prefName + "\n");
@@ -142,7 +143,7 @@ GroupdavPreferenceService.prototype = {
 		return value;
 	},
 
-	_setPref: function(prefName, value) {
+	_setPref: function GdPSvc__setPref(prefName, value) {
 // 		dump("setPref: " + this.prefPath + prefName + " to: " + value + "\n");
 		try {
 			this.mPreferencesService.setCharPref(this.prefPath + prefName, value);
@@ -155,7 +156,7 @@ GroupdavPreferenceService.prototype = {
 		}
 // 		dump("setPref - done\n");
 	},
-	_getBoolPref: function(prefName) {
+	_getBoolPref: function GdPSvc__getBoolPref(prefName) {
 		var boolValue = false;
 		var value = this._getPref(prefName);
 		if (value) {
@@ -169,7 +170,7 @@ GroupdavPreferenceService.prototype = {
 
 		return boolValue;
 	},
-	_setBoolPref: function(prefName, value) {
+	_setBoolPref: function GdPSvc__setBoolPref(prefName, value) {
 		var strValue;
 
 		if (value)
@@ -180,14 +181,14 @@ GroupdavPreferenceService.prototype = {
 		this._setPref(prefName, strValue);
 	},
 
-	getAutoDeleteFromServer: function() {
+	getAutoDeleteFromServer: function GdPSvc_getAutoDeleteFromServer() {
 		return this._getBoolPref("autoDeleteFromServer");
 	},
-	setAutoDeleteFromServer: function(value) {
+	setAutoDeleteFromServer: function GdPSvc_setAutoDeleteFromServer(value) {
 		this._setBoolPref("autoDeleteFromServer", value);
 	},
 
-	getURL: function() {
+	getURL: function GdPSvc_getURL() {
 		var url = this._getPref("url");
 		if (url) {
 			if (url[url.length - 1] != '/')
@@ -196,62 +197,56 @@ GroupdavPreferenceService.prototype = {
 
 		return url;
 	},
-	getHostName: function(){
+	setURL: function GdPSvc_setURL(url) {
+		this._setPref("url", url);
+	},
+
+	getHostName: function GdPSvc_getHostName(){
 		var hostname = null;
 		var url = this.getURL();
 
 		if (url && url.length > 0) {
-			var uri = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIURI);
+			var uri = Components.classes["@mozilla.org/network/standard-url;1"]
+								.createInstance(Components.interfaces.nsIURI);
 			uri.spec = url;
 			hostname = uri.host;
 		}
 
 		return hostname;
 	},
-	setURL: function(url) {
-		this._setPref("url", url);
-	},
 	
-	getDirectoryName: function() {
+	getDirectoryName: function GdPSvc_getDirectoryName() {
 		return this._getPref("name");
 	},
-	setDirectoryName: function(name) {
+	setDirectoryName: function GdPSvc_setDirectoryName(name) {
 		this._setPref("name", name);
 	},
 	
-	getServerType: function() {
+	getServerType: function GdPSvc_getServerType() {
 		return parseInt(this._getPref("serverType"));
 	},
-	setServerType: function(value) {
+	setServerType: function GdPSvc_setServerType(value) {
 		this._setPref("serverType", value);
 	},
 	
-	getDisplayDialog: function() {
-		return this._getBoolPref("displaySyncCompletedDialog");
-	},
-	setDisplayDialog: function(value) {
-// 		dump("value: " + value + "\n");
-		this._setBoolPref("displaySyncCompletedDialog", value);
-	},
-	
-	getMigrationDone: function() {
+	getMigrationDone: function GdPSvc_getMigrationDone() {
 		return this._getBoolPref("migrationDone");
 	},
-	setMigrationDone: function(value) {
+	setMigrationDone: function GdPSvc_setMigrationDone(value) {
 		this._setBoolPref("migrationDone", value);
 	},
 
-	getCTag: function() {
+	getCTag: function GdPSvc_getCTag() {
 		return this._getPrefWithDefault("ctag", "");
 	},
-	setCTag: function(value) {
+	setCTag: function GdPSvc_setCTag(value) {
 		this._setPref("ctag", value);
 	},
 
-	getWebdavSyncToken: function() {
+	getWebdavSyncToken: function GdPSvc_getWebdavSyncToken() {
 		return this._getPrefWithDefault("sync-token", "");
 	},
-	setWebdavSyncToken: function(value) {
+	setWebdavSyncToken: function GdPSvc_setWebdavSyncToken(value) {
 		this._setPref("sync-token", value);
 	}
 };

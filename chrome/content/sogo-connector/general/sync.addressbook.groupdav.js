@@ -159,7 +159,6 @@ GroupDavSynchronizer.prototype = {
 		this.gURL = groupdavPrefService.getURL();
 		this.gCTag = groupdavPrefService.getCTag();
 		this.webdavSyncToken = groupdavPrefService.getWebdavSyncToken();
-		this.gDisplaySyncDialog = groupdavPrefService.getDisplayDialog() == "true";
 
 		this.localCardVersionHash = {};
 		this.localListVersionHash = {};
@@ -303,7 +302,7 @@ GroupDavSynchronizer.prototype = {
     for (var key in this.serverDownloads) {
       var itemDict = this.serverDownloads[key];
       if (itemDict.type == "text/x-vlist") {
-        dump(key + " is a list to download\n");
+//         dump(key + " is a list to download\n");
         hasDownloads = true;
         var fileUrl = this.gURL + key;
         var data = {query: "list-download", data: key};
@@ -321,7 +320,7 @@ GroupDavSynchronizer.prototype = {
 	},
  onDAVQueryComplete: function(status, response, headers, data) {
 		this.callbackCode = status;
-    dump("request status: " + status + "\n");
+//     dump("request status: " + status + "\n");
 		if (data.query == "vcard-download")
 			this.onVCardDownloadComplete(status, response, data.data);
 		else if (data.query == "list-download")
@@ -432,11 +431,11 @@ GroupDavSynchronizer.prototype = {
 		else
 			prefId = this.gAddressBook.directoryProperties.prefName;
 
-		dump("PrefId: " + prefId + "\n");
+// 		dump("PrefId: " + prefId + "\n");
 		var prefService = (Components.classes["@mozilla.org/preferences-service;1"]
 											 .getService(Components.interfaces.nsIPrefBranch));
 		var fileName = prefService.getCharPref(prefId + ".filename");
-		dump("commit: " + fileName + "\n");
+// 		dump("commit: " + fileName + "\n");
 		var ab = Components.classes["@mozilla.org/addressbook;1"]
 		.createInstance(Components.interfaces.nsIAddressBook);
 		var abDb = ab.getAbDatabaseFromURI("moz-abmdbdirectory://" + fileName);
@@ -530,11 +529,11 @@ GroupDavSynchronizer.prototype = {
 		if (list) {
 			isNew = false;
 			listCards = SCGetChildCards(list);
-			dump("updating local list '" + key + "'\n");
+// 			dump("updating local list '" + key + "'\n");
 		}
 		else {
 			isNew = true;
-			dump("creating local list '" + key + "'\n");
+// 			dump("creating local list '" + key + "'\n");
 			list = Components.classes["@mozilla.org/addressbook/directoryproperty;1"]
 			.createInstance(Components.interfaces.nsIAbDirectory);
 			this.gAddressBook.addMailList(list);
@@ -585,7 +584,7 @@ GroupDavSynchronizer.prototype = {
 
 		var hrefArray = origHref.split("/");
 		var noprefix = false;
-		dump("hrefArray: " + hrefArray + "\n");
+// 		dump("hrefArray: " + hrefArray + "\n");
 
 		if (hrefArray[0].substr(0,5) == "https"
 				&& hrefArray[2].indexOf(":443") > 0) {
@@ -613,7 +612,7 @@ GroupDavSynchronizer.prototype = {
 			href = gURLArray[0] + "//" + gURLArray[2] + href;
 		}
 
-		dump("Cleaned up href: " + href + "\n");
+// 		dump("Cleaned up href: " + href + "\n");
 
     return href;
 	},
@@ -657,11 +656,11 @@ GroupDavSynchronizer.prototype = {
 
                 var newCTag = prop["getctag"][0];
                 if (newCTag && newCTag == this.gCTag) {
-                  dump("ctag matches or drop operation\n");
+//                   dump("ctag matches or drop operation\n");
                   this.processCards();
                 }
                 else {
-                  dump("ctag does not match\n");
+//                   dump("ctag does not match\n");
                   this.updatesStatus = SOGOC_UPDATES_SERVERSIDE;
                   this.newCTag = newCTag;
                   this.checkServerUpdates();
@@ -708,7 +707,7 @@ GroupDavSynchronizer.prototype = {
     }
   },
  onServerHashQueryComplete: function(status, jsonResponse) {
-    dump("onServerHashQueryComplete\n");
+//     dump("onServerHashQueryComplete\n");
 		this.pendingOperations = 0;
 
     var reportedKeys = {};
@@ -788,7 +787,7 @@ GroupDavSynchronizer.prototype = {
 	},
 
  onServerSyncQueryComplete: function(status, jsonResponse) {
-    dump("onServerSyncQueryComplete\n");
+//     dump("onServerSyncQueryComplete\n");
 		this.pendingOperations = 0;
 
 		if (jsonResponse) {
@@ -822,7 +821,7 @@ GroupDavSynchronizer.prototype = {
                          otherwise we will end up with duplicated instances. */
                       if (!(this.localCardPointerHash[key]
                             || this.localListPointerHash[key])) {
-                        dump("adopting: " + key + "\n");
+//                         dump("adopting: " + key + "\n");
                         this.serverDownloads[key] = itemDict;
                         this.serverDownloadsCount++;
                       }
@@ -881,15 +880,15 @@ GroupDavSynchronizer.prototype = {
 	},
 
  processCards: function() {
-		dump("processCards...\n");
+// 		dump("processCards...\n");
     var total = (this.localUploads
                  + this.serverDownloadsCount
                  + this.serverDeletes.length);
 		if (total > 0)
 			this.progressMgr.registerAddressBook(this.gURL, total);
 
-		dump("  total: " + total + "\n");
-		dump("  this.updatesStatus: " + this.updatesStatus + "\n");
+// 		dump("  total: " + total + "\n");
+// 		dump("  this.updatesStatus: " + this.updatesStatus + "\n");
 		if (this.updatesStatus == SOGOC_UPDATES_CLIENTSIDE) {
 			this.pendingOperations = 1;
 			// 			dump("pendingOperations: " + this.pendingOperations + "\n");
@@ -906,7 +905,7 @@ GroupDavSynchronizer.prototype = {
 			this.checkCallback();
 	},
  uploadCards: function() {
-		dump("uploadCards\n");
+// 		dump("uploadCards\n");
 		this.remainingUploads = 0;
 
     for (var key in this.localCardUploads) {
@@ -917,7 +916,7 @@ GroupDavSynchronizer.prototype = {
       if (vcard) {
         var cardURL = this.gURL + key;
         var data = {query: "card-upload", data: card, key: key};
-        dump("upload new/updated card: " + cardURL + "\n");
+//         dump("upload new/updated card: " + cardURL + "\n");
         this.remainingUploads++;
         var request = new sogoWebDAV(cardURL, this, data);
         request.put(vcard, "text/x-vcard; charset=utf-8");
@@ -937,7 +936,7 @@ GroupDavSynchronizer.prototype = {
 	},
 
  processLists: function() {
-    dump("processLists\n");
+//     dump("processLists\n");
 		if (this.updatesStatus == SOGOC_UPDATES_CLIENTSIDE) {
 			this.pendingOperations = 1;
 			// 			dump("pendingOperations: " + this.pendingOperations + "\n");
@@ -961,7 +960,7 @@ GroupDavSynchronizer.prototype = {
 			var vlist = list2vlist(key, this.localListUploads[key]);
 			if (vlist) {
 				var listURL = this.gURL + key;
-				dump("upload updated list: " + listURL + "\n");
+// 				dump("upload updated list: " + listURL + "\n");
 				var data = {query: "list-upload",
 										data: this.localListUploads[key],
 										key: key};
@@ -970,7 +969,7 @@ GroupDavSynchronizer.prototype = {
 				request.put(vlist, "text/x-vlist; charset=utf-8");
 			}
 			else {
- 				dump("new vcard could not be generated for update\n");
+ 				dump("new vlist could not be generated for update\n");
 				this.progressMgr.updateAddressBook(this.gURL);
 			}
 		}
@@ -983,7 +982,7 @@ GroupDavSynchronizer.prototype = {
 	},
 
  processCardDeletes: function() {
-		dump("processCardDeletes\n");
+// 		dump("processCardDeletes\n");
 		var deletes = [];
 		//	if (groupdavPrefService.getAutoDeleteFromServer()){
     for each (var key in this.serverDeletes) {
@@ -1005,7 +1004,7 @@ GroupDavSynchronizer.prototype = {
 				cards.AppendElement(card);
 			}
 
-			dump("delete from : " + this.gSelectedDirectoryURI + "\n");
+// 			dump("delete from : " + this.gSelectedDirectoryURI + "\n");
 			this.gAddressBook.deleteCards(cards);
 		}
 	},
@@ -1028,7 +1027,7 @@ GroupDavSynchronizer.prototype = {
 		this.checkCallback();
 	},
  finalize: function() {
-    dump("finalize\n");
+//     dump("finalize\n");
 		if ((this.updatesStatus & SOGOC_UPDATES_CLIENTSIDE)) {
 			var data = {query: "server-finalize-propfind"};
 			var request = new sogoWebDAV(this.gURL, this, data);
@@ -1050,7 +1049,7 @@ GroupDavSynchronizer.prototype = {
       var responses = jsonResponse["multistatus"][0]["response"];
 			for each (var response in responses) {
         var href = response["href"][0];
- 				dump("href: " + href + "\n");
+//  				dump("href: " + href + "\n");
         var propstats = response["propstat"];
         for each (var propstat in propstats) {
           if (propstat["status"][0].indexOf("HTTP/1.1 200") == 0) {
@@ -1080,11 +1079,11 @@ GroupDavSynchronizer.prototype = {
 		}
 	},
  checkCallback: function() {
-		dump("checkCallback:\n");
+// 		dump("checkCallback:\n");
 		// 		dump("\n\nthis = " + this.mCounter + "\n");
-		dump("  this.processMode: " + this.processMode + "\n");
-		dump("  this.pendingOperations: " + this.pendingOperations + "\n");
-		dump("  this.updatesStatus: " + this.updatesStatus + "\n");
+// 		dump("  this.processMode: " + this.processMode + "\n");
+// 		dump("  this.pendingOperations: " + this.pendingOperations + "\n");
+// 		dump("  this.updatesStatus: " + this.updatesStatus + "\n");
 		// 		dump("_checkCallback: processMode: " + this.processMode + "\n");
 		// 		dump("_checkCallback: pendingOperations: " + this.pendingOperations + "\n");
 		if (this.pendingOperations < 0) {

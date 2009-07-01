@@ -104,7 +104,6 @@ function SCCreateGroupDAVDirectory(description, url) {
 	var groupdavPrefService = new GroupdavPreferenceService(properties.prefName);
 	groupdavPrefService.setDirectoryName(description);
 	groupdavPrefService.setURL(url);
-	groupdavPrefService.setDisplayDialog(false);
 
 	return SCGetDirectoryFromURI("moz-abmdbdirectory://" + properties.fileName);
 }
@@ -148,6 +147,7 @@ function _SCDeleteAddressBook(directory) {
 
 // 	dump("dir: " + directory + "\n");
 // 	dump("dir.dirName: " + directory.dirName + "\n");
+// 	dump("backtrace: " + backtrace() + "\n");
 	parentDir.deleteDirectory(directory);
 // 	var ab = Components.classes["@mozilla.org/addressbook;1"]
 // 		.createInstance(Components.interfaces.nsIAddressBook);
