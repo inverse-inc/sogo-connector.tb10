@@ -1,3 +1,10 @@
+2009-07-02  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	*chrome/content/sogo-connector/addressbook/addressbook.groupdav.overlay.js,
+	chrome/content/sogo-connector/general/sync.addressbook.groupdav.js:
+	save preferences as soon as a list has been modified to avoid
+	duplication when a crash occurs.
+
 2009-07-01  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	*

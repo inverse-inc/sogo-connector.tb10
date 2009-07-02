@@ -327,8 +327,13 @@ var deleteManager = {
 // 				dump("deleting list\n");
 				var attributes = new GroupDAVListAttributes(data.component);
 				attributes.deleteRecord();
- 				GetAbView().deleteSelectedCards();
+        /* we commit the preferences here because sometimes Thunderbird will
+           crash when deleting the real instance of the list. */
+				var prefService = (Components.classes["@mozilla.org/preferences-service;1"]
+													 .getService(Components.interfaces.nsIPrefBranch));
+				prefService.savePrefFile(null);
 				data.directory.deleteDirectory(data.component);
+ 				GetAbView().deleteSelectedCards();
 			}
 			else
 				dump("component is of unknown type: " + data.component + "\n");

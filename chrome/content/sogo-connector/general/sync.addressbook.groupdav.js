@@ -322,7 +322,7 @@ GroupDavSynchronizer.prototype = {
 		this.callbackCode = status;
 //     dump("request status: " + status + "\n");
 		if (data.query == "vcard-download")
-			this.onVCardDownloadComplete(status, response, data.data);
+			this.onCardDownloadComplete(status, response, data.data);
 		else if (data.query == "list-download")
 			this.onListDownloadComplete(status, response, data.data);
 		else if (data.query == "server-check-propfind")
@@ -355,7 +355,7 @@ GroupDavSynchronizer.prototype = {
 		failures.push(data);
 	},
 
- onVCardDownloadComplete: function(status, data, key) {
+ onCardDownloadComplete: function(status, data, key) {
 		this.remainingDownloads--;
 		this.progressMgr.updateAddressBook(this.gURL);
 		if (Components.isSuccessCode(status)
@@ -366,7 +366,6 @@ GroupDavSynchronizer.prototype = {
 			this.appendFailure(status, key);
 
 		if (this.remainingDownloads == 0) {
-			this.commitAddrDB();
 			this.pendingOperations--;
 			//  			dump("decreasing 3 pendingOperations...\n");
 			this.checkCallback();
@@ -419,7 +418,6 @@ GroupDavSynchronizer.prototype = {
 		this.progressMgr.updateAddressBook(this.gURL);
 		this.remainingUploads--;
 		if (this.remainingUploads == 0) {
-			this.commitAddrDB();
 			this.pendingOperations--;
 			this.checkCallback();
 		}
@@ -441,6 +439,11 @@ GroupDavSynchronizer.prototype = {
 		var abDb = ab.getAbDatabaseFromURI("moz-abmdbdirectory://" + fileName);
 		abDb.close(true);
 	},
+ commitPreferences: function() {
+		var prefService = (Components.classes["@mozilla.org/preferences-service;1"]
+											 .getService(Components.interfaces.nsIPrefBranch));
+    prefService.savePrefFile(null);
+  },
  importCard: function(key, data) {
 		var vcardFieldsArray = {};  //To handle fbURL from SOGo(freebusy) and vcards fields that have no equivalent in Thunderbird.
 		vcardFieldsArray["groupDavVcardCompatibility"] = "";
@@ -940,7 +943,6 @@ GroupDavSynchronizer.prototype = {
 		}
 
 		if (this.remainingUploads == 0) {
-			this.commitAddrDB();
 			this.pendingOperations--;
 			//  			dump("decreasing 11 pendingOperations...\n");
 			this.checkCallback();
@@ -1028,6 +1030,9 @@ GroupDavSynchronizer.prototype = {
       if (list) {
 				var attributes = new GroupDAVListAttributes(list);
 				attributes.deleteRecord();
+        /* we commit the preferences here because sometimes Thunderbird will
+           crash when deleting the real instance of the list. */
+        this.commitPreferences();
 				dump("deleting list: " + key
 						 + "; " + this.localListVersionHash[key] + "\n");
 				this.gAddressBook.deleteDirectory(list);
@@ -1104,14 +1109,17 @@ GroupDavSynchronizer.prototype = {
 		if (this.pendingOperations == 0) {
 // 			dump("switching processMode!\n");
 			if (this.processMode == SOGOC_PROCESS_CARDS) {
+        this.commitAddrDB();
 				this.processMode = SOGOC_PROCESS_LISTS;
 				this.processLists();
 			}
 			else if (this.processMode == SOGOC_PROCESS_LISTS) {
+        this.commitPreferences();
 				this.processMode = SOGOC_PROCESS_FINALIZE;
 				this.finalize();
 			}
 			else if (this.processMode == SOGOC_PROCESS_FINALIZE) {
+        this.commitPreferences();
 				if (this.callback)
 					this.callback(this.gURL, this.callbackCode, this.callbackFailures,
 												this.callbackData);
