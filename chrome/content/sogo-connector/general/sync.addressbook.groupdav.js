@@ -825,8 +825,20 @@ GroupDavSynchronizer.prototype = {
                         this.serverDownloads[key] = itemDict;
                         this.serverDownloadsCount++;
                       }
-                      else
-                        dump("skipped " + key + "\n");
+                      else {
+                        var localVersion = this.localCardVersionHash[key];
+                        if (!localVersion)
+                          localVersion = this.localListVersionHash[key];
+                        if (!localVersion || localVersion != version) {
+                          dump("new card/list " + key + " declared as new"
+                               + " from server, with a local copy but"
+                               + " with a different version.");
+                          this.serverDownloads[key] = itemDict;
+                          this.serverDownloadsCount++;
+                        }
+                        else
+                          dump("skipped " + key + "\n");
+                      }
                     }
                     else {
                       var localVersion = this.localCardVersionHash[key];
@@ -984,7 +996,6 @@ GroupDavSynchronizer.prototype = {
  processCardDeletes: function() {
 // 		dump("processCardDeletes\n");
 		var deletes = [];
-		//	if (groupdavPrefService.getAutoDeleteFromServer()){
     for each (var key in this.serverDeletes) {
       if (this.localCardPointerHash[key])
         deletes.push(key);
@@ -1022,7 +1033,6 @@ GroupDavSynchronizer.prototype = {
 				this.gAddressBook.deleteDirectory(list);
 			}
 		}
-		//	if (groupdavPrefService.getAutoDeleteFromServer()){
 		this.pendingOperations--;
 		this.checkCallback();
 	},
