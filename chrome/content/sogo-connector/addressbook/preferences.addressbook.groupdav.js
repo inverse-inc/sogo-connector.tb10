@@ -129,7 +129,6 @@ function onAcceptWebDAV(){
 
 	var groupdavPrefService = new GroupdavPreferenceService(properties.prefName);
 	groupdavPrefService.setURL(document.getElementById("groupdavURL").value);
-	groupdavPrefService.setDirectoryName(description);
 }
 
 function SCGetCurrentDirectoryURI() {

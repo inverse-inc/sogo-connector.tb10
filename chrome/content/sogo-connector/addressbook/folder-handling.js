@@ -102,7 +102,6 @@ function SCCreateGroupDAVDirectory(description, url) {
 	parentDir.createNewDirectory(properties);
 
 	var groupdavPrefService = new GroupdavPreferenceService(properties.prefName);
-	groupdavPrefService.setDirectoryName(description);
 	groupdavPrefService.setURL(url);
 
 	return SCGetDirectoryFromURI("moz-abmdbdirectory://" + properties.fileName);

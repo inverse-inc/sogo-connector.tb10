@@ -1,5 +1,9 @@
 2009-07-01  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	*
+	chrome/content/sogo-connector/general/preference.service.addressbook.groupdav.js:
+	removed obsolete preferences
+
 	* js/CalDAVAclManager.js: we become a bit more foolprop when an
 	XMLHttpRequest fails for a reason or another and delete the
 	corresponding entry so that the request can happen again.

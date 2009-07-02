@@ -50,7 +50,7 @@ function isGroupdavDirectory(abURI) {
  		var prefId = ab.directoryProperties.prefName;
 		try {
 			var groupdavPrefService = new GroupdavPreferenceService(prefId);
-			value = (groupdavPrefService.getDirectoryName() != "");
+			value = (groupdavPrefService.getURL() != "");
 		}
 		catch(e) {
 			//var xpcConnect =Components.classes["DEB1D48E-7469-4B01-B186-D9854C7D3F2D"].getService(Components.interfaces.nsIXPConnect);	
@@ -181,13 +181,6 @@ GroupdavPreferenceService.prototype = {
 		this._setPref(prefName, strValue);
 	},
 
-	getAutoDeleteFromServer: function GdPSvc_getAutoDeleteFromServer() {
-		return this._getBoolPref("autoDeleteFromServer");
-	},
-	setAutoDeleteFromServer: function GdPSvc_setAutoDeleteFromServer(value) {
-		this._setBoolPref("autoDeleteFromServer", value);
-	},
-
 	getURL: function GdPSvc_getURL() {
 		var url = this._getPref("url");
 		if (url) {
@@ -213,27 +206,6 @@ GroupdavPreferenceService.prototype = {
 		}
 
 		return hostname;
-	},
-	
-	getDirectoryName: function GdPSvc_getDirectoryName() {
-		return this._getPref("name");
-	},
-	setDirectoryName: function GdPSvc_setDirectoryName(name) {
-		this._setPref("name", name);
-	},
-	
-	getServerType: function GdPSvc_getServerType() {
-		return parseInt(this._getPref("serverType"));
-	},
-	setServerType: function GdPSvc_setServerType(value) {
-		this._setPref("serverType", value);
-	},
-	
-	getMigrationDone: function GdPSvc_getMigrationDone() {
-		return this._getBoolPref("migrationDone");
-	},
-	setMigrationDone: function GdPSvc_setMigrationDone(value) {
-		this._setBoolPref("migrationDone", value);
 	},
 
 	getCTag: function GdPSvc_getCTag() {
