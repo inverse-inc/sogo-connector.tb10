@@ -48,16 +48,16 @@ CalDAVAclManager.prototype = {
  identityCount: 0,
  accountMgr: null,
  calendarEntry: function calendarEntry(calendarURI) {
-        var url = fixURL(calendarURI.spec);
-        var entry = this.calendars[url];
-        if (!entry) {
-            entry = new CalDAVAclCalendarEntry(calendarURI);
-            this.calendars[url] = entry;
-            this._queryCalendar(url);
-        }
+    var url = fixURL(calendarURI.spec);
+    var entry = this.calendars[url];
+    if (!entry) {
+        entry = new CalDAVAclCalendarEntry(calendarURI);
+        this.calendars[url] = entry;
+        this._queryCalendar(url);
+    }
 
-        return entry;
-    },
+    return entry;
+   },
  componentEntry: function componentEntry(calendarURI, componentURL) {
         var calendarURL = fixURL(calendarURI.spec);
         var calendar = this.calendarEntry(calendarURI);
@@ -258,8 +258,7 @@ CalDAVAclManager.prototype = {
             dump("CalDAV: Server does not support ACLs\n");
             calendar.hasAccessControl = false;
         }
-				
-    },
+	},
  _userAddressSetCallback: function _collectionSetCallback(status, url, headers,
                                                           response, data) {
         if (status == 207) {
@@ -299,9 +298,13 @@ CalDAVAclManager.prototype = {
                 }
             }
 
-            var observerService = Components.classes["@mozilla.org/observer-service;1"]
-            .getService(Components.interfaces.nsIObserverService);
-            observerService.notifyObservers(null, "caldav-acl-loaded", this.calendars[data.calendar].uri.spec);
+            if (this.calendars[data.calendar].nbrAddressSets) {
+                var observerService = Components.classes["@mozilla.org/observer-service;1"]
+                                      .getService(Components.interfaces.nsIObserverService);
+                observerService.notifyObservers(null, "caldav-acl-loaded", this.calendars[data.calendar].uri.spec);
+            } else {
+                this.calendars[data.calendar].nbrAddressSets = 1;
+            }
         }
     },
  _initAccountMgr: function _initAccountMgr() {
