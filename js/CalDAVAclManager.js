@@ -94,11 +94,15 @@ CalDAVAclManager.prototype = {
  onDAVQueryComplete: function onDAVQueryComplete(status, url, headers,
                                                  response, data) {
         // dump("callback for method: " + data.method + "\n");
-        if (status == 499) {
+        if (status > 399) {
             dump("an anomally occured during request '" + data.method + "'.\n"
                  + "We remove the calendar entry to give it a chance of"
                  + " succeeding later.\n");
             var fixedURL = fixURL(url);
+            var observerService = Components.classes["@mozilla.org/observer-service;1"]
+                                  .getService(Components.interfaces.nsIObserverService);
+            observerService.notifyObservers(null, "caldav-acl-reset",
+                                            this.calendars[fixedURL].uri.spec);
             delete this.calendars[fixedURL];
         }
         else {
@@ -299,6 +303,9 @@ CalDAVAclManager.prototype = {
             }
 
             if (this.calendars[data.calendar].nbrAddressSets) {
+//                 dump("acl complete for " + data.calendar
+//                      + "; nbrAddressSets: " +
+//                      this.calendars[data.calendar].nbrAddressSets + "\n");
                 var observerService = Components.classes["@mozilla.org/observer-service;1"]
                                       .getService(Components.interfaces.nsIObserverService);
                 observerService.notifyObservers(null, "caldav-acl-loaded", this.calendars[data.calendar].uri.spec);

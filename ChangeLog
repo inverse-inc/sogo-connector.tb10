@@ -1,3 +1,10 @@
+2009-07-07  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* js/CalDAVAclManager.js: trigger a "caldav-acl-reset"
+	notification where the status code returned by the server is >
+	399. This enables listeners to take action when the request chain
+	is aborted.
+
 2009-07-06  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* js/CalDAVAclManager.js: trigger the "caldav-acl-loaded"
