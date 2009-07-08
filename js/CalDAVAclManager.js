@@ -70,7 +70,7 @@ CalDAVAclManager.prototype = {
             entry.parentCalendarEntry = calendar;
             if (componentURL) {
                 calendar.entries[componentURL] = entry;
-                this._queryComponent(entry, calendarURI.spec + componentURL);
+                this._queryComponent(entry, calendarURI.spec + componentURL, calendarURL);
             }
             else
                 entry.userPrivileges = [];
@@ -94,16 +94,39 @@ CalDAVAclManager.prototype = {
  onDAVQueryComplete: function onDAVQueryComplete(status, url, headers,
                                                  response, data) {
         // dump("callback for method: " + data.method + "\n");
-        if (status > 399) {
+        /* Warning, the url returned as parameter is not always the
+           calendar URL since we also query user principals and items. */
+        if (status > 498) {
             dump("an anomally occured during request '" + data.method + "'.\n"
+                 + "  Code: " + status + "\n"
                  + "We remove the calendar entry to give it a chance of"
                  + " succeeding later.\n");
-            var fixedURL = fixURL(url);
+            var fixedURL = fixURL(data.calendar);
+            dump("   query url: " + url + "\n");
+            dump("   calendar url: " + fixedURL + "\n");
             var observerService = Components.classes["@mozilla.org/observer-service;1"]
                                   .getService(Components.interfaces.nsIObserverService);
             observerService.notifyObservers(null, "caldav-acl-reset",
                                             this.calendars[fixedURL].uri.spec);
             delete this.calendars[fixedURL];
+        }
+        else if (status > 399) {
+            dump("An error occurred with one of the ACL queries, which"
+                 + " indicates the server don't support ACL.\n"
+                 + "  Code: " + status + "\n"
+                 + "We keep the ACL entry but mark it as having no support.\n");
+            var fixedURL = fixURL(data.calendar);
+            dump("   query url: " + url + "\n");
+            dump("   calendar url: " + fixedURL + "\n");
+            var entry = this.calendars[fixedURL];
+            var wasReady = entry.isCalendarReady();
+            this._markWithNoAccessControl(fixedURL);
+            if (!wasReady) {
+                var observerService = Components.classes["@mozilla.org/observer-service;1"]
+                                      .getService(Components.interfaces.nsIObserverService);
+                observerService.notifyObservers(null, "caldav-acl-loaded",
+                                                this.calendars[fixedURL].uri.spec);
+            }
         }
         else {
             if (data.method == "acl-options")
@@ -131,7 +154,8 @@ CalDAVAclManager.prototype = {
         calendar.ownerPrincipal = null;
     },
  _queryCalendar: function _queryCalendar(url) {
-        this.xmlRequest(url, "OPTIONS", null, null, {method: "acl-options"});
+        this.xmlRequest(url, "OPTIONS", null, null,
+                        {method: "acl-options", calendar: url});
     },
  _optionsCallback: function _optionsCallback(status, url, headers,
                                              response, data) {
@@ -149,7 +173,7 @@ CalDAVAclManager.prototype = {
             this.xmlRequest(url, "PROPFIND", propfind,
                             {'content-type': "application/xml; charset=utf-8",
                                     'depth': "0"},
-                            {method: "collection-set"});
+                            {method: "collection-set", calendar: calURL});
         }
         else
             this._markWithNoAccessControl(calURL);
@@ -214,7 +238,7 @@ CalDAVAclManager.prototype = {
                     this.xmlRequest(address, "REPORT", report,
                                     {'depth': "0",
                                             'content-type': "application/xml; charset=utf-8" },
-                                    { method: "principal-match", calendar: url});
+                                    { method: "principal-match", calendar: calURL});
 
                     this.calendars[url].userPrivileges
                         = this._parsePrivileges(queryDoc);
@@ -252,8 +276,8 @@ CalDAVAclManager.prototype = {
                 this.xmlRequest(fixedURL, "PROPFIND", propfind,
                                 {'content-type': "application/xml; charset=utf-8",
                                         'depth': "0"},
-                                {method: "user-address-set", who: "user", calendar:
-                                    data.calendar});
+                                {method: "user-address-set", who: "user",
+                                        calendar: data.calendar});
                 principals.push(fixedURL);
             }
             calendar.userPrincipals = principals;
@@ -457,14 +481,14 @@ CalDAVAclManager.prototype = {
     },
 
  /* component controller */
- _queryComponent: function _queryComponent(entry, url) {
+ _queryComponent: function _queryComponent(entry, url, calendarURL) {
         // dump("queryCompoennt\n");
         var propfind = ("<?xml version='1.0' encoding='UTF-8'?>\n"
                         + "<D:propfind xmlns:D='DAV:'><D:prop><D:current-user-privilege-set/></D:prop></D:propfind>");
         this.xmlRequest(url, "PROPFIND", propfind,
     {'content-type': "application/xml; charset=utf-8",
             'depth': "0"},
-    {method: "component-privilege-set", entry: entry});
+    {method: "component-privilege-set", entry: entry, calendar: calendarURL});
     },
  _componentPrivilegeSetCallback: function
  _componentPrivilegeSetCallback(status, url, headers, response, data) {
@@ -593,7 +617,6 @@ CalDAVAclCalendarEntry.prototype = {
                 && typeof(this.userPrincipals) != "undefined"
                 && typeof(this.userPrivileges) != "undefined"
                 && typeof(this.userAddresses) != "undefined"
-                && typeof(this.ownerAddresses) != "undefined"
                 && typeof(this.userIdentities) != "undefined"
                 && typeof(this.ownerIdentities) != "undefined"
                 && typeof(this.ownerPrincipal) != "undefined");
