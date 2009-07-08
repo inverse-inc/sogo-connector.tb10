@@ -89,20 +89,21 @@ function SCComputeEnableNewItems() {
 
     var cal = getSelectedCalendar();
     if (cal && cal.type == "caldav") {
-        dump("cal: " + cal.name + "\n");
+//         dump("cal: " + cal.name + "\n");
         var aclMgr = Components.classes["@inverse.ca/calendar/caldav-acl-manager;1"]
             .getService(Components.interfaces.nsISupports)
             .wrappedJSObject;
-        var entry = aclMgr.calendarEntry(cal.uri);
-        SCEnableNewItems = (entry.isCalendarReady()
-                            && entry.userCanAddComponents());
+        var calEntry = aclMgr.calendarEntry(cal.uri);
+        SCEnableNewItems = (calEntry.isCalendarReady()
+                            && calEntry.userCanAddComponents());
     }
     else
         SCEnableNewItems = true;
 
-    dump("enable new items: " + SCEnableNewItems + "\n");
+//     dump("enable new items: " + SCEnableNewItems + "\n");
+//     dump("  url: " + cal.uri.spec + "\n");
     if (SCEnableNewItems != oldValue) {
-        dump("updating new commands\n");
+//         dump("updating new commands\n");
         goUpdateCommand("calendar_new_event_command");
         goUpdateCommand("calendar_new_todo_command");
     }
@@ -114,7 +115,7 @@ function SCOnSelectionChanged(event) {
 }
 
 function SCOnCalendarSelect(event) {
-    dump("onselectionchanged\n");
+//     dump("onselectionchanged\n");
     SCComputeEnableNewItems();
     window.SCOldOnCalendarSelect(event);
 }
