@@ -1,3 +1,9 @@
+2009-07-09  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* chrome/content/sogo-connector/calendar/calendars-list-overlay.js:
+	don't enable the "new items" buttons when the selected calendar is
+	marked as read-only.
+
 2009-07-08  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* js/CalDAVAclManager.js: we pass the url of the calendar as data
