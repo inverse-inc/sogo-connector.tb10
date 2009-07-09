@@ -1,5 +1,5 @@
 <!ENTITY inverse.CalDAV.tab "CalDAV">
-<!ENTITY inverse.FbUrl.label "Freebusy URL:">
+<!ENTITY inverse.FbUrl.label "Beschikbaarheids (Free/Busy) URL:">
 
 <!--
   NAME 'calFBURL'
