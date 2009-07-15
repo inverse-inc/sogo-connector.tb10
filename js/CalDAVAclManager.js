@@ -413,7 +413,7 @@ CalDAVAclManager.prototype = {
         if (!this.accountMgr)
             this._initAccountMgr();
 
-	var newIdentity = this._findIdentity(email, displayName);
+        var newIdentity = this._findIdentity(email, displayName);
         if (!newIdentity) {
             var newIdentity = Components
                 .classes["@mozilla.org/messenger/identity;1"]

@@ -25,4 +25,9 @@
   </row>
 
   <checkbox id="event-all-day" disabled="true"/>
+
+  <hbox id="status-privacy-confidential-box" privacy="CONFIDENTIAL">
+    <label id="label-privacy-confidential"
+      value="&event.menu.options.privacy.confidential.label;"/>
+  </hbox>
 </overlay>
