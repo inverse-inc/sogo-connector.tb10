@@ -48,6 +48,7 @@ XMLToJSONParser.prototype = {
 		if (node.childNodes.length) {
 			var textValue = "";
 			var dictValue = {};
+			var hasElements = false;
 			for (var i = 0; i < node.childNodes.length; i++) {
 				var currentNode = node.childNodes[i];
 				var nodeName = currentNode.localName;
@@ -56,6 +57,7 @@ XMLToJSONParser.prototype = {
 					textValue += currentNode.nodeValue;
 				else if (currentNode.nodeType
 								 == Components.interfaces.nsIDOMNode.ELEMENT_NODE) {
+					hasElements = true;
 					var nodeValue = this._translateNode(currentNode);
 					if (!dictValue[nodeName])
 						dictValue[nodeName] = [];
@@ -63,10 +65,10 @@ XMLToJSONParser.prototype = {
 				}
 			}
 
-			if (textValue.length)
-				value = textValue;
-			else
+			if (hasElements)
 				value = dictValue;
+			else
+				value = textValue;
 		}
 
 		return value;

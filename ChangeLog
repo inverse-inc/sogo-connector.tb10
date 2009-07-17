@@ -1,5 +1,9 @@
 2009-07-17  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* chrome/content/inverse-library/sogoWebDAV.js: fixed a bug
+	occuring in the XML to JSON converter when the parsed response is
+	not flattened.
+
 	* js/CalDAVAclManager.js: we trigger the
 	"caldav-component-acl-loaded" or "caldav-component-acl-reset" to
 	notify observers that the event entries are ready.
