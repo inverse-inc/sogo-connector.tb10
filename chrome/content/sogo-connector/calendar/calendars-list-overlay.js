@@ -165,6 +165,6 @@ SCCalDAVACLObserver.prototype = {
     
         return this;
     }
-}
+};
 
-    window.addEventListener("load", SCCalendarsListOverlayOnLoad, false);
+window.addEventListener("load", SCCalendarsListOverlayOnLoad, false);
