@@ -1,3 +1,5 @@
+/* -*- Mode: java; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+
 window.addEventListener("load", SCOnCreationOverlayLoad, false);
 
 function SCOnCreationOverlayLoad() {

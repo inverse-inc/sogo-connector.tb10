@@ -1,3 +1,5 @@
+/* -*- Mode: java; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+
 var initInterval = -1;
 var componentEntry = null;
 var component = null;
