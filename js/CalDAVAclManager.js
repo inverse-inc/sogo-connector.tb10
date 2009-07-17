@@ -96,36 +96,57 @@ CalDAVAclManager.prototype = {
         // dump("callback for method: " + data.method + "\n");
         /* Warning, the url returned as parameter is not always the
            calendar URL since we also query user principals and items. */
+        var fixedURL = fixURL(data.calendar);
         if (status > 498) {
             dump("an anomally occured during request '" + data.method + "'.\n"
                  + "  Code: " + status + "\n"
                  + "We remove the calendar entry to give it a chance of"
                  + " succeeding later.\n");
-            var fixedURL = fixURL(data.calendar);
-            dump("   query url: " + url + "\n");
-            dump("   calendar url: " + fixedURL + "\n");
             var observerService = Components.classes["@mozilla.org/observer-service;1"]
                                   .getService(Components.interfaces.nsIObserverService);
-            observerService.notifyObservers(null, "caldav-acl-reset",
-                                            this.calendars[fixedURL].uri.spec);
-            delete this.calendars[fixedURL];
+            if (data.component) {
+                observerService.notifyObservers(null,
+                                                "caldav-compenent-acl-reset",
+                                                data.component);
+                delete this.calendars[fixedURL].entries[data.component];
+            } else {
+                dump("   query url: " + url + "\n");
+                dump("   calendar url: " + fixedURL + "\n");
+                observerService.notifyObservers(null, "caldav-acl-reset",
+                                                this.calendars[fixedURL].uri.spec);
+                delete this.calendars[fixedURL];
+            }
         }
         else if (status > 399) {
             dump("An error occurred with one of the ACL queries, which"
                  + " indicates the server don't support ACL.\n"
                  + "  Code: " + status + "\n"
                  + "We keep the ACL entry but mark it as having no support.\n");
-            var fixedURL = fixURL(data.calendar);
-            dump("   query url: " + url + "\n");
-            dump("   calendar url: " + fixedURL + "\n");
-            var entry = this.calendars[fixedURL];
-            var wasReady = entry.isCalendarReady();
-            this._markWithNoAccessControl(fixedURL);
-            if (!wasReady) {
+            if (data.component) {
                 var observerService = Components.classes["@mozilla.org/observer-service;1"]
                                       .getService(Components.interfaces.nsIObserverService);
-                observerService.notifyObservers(null, "caldav-acl-loaded",
-                                                this.calendars[fixedURL].uri.spec);
+                var compEntry = this.calendars[fixedURL].entries[data.component];
+                var compData = {
+                  component: data.component,
+                  entry: compEntry
+                };
+                compData.wrappedJSObject = compData;
+                observerService.notifyObservers(null,
+                                                "caldav-component-acl-reset",
+                                                compData);
+                delete this.calendars[fixedURL].entries[data.component];
+            } else {
+                dump("   query url: " + url + "\n");
+                dump("   calendar url: " + fixedURL + "\n");
+                var entry = this.calendars[fixedURL];
+                var wasReady = entry.isCalendarReady();
+                this._markWithNoAccessControl(fixedURL);
+                if (!wasReady) {
+                    var observerService = Components.classes["@mozilla.org/observer-service;1"]
+                                          .getService(Components.interfaces.nsIObserverService);
+                    observerService.notifyObservers(null, "caldav-acl-loaded",
+                                                    this.calendars[fixedURL].uri.spec);
+                }
             }
         }
         else {
@@ -311,6 +332,8 @@ CalDAVAclManager.prototype = {
                     addresses.push(address);
                 }
 
+            dump("identities for calendar: " + data.calendar + "\n");
+            dump("  type: " + data.who + "\n");
             var identities = this.calendars[data.calendar][identitiesKey];
             if (!identities) {
                 identities = [];
@@ -319,6 +342,7 @@ CalDAVAclManager.prototype = {
             var displayName = this._parsePrincipalDisplayName(queryDoc);
             if (displayName) {
                 for (var address in addressValues) {
+                    dump("  address: " + address + "\n");
                     if (address.search("mailto:", "i") == 0) {
                         this._appendIdentity(identities, displayName,
                                              address.substr(7), this.calendars[data.calendar]);
@@ -488,7 +512,7 @@ CalDAVAclManager.prototype = {
         this.xmlRequest(url, "PROPFIND", propfind,
     {'content-type': "application/xml; charset=utf-8",
             'depth': "0"},
-    {method: "component-privilege-set", entry: entry, calendar: calendarURL});
+    {method: "component-privilege-set", entry: entry, component: url});
     },
  _componentPrivilegeSetCallback: function
  _componentPrivilegeSetCallback(status, url, headers, response, data) {
@@ -498,6 +522,10 @@ CalDAVAclManager.prototype = {
         // dump("\n\n\ncomponent-privilege-set:\n" + response + "\n\n\n");
     
         data.entry.userPrivileges = this._parsePrivileges(queryDoc);
+        var observerService = Components.classes["@mozilla.org/observer-service;1"]
+                              .getService(Components.interfaces.nsIObserverService);
+        observerService.notifyObservers(null, "caldav-component-acl-loaded",
+                                        data.component);
     },
  _parsePrivileges: function _parsePrivileges(queryDoc) {
         var privileges = [];
