@@ -87,22 +87,25 @@ function SCComputeEnableDelete(selectedItems) {
 function SCComputeEnableNewItems() {
     var oldValue = SCEnableNewItems;
 
+    SCEnableNewItems = false;
     var cal = getSelectedCalendar();
-    if (cal && cal.type == "caldav") {
-//         dump("cal: " + cal.name + "\n");
-        if (cal.readOnly)
-            SCEnableNewItems = false;
-        else {
-            var aclMgr = Components.classes["@inverse.ca/calendar/caldav-acl-manager;1"]
-                         .getService(Components.interfaces.nsISupports)
-                         .wrappedJSObject;
-            var calEntry = aclMgr.calendarEntry(cal.uri);
-            SCEnableNewItems = (calEntry.isCalendarReady()
-                                && calEntry.userCanAddComponents());
+    if (cal) {
+        if (cal.type == "caldav") {
+            //         dump("cal: " + cal.name + "\n");
+            if (cal.readOnly)
+                SCEnableNewItems = false;
+            else {
+                var aclMgr = Components.classes["@inverse.ca/calendar/caldav-acl-manager;1"]
+                             .getService(Components.interfaces.nsISupports)
+                             .wrappedJSObject;
+                var calEntry = aclMgr.calendarEntry(cal.uri);
+                SCEnableNewItems = (calEntry.isCalendarReady()
+                                    && calEntry.userCanAddComponents());
+            }
+        } else {
+            SCEnableNewItems = !cal.readOnly;
         }
     }
-    else
-        SCEnableNewItems = !cal.readOnly;
 
 //     dump("enable new items: " + SCEnableNewItems + "\n");
 //     dump("  url: " + cal.uri.spec + "\n");
