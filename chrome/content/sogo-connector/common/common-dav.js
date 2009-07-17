@@ -1,5 +1,5 @@
-/* -*- Mode: java; tab-width: 2; c-tab-always-indent: t; indent-tabs-mode: t; c-basic-offset: 2 -*- */
-/*************************************************************************************************************   
+/* -*- Mode: java; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/**********************************************************************   
  Copyright:	Inverse inc., 2006-2007
  Author: 	Robert Bolduc
  Email:		support@inverse.ca 
@@ -19,7 +19,7 @@
     You should have received a copy of the GNU General Public License
     along with "SOGo Connector"; if not, write to the Free Software
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- ********************************************************************************/
+ *********************************************************************/
 
 function jsInclude(files, target) {
  	var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
