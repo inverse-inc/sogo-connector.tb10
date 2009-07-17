@@ -1,10 +1,27 @@
 /* -*- Mode: java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
-var loader = Components .classes["@mozilla.org/moz/jssubscript-loader;1"]
-    .getService(Components.interfaces.mozIJSSubScriptLoader);
-loader.loadSubScript("chrome://sogo-connector/content/general/mozilla.utils.inverse.ca.js");
+// var loader = Components .classes["@mozilla.org/moz/jssubscript-loader;1"]
+//     .getService(Components.interfaces.mozIJSSubScriptLoader);
+// loader.loadSubScript("chrome://sogo-connector/content/general/mozilla.utils.inverse.ca.js");
+
+/* STACK method from lightning */
+function backtrace(aDepth) {
+    var depth = aDepth || 50;
+    var stack = "";
+    var frame = Components.stack.caller;
+    for (var i = 1; i <= depth && frame; i++) {
+        stack += i + ": [" + frame.filename + ":" +
+                 frame.lineNumber + "] " + frame.name + "\n";
+        frame = frame.caller;
+    }
+    return stack;
+}
 
 function fixURL(url) {
+    if (!url) {
+        dump("fixURL: no URL! - backtrace\n" + backtrace());
+        throw("fixURL: no URL!\n");
+    }
     var fixedURL = url;
     if (fixedURL[fixedURL.length-1] != '/')
         fixedURL += '/';
@@ -512,7 +529,8 @@ CalDAVAclManager.prototype = {
         this.xmlRequest(url, "PROPFIND", propfind,
     {'content-type': "application/xml; charset=utf-8",
             'depth': "0"},
-    {method: "component-privilege-set", entry: entry, component: url});
+    {method: "component-privilege-set",
+            entry: entry, calendar: calendarURL, component: url});
     },
  _componentPrivilegeSetCallback: function
  _componentPrivilegeSetCallback(status, url, headers, response, data) {
