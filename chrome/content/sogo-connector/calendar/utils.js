@@ -22,3 +22,46 @@ function isCalendarWritable(aCalendar) {
             (!getIOService().offline ||
              aCalendar.getProperty("requiresNetwork") === false));
 }
+
+function SCOpenDialogRefreshObserver(dialogArguments) {
+    this.dialogArguments = dialogArguments;
+}
+
+SCOpenDialogRefreshObserver.prototype = {
+    onLoad: function(aCalendar) {
+        aCalendar.removeObserver(this);
+        window.SCOldOpenDialog.apply(window, this.dialogArguments);        
+    },
+
+    onStartBatch: function() {},
+    onEndBatch: function() {},
+    onAddItem: function(aItem) {},
+    onModifyItem: function(aNewItem, aOldItem) {},
+    onDeleteItem: function(aDeletedItem) {},
+    onError: function(aCalendar, aErrNo, aMessage) {},
+    onPropertyChanged: function(aCalendar, aName, aValue, aOldValue) {},
+    onPropertyDeleting: function(aCalendar, aName) {}
+};
+
+function SCOpenDialog(url, name, parameters, args) {
+    var proceed = true;
+    
+    if (url == "chrome://calendar/content/calendar-summary-dialog.xul") {
+        var calendar = args.calendar;
+        if (calendar
+            && isCalendarWritable(calendar)
+            && calendar.type == "caldav") {
+            var refreshObserver = new SCOpenDialogRefreshObserver(arguments);
+            calendar.addObserver(refreshObserver);
+            calendar.refresh();
+            proceed = false;
+        }
+    }
+
+    if (proceed) {
+        window.SCOldOpenDialog.apply(window, arguments);
+    }
+}
+
+window.SCOldOpenDialog = window.openDialog;
+window.openDialog = window.SCOpenDialog;
