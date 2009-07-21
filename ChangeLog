@@ -1,3 +1,9 @@
+2009-07-21  Ludovic Marcotte  <lmarcotte@inverse.ca>
+
+	* chrome/content/sogo-connector/general/vcards.utils.js
+	We now keep custom fields between roundtrips.
+	See http://www.scalableogo.org/bugs/view.php?id=32
+
 2009-07-19  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* chrome/content/sogo-connector/calendar/utils.js: overriden

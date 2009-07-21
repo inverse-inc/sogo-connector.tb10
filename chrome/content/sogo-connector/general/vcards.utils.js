@@ -379,6 +379,18 @@ var _insertCardMethods = {
  note: function(card, parameters, values) {
 	 card.notes = values.join(";");
  },
+ custom1: function(card, parameters, values) {
+	card.custom1 = values[0];
+ },
+ custom2: function(card, parameters, values) {
+	card.custom2 = values[0];
+ },
+ custom3: function(card, parameters, values) {
+	card.custom3 = values[0];
+ },
+ custom4: function(card, parameters, values) {
+	card.custom4 = values[0];
+ },
  begin: function(card, parameters, values) {
  },
  end: function(card, parameters, values) {
