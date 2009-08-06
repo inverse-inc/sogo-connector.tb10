@@ -30,7 +30,7 @@ function SCOpenDialogRefreshObserver(dialogArguments) {
 SCOpenDialogRefreshObserver.prototype = {
     onLoad: function(aCalendar) {
         aCalendar.removeObserver(this);
-        window.SCOldOpenDialog.apply(window, this.dialogArguments);        
+        window.SCOldOpenDialog.apply(window, this.dialogArguments);
     },
 
     onStartBatch: function() {},
