@@ -1,3 +1,9 @@
+2009-08-07  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	*
+	chrome/content/sogo-connector/calendar/calendar-summary-dialog.{js,xul}:
+	removed overlays, modified code put back in Lightning (inverse edition).
+
 2009-07-21  Ludovic Marcotte  <lmarcotte@inverse.ca>
 
 	* chrome/content/sogo-connector/general/vcards.utils.js
