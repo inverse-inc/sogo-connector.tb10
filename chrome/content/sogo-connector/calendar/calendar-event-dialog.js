@@ -34,7 +34,7 @@ function SCOnLoadHandler(event) {
             if (cache) {
                 if (cache[component.id]) {
                     componentURL = cache[component.id].locationPath;
-                    dump("componentURL: " + componentURL + "\n");
+//                     dump("componentURL: " + componentURL + "\n");
                 }
             }
             else
