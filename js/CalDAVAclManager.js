@@ -105,6 +105,7 @@ CalDAVAclManager.prototype = {
             calendar.userIdentities = [];
             calendar.ownerIdentities = [];
             calendar.ownerPrincipal = null;
+            calendar.entries = {};
             this._queryCalendar(url);
         }
     },

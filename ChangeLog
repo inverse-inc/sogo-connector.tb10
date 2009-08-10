@@ -1,3 +1,8 @@
+2009-08-10  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* js/CalDAVAclManager.js: we remove the entries pertaining to
+	subitems when a refresh occurs on a calendar entry.
+
 2009-08-07  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	*
