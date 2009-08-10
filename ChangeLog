@@ -1,5 +1,8 @@
 2009-08-10  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* chrome/content/sogo-connector/general/sync.addressbook.groupdav.js:
+	modified to handle "valid-sync-token" synchronization errors.
+
 	* chrome/content/sogo-connector/calendar/calendar-summary-dialog.xul:
 	new version of the overlay, only for including utils.js and
 	thereby have access to our version of isCalendarWritable.

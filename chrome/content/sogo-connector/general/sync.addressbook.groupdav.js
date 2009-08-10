@@ -687,21 +687,24 @@ GroupDavSynchronizer.prototype = {
             this.abort();
         }
     },
+ triggerWebDAVSync: function() {
+        var syncQuery = ('<?xml version="1.0"?>'
+                         + '<sync-collection xmlns="DAV:">'
+                         + ((this.webdavSyncToken.length)
+                            ? ('<sync-token>'
+                               + this.webdavSyncToken
+                               + '</sync-token>')
+                            : '<sync-token/>')
+                         + '<prop><getetag/><getcontenttype/></prop>'
+                         + '</sync-collection>');
+        var data = {query: "server-sync-query"};
+        var request = new sogoWebDAV(this.gURL, this, data);
+        request.requestJSONResponse = true;
+        request.report(syncQuery, true);
+    },
  checkServerUpdates: function() {
         if (this.hasWebdavSync) {
-            var syncQuery = ('<?xml version="1.0"?>'
-                             + '<sync-collection xmlns="DAV:">'
-                             + ((this.webdavSyncToken.length)
-                                ? ('<sync-token>'
-                                   + this.webdavSyncToken
-                                   + '</sync-token>')
-                                : '<sync-token/>')
-                             + '<prop><getetag/><getcontenttype/></prop>'
-                             + '</sync-collection>');
-            var data = {query: "server-sync-query"};
-            var request = new sogoWebDAV(this.gURL, this, data);
-            request.requestJSONResponse = true;
-            request.report(syncQuery, true);
+            this.triggerWebDAVSync();
         }
         else {
             var data = {query: "server-propfind"};
@@ -795,6 +798,8 @@ GroupDavSynchronizer.prototype = {
 
         if (jsonResponse) {
             if (status > 199 && status < 400) {
+                var completeSync = (this.webdavSyncToken.length == 0);
+                var reportedKeys = {};
                 this.newWebdavSyncToken
                     = jsonResponse["multistatus"][0]["sync-token"][0];
                 var responses = jsonResponse["multistatus"][0]["sync-response"];
@@ -815,6 +820,7 @@ GroupDavSynchronizer.prototype = {
                                     if (contType == "text/x-vcard"
                                         || contType == "text/vcard"
                                         || contType == "text/x-vlist") {
+                                        reportedKeys[key] = true;
                                         var version = prop["getetag"][0];
                                         var itemDict = { etag: version, type: contType };
                                         dump("item: " + key + "; etag: " + version + "; type: "
@@ -884,11 +890,39 @@ GroupDavSynchronizer.prototype = {
                     }
                 }
 
+                if (completeSync) {
+                    for (var key in this.localCardVersionHash) {
+                        var localVersion = this.localCardVersionHash[key];
+                        if (localVersion != "-1" && !reportedKeys[key])
+                            this.serverDeletes.push(key);
+                    }
+                    for (var key in this.localListVersionHash) {
+                        var localVersion = this.localListVersionHash[key];
+                            if (localVersion != "-1" && !reportedKeys[key])
+                                this.serverDeletes.push(key);
+                    }
+                }
+
                 if (this.validCollection)
                     this.processCards();
+            } else {
+                syncError = false;
+                if (this.webdavSyncToken.length
+                    && jsonResponse["error"] && jsonResponse["error"].length) {
+                    davError = jsonResponse["error"][0];
+                    if (davError["valid-sync-token"].length) {
+                        syncError = true;
+                    }
+                }
+                if (status == 403 && syncError) {
+                    dump("[sogo-connector] received 'valid-sync-token' error"
+                         + " code, retrying without a token...\n");
+                    this.webdavSyncToken = "";
+                    this.triggerWebDAVSync();
+                } else {
+                    this.abort();
+                }
             }
-            else
-                this.abort();
         }
         else
             dump("onServerHashQueryComlete: the server returned an empty response\n");
