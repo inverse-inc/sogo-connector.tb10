@@ -69,13 +69,14 @@ SCOpenDialogRefreshObserver.prototype = {
 };
 
 function SCOpenDialog(url, name, parameters, args) {
-    var calendar = args.calendar;
-    if (calendar
-        && isCalendarWritable(calendar)
-        && calendar.type == "caldav") {
+    if (args
+        && (args.mode && args.mode != "new")
+        && isCalendarWritable(args.calendar)
+        && args.calendar.type == "caldav") {
         var refreshObserver = new SCOpenDialogRefreshObserver(url, name,
                                                               parameters,
                                                               args);
+        var calendar = args.calendar;
         calendar.addObserver(refreshObserver);
         calendar.refresh();
     } else {
