@@ -23,14 +23,39 @@ function isCalendarWritable(aCalendar) {
              aCalendar.getProperty("requiresNetwork") === false));
 }
 
-function SCOpenDialogRefreshObserver(dialogArguments) {
-    this.dialogArguments = dialogArguments;
+function SCOpenDialogRefreshObserver(url, name, parameters, args) {
+    this.arguments = { url: url,
+                       name: name,
+                       parameters: parameters,
+                       args: args };
 }
 
 SCOpenDialogRefreshObserver.prototype = {
     onLoad: function(aCalendar) {
         aCalendar.removeObserver(this);
-        window.SCOldOpenDialog.apply(window, this.dialogArguments);
+        var thisObserver = this;
+        var event = this.arguments.args.calendarEvent;
+        if (event) {
+            var getItemListener = {
+                onGetResult: function (aCalendar, aStatus, aItemType,
+                                       aDetail, aCount, aItems) {
+                    thisObserver.arguments.args.calendarEvent = aItems[0];
+                    SCOldOpenDialog(thisObserver.arguments.url,
+                                    thisObserver.arguments.name,
+                                    thisObserver.arguments.parameters,
+                                    thisObserver.arguments.args);
+                },
+                onOperationComplete: function (aCalendar, aStatus,
+                                               aOperationType, aId, aDetail) {
+                }
+            };
+            aCalendar.getItem(event.id, getItemListener);
+        } else {
+            SCOldOpenDialog(this.arguments.url,
+                            this.arguments.name,
+                            this.arguments.parameters,
+                            this.arguments.args);
+        }
     },
 
     onStartBatch: function() {},
@@ -44,21 +69,16 @@ SCOpenDialogRefreshObserver.prototype = {
 };
 
 function SCOpenDialog(url, name, parameters, args) {
-    var proceed = true;
-    
-    if (url == "chrome://calendar/content/calendar-summary-dialog.xul") {
-        var calendar = args.calendar;
-        if (calendar
-            && isCalendarWritable(calendar)
-            && calendar.type == "caldav") {
-            var refreshObserver = new SCOpenDialogRefreshObserver(arguments);
-            calendar.addObserver(refreshObserver);
-            calendar.refresh();
-            proceed = false;
-        }
-    }
-
-    if (proceed) {
+    var calendar = args.calendar;
+    if (calendar
+        && isCalendarWritable(calendar)
+        && calendar.type == "caldav") {
+        var refreshObserver = new SCOpenDialogRefreshObserver(url, name,
+                                                              parameters,
+                                                              args);
+        calendar.addObserver(refreshObserver);
+        calendar.refresh();
+    } else {
         window.SCOldOpenDialog.apply(window, arguments);
     }
 }

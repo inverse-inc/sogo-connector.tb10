@@ -1,3 +1,10 @@
+2009-08-17  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* chrome/content/sogo-connector/calendar/utils.js: if an item
+	changes during a calendar refresh, we must fetch the new item from
+	the calendar and bind it to the editing/summary dialog. Otherwise
+	the old version is still used.
+
 2009-08-10  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* chrome/content/sogo-connector/general/sync.addressbook.groupdav.js:
