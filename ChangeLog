@@ -1,5 +1,7 @@
 2009-08-21  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* install.rdf: version number set to 0.97pre1
+
 	* chrome/content/sogo-connector/calendar/utils.js: slightly
 	modified to override modifyEventWithDialog rather than openDialog.
 	Fixed to take the recurrence state of the selected item into
