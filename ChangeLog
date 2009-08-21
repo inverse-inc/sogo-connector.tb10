@@ -1,3 +1,10 @@
+2009-08-21  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* chrome/content/sogo-connector/calendar/utils.js: slightly
+	modified to override modifyEventWithDialog rather than openDialog.
+	Fixed to take the recurrence state of the selected item into
+	account.
+
 2009-08-17  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* chrome/content/sogo-connector/calendar/utils.js: if an item

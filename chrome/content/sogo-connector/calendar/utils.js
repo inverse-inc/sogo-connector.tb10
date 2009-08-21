@@ -23,39 +23,36 @@ function isCalendarWritable(aCalendar) {
              aCalendar.getProperty("requiresNetwork") === false));
 }
 
-function SCOpenDialogRefreshObserver(url, name, parameters, args) {
-    this.arguments = { url: url,
-                       name: name,
-                       parameters: parameters,
-                       args: args };
+function SCModifyEventWithDialogObserver(aItem, job, aPromptOccurrence) {
+    this.arguments = { itemArg: aItem,
+                       jobArg: job,
+                       promptArg: aPromptOccurrence };
 }
 
-SCOpenDialogRefreshObserver.prototype = {
+SCModifyEventWithDialogObserver.prototype = {
     onLoad: function(aCalendar) {
         aCalendar.removeObserver(this);
         var thisObserver = this;
-        var event = this.arguments.args.calendarEvent;
-        if (event) {
-            var getItemListener = {
-                onGetResult: function (aCalendar, aStatus, aItemType,
-                                       aDetail, aCount, aItems) {
-                    thisObserver.arguments.args.calendarEvent = aItems[0];
-                    SCOldOpenDialog(thisObserver.arguments.url,
-                                    thisObserver.arguments.name,
-                                    thisObserver.arguments.parameters,
-                                    thisObserver.arguments.args);
-                },
-                onOperationComplete: function (aCalendar, aStatus,
-                                               aOperationType, aId, aDetail) {
+        var getItemListener = {
+            onGetResult: function (aCalendar, aStatus, aItemType,
+                                   aDetail, aCount, aItems) {
+                var parentItem = aItems[0];
+                var rID = thisObserver.arguments.itemArg.recurrenceId;
+                var item;
+                if (rID) {
+                    item = parentItem.recurrenceInfo.getOccurrenceFor(rID);
+                } else {
+                    item = parentItem;
                 }
-            };
-            aCalendar.getItem(event.id, getItemListener);
-        } else {
-            SCOldOpenDialog(this.arguments.url,
-                            this.arguments.name,
-                            this.arguments.parameters,
-                            this.arguments.args);
-        }
+                SCOldModifyEventWithDialog(item,
+                                           thisObserver.arguments.jobArg,
+                                           thisObserver.arguments.prompArg);
+            },
+            onOperationComplete: function (aCalendar, aStatus,
+                                           aOperationType, aId, aDetail) {
+            }
+        };
+        aCalendar.getItem(thisObserver.arguments.itemArg.id, getItemListener);
     },
 
     onStartBatch: function() {},
@@ -68,21 +65,18 @@ SCOpenDialogRefreshObserver.prototype = {
     onPropertyDeleting: function(aCalendar, aName) {}
 };
 
-function SCOpenDialog(url, name, parameters, args) {
-    if (args
-        && (args.mode && args.mode != "new")
-        && isCalendarWritable(args.calendar)
-        && args.calendar.type == "caldav") {
-        var refreshObserver = new SCOpenDialogRefreshObserver(url, name,
-                                                              parameters,
-                                                              args);
-        var calendar = args.calendar;
+function SCModifyEventWithDialog(aItem, job, aPrompt) {
+    var calendar = aItem.calendar;
+    if (calendar.type == "caldav") {
+        var refreshObserver = new SCModifyEventWithDialogObserver(aItem,
+                                                                  job,
+                                                                  aPrompt);
         calendar.addObserver(refreshObserver);
         calendar.refresh();
     } else {
-        window.SCOldOpenDialog.apply(window, arguments);
+        window.SCOldModifyEventWithDialog.apply(window, arguments);
     }
 }
 
-window.SCOldOpenDialog = window.openDialog;
-window.openDialog = window.SCOpenDialog;
+window.SCOldModifyEventWithDialog = window.modifyEventWithDialog;
+window.modifyEventWithDialog = window.SCModifyEventWithDialog;
