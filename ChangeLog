@@ -1,5 +1,9 @@
 2009-08-21  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* chrome/content/sogo-connector/calendar/calendar-common-sets.xul:
+	added an "Export Task" menu item to the task context menu, that
+	triggers the export of the selected tasks.
+
 	* install.rdf: version number set to 0.97pre1
 
 	* chrome/content/sogo-connector/calendar/utils.js: slightly
