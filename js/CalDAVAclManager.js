@@ -544,7 +544,7 @@ CalDAVAclManager.prototype = {
         var observerService = Components.classes["@mozilla.org/observer-service;1"]
                               .getService(Components.interfaces.nsIObserverService);
         observerService.notifyObservers(null, "caldav-component-acl-loaded",
-                                        data.component);
+                                        { entry: data.component });
     },
  _parsePrivileges: function _parsePrivileges(queryDoc) {
         var privileges = [];
