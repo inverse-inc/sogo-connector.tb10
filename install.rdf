@@ -5,14 +5,13 @@
   <RDF:Description RDF:about="urn:mozilla:install-manifest"
     em:name="Inverse SOGo Connector"
     em:id="sogo-connector@inverse.ca"
-    em:version="0.97"
+    em:version="0.98pre1"
     em:description="A DAV plugin for keeping addressbooks and events in sync"
     em:iconURL="chrome://sogo-connector/skin/addressbook/sogo.png"
     em:creator="Inverse &lt;support@inverse.ca>"
     em:homepageURL="http://www.inverse.ca/contributions/sogo_connector.html"
     em:updateURL="http://www.inverse.ca/groupware/plugins/updates.php?plugin=%ITEM_ID%&amp;version=%ITEM_VERSION%">
-    <em:developer>Robert Bolduc</em:developer>	  
-    <em:developer>Wolfgang Sourdeau</em:developer>
+    <em:developer>Inverse &lt;support@inverse.ca></em:developer>	  
     <em:contributor>Chris Bryant</em:contributor>
     <em:contributor>Damon Hart</em:contributor>
     <em:contributor>Dominik Gehl</em:contributor>
