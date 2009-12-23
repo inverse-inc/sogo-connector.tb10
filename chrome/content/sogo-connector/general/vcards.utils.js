@@ -262,7 +262,12 @@ var _insertCardMethods = {
 			card.department = values[1];
 	},
  tel: function(card, parameters, values) {
-		var preTypes = parameters["type"].join(",").split(",");
+		var preTypes;
+		if (parameters["type"]) {
+			preTypes = parameters["type"].join(",").split(",");
+		} else {
+			preTypes = null;
+		}
 		var knownType = false;
 		if (preTypes)
 			for (var i = 0; i < preTypes.length; i++) {
@@ -296,7 +301,12 @@ var _insertCardMethods = {
 	},
  adr: function(card, parameters, values) {
 		var types = new Array();
-		var preTypes = parameters["type"];
+		var preTypes;
+		if (parameters["type"]) {
+			preTypes = parameters["type"].join(",").split(",");
+		} else {
+			preTypes = null;
+		}
 		if (preTypes)
 			for (var i = 0; i < preTypes.length; i++)
 				types[i] = preTypes[i].toUpperCase();
@@ -317,7 +327,7 @@ var _insertCardMethods = {
 		else {
 			if (values[0])
 				card.workAddress2 = values[0];
-			if (values[2]) 
+			if (values[2])
 				card.workAddress = values[2];
 			if (values[3])
 				card.workCity = values[3];
@@ -331,7 +341,12 @@ var _insertCardMethods = {
 	},
  email: function(card, parameters, values) {
 		var types = new Array();
-		var preTypes = parameters["type"];
+		var preTypes;
+		if (parameters["type"]) {
+			preTypes = parameters["type"].join(",").split(",");
+		} else {
+			preTypes = null;
+		}
 		if (preTypes)
 			for (var i = 0; i < preTypes.length; i++)
 				types[i] = preTypes[i].toUpperCase();
@@ -349,7 +364,12 @@ var _insertCardMethods = {
 	},
  url: function(card, parameters, values) {
 		var types = new Array();
-		var preTypes = parameters["type"];
+		var preTypes;
+		if (parameters["type"]) {
+			preTypes = parameters["type"].join(",").split(",");
+		} else {
+			preTypes = null;
+		}
 		if (preTypes)
 			for (var i = 0; i < preTypes.length; i++)
 				types[i] = preTypes[i].toUpperCase();

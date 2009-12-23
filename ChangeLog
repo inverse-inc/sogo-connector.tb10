@@ -1,3 +1,9 @@
+2009-12-23  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* chrome/content/sogo-connector/general/vcards.utils.js: ensure
+	that the "type" parameter is available when reconstructing the
+	array of types for the "TEL", "WORK", "URL" and "EMAIL" tags.
+
 2009-08-21  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* chrome/content/sogo-connector/calendar/calendar-common-sets.xul:
