@@ -1,3 +1,9 @@
+2010-01-15  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* chrome/content/sogo-connector/general/sync.addressbook.groupdav.js:
+	fixed support for webdav-sync, which didn't take the intermediary
+	"supported-report" element into account.
+
 2009-12-23  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* chrome/content/sogo-connector/general/vcards.utils.js: ensure

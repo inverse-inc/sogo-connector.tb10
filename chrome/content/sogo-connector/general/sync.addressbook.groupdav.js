@@ -619,6 +619,45 @@ GroupDavSynchronizer.prototype = {
 
         return href;
     },
+
+ /* The right way... */
+ _detectWebdavSyncInSupportedReports: function(supportedReports) {
+        var i = 0;
+        while (!this.hasWebdavSync && i < supportedReports.length) {
+            var report = supportedReports[i]["report"];
+            if (report && report.length && report[0]["sync-collection"]) {
+                this.hasWebdavSync = true;
+            } else {
+                i++;
+            }
+        }
+    },
+
+ /* The wrong way, used by SOGO < 1.2 */
+ _detectWebdavSyncInReports: function(reports) {
+        var i = 0;
+        while (!this.hasWebdavSync && i < reports.length) {
+            if (reports[i]["sync-collection"])
+                this.hasWebdavSync = true;
+            else
+                i++;
+        }
+    },
+
+ _detectWebdavSyncInSupportedReportSet: function(reportSet) {
+        if (reportSet && reportSet.length) {
+            var supportedReports = reportSet[0]["supported-report"];
+            if (supportedReports) {
+                this._detectWebdavSyncInSupportedReports(supportedReports);
+            } else {
+                var reports = reportSet[0]["report"];
+                if (reports) {
+                    this._detectWebdavSyncInReports(reports);
+                }
+            }            
+        }
+    },
+
  onServerCheckComplete: function(status, jsonResponse) {
         this.pendingOperations = 0;
         // 		dump("pendingOperations: " + this.pendingOperations + "\n");
@@ -643,16 +682,8 @@ GroupDavSynchronizer.prototype = {
                             if (rsrcType["vcard-collection"]
                                 || rsrcType.indexOf["addressbook"]) {
                                 this.validCollection = true;
-                                
-                                var reports = prop["supported-report-set"][0]["report"];
-                                var i = 0;
-                                while (!this.hasWebdavSync && i < reports.length) {
-                                    if (reports[i]["sync-collection"])
-                                        this.hasWebdavSync = true;
-                                    else
-                                        i++;
-                                }
-                                
+                                this._detectWebdavSyncInSupportedReportSet(prop["supported-report-set"]);
+
                                 /* we "load" the local card keys and etags here */
                                 this.fillLocalCardHashes();
                                 this.fillLocalListHashes();
