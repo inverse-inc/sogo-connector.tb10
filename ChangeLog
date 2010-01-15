@@ -3,6 +3,7 @@
 	* chrome/content/sogo-connector/general/sync.addressbook.groupdav.js:
 	fixed support for webdav-sync, which didn't take the intermediary
 	"supported-report" element into account.
+	Fixed a bug in the intepretation of the DAV resourcetype property.
 
 2009-12-23  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 

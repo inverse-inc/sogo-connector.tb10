@@ -680,7 +680,7 @@ GroupDavSynchronizer.prototype = {
                         if (href == this.gURL) {
                             var rsrcType = prop["resourcetype"][0];
                             if (rsrcType["vcard-collection"]
-                                || rsrcType.indexOf["addressbook"]) {
+                                || rsrcType["addressbook"]) {
                                 this.validCollection = true;
                                 this._detectWebdavSyncInSupportedReportSet(prop["supported-report-set"]);
 
