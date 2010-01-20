@@ -70,7 +70,7 @@ function buildCardDavReportXML(filter) {
 						 + ' xmlns:C="urn:ietf:params:xml:ns:carddav">'
 						 + '<D:prop><D:getetag/><C:addressbook-data/></D:prop>'
 						 + '<C:filter><C:prop-filter name="mail">'
-						 + '<C:text-match collation="i;unicasemap" match-type="substring">'
+						 + '<C:text-match collation="i;unicasemap" match-type="starts-with">'
 						 + xmlEscape(filter)
 						 + '</C:text-match></C:prop-filter></C:filter>'
 						 + '</C:addressbook-query>');
