@@ -574,6 +574,13 @@ function _updateProgressBar(pc) {
 }
 
 function onLoadDAV() {
+	var appInfo = Components.classes["@mozilla.org/xre/app-info;1"]
+                           .getService(Components.interfaces.nsIXULRuntime);
+	if (appInfo.OS == "Darwin") {
+		var toolbar = document.getElementById("ab-bar2");
+		toolbar.setAttribute("arch", "mac");
+	}
+
 	this.SCAbEditSelectedDirectoryOriginal = this.AbEditSelectedDirectory;
 	this.AbEditSelectedDirectory = this.SCAbEditSelectedDirectory;
 	this.SCAbDeleteOriginal = this.AbDelete;

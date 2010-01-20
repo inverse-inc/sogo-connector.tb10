@@ -1,3 +1,8 @@
+2010-01-20  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* chrome/skin/classic/sogo-connector/addressbook/addressbook.groupdav.overlay.css:
+	added classes and icons from Mac and non-Mac platforms. (Closes: #51)
+
 2010-01-15  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* chrome/content/sogo-connector/general/sync.addressbook.groupdav.js:
