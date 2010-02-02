@@ -126,13 +126,16 @@ CalDAVAclManager.prototype = {
                 observerService.notifyObservers(null,
                                                 "caldav-compenent-acl-reset",
                                                 data.component);
-                delete this.calendars[fixedURL].entries[data.component];
+                if (this.calendars[fixedURL]
+                    && this.calendars[fixedURL].entries)
+                    delete this.calendars[fixedURL].entries[data.component];
             } else {
                 dump("   query url: " + url + "\n");
                 dump("   calendar url: " + fixedURL + "\n");
                 observerService.notifyObservers(null, "caldav-acl-reset",
                                                 this.calendars[fixedURL].uri.spec);
-                delete this.calendars[fixedURL];
+                if (this.calendars[fixedURL])
+                    delete this.calendars[fixedURL];
             }
         }
         else if (status > 399) {

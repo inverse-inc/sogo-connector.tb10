@@ -1,3 +1,9 @@
+2010-02-02  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* js/CalDAVAclManager.js (onDAVQueryComplete:) ensure that the
+	returned entries exists in the cache before deleting them, to
+	avoid an exception.
+
 2010-01-20  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* chrome/skin/classic/sogo-connector/addressbook/addressbook.groupdav.overlay.css:
