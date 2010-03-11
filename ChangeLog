@@ -1,3 +1,10 @@
+2010-03-11  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* js/CalDAVAclManager.js (_initAccountMgr): it may happen that
+	identities referenced in the account manager are ghost identities.
+	We work-around this, at least for the moment, by explicitly
+	removing those from the default account.
+
 2010-02-02  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* js/CalDAVAclManager.js (onDAVQueryComplete:) ensure that the

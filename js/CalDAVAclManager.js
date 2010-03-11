@@ -385,23 +385,30 @@ CalDAVAclManager.prototype = {
     },
  _initAccountMgr: function _initAccountMgr() {
         this.accountMgr = Components.classes["@mozilla.org/messenger/account-manager;1"]
-        .getService(Components.interfaces.nsIMsgAccountManager);
+                                    .getService(Components.interfaces.nsIMsgAccountManager);
+        var defaultAccount = this.accountMgr.defaultAccount;
        
         var identities = this.accountMgr.allIdentities.QueryInterface(Components.interfaces.nsICollection);
         var values = [];
         var current = 0;
         var max = 0;
-        
+
         // We get the identities we use for mail accounts. We also
         // get the highest key which will be used as the basis when
         // adding new identities (so we don't overwrite keys...)
         for (var i = identities.Count()-1; i >= 0; i--) {
             var identity = identities.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgIdentity);
             if (identity.key.indexOf("caldav_") == 0) {
-                values.push(identity.key);
-                current = parseInt(identity.key.substring(7));
-                if (current > max)
-                    max = current;
+                if (identity.email) {
+                    values.push(identity.key);
+                    current = parseInt(identity.key.substring(7));
+                    if (current > max)
+                        max = current;
+                } else {
+                    dump("CalDAVAclManager._initAccountMgr: removing stale"
+                         + " identity '" + identity.key + "'\n");
+                    defaultAccount.removeIdentity(identity);
+                }
             }
         }
 
@@ -415,6 +422,8 @@ CalDAVAclManager.prototype = {
             if (pref.indexOf("caldav_") == 0) {
                 var key = pref.substring(0, pref.indexOf("."));
                 if (values.indexOf(key) < 0) {
+                    dump("CalDAVAclManager._initAccountMgr: removing useless"
+                         +" identity branch: '" + key + "'\n");
                     prefBranch.deleteBranch(key);
                 }
             }
@@ -424,14 +433,15 @@ CalDAVAclManager.prototype = {
  _findIdentity: function _findIdentity(email, displayName) {
         var identity = null;
         var lowEmail = email.toLowerCase();
+        var lowDisplayName = displayName.toLowerCase();
 
         var identities = this.accountMgr.allIdentities.QueryInterface(Components.interfaces.nsICollection);
         var i = 0;
         while (!identity && i < identities.Count()) {
             var currentIdentity = identities.GetElementAt(i)
                 .QueryInterface(Components.interfaces.nsIMsgIdentity);
-            if (currentIdentity.email.toLowerCase() == lowEmail &&
-                currentIdentity.fullName == displayName)
+            if (currentIdentity.email.toLowerCase() == lowEmail
+                && currentIdentity.fullName.toLowerCase() == lowDisplayName)
                 identity = currentIdentity;
             else
                 i++;
