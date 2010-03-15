@@ -137,12 +137,27 @@ function onXMLRequestReadyStateChange(request) {
 				else {
 					headers = _parseHeaders(request.getAllResponseHeaders());
 					if (request.client.requestJSONResponse) {
-						if (request.responseXML) {
+						var flatCType;
+						if (headers["content-type"]) {
+							flatCType = headers["content-type"][0];
+						} else {
+							flatCType = "";
+						}
+						var flatCLength;
+						if (headers["content-length"]) {
+							flatCLength = parseInt(headers["content-length"][0]);
+						} else {
+							flatCLength = 0;
+						}
+						if ((flatCType.indexOf("text/xml") == 0
+								 || flatCType.indexOf("application/xml") == 0)
+								&& flatCLength > 0 && request.responseXML) {
 							var parser = new XMLToJSONParser(request.responseXML);
 							response = parser;
 						}
-						else
+						else {
 							response = null;
+						}
 					}
 					else
 						response = request.responseText;

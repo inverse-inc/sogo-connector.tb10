@@ -1,3 +1,12 @@
+2010-03-15  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* chrome/content/inverse-library/sogoWebDAV.js
+	(onXMLRequestReadyStateChange): we check the content-type for
+	"text/xml" or "application/xml" return types before requesting the
+	"responseXML" member of the request object. We also check for a
+	content-length > 0. This avoids a "no content found" error with
+	empty responses.
+
 2010-03-11  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* js/CalDAVAclManager.js (_initAccountMgr): it may happen that
