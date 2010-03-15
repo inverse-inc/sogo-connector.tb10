@@ -664,7 +664,7 @@ GroupDavSynchronizer.prototype = {
         //  		dump("status: " + status + "\n");
         //  		dump("response: " + response + "\n");
 
-        if (status > 199 && status < 400) {
+        if (status > 199 && status < 400 && jsonResponse) {
             var responses = jsonResponse["multistatus"][0]["response"];
             for each (var response in responses) {
                 var href = response["href"][0];
