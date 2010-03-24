@@ -19,6 +19,9 @@
     <command id="cmd_SCClose" oncommand="SCCloseEvent();"/>
   </commandset>
 
+  <menuitem id="options-privacy-confidential-menuitem"
+    label="&event.menu.options.privacy.confidential.label;"/>
+
   <row id="event-grid-attendee-row" position="1">
     <label id="event-grid-fixedConfidentialLabel" collapsed="true"
       value="&event.menu.options.privacy.confidential.label;"/>

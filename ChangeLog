@@ -1,3 +1,8 @@
+2010-03-24  Ludovic Marcotte  <lmarcotte@inverse.ca>
+
+	* chrome/content/sogo-connector/calendar/calendar-event-dialog.xul
+	We correctly overlay the menuitem for the "confidential" label
+
 2010-03-15  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* chrome/content/inverse-library/sogoWebDAV.js
