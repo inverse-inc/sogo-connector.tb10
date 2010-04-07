@@ -361,7 +361,7 @@ CalDAVAclManager.prototype = {
                 this.calendars[data.calendar][identitiesKey] = identities;
             }
             var displayName = this._parsePrincipalDisplayName(queryDoc);
-            if (displayName) {
+            if (displayName != null) {
                 for (var address in addressValues) {
                     dump("  address: " + address + "\n");
                     if (address.search("mailto:", "i") == 0) {

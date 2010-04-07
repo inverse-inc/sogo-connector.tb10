@@ -1,3 +1,9 @@
+2010-04-07  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* js/CalDAVAclManager.js (_userAddressSetCallback): take
+	identities with empty displayname into account. In JS, "" = false,
+	therefore we need to test it against "null" to achieve this.
+
 2010-03-24  Ludovic Marcotte  <lmarcotte@inverse.ca>
 
 	* chrome/content/sogo-connector/calendar/calendar-event-dialog.xul
