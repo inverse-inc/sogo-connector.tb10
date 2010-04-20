@@ -1,3 +1,12 @@
+2010-04-20  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* chrome/content/sogo-connector/general/vcards.utils.js
+	(_insertCardMethods.tel): we no longer loop around the whole list
+	of types. Instead we search for certain known types and try to
+	popupate the card accordingly.
+	(_insertCardMethods.adr): we privilege the "HOME" type when the
+	"WORK" type is not specified.
+
 2010-04-07  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* js/CalDAVAclManager.js (_userAddressSetCallback): take

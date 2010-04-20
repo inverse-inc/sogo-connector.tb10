@@ -269,30 +269,24 @@ var _insertCardMethods = {
 			preTypes = null;
 		}
 		var knownType = false;
-		if (preTypes)
-			for (var i = 0; i < preTypes.length; i++) {
-				var type = preTypes[i].toUpperCase();
-				if (type == "HOME") {
-					card.homePhone = values[0];
-					knownType = true;
-				}
-				else if (type == "CELL") {
-					card.cellularNumber = values[0];
-					knownType = true;
-				}
-				else if (type == "FAX") {
-					card.faxNumber = values[0];
-					knownType = true;
-				}
-				else if (type == "WORK") {
-					card.workPhone = values[0];
-					knownType = true;
-				}
-				else if (type == "PAGER") {
-					card.pagerNumber = values[0];
-					knownType = true;
-				}
+		if (preTypes) {
+			if (preTypes.indexOf("FAX") > -1) {
+				card.faxNumber = values[0];
+				knownType = true;
+			} else if (preTypes.indexOf("CELL") > -1) {
+				card.cellularNumber = values[0];
+				knownType = true;
+			} else if (preTypes.indexOf("PAGER") > -1) {
+				card.pagerNumber = values[0];
+				knownType = true;
+			} else if (preTypes.indexOf("HOME") > -1) {
+				card.homePhone = values[0];
+				knownType = true;
+			} else if (preTypes.indexOf("WORK") > -1) {
+				card.workPhone = values[0];
+				knownType = true;
 			}
+		}
 		if (!knownType)
 			if (card.workPhone.length == 0)
 				card.workPhone = values[0];
@@ -310,21 +304,7 @@ var _insertCardMethods = {
 		if (preTypes)
 			for (var i = 0; i < preTypes.length; i++)
 				types[i] = preTypes[i].toUpperCase();
-		if (types.indexOf("HOME") > -1) {
-			if (values[0])
-				card.homeAddress2 = values[0];
-			if (values[2]) 
-				card.homeAddress = values[2];
-			if (values[3])
-				card.homeCity = values[3];
-			if (values[4])
-				card.homeState = values[4];
-			if (values[5])
-				card.homeZipCode = values[5];
-			if (values[6])
-				card.homeCountry = values[6];
-		}
-		else {
+		if (types.indexOf("WORK") > -1) {
 			if (values[0])
 				card.workAddress2 = values[0];
 			if (values[2])
@@ -337,6 +317,20 @@ var _insertCardMethods = {
 				card.workZipCode = values[5];
 			if (values[6])
 				card.workCountry = values[6];
+		}
+		else {
+			if (values[0])
+				card.homeAddress2 = values[0];
+			if (values[2]) 
+				card.homeAddress = values[2];
+			if (values[3])
+				card.homeCity = values[3];
+			if (values[4])
+				card.homeState = values[4];
+			if (values[5])
+				card.homeZipCode = values[5];
+			if (values[6])
+				card.homeCountry = values[6];
 		}
 	},
  email: function(card, parameters, values) {
