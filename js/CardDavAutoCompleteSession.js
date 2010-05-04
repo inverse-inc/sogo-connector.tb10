@@ -45,7 +45,7 @@ function CardDavAutoCompleteSession() {
             .getCharPref("sogo-connector.autoComplete.commentAttribute");
         if (attribute && attribute.length > 0) {
             this.commentAttribute = attribute;
-            dump("comment attribute: " + attribute + "\n");
+            // dump("comment attribute: " + attribute + "\n");
         }
     }
     catch(e) {
@@ -99,7 +99,7 @@ CardDavAutoCompleteSession.prototype = {
     },
     onDAVQueryComplete: function(status, result, headers, data) {
         if (this.active && data == this.lastRequest && result) {
-            dump("on dav query complete... " + new Date() + "\n");
+            // dump("on dav query complete... " + new Date() + "\n");
             var resultArray = Components.classes["@mozilla.org/supports-array;1"]
             .createInstance(Components.interfaces.nsISupportsArray);
 

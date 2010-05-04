@@ -186,7 +186,7 @@ SOGoConnectorACSessionWrapper.prototype = {
 	},
 
  onAutoComplete: function(result, status, number) {
-		dump("wrapper autocompete\n");
+		// dump("wrapper autocompete\n");
 		if (this.running) {
 			this.waiting--;
 
