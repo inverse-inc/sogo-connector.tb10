@@ -1,3 +1,9 @@
+2010-05-11  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* components/componentRegistry.js: disbabled
+	""@inverse.ca/calendar/fburl-freebusy-provider;1" as it seems to
+	cause a problem in certain configurations.
+
 2010-04-20  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* chrome/content/sogo-connector/general/vcards.utils.js
