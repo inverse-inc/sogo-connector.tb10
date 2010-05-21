@@ -158,7 +158,7 @@ function formatAutoCompleteItem (fn, email, comment) {
 	if (!comment)
 		comment = "";
 	item.comment = comment;
-    dump("comment: " + comment + "\n");
+    // dump("comment: " + comment + "\n");
     // 	item.param = searchString;
 	if (fn.length)
 		item.value = fn + " <" + email + ">";
