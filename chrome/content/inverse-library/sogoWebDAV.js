@@ -143,11 +143,25 @@ function onXMLRequestReadyStateChange(request) {
 						} else {
 							flatCType = "";
 						}
+
+						/* The length must be > 0 to avoid attempts of passing empty
+							 responses to the XML parser, which would trigger an
+							 exception. */
 						var flatCLength;
 						if (headers["content-length"]) {
 							flatCLength = parseInt(headers["content-length"][0]);
 						} else {
-							flatCLength = 0;
+							if (request.responseText) {
+								/* The "Content-Length" header may not be present, for example
+									 with a chunked transfer encoding. In that case we deduce
+									 the length from the response string. */
+								flatCLength = request.responseText.length;
+							}
+							else {
+								dump("sogoWebDAV.js: response has no content-length"
+										 + " and no response text\n");
+								flatCLength = 0;
+							}
 						}
 						if ((flatCType.indexOf("text/xml") == 0
 								 || flatCType.indexOf("application/xml") == 0)

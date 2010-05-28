@@ -1,3 +1,11 @@
+2010-05-28  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* chrome/content/inverse-library/sogoWebDAV.js:
+	(onXMLRequestReadyStateChange) we now attempt to deduce the
+	content length from the response text when the "content-length"
+	header is not present. This enables us to support the "chunked"
+	transfer encoding.
+
 2010-05-11  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* components/componentRegistry.js: disbabled
