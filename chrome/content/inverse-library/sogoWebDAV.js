@@ -259,6 +259,9 @@ sogoWebDAV.prototype = {
 		else if (operation == "PROPPATCH") {
 			this._sendHTTPRequest(operation, parameters);
 		}
+		else if (operation == "OPTIONS") {
+			this._sendHTTPRequest(operation, parameters);
+		}
     else
       throw ("operation '" + operation + "' is not currently supported");
   },
@@ -290,6 +293,9 @@ sogoWebDAV.prototype = {
 		query += ("><D:prop>" + propPart + "</D:prop></D:propfind>");
 
 		return query;
+	},
+ options: function() {
+    this.load("OPTIONS");
 	},
  propfind: function(props, deep) {
 		this.requestJSONResponse = true;

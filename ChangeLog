@@ -1,3 +1,8 @@
+2010-06-07  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* chrome/content/inverse-library/sogoWebDAV.js: added the
+	"OPTIONS" operation.
+
 2010-05-28  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* chrome/content/inverse-library/sogoWebDAV.js:
