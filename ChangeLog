@@ -1,3 +1,9 @@
+2010-06-16  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* chrome/content/sogo-connector/general/vcards.utils.js:
+	(_insertCardMethods.tel): we must treat the types
+	case-insensitively, as is done with the other similar elements.
+
 2010-06-07  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* chrome/content/inverse-library/sogoWebDAV.js: added the

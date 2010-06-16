@@ -262,30 +262,29 @@ var _insertCardMethods = {
 			card.department = values[1];
 	},
  tel: function(card, parameters, values) {
-		var preTypes;
+		var types = [];
 		if (parameters["type"]) {
-			preTypes = parameters["type"].join(",").split(",");
-		} else {
-			preTypes = null;
+			var preTypes = parameters["type"].join(",").split(",");
+			for each (var preType in preTypes) {
+					types.push(preType.toUpperCase());
+			}
 		}
 		var knownType = false;
-		if (preTypes) {
-			if (preTypes.indexOf("FAX") > -1) {
-				card.faxNumber = values[0];
-				knownType = true;
-			} else if (preTypes.indexOf("CELL") > -1) {
-				card.cellularNumber = values[0];
-				knownType = true;
-			} else if (preTypes.indexOf("PAGER") > -1) {
-				card.pagerNumber = values[0];
-				knownType = true;
-			} else if (preTypes.indexOf("HOME") > -1) {
-				card.homePhone = values[0];
-				knownType = true;
-			} else if (preTypes.indexOf("WORK") > -1) {
-				card.workPhone = values[0];
-				knownType = true;
-			}
+		if (types.indexOf("FAX") > -1) {
+			card.faxNumber = values[0];
+			knownType = true;
+		} else if (types.indexOf("CELL") > -1) {
+			card.cellularNumber = values[0];
+			knownType = true;
+		} else if (types.indexOf("PAGER") > -1) {
+			card.pagerNumber = values[0];
+			knownType = true;
+		} else if (types.indexOf("HOME") > -1) {
+			card.homePhone = values[0];
+			knownType = true;
+		} else if (types.indexOf("WORK") > -1) {
+			card.workPhone = values[0];
+			knownType = true;
 		}
 		if (!knownType)
 			if (card.workPhone.length == 0)
