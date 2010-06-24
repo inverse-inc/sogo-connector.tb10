@@ -1,4 +1,23 @@
-/* -*- Mode: java; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* calendars-list-overlay.js - This file is part of "SOGo Connector", a Thunderbird extension.
+ *
+ * Copyright: Inverse inc., 2006-2010
+ *    Author: Robert Bolduc, Wolfgang Sourdeau
+ *     Email: support@inverse.ca
+ *       URL: http://inverse.ca
+ *
+ * "SOGo Connector" is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 as published by
+ * the Free Software Foundation;
+ *
+ * "SOGo Connector" is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * "SOGo Connector"; if not, write to the Free Software Foundation, Inc., 51
+ * Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
+ */
 
 window.gCalendarBundle = {
     getString: function(a) {
@@ -33,7 +52,7 @@ function SCCalendarsListOverlayOnLoad() {
 
     var aclObserver = new SCCalDAVACLObserver(this);
     var observerService = Components.classes["@mozilla.org/observer-service;1"]
-        .getService(Components.interfaces.nsIObserverService);
+                                    .getService(Components.interfaces.nsIObserverService);
     observerService.addObserver(aclObserver, "caldav-acl-loaded", false);
 
     SCComputeEnableNewItems();
@@ -64,8 +83,8 @@ function SCComputeEnableDelete(selectedItems) {
     SCEnableDelete = (selectedItems.length > 0);
 
     var aclMgr = Components.classes["@inverse.ca/calendar/caldav-acl-manager;1"]
-        .getService(Components.interfaces.nsISupports)
-        .wrappedJSObject;
+                           .getService(Components.interfaces.nsISupports)
+                           .wrappedJSObject;
 
     for (var i = 0; i < selectedItems.length; i++) {
         var calendar = selectedItems[i].calendar;
@@ -96,8 +115,8 @@ function SCComputeEnableNewItems() {
                 SCEnableNewItems = false;
             else {
                 var aclMgr = Components.classes["@inverse.ca/calendar/caldav-acl-manager;1"]
-                             .getService(Components.interfaces.nsISupports)
-                             .wrappedJSObject;
+                                       .getService(Components.interfaces.nsISupports)
+                                       .wrappedJSObject;
                 var calEntry = aclMgr.calendarEntry(cal.uri);
                 SCEnableNewItems = (calEntry.isCalendarReady()
                                     && calEntry.userCanAddComponents());
@@ -107,10 +126,10 @@ function SCComputeEnableNewItems() {
         }
     }
 
-//     dump("enable new items: " + SCEnableNewItems + "\n");
-//     dump("  url: " + cal.uri.spec + "\n");
+    //     dump("enable new items: " + SCEnableNewItems + "\n");
+    //     dump("  url: " + cal.uri.spec + "\n");
     if (SCEnableNewItems != oldValue) {
-//         dump("updating new commands\n");
+        //         dump("updating new commands\n");
         goUpdateCommand("calendar_new_event_command");
         goUpdateCommand("calendar_new_todo_command");
     }
@@ -122,7 +141,7 @@ function SCOnSelectionChanged(event) {
 }
 
 function SCOnCalendarSelect(event) {
-//     dump("onselectionchanged\n");
+    //     dump("onselectionchanged\n");
     SCComputeEnableNewItems();
     window.SCOldOnCalendarSelect(event);
 }
@@ -147,14 +166,14 @@ function SCCalDAVACLObserver(parent) {
 
 SCCalDAVACLObserver.prototype = {
     parent: null,
-    
-    observe: function(aSubject, aTopic, aData) {	
-        if (aTopic == "caldav-acl-loaded") {      
+
+    observe: function(aSubject, aTopic, aData) {
+        if (aTopic == "caldav-acl-loaded") {
             var tree = parent.document.getElementById("calendar-list-tree-widget");
             if (tree) {
                 var index = tree.currentIndex;
                 var calendar = parent.calendarListTreeView.getCalendar(index);
-	
+
                 if (calendar.uri.spec == aData) {
                     parent.SCOnCalendarSelect({detail:[]});
                 }
@@ -165,7 +184,7 @@ SCCalDAVACLObserver.prototype = {
         if (!aIID.equals(Components.interfaces.nsIObserver)
             && !aIID.equals(Components.interfaces.nsISupports))
             throw Components.results.NS_ERROR_NO_INTERFACE;
-    
+
         return this;
     }
 };

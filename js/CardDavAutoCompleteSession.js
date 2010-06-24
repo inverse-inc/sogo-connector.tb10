@@ -1,22 +1,43 @@
+/* CardDavAutoCompleteSession.js - This file is part of "SOGo Connector", a Thunderbird extension.
+ *
+ * Copyright: Inverse inc., 2006-2010
+ *    Author: Robert Bolduc, Wolfgang Sourdeau
+ *     Email: support@inverse.ca
+ *       URL: http://inverse.ca
+ *
+ * "SOGo Connector" is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 as published by
+ * the Free Software Foundation;
+ *
+ * "SOGo Connector" is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * "SOGo Connector"; if not, write to the Free Software Foundation, Inc., 51
+ * Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
+ */
+
 function jsInclude(files, target) {
-	var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
-		.getService(Components.interfaces.mozIJSSubScriptLoader);
-	for (var i = 0; i < files.length; i++) {
-		try {
-			loader.loadSubScript(files[i], target);
-		}
-		catch(e) {
-			dump("CardDavAutoCompleteSession.js: failed to include '" + files[i] + "'\n" + e + "\n");
-		}
-	}
+    var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+                           .getService(Components.interfaces.mozIJSSubScriptLoader);
+    for (var i = 0; i < files.length; i++) {
+        try {
+            loader.loadSubScript(files[i], target);
+        }
+        catch(e) {
+            dump("CardDavAutoCompleteSession.js: failed to include '" + files[i] + "'\n" + e + "\n");
+        }
+    }
 }
 
 jsInclude(["chrome://sogo-connector/content/general/webdav.inverse.ca.js",
            "chrome://sogo-connector/content/general/vcards.utils.js"]);
 
 /***********************************************************
-constants
-***********************************************************/
+ constants
+ ***********************************************************/
 
 // reference to the interface defined in inverseJSEnumerator.idl
 //const inverseIJSEnumerator = CI.inverseIJSEnumerator;
@@ -31,15 +52,15 @@ constants
 // const CLASS_NAME = "Implementation of nsICardDAVAutoCompleteSession";
 
 /***********************************************************
-class definition
-***********************************************************/
+ class definition
+ ***********************************************************/
 
 //class constructor
 function CardDavAutoCompleteSession() {
-	dump("CardDavAutoCompleteSession constructor!\n");
+    dump("CardDavAutoCompleteSession constructor!\n");
 
     var prefService = Components.classes["@mozilla.org/preferences-service;1"]
-		.getService(Components.interfaces.nsIPrefBranch);
+                                .getService(Components.interfaces.nsIPrefBranch);
     try {
         var attribute = prefService
             .getCharPref("sogo-connector.autoComplete.commentAttribute");
@@ -101,10 +122,10 @@ CardDavAutoCompleteSession.prototype = {
         if (this.active && data == this.lastRequest && result) {
             // dump("on dav query complete... " + new Date() + "\n");
             var resultArray = Components.classes["@mozilla.org/supports-array;1"]
-            .createInstance(Components.interfaces.nsISupportsArray);
+                                        .createInstance(Components.interfaces.nsISupportsArray);
 
             var parser = Components.classes["@mozilla.org/xmlextras/domparser;1"]
-            .createInstance(Components.interfaces.nsIDOMParser);
+                                   .createInstance(Components.interfaces.nsIDOMParser);
             var domResult = parser.parseFromString(result, "text/xml");
             var nodeList = domResult.getElementsByTagName("addressbook-data");
             for (var i = 0; i < nodeList.length; i++) {
@@ -128,7 +149,7 @@ CardDavAutoCompleteSession.prototype = {
                 var matchFound = 1; //nsIAutoCompleteStatus::matchFound
 
                 var results = Components.classes["@mozilla.org/autocomplete/results;1"]
-                .createInstance(Components.interfaces.nsIAutoCompleteResults);
+                                        .createInstance(Components.interfaces.nsIAutoCompleteResults);
                 results.items = resultArray;
                 results.defaultItemIndex = 0;
                 results.searchString = this.searchString;
@@ -152,18 +173,18 @@ CardDavAutoCompleteSession.prototype = {
 };
 
 function formatAutoCompleteItem (fn, email, comment) {
-	var item = Components.classes["@mozilla.org/autocomplete/item;1"]
-		.createInstance(Components.interfaces.nsIAutoCompleteItem);
-	item.className = "remote-abook";
-	if (!comment)
-		comment = "";
-	item.comment = comment;
+    var item = Components.classes["@mozilla.org/autocomplete/item;1"]
+                         .createInstance(Components.interfaces.nsIAutoCompleteItem);
+    item.className = "remote-abook";
+    if (!comment)
+        comment = "";
+    item.comment = comment;
     // dump("comment: " + comment + "\n");
     // 	item.param = searchString;
-	if (fn.length)
-		item.value = fn + " <" + email + ">";
-	else
-		item.value = email;
+    if (fn.length)
+        item.value = fn + " <" + email + ">";
+    else
+        item.value = email;
 
-	return item;
+    return item;
 }

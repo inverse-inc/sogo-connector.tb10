@@ -1,8 +1,29 @@
+/* SOGoFBURLFreeBusyProvider.js - This file is part of "SOGo Connector", a Thunderbird extension.
+ *
+ * Copyright: Inverse inc., 2006-2010
+ *    Author: Robert Bolduc, Wolfgang Sourdeau
+ *     Email: support@inverse.ca
+ *       URL: http://inverse.ca
+ *
+ * "SOGo Connector" is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 as published by
+ * the Free Software Foundation;
+ *
+ * "SOGo Connector" is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * "SOGo Connector"; if not, write to the Free Software Foundation, Inc., 51
+ * Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
+ */
+
 const SOGOFBURLExpiration = 20; /* seconds */
 
 function jsInclude(files, target) {
     var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
-        .getService(Components.interfaces.mozIJSSubScriptLoader);
+                           .getService(Components.interfaces.mozIJSSubScriptLoader);
     for (var i = 0; i < files.length; i++) {
         try {
             loader.loadSubScript(files[i], target);
@@ -22,12 +43,11 @@ jsInclude(["chrome://inverse-library/content/simpleLdapQuery.js",
            "chrome://sogo-connector/content/general/mozilla.utils.inverse.ca.js"]);
 
 function SOGoFBURLFreeBusyProvider() {
-    this.rdfService = Components
-        .classes["@mozilla.org/rdf/rdf-service;1"]
-        .getService(Components.interfaces.nsIRDFService);
+    this.rdfService = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+                                .getService(Components.interfaces.nsIRDFService);
 
     this.mPrefsService = Components.classes["@mozilla.org/preferences;1"]
-        .getService(Components.interfaces.nsIPref);
+                                   .getService(Components.interfaces.nsIPref);
 
     this.fbCache = {};
     this.wrappedJSObject = this;
@@ -44,7 +64,7 @@ SOGoFBURLFreeBusyProvider.prototype = {
         if (!this._registered) {
             dump("registering calfb url provider\n");
             var svc = Components.classes["@mozilla.org/calendar/freebusy-service;1"]
-                .getService(Components.interfaces.calIFreeBusyService);
+                                .getService(Components.interfaces.calIFreeBusyService);
             svc.addProvider(this);
             this._registered = true;
         }
@@ -90,9 +110,9 @@ SOGoFBURLFreeBusyProvider.prototype = {
 
     _queryDirectory: function(directory, mail, results) {
         var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-        .getService(Components.interfaces.nsIRDFService);
+                            .getService(Components.interfaces.nsIRDFService);
         var ds = Components.classes["@mozilla.org/rdf/datasource;1?name=addressdirectory"]
-        .getService(Components.interfaces.nsIRDFDataSource);
+                           .getService(Components.interfaces.nsIRDFDataSource);
         var childSrc = rdf.GetResource("http://home.netscape.com/NC-rdf#CardChild");
         var cards = ds.GetTargets(directory, childSrc, false);
         while (cards.hasMoreElements()) {
@@ -102,7 +122,7 @@ SOGoFBURLFreeBusyProvider.prototype = {
             if (card.primaryEmail.toLowerCase() == mail)
                 matchMail = card.primaryEmail;
             else if (card.secondEmail.toLowerCase() == mail)
-                matchMail = card.secondEmail;
+            matchMail = card.secondEmail;
             if (matchMail.length > 0) {
                 try {
                     var fbUrl = protoCard.getStringAttribute("calFBURL");
@@ -114,7 +134,7 @@ SOGoFBURLFreeBusyProvider.prototype = {
                 }
                 if (fbUrl && fbUrl.length > 0)
                     results.push({ mail: matchMail,
-                                calFBURL: fbUrl });
+                                   calFBURL: fbUrl });
             }
         }
     },
@@ -123,13 +143,13 @@ SOGoFBURLFreeBusyProvider.prototype = {
         //           dump ("calFB (local): " + mail + "\n");
         var results = new Array();
         var RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-        .getService(Components.interfaces.nsIRDFService)
+                            .getService(Components.interfaces.nsIRDFService);
         var parentDir = RDF.GetResource("moz-abdirectory://")
-        .QueryInterface(Components.interfaces.nsIAbDirectory);
+                           .QueryInterface(Components.interfaces.nsIAbDirectory);
         var dirs = parentDir.childNodes;
         while (dirs.hasMoreElements()) {
             var dir = dirs.getNext()
-                .QueryInterface(Components.interfaces.nsIAbDirectory);
+                          .QueryInterface(Components.interfaces.nsIAbDirectory);
             if (!dir.isRemote && !dir.isMailList)
                 this._queryDirectory(dir, mail, results);
         }
@@ -154,14 +174,14 @@ SOGoFBURLFreeBusyProvider.prototype = {
     _GetFBURLInLDAPAddressBook: function(mail, prefsPrefix) {
         //           dump ("calFB (ldap): " + mail + "\n");
         var results = new Array();
-    
+
         try {
             //                dump("branch: " + prefsPrefix + "directoryServer\n");
             var branch = this.mPrefsService.GetCharPref(prefsPrefix
                                                         + "directoryServer");
             var uriSpec = this.mPrefsService.GetCharPref(branch + ".uri");
             var uri = Components.classes["@mozilla.org/network/ldap-url;1"]
-                .createInstance(Components.interfaces.nsILDAPURL);
+                                .createInstance(Components.interfaces.nsILDAPURL);
             uri.spec = uriSpec;
             var filter = "(mail=" + mail + ")";
             uri.filter = filter;
@@ -180,7 +200,7 @@ SOGoFBURLFreeBusyProvider.prototype = {
         catch(e) {
             dump("calendar-event-dialog-freebusy.xml: " + e + "\n");
         }
-    
+
         return results;
     },
 
@@ -198,10 +218,10 @@ SOGoFBURLFreeBusyProvider.prototype = {
                        + ")(LastName,c," + encoded + "))");
             //                dump("ac uri: " + uri + "\n");
             var directory = this.rdfService.GetResource(uri)
-                .QueryInterface(Components.interfaces.nsIAbDirectory);
+                                .QueryInterface(Components.interfaces.nsIAbDirectory);
             this._queryDirectory(directory, criteria, results);
         }
-    
+
         return results;
     },
 
@@ -213,25 +233,25 @@ SOGoFBURLFreeBusyProvider.prototype = {
             mail = mail.split(":")[1];
         mail = mail.toLowerCase();
         var results;
-        var prefsPrefix = "ldap_2.autoComplete."
+        var prefsPrefix = "ldap_2.autoComplete.";
         if (this.mPrefsService.GetBoolPref(prefsPrefix + "useAddressBooks"))
             results = this._GetFBURLInLocalAddressBook(mail);
         else
             results = new Array();
-    
+
         if (this.mPrefsService.GetBoolPref(prefsPrefix + "useDirectory")){
             if (isAutoCompleteDirectoryServerCardDAV())
                 results = results.concat(this._GetFBURLInCardDAVAddressBook(mail));
             else //LDAP
                 results = results.concat(this._GetFBURLInLDAPAddressBook(mail, prefsPrefix));
         }
-    
+
         //             this.mConsoleService.logStringMessage("tes cn: " + cn);
         //             this.mConsoleService.logStringMessage("test mail: " + mail);
         if (results.length > 0) {
             var i = 0;
             while (!(fbUrl && fbUrl.length > 0)
-                   && i < results.length) {
+                && i < results.length) {
                 var result = results[i];
                 if (result) {
                     //                 this.mConsoleService.logStringMessage("cn: " + result["cn"]);
@@ -245,7 +265,7 @@ SOGoFBURLFreeBusyProvider.prototype = {
             if (!fbUrl)
                 fbUrl = results[0]["calFBURL"];
         }
-    
+
         return fbUrl;
     },
 
@@ -294,9 +314,9 @@ SOGoFBURLFreeBusyProvider.prototype = {
             if (fbTypeString == "FREE")
                 fbType = Components.interfaces.calIFreeBusyInterval.FREE;
             else if (fbTypeString == "BUSY-UNAVAILABLE")
-                fbType = Components.interfaces.calIFreeBusyInterval.BUSY_UNAVAILABLE;
+            fbType = Components.interfaces.calIFreeBusyInterval.BUSY_UNAVAILABLE;
             else if (fbTypeString == "BUSY-TENTATIVE")
-                fbType = Components.interfaces.calIFreeBusyInterval.BUSY_TENTATIVE;
+            fbType = Components.interfaces.calIFreeBusyInterval.BUSY_TENTATIVE;
         }
 
         return fbType;
@@ -314,7 +334,7 @@ SOGoFBURLFreeBusyProvider.prototype = {
         if (duration[1].toUpperCase().charAt(0) == 'P') {
             end = fbEntry.interval.start.clone();
             var fbDuration = Components.classes["@mozilla.org/calendar/duration;1"]
-                .createInstance(Components.interfaces.calIDuration);
+                                       .createInstance(Components.interfaces.calIDuration);
             fbDuration.icalString = duration[1];
             end.addDuration(fbDuration);
         }
@@ -337,12 +357,12 @@ SOGoFBURLFreeBusyProvider.prototype = {
         }
         listener.onResult(null, ranges);
     },
- 
+
     onDAVQueryComplete: function(aStatusCode, fbText, headers, data) {
         if (aStatusCode > 199 && aStatusCode < 300) {
             fbText = this._preparse(this._joinLines(fbText));
             var ics = Components.classes["@mozilla.org/calendar/ics-service;1"]
-            .getService(Components.interfaces.calIICSService);
+                                .getService(Components.interfaces.calIICSService);
             var cal = ics.parseICS(fbText, null);
             var vfb = cal.getFirstSubcomponent("VFREEBUSY");
 

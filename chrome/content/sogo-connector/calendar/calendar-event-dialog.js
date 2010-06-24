@@ -1,4 +1,23 @@
-/* -*- Mode: java; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* calendar-event-dialog.js - This file is part of "SOGo Connector", a Thunderbird extension.
+ *
+ * Copyright: Inverse inc., 2006-2010
+ *    Author: Robert Bolduc, Wolfgang Sourdeau
+ *     Email: support@inverse.ca
+ *       URL: http://inverse.ca
+ *
+ * "SOGo Connector" is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 as published by
+ * the Free Software Foundation;
+ *
+ * "SOGo Connector" is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * "SOGo Connector"; if not, write to the Free Software Foundation, Inc., 51
+ * Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
+ */
 
 var initInterval = -1;
 var componentEntry = null;
@@ -23,8 +42,8 @@ function SCOnLoadHandler(event) {
 
     if (calendar.type == "caldav") {
         var mgr = Components.classes["@inverse.ca/calendar/caldav-acl-manager;1"]
-            .getService(Components.interfaces.nsISupports)
-            .wrappedJSObject;
+                            .getService(Components.interfaces.nsISupports)
+                            .wrappedJSObject;
 
         var componentURL = null;
         if (component.id) {
@@ -34,7 +53,7 @@ function SCOnLoadHandler(event) {
             if (cache) {
                 if (cache[component.id]) {
                     componentURL = cache[component.id].locationPath;
-//                     dump("componentURL: " + componentURL + "\n");
+                    //                     dump("componentURL: " + componentURL + "\n");
                 }
             }
             else
@@ -69,8 +88,8 @@ function getWindowAttendeeById(attendeeID) {
     while (!attendee && i < window.attendees.length)
         if (window.attendees[i].id.toLowerCase() == attendeeID)
             attendee = window.attendees[i];
-        else
-            i++;
+    else
+        i++;
 
     return attendee;
 }
@@ -122,9 +141,8 @@ function _makeChildNodesReadOnly(node) {
 
 function SCUpdateCustomFields() {
     var fixedLabel = document.getElementById("event-grid-fixedConfidentialLabel");
-    var nodes = document
-        .getElementById("button-privacy")
-        .getElementsByTagName("menuitem");
+    var nodes = document.getElementById("button-privacy")
+                        .getElementsByTagName("menuitem");
     nodes[1].label = fixedLabel.value;
 }
 
@@ -137,8 +155,8 @@ function SCOnChangeCalendar(event) {
     //         dump("calendar.name: " + calendar.name + "\n");
     if (calendar.type == "caldav") {
         var mgr = Components.classes["@inverse.ca/calendar/caldav-acl-manager;1"]
-            .getService(Components.interfaces.nsISupports)
-            .wrappedJSObject;
+                            .getService(Components.interfaces.nsISupports)
+                            .wrappedJSObject;
         componentEntry = mgr.componentEntry(calendar.uri, null);
         initInterval = setInterval(SCReadyCallback, 200);
     }
@@ -162,23 +180,23 @@ SCCalendarManager.prototype = {
     getCalendars: function SCGetCalendars(arg) {
         var calendars = this.realMgr.getCalendars(arg);
         var aclMgr = Components.classes["@inverse.ca/calendar/caldav-acl-manager;1"]
-        .getService(Components.interfaces.nsISupports)
-        .wrappedJSObject;
+                               .getService(Components.interfaces.nsISupports)
+                               .wrappedJSObject;
 
         var isNew = !(window.arguments[0].calendarEvent.id);
 
-//         dump("this url: " + window.arguments[0].calendar.uri.spec + "\n");
+        //         dump("this url: " + window.arguments[0].calendar.uri.spec + "\n");
 
         var result = [];
         for (var i = 0; i < calendars.length; i++) {
             var isIncluded = true;
             if (calendars[i].type == "caldav") {
                 //                                 dump("{ ");
-//                 dump("current url: " + calendars[i].uri.spec + "\n");
+                //                 dump("current url: " + calendars[i].uri.spec + "\n");
                 var entry = aclMgr.calendarEntry(calendars[i].uri);
                 isIncluded = (entry.isCalendarReady() && (entry.userCanAddComponents()
-                              || (!isNew && window.arguments[0].calendar
-                                  == calendars[i])));
+                                                          || (!isNew && window.arguments[0].calendar
+                                                              == calendars[i])));
                 //                                 dump(calendars[i].name + ": " + isIncluded);
                 //                                 if (entry.userPrivileges)
                 //                                         dump("\n  privileges: " + entry.userPrivileges.join(", "));
