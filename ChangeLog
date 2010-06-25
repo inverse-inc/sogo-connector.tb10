@@ -1,3 +1,27 @@
+2010-06-24  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* chrome/content/inverse-library/sogoWebDAV.js: (sogoWebDAV:)
+	added a new "synchronous" parameter for triggering synchronous
+	requests. By default, this.synchronous is set to false, when not
+	specified.
+	(onXMLRequestReadyStateChange:) handle synchronous requests. The
+	XMLHttpRequest implementation of Mozilla now triggers an exception
+	when the request could not complete and "getAllResponseHeaders" is
+	invoked. We now treat this exception as was already done with
+	"status". We also check if the new ivar "requestXMLResponse" is
+	set on the client so that we can return a proper XML response
+	without needing for reparsing it in the callbacks.
+	(sogoWebDAV.prototype.post:) we now explicitly set the
+	content-type to appXXX/xml.
+
+	* chrome/content/sogo-connector/general/webdav.inverse.ca.js:
+	dropped file.
+
+	* chrome/content/sogo-connector/general/webdav_lib/*.js: dropped
+	all files, made useless by the changes in sogoWebDAV.js.
+
+	* Initial TB3.1 code
+
 2010-06-07  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* chrome/content/inverse-library/sogoWebDAV.js: added the

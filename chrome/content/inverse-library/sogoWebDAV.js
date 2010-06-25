@@ -20,9 +20,9 @@
  */
 
 function jsInclude(files, target) {
-    var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+    let loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
                            .getService(Components.interfaces.mozIJSSubScriptLoader);
-    for (var i = 0; i < files.length; i++) {
+    for (let i = 0; i < files.length; i++) {
         try {
             loader.loadSubScript(files[i], target);
         }
@@ -38,11 +38,11 @@ function jsInclude(files, target) {
 jsInclude(["chrome://inverse-library/content/uuid.js"]);
 
 function backtrace(aDepth) {
-    var depth = aDepth || 10;
-    var stack = "";
-    var frame = arguments.callee.caller;
+    let depth = aDepth || 10;
+    let stack = "";
+    let frame = arguments.callee.caller;
 
-    for (var i = 1; i <= depth && frame; i++) {
+    for (let i = 1; i <= depth && frame; i++) {
         stack += i+": "+ frame.name + "\n";
         frame = frame.caller;
     }
@@ -56,28 +56,28 @@ function XMLToJSONParser(doc) {
 
 XMLToJSONParser.prototype = {
     _buildTree: function XMLToJSONParser_buildTree(doc) {
-        var nodeName = doc.documentElement.localName;
+        let nodeName = doc.documentElement.localName;
         this[nodeName] = [this._translateNode(doc.documentElement)];
 
         // 		dump("Parsed XMLToJSON object: " + dumpObject(this) + "\n");
     },
     _translateNode: function XMLToJSONParser_translateNode(node) {
-        var value = null;
+        let value = null;
 
         if (node.childNodes.length) {
-            var textValue = "";
-            var dictValue = {};
-            var hasElements = false;
-            for (var i = 0; i < node.childNodes.length; i++) {
-                var currentNode = node.childNodes[i];
-                var nodeName = currentNode.localName;
+            let textValue = "";
+            let dictValue = {};
+            let hasElements = false;
+            for (let i = 0; i < node.childNodes.length; i++) {
+                let currentNode = node.childNodes[i];
+                let nodeName = currentNode.localName;
                 if (currentNode.nodeType
                     == Components.interfaces.nsIDOMNode.TEXT_NODE)
                     textValue += currentNode.nodeValue;
                 else if (currentNode.nodeType
                          == Components.interfaces.nsIDOMNode.ELEMENT_NODE) {
                     hasElements = true;
-                    var nodeValue = this._translateNode(currentNode);
+                    let nodeValue = this._translateNode(currentNode);
                     if (!dictValue[nodeName])
                         dictValue[nodeName] = [];
                     dictValue[nodeName].push(nodeValue);
@@ -99,7 +99,7 @@ function xmlEscape(text) {
 }
 
 function xmlUnescape(text) {
-    var s = (""+text).replace(/&lt;/g, "<", "g");
+    let s = (""+text).replace(/&lt;/g, "<", "g");
     s = s.replace(/&gt;/g, ">", "g");
     s = s.replace(/&amp;/g, "&",  "g");
 
@@ -107,19 +107,19 @@ function xmlUnescape(text) {
 }
 
 function _parseHeaders(rawHeaders) {
-    var headers = {};
+    let headers = {};
 
     if (rawHeaders) {
-        var lines = rawHeaders.split("\n");
-        var currentKey = null;
+        let lines = rawHeaders.split("\n");
+        let currentKey = null;
 
-        for each (var line in lines) {
+        for each (let line in lines) {
             if (line.length) {
-                var firstChar = line.charCodeAt(0);
+                let firstChar = line.charCodeAt(0);
                 if (firstChar != 32 && firstChar != 9) {
-                    var keyEnd = line.indexOf(":");
+                    let keyEnd = line.indexOf(":");
                     currentKey = line.substr(0, keyEnd).toLowerCase();
-                    var values = headers[currentKey];
+                    let values = headers[currentKey];
                     if (!values) {
                         values = [];
                         headers[currentKey] = values;
@@ -133,30 +133,37 @@ function _parseHeaders(rawHeaders) {
     return headers;
 }
 
-function onXMLRequestReadyStateChange(request) {
+function onXMLRequestReadyStateChange(request, synchronous) {
     // 	dump("xmlreadystatechange: " + request.readyState + "\n");
-    if (request.readyState == 4) {
+    if (synchronous || request.readyState == 4) {
         if (request.client.target) {
-            var status = 499;
+            let status;
+            let responseHeaders;
             try {
                 status = request.status;
+                responseHeaders = request.getAllResponseHeaders();
             }
-            catch(e) { dump("trapped exception: " + e + "\n"); }
+            catch(e) {
+                dump("trapped exception: " + e + "\n");
+                status = 499;
+                responseHeaders = "";
+            }
 
             try {
                 // 				dump("method: " + request.method + "\n");
                 // 				dump("status code: " + request.readyState + "\n");
-                var headers;
-                var response;
+                let headers;
+                let response;
                 if (status == 499) {
                     headers = {};
                     response = "";
                     dump("received status 499 for url: " + request.client.url + "\n");
                 }
                 else {
-                    headers = _parseHeaders(request.getAllResponseHeaders());
-                    if (request.client.requestJSONResponse) {
-                        var flatCType;
+                    headers = _parseHeaders(responseHeaders);
+                    if (request.client.requestJSONResponse
+                        || request.client.requestXMLResponse) {
+                        let flatCType;
                         if (headers["content-type"]) {
                             flatCType = headers["content-type"][0];
                         } else {
@@ -166,7 +173,7 @@ function onXMLRequestReadyStateChange(request) {
                         /* The length must be > 0 to avoid attempts of passing empty
                          responses to the XML parser, which would trigger an
                          exception. */
-                        var flatCLength;
+                        let flatCLength;
                         if (headers["content-length"]) {
                             flatCLength = parseInt(headers["content-length"][0]);
                         } else {
@@ -185,8 +192,13 @@ function onXMLRequestReadyStateChange(request) {
                         if ((flatCType.indexOf("text/xml") == 0
                              || flatCType.indexOf("application/xml") == 0)
                             && flatCLength > 0 && request.responseXML) {
-                            var parser = new XMLToJSONParser(request.responseXML);
-                            response = parser;
+                            if (request.client.requestJSONResponse) {
+                                let parser = new XMLToJSONParser(request.responseXML);
+                                response = parser;
+                            }
+                            else {
+                                response = request.responseXML;
+                            }
                         }
                         else {
                             response = null;
@@ -211,63 +223,71 @@ function onXMLRequestReadyStateChange(request) {
     }
 }
 
-function sogoWebDAV(url, target, data, asynchronous) {
+function sogoWebDAV(url, target, data, synchronous) {
     this.url = url;
     this.target = target;
     this.cbData = data;
     this.requestJSONResponse = false;
-    this.asynchronous = true; /* FIXME */
+    this.requestXMLResponse = false;
+    if (typeof synchronous == "undefined") {
+        this.synchronous = false;
+    }
+    else {
+        this.synchronous = synchronous;
+    }
 }
 
 sogoWebDAV.prototype = {
     _sendHTTPRequest: function(method, parameters, headers) {
-        var xmlRequest = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
+        let xmlRequest = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
                                    .createInstance(Components.interfaces.nsIXMLHttpRequest);
 
-        xmlRequest.open(method, this.url, this.asynchronous);
+        xmlRequest.open(method, this.url, !this.synchronous);
         if (headers) {
-            for (var header in headers)
-                xmlRequest.setRequestHeader(header, headers[header]);
+            for (let header in headers) {
+                xmlRequest.setRequestHeader(header, String(headers[header]));
+            }
         }
         xmlRequest.url = this.url;
         xmlRequest.client = this;
         xmlRequest.method = method;
 
-        var thisRequest = xmlRequest;
-        xmlRequest.onreadystatechange = function() {
-            onXMLRequestReadyStateChange(thisRequest);
-        };
+        if (!this.synchronous) {
+            let thisRequest = xmlRequest;
+            xmlRequest.onreadystatechange = function() {
+                onXMLRequestReadyStateChange(thisRequest, false);
+            };
+        }
 
         xmlRequest.send(parameters);
+        if (this.synchronous) {
+            onXMLRequestReadyStateChange(xmlRequest, true);
+        }
     },
 
     load: function(operation, parameters) {
         if (operation == "GET") {
             this._sendHTTPRequest(operation);
         }
-        else if (operation == "PUT") {
-            this._sendHTTPRequest(operation, parameters.data,
+        else if (operation == "PUT" || operation == "POST") {
+            this._sendHTTPRequest(operation,
+                                  parameters.data,
                                   { "content-type": parameters.contentType });
         }
         else if (operation == "PROPFIND") {
-            var headers = { "depth": (parameters.deep
+            let headers = { "depth": (parameters.deep
                                       ? "1": "0"),
                             "content-type": "application/xml; charset=utf8" };
-            var query = this._propfindQuery(parameters.props);
-            dump("PROPFIND query: " + query);
+            let query = this._propfindQuery(parameters.props);
             this._sendHTTPRequest(operation, query, headers);
         }
         else if (operation == "REPORT") {
-            // 			dump("REPORT: " + parameters.deep);
-            var headers = { "depth": (parameters.deep
+            let headers = { "depth": (parameters.deep
                                       ? "1": "0"),
                             "Connection": "TE",
                             "TE": "trailers",
                             "content-type": "application/xml; charset=utf8" };
             this._sendHTTPRequest(operation, parameters.query, headers);
-        }
-        else if (operation == "POST") {
-            this._sendHTTPRequest(operation, parameters);
         }
         else if (operation == "MKCOL") {
             this._sendHTTPRequest(operation, parameters);
@@ -290,14 +310,20 @@ sogoWebDAV.prototype = {
     put: function(data, contentType) {
         this.load("PUT", {data: data, contentType: contentType});
     },
+    post: function(data, contentType) {
+        if (typeof(contentType) == "undefined") {
+            contentType = "application/xml; charset=utf8";
+        }
+        this.load("POST", {data: data, contentType: contentType});
+    },
     _propfindQuery: function(props) {
-        var nsDict = { "DAV:": "D" };
-        var propPart = "";
-        var nsCount = 0;
-        for each (var prop in props) {
-            var propParts = prop.split(" ");
-            var ns = propParts[0];
-            var nsS = nsDict[ns];
+        let nsDict = { "DAV:": "D" };
+        let propPart = "";
+        let nsCount = 0;
+        for each (let prop in props) {
+            let propParts = prop.split(" ");
+            let ns = propParts[0];
+            let nsS = nsDict[ns];
             if (!nsS) {
                 nsS = "x" + nsCount;
                 nsDict[ns] = nsS;
@@ -305,9 +331,9 @@ sogoWebDAV.prototype = {
             }
             propPart += "<" + nsS + ":" + propParts[1] + "/>";
         }
-        var query = ("<?xml version=\"1.0\"?>\n"
+        let query = ("<?xml version=\"1.0\"?>\n"
                      + "<D:propfind");
-        for (var ns in nsDict)
+        for (let ns in nsDict)
             query += " xmlns:" + nsDict[ns] + "=\"" + ns + "\"";
         query += ("><D:prop>" + propPart + "</D:prop></D:propfind>");
 
@@ -332,9 +358,6 @@ sogoWebDAV.prototype = {
         if (typeof deep == "undefined")
             deep = true;
         this.load("REPORT", {query: query, deep: deep});
-    },
-    post: function(query) {
-        this.load("POST", query);
     },
     proppatch: function(query) {
         this.requestJSONResponse = true;
