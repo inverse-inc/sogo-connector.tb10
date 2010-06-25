@@ -25,12 +25,9 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA	
 -->
 
-<?xul-overlay href="chrome://communicator/content/contentAreaContextOverlay.xul"?>
 <!DOCTYPE overlay SYSTEM "chrome://sogo-connector/locale/addressbook/ca.inverse.abMainWindow.groupdav.dtd">
 
 <overlay id="ca.inverse.messenger.groupdav" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <window id="messengerWindow">
-    <script type="application/x-javascript"
-      src="chrome://sogo-connector/content/addressbook/messenger.groupdav.overlay.js"/>
-  </window>
+  <script type="application/x-javascript"
+          src="chrome://sogo-connector/content/addressbook/messenger.groupdav.overlay.js"/>
 </overlay>

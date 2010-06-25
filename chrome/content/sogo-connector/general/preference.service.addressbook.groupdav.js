@@ -20,14 +20,14 @@
  */
 
 function jsInclude(files, target) {
-    var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+    let loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
                            .getService(Components.interfaces.mozIJSSubScriptLoader);
-    for (var i = 0; i < files.length; i++) {
+    for (let i = 0; i < files.length; i++) {
         try {
             loader.loadSubScript(files[i], target);
         }
         catch(e) {
-            dump("webdav.inverse.ca.js: failed to include '" + files[i] + "'\n" + e + "\n");
+            dump("preference.services.addressbook.groupdav.js: failed to include '" + files[i] + "'\n" + e + "\n");
         }
     }
 }
@@ -35,27 +35,26 @@ function jsInclude(files, target) {
 jsInclude(["chrome://sogo-connector/content/general/mozilla.utils.inverse.ca.js"]);
 
 function isGroupdavDirectory(abURI) {
-    var value = false;
+    let value = false;
 
     if (abURI
         && abURI.search("mab/MailList") == -1
         && abURI.search("moz-abmdbdirectory://") == 0) {
-        var ab = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-                           .getService(Components.interfaces.nsIRDFService)
-                           .GetResource(abURI)
-                           .QueryInterface(Components.interfaces.nsIAbDirectory);
-
-        var prefId = ab.directoryProperties.prefName;
+        let abManager = Components.classes["@mozilla.org/abmanager;1"]
+                                  .getService(Components.interfaces.nsIAbManager);
+        let ab = abManager.getDirectory(abURI);
+        //  		let prefId = ab.directoryProperties.prefName;
+        let prefId = ab.dirPrefId;
         try {
-            var groupdavPrefService = new GroupdavPreferenceService(prefId);
+            let groupdavPrefService = new GroupdavPreferenceService(prefId);
             value = (groupdavPrefService.getURL() != "");
         }
         catch(e) {
-            //var xpcConnect =Components.classes["DEB1D48E-7469-4B01-B186-D9854C7D3F2D"].getService(Components.interfaces.nsIXPConnect);
-            // 			dump("ab prefid: " + prefId + "\n");
-            // 			dump("abURI '" + abURI
-            // 					 + " is invalid in call isGroupdavDirectory(abURI) \n\n STACK:\n"
-            // 					 + backtrace(10));
+            //let xpcConnect =Components.classes["DEB1D48E-7469-4B01-B186-D9854C7D3F2D"].getService(Components.interfaces.nsIXPConnect);
+            // dump("ab prefid: " + prefId + "\n");
+            // dump("abURI '" + abURI
+            //      + " is invalid in call isGroupdavDirectory(abURI) \n\n STACK:\n"
+            // 		 + backtrace(10));
             // TODO this needs to be handle better
             // Currently if for any reason someone messed up prefs.js this could create havoc
         }
@@ -67,18 +66,23 @@ function isGroupdavDirectory(abURI) {
 }
 
 function isCardDavDirectory(abURI){
-    var value = false;
+    let value = false;
 
-    var abdavPrefix = "moz-abdavdirectory://";
+    if (abURI && abURI.search("carddav://") == 0) {
+        dump("isCardDavDirectory Wrong URI for a CardDAV entry: " + abURI
+             + "\n" + backtrace() + "\n\n");
+        throw("isCardDavDirectory Wrong URI for a CardDAV entry: " + abURI);
+    }
+
+    let abdavPrefix = "moz-abdavdirectory://";
     if (abURI
         && abURI.search("mab/MailList") == -1
-        && (abURI.search("carddav://") == 0
-            || abURI.search(abdavPrefix) == 0)) {
-        var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+        && abURI.search(abdavPrefix) == 0) {
+        let prefs = Components.classes["@mozilla.org/preferences-service;1"]
                               .getService(Components.interfaces.nsIPrefBranch);
-        var prefName = abURI.substr(abdavPrefix.length);
+        let prefName = abURI.substr(abdavPrefix.length);
         try {
-            var uri = prefs.getCharPref(prefName + ".uri");
+            let uri = prefs.getCharPref(prefName + ".uri");
             value = (uri.search("carddav://") == 0);
         }
         catch(e) {
@@ -86,7 +90,14 @@ function isCardDavDirectory(abURI){
         }
     }
 
-    // 	dump("isCardDAV: " + abURI + " = " + value + "\n");
+    // dump("isCardDAV: " + abURI + " = " + value + "\n");
+
+    // /* CUT */
+    // let abManager = Components.classes["@mozilla.org/abmanager;1"]
+    //     .getService(Components.interfaces.nsIAbManager);
+    // let ab = abManager.getDirectory(abURI);
+    // dump("   ab: "  + ab + "\n");
+    // /* /CUT */
 
     return value;
 }
@@ -108,7 +119,7 @@ GroupdavPreferenceService.prototype = {
     prefPath: null,
 
     _getPref: function GdPSvc__getPref(prefName) {
-        var value = null;
+        let value = null;
 
         // 		dump("getPref: " + this.prefPath + prefName + "\n");
 
@@ -116,9 +127,9 @@ GroupdavPreferenceService.prototype = {
             value = this.mPreferencesService.getCharPref(this.prefPath + prefName);
         }
         catch(e) {
-            dump("exception getting pref '" + this.prefPath + prefName
-                 + "': \n" + e + " (" + e.lineNumber + ")\n");
-            dump("  stack:\n" + backtrace() + "\n");
+            // dump("exception getting pref '" + this.prefPath + prefName
+            //      + "': \n" + e + " (" + e.lineNumber + ")\n");
+            // dump("  stack:\n" + backtrace() + "\n");
             throw("unacceptable condition: " + e);
         }
 
@@ -126,12 +137,12 @@ GroupdavPreferenceService.prototype = {
     },
     _getPrefWithDefault:
     function GdPSvc__getPrefWithDefault(prefName, defaultValue) {
-        var value = defaultValue;
+        let value = defaultValue;
 
         // 		dump("getPref: " + this.prefPath + prefName + "\n");
 
         try {
-            var newValue = this.mPreferencesService
+            let newValue = this.mPreferencesService
                                .getCharPref(this.prefPath + prefName);
             if (newValue)
                 value = newValue;
@@ -155,10 +166,10 @@ GroupdavPreferenceService.prototype = {
         // 		dump("setPref - done\n");
     },
     _getBoolPref: function GdPSvc__getBoolPref(prefName) {
-        var boolValue = false;
-        var value = this._getPref(prefName);
+        let boolValue = false;
+        let value = this._getPref(prefName);
         if (value) {
-            var strValue = value.toLowerCase();
+            let strValue = value.toLowerCase();
             if (strValue == "true"
                 || strValue == "1"
                 || strValue == "on"
@@ -169,7 +180,7 @@ GroupdavPreferenceService.prototype = {
         return boolValue;
     },
     _setBoolPref: function GdPSvc__setBoolPref(prefName, value) {
-        var strValue;
+        let strValue;
 
         if (value)
             strValue = "true";
@@ -180,7 +191,7 @@ GroupdavPreferenceService.prototype = {
     },
 
     getURL: function GdPSvc_getURL() {
-        var url = this._getPref("url");
+        let url = this._getPref("url");
         if (url) {
             if (url[url.length - 1] != '/')
                 url += '/';
@@ -193,11 +204,11 @@ GroupdavPreferenceService.prototype = {
     },
 
     getHostName: function GdPSvc_getHostName(){
-        var hostname = null;
-        var url = this.getURL();
+        let hostname = null;
+        let url = this.getURL();
 
         if (url && url.length > 0) {
-            var uri = Components.classes["@mozilla.org/network/standard-url;1"]
+            let uri = Components.classes["@mozilla.org/network/standard-url;1"]
                                 .createInstance(Components.interfaces.nsIURI);
             uri.spec = url;
             hostname = uri.host;
@@ -221,29 +232,30 @@ GroupdavPreferenceService.prototype = {
     }
 };
 
-function GroupDAVListAttributes(list) {
-    var listRsrc = list.QueryInterface(Components.interfaces.nsIRDFResource);
-    var uri = listRsrc.Value;
-    var uriParts = uri.split("/");
-    var parentURI = uriParts[0] + "//" + uriParts[2];
+function GroupDAVListAttributes(uri) {
+    // dump("GroupDAVListAttributes on uri: " + uri + "\n");
+    if (!uri) {
+        dump("  stack:\n" + backtrace() + "\n");
+    }
+    let uriParts = uri.split("/");
 
-    var ab = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-                       .getService(Components.interfaces.nsIRDFService)
-                       .GetResource(parentURI)
-                       .QueryInterface(Components.interfaces.nsIAbDirectory);
-    var prefPrefix = "ldap_2.servers.";
-    var uniqueID = (ab.directoryProperties.prefName.substr(prefPrefix.length)
+    let abManager = Components.classes["@mozilla.org/abmanager;1"]
+                              .getService(Components.interfaces.nsIAbManager);
+    let ab = abManager.getDirectory(uriParts[0] + "//" + uriParts[2]);
+
+    let prefPrefix = "ldap_2.servers.";
+    let uniqueID = (ab.dirPrefId.substr(prefPrefix.length)
                       .replace("_", "", "g")
                     + "_" + uriParts[3].replace("_", "", "g"));
     this.mPrefs = Components.classes["@mozilla.org/preferences-service;1"]
                             .getService(Components.interfaces.nsIPrefBranch);
     this.prefPath = "extensions.ca.inverse.addressbook.groupdav." + uniqueID;
-    dump("*** list: " + this.prefPath + "\n");
+    // dump("*** list: " + this.prefPath + "\n");
 }
 
 GroupDAVListAttributes.prototype = {
     _getCharPref: function(key) {
-        var value;
+        let value;
         try {
             value = this.mPrefs.getCharPref(this.prefPath + "." + key);
         }
@@ -251,11 +263,11 @@ GroupDAVListAttributes.prototype = {
             value = null;
         }
 
-        dump(key + ": " + value + "\n");
+        // dump(key + ": " + value + "\n");
         return value;
     },
     _setCharPref: function(key, value) {
-        dump("new " + key + ": " + value + "\n");
+        // dump("new " + key + ": " + value + "\n");
         this.mPrefs.setCharPref(this.prefPath + "." + key, value);
     },
 

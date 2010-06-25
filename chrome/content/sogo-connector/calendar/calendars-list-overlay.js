@@ -19,17 +19,17 @@
  * Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-window.gCalendarBundle = {
-    getString: function(a) {
-        return a;
-    }
-};
+// window.gCalendarBundle = {
+//     getString: function(a) {
+//         return a;
+//     }
+// };
 
-var SCEnableDelete = false;
-var SCEnableNewItems = true;
+let SCEnableDelete = false;
+let SCEnableNewItems = true;
 
 function SCCalendarsListOverlayOnLoad() {
-    gCalendarBundle = document.getElementById("SCCalendarStringBundle");
+    // gCalendarBundle = document.getElementById("SCCalendarStringBundle");
 
     calendarController.SCOldCalendarControllerIsCommandEnabled
         = calendarController.isCommandEnabled;
@@ -39,19 +39,20 @@ function SCCalendarsListOverlayOnLoad() {
     window.SCOldOnSelectionChanged = calendarController.onSelectionChanged;
     calendarController.onSelectionChanged = window.SCOnSelectionChanged;
 
-    window.SCOldOnCalendarSelect = calendarListTreeView.onSelect;
-    calendarListTreeView.onSelect = window.SCOnCalendarSelect;
+    let tree = document.getElementById("calendar-list-tree-widget");
+    window.SCOldOnCalendarSelect = tree.onSelect;
+    tree.onSelect = window.SCOnCalendarSelect;
 
     unifinderTreeView.SCOldSetSelectedItems
         = unifinderTreeView.setSelectedItems;
     unifinderTreeView.setSelectedItems = window.SCuTVSetSelectedItems;
 
-    var taskTreeView = document.getElementById("calendar-task-tree");
+    let taskTreeView = document.getElementById("calendar-task-tree");
     taskTreeView.SCOldOnTaskTreeViewSelect = taskTreeView.onselect;
     taskTreeView.onselect = window.SCOnTaskTreeViewSelect;
 
-    var aclObserver = new SCCalDAVACLObserver(this);
-    var observerService = Components.classes["@mozilla.org/observer-service;1"]
+    let aclObserver = new SCCalDAVACLObserver(this);
+    let observerService = Components.classes["@mozilla.org/observer-service;1"]
                                     .getService(Components.interfaces.nsIObserverService);
     observerService.addObserver(aclObserver, "caldav-acl-loaded", false);
 
@@ -59,7 +60,7 @@ function SCCalendarsListOverlayOnLoad() {
 }
 
 function SCCalendarControllerIsCommandEnabled(command) {
-    var result;
+    let result;
     if (command == "calendar_delete_event_command"
         || command == "calendar_delete_todo_command"
         || command == "button_delete"
@@ -79,17 +80,17 @@ function SCCalendarControllerIsCommandEnabled(command) {
 };
 
 function SCComputeEnableDelete(selectedItems) {
-    var firstState = SCEnableDelete;
+    let firstState = SCEnableDelete;
     SCEnableDelete = (selectedItems.length > 0);
 
-    var aclMgr = Components.classes["@inverse.ca/calendar/caldav-acl-manager;1"]
+    let aclMgr = Components.classes["@inverse.ca/calendar/caldav-acl-manager;1"]
                            .getService(Components.interfaces.nsISupports)
                            .wrappedJSObject;
 
-    for (var i = 0; i < selectedItems.length; i++) {
-        var calendar = selectedItems[i].calendar;
+    for (let i = 0; i < selectedItems.length; i++) {
+        let calendar = selectedItems[i].calendar;
         if (calendar.type == "caldav") {
-            var calEntry = aclMgr.calendarEntry(calendar.uri);
+            let calEntry = aclMgr.calendarEntry(calendar.uri);
             SCEnableDelete = (calEntry.isCalendarReady()
                               && calEntry.userCanDeleteComponents());
         }
@@ -104,20 +105,20 @@ function SCComputeEnableDelete(selectedItems) {
 }
 
 function SCComputeEnableNewItems() {
-    var oldValue = SCEnableNewItems;
+    let oldValue = SCEnableNewItems;
 
     SCEnableNewItems = false;
-    var cal = getSelectedCalendar();
+    let cal = getSelectedCalendar();
     if (cal) {
         if (cal.type == "caldav") {
             //         dump("cal: " + cal.name + "\n");
             if (cal.readOnly)
                 SCEnableNewItems = false;
             else {
-                var aclMgr = Components.classes["@inverse.ca/calendar/caldav-acl-manager;1"]
+                let aclMgr = Components.classes["@inverse.ca/calendar/caldav-acl-manager;1"]
                                        .getService(Components.interfaces.nsISupports)
                                        .wrappedJSObject;
-                var calEntry = aclMgr.calendarEntry(cal.uri);
+                let calEntry = aclMgr.calendarEntry(cal.uri);
                 SCEnableNewItems = (calEntry.isCalendarReady()
                                     && calEntry.userCanAddComponents());
             }
@@ -169,10 +170,9 @@ SCCalDAVACLObserver.prototype = {
 
     observe: function(aSubject, aTopic, aData) {
         if (aTopic == "caldav-acl-loaded") {
-            var tree = parent.document.getElementById("calendar-list-tree-widget");
+            let tree = document.getElementById("calendar-list-tree-widget");
             if (tree) {
-                var index = tree.currentIndex;
-                var calendar = parent.calendarListTreeView.getCalendar(index);
+                let calendar = getSelectedCalendar();
 
                 if (calendar.uri.spec == aData) {
                     parent.SCOnCalendarSelect({detail:[]});

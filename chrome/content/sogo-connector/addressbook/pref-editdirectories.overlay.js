@@ -20,9 +20,9 @@
  */
 
 function jsInclude(files, target) {
-    var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+    let loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
                            .getService(Components.interfaces.mozIJSSubScriptLoader);
-    for (var i = 0; i < files.length; i++) {
+    for (let i = 0; i < files.length; i++) {
         try {
             loader.loadSubScript(files[i], target);
         }
@@ -38,20 +38,13 @@ function jsInclude(files, target) {
 jsInclude(["chrome://sogo-connector/content/general/preference.service.addressbook.groupdav.js"]);
 
 function SCEditDirectory() {
-    var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
-    var abURI = "moz-abdavdirectory://" + gCurrentDirectoryServerId;
-    var ab = rdf.GetResource(abURI).QueryInterface(Components.interfaces.nsIAbDirectory);
+    let rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
+    let abURI = "moz-abdavdirectory://" + gCurrentDirectoryServerId;
+    let ab = rdf.GetResource(abURI).QueryInterface(Components.interfaces.nsIAbDirectory);
 
     if (ab.directoryProperties.URI.indexOf("carddav://") == 0) {
         window.openDialog("chrome://sogo-connector/content/addressbook/preferences.addressbook.groupdav.xul",
                           "", "chrome,modal=yes,resizable=no,centerscreen", abURI);
-        if (gUpdate) {
-            var directoriesList = document.getElementById("directoriesList");
-            var selectedNode = directoriesList.selectedItems[0];
-            selectedNode.setAttribute('label', gNewServer);
-            selectedNode.setAttribute('string', gNewServerString);
-            window.opener.gRefresh = true;
-        }
     }
     else {
         this.oldEditDirectory();

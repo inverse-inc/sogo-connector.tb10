@@ -31,8 +31,6 @@
 <?xml-stylesheet href="chrome://messenger/skin/addressbook/addressbook.css"
  type="text/css"?>
 
-<?xul-overlay href="chrome://communicator/content/contentAreaContextOverlay.xul"?>
-
 <overlay id="ca.inverse.addressbook.groupdav"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/x-javascript"
@@ -44,13 +42,13 @@
 
   <!--Add the GroupDAV synchronize button to the toolbar -->
   <toolbarpalette id="AddressBookToolbarPalette">
-    <toolbarbutton id="button-groupdavSync" label="&GroupDavSync.label;" tooltiptext="&GroupDavSync.tooltip;" class="" command="cmd_syncGroupdav"/>	  
+    <toolbarbutton id="button-groupdavSync" label="&GroupDavSync.label;" tooltiptext="&GroupDavSync.tooltip;" class="toolbarbutton-1" command="cmd_syncGroupdav"/>	  
   </toolbarpalette>
 
-  <toolbar id="ab-bar2"
-    defaultset="button-newcard,button-newlist,separator,button-editcard,button-newmessage,separator,button-abdelete,button-groupdavSync,spring,search-container,separator">		 
+  <!-- <toolbar id="ab-bar2" -->
+  <!--   defaultset="button-newcard,button-newlist,separator,button-editcard,button-newmessage,separator,button-abdelete,button-groupdavSync,spring,search-container,separator">		  -->
+  <!-- </toolbar> -->
 
-  </toolbar>
   <!--Add the GroupDAV synchronize menu to the tree contextual menu -->
   <popup id="dirTreeContext">
     <menuseparator/>	

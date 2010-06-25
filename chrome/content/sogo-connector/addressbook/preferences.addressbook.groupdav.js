@@ -20,9 +20,9 @@
  */
 
 function jsInclude(files, target) {
-    var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+    let loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
                            .getService(Components.interfaces.mozIJSSubScriptLoader);
-    for (var i = 0; i < files.length; i++) {
+    for (let i = 0; i < files.length; i++) {
         try {
             loader.loadSubScript(files[i], target);
         }
@@ -36,25 +36,25 @@ jsInclude(["chrome://sogo-connector/content/addressbook/folder-handling.js",
            "chrome://sogo-connector/content/general/preference.service.addressbook.groupdav.js",
            "chrome://sogo-connector/content/general/mozilla.utils.inverse.ca.js"]);
 
-// var fromPreferences = false;
+// let fromPreferences = false;
 
 function onAccept() {
-    var prefMsgBundle = document.getElementById("preferencesMsgId");
+    let prefMsgBundle = document.getElementById("preferencesMsgId");
 
     //There has to be at least a description to create a SOGO addressbook
-    var description = document.getElementById("description").value;
+    let description = document.getElementById("description").value;
     if (!description || description == "") {
         alert(prefMsgBundle.getString("missingDescriptionMsg"));
         return false;
     }
 
-    var url = document.getElementById("groupdavURL").value;
+    let url = document.getElementById("groupdavURL").value;
     if (!url || url == "") {
         alert(prefMsgBundle.getString("missingDescriptionURL"));
         return false;
     }
 
-    var readOnly = document.getElementById("readOnly").checked;
+    let readOnly = document.getElementById("readOnly").checked;
     if (readOnly)
         onAcceptCardDAV();
     else
@@ -64,73 +64,59 @@ function onAccept() {
 }
 
 function onAcceptCardDAV() {
-    var url = document.getElementById("groupdavURL").value;
-    var description = document.getElementById("description").value;
+    let url = document.getElementById("groupdavURL").value;
+    let description = document.getElementById("description").value;
 
-    var directoryURI = SCGetCurrentDirectoryURI();
+    let directoryURI = SCGetCurrentDirectoryURI();
     if (directoryURI) {
-        var directory = SCGetDirectoryFromURI(directoryURI);
+        let directory = SCGetDirectoryFromURI(directoryURI);
         if (directory && directory.dirPrefId.length > 0) {
-            var properties = directory.directoryProperties;
-            properties.description = description;
-            properties.URI = "carddav://" + url;
+            directory.dirName = description;
 
-            var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-                                .getService(Components.interfaces.nsIRDFService);
-            var parentDir = rdf.GetResource("moz-abdirectory://")
-                               .QueryInterface(Components.interfaces.nsIAbDirectory);
-            parentDir.modifyDirectory(directory, properties);
-            window.opener.gNewServerString = directory.dirPrefId;
+
+            // let rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+            //                     .getService(Components.interfaces.nsIRDFService);
+            // let parentDir = rdf.GetResource("moz-abdirectory://")
+            //                    .QueryInterface(Components.interfaces.nsIAbDirectory);
+            // parentDir.modifyDirectory(directory, properties);
         }
         else
             throw("invalid CardDAV directory: " + uri + "\n");
     }
     else
-        window.opener.gNewServerString = SCCreateCardDAVDirectory(description, url);
-
-    window.opener.gNewServer = description;
-    window.opener.gUpdate = true;
+        SCCreateCardDAVDirectory(description, url);
 }
 
-function onAcceptWebDAV(){
-    var properties;
-    var description = document.getElementById("description").value;
+function onAcceptWebDAV() {
+    let prefId;
 
-    var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
-    // var addressbookDS = rdf.GetDataSource("rdf:addressdirectory");
-    var parentDir = rdf.GetResource("moz-abdirectory://").QueryInterface(Components.interfaces.nsIAbDirectory);
-    var uri = SCGetCurrentDirectoryURI();
+    let description = document.getElementById("description").value;
+    let uri = SCGetCurrentDirectoryURI();
     if (uri) {
-        var directory = SCGetDirectoryFromURI(uri);
+        let directory = SCGetDirectoryFromURI(uri);
         if (directory && directory.dirPrefId.length > 0) {
-            // Modifying existing Addressbook
-
-            properties = directory.directoryProperties;
-            properties.description = description;
-
-            dump(parentDir.hasDirectory(directory) + "\n");
-            parentDir.modifyDirectory(directory, properties);
+            directory.dirName = description;
+            prefId = directory.dirPrefId;
         }
         else
             throw("invalid WebDAV directory: " + uri + "\n");
     }
     else {
         // adding a new Addressbook
-        properties = Components.classes["@mozilla.org/addressbook/properties;1"]
-                               .createInstance(Components.interfaces.nsIAbDirectoryProperties);
-        properties.dirType = 2;// ???don't know which values should go in there but 2 seems to get the job done
-        properties.description = document.getElementById("description").value;
-
-        parentDir.createNewDirectory(properties);
-        window.opener.gNewServerString = properties.prefName;
+        let abMgr = Components.classes["@mozilla.org/abmanager;1"]
+                              .getService(Components.interfaces.nsIAbManager);
+        prefId = abMgr.newAddressBook(description, null,
+                                      2 /* don't know which values should go in
+                                         there but 2 seems to get the job
+                                         done */);
     }
 
-    var groupdavPrefService = new GroupdavPreferenceService(properties.prefName);
+    let groupdavPrefService = new GroupdavPreferenceService(prefId);
     groupdavPrefService.setURL(document.getElementById("groupdavURL").value);
 }
 
 function SCGetCurrentDirectoryURI() {
-    var uri;
+    let uri;
 
     if (window.arguments && window.arguments[0])
         uri = window.arguments[0];
@@ -143,27 +129,27 @@ function SCGetCurrentDirectoryURI() {
 function onLoad() {
     // TODO	add download now for cardDAV, the tab is currently hidden
 
-    var uri = SCGetCurrentDirectoryURI();
+    let uri = SCGetCurrentDirectoryURI();
     if (uri) {
-        var directory = SCGetDirectoryFromURI(uri);
+        let directory = SCGetDirectoryFromURI(uri);
         if (directory) {
-            var readOnly = (uri.indexOf("moz-abdavdirectory://") == 0);
-            var roElem = document.getElementById("readOnly");
+            let readOnly = (uri.indexOf("moz-abdavdirectory://") == 0);
+            let roElem = document.getElementById("readOnly");
             roElem.setAttribute("checked", readOnly);
             roElem.disabled = true;
 
-            var description = "";
-            var url = "";
+            let description = "";
+            let url = "";
 
             if (readOnly) {
                 description = directory.dirName;
-                var cardDavPrefix = "carddav://";
-                var dUrl = directory.directoryProperties.URI;
+                let cardDavPrefix = "carddav://";
+                let dUrl = directory.URI;
                 if (dUrl.indexOf(cardDavPrefix) == 0)
                     url = dUrl.substr(cardDavPrefix.length);
             }
             else {
-                var groupdavPrefService = new GroupdavPreferenceService(directory.directoryProperties.prefName);
+                let groupdavPrefService = new GroupdavPreferenceService(directory.dirPrefId);
                 description = directory.dirName;
                 url = groupdavPrefService.getURL();
             }
@@ -179,40 +165,4 @@ function onLoad() {
 
 function onCancel() {
     window.close();
-}
-
-// Handle readOnly checkbox updates
-
-
-function DownloadNow(){
-
-    // TODO	add download now for cardDAV
-    /*
-     if (!gDownloadInProgress) {
-     gProgressText = document.getElementById("replicationProgressText");
-     gProgressMeter = document.getElementById("replicationProgressMeter");
-
-     gProgressText.hidden = false;
-     gProgressMeter.hidden = false;
-     gReplicationCancelled = false;
-
-     try {
-     gReplicationService.startReplication(gCurrentDirectoryString,
-     progressListener);
-     }
-     catch (ex) {
-     EndDownload(false);
-     }
-     } else {
-     gReplicationCancelled = true;
-     try {
-     gReplicationService.cancelReplication(gCurrentDirectoryString);
-     }
-     catch (ex) {
-     // XXX todo
-     // perhaps replication hasn't started yet?  This can happen if you hit cancel after attempting to replication when offline
-     dump("unexpected failure while cancelling.  ex=" + ex + "\n");
-     }
-     }
-     */
 }
