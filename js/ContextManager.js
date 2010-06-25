@@ -29,7 +29,7 @@ ContextManager.prototype = {
     wrappedJSObject: null,
 
     getContext: function(name) {
-        var context = this.contexts[name];
+        let context = this.contexts[name];
         if (!context) {
             context = {};
             this.contexts[name] = context;
@@ -38,7 +38,7 @@ ContextManager.prototype = {
         return context;
     },
     resetContext: function(name) {
-        var context = this.contexts[name];
+        let context = this.contexts[name];
         if (context)
             this.contexts[name] = null;
     },
@@ -50,3 +50,4 @@ ContextManager.prototype = {
         return this;
     }
 };
+

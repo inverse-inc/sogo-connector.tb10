@@ -20,9 +20,9 @@
  */
 
 function jsInclude(files, target) {
-    var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+    let loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
                            .getService(Components.interfaces.mozIJSSubScriptLoader);
-    for (var i = 0; i < files.length; i++) {
+    for (let i = 0; i < files.length; i++) {
         try {
             loader.loadSubScript(files[i], target);
         }
@@ -37,15 +37,15 @@ function jsInclude(files, target) {
 
 jsInclude(["chrome://sogo-connector/content/general/preference.service.addressbook.groupdav.js"]);
 
-var autoCompleteDirectoryPreferencesPrefix = "ldap_2.autoComplete.";
+let autoCompleteDirectoryPreferencesPrefix = "ldap_2.autoComplete.";
 
 function getAutoCompleteCardDAVUri(){
-    var result = null;
-    var prefsService = Components.classes["@mozilla.org/preferences;1"]
+    let result = null;
+    let prefsService = Components.classes["@mozilla.org/preferences;1"]
                                  .getService(Components.interfaces.nsIPref);
 
     // 	dump("prefix: " + autoCompleteDirectoryPreferencesPrefix + "\n");
-    var directoryServerPrefix = prefsService.GetCharPref(autoCompleteDirectoryPreferencesPrefix + "directoryServer");
+    let directoryServerPrefix = prefsService.GetCharPref(autoCompleteDirectoryPreferencesPrefix + "directoryServer");
     if (directoryServerPrefix
         && directoryServerPrefix.length > 0)
         result = "moz-abdavdirectory://" + directoryServerPrefix;
@@ -54,9 +54,9 @@ function getAutoCompleteCardDAVUri(){
 }
 
 function isAutoCompleteDirectoryServerCardDAV() {
-    var result = false;
+    let result = false;
 
-    var uri = getAutoCompleteCardDAVUri(autoCompleteDirectoryPreferencesPrefix);
+    let uri = getAutoCompleteCardDAVUri(autoCompleteDirectoryPreferencesPrefix);
     dump("uri: " + uri + "\n");
     if (uri)
         result = isCardDavDirectory(uri);

@@ -28,7 +28,7 @@ function SCOnCreationOverlayLoad() {
 
 function SCDoCreateCalendar() {
     if (gCalendar.type == "caldav") {
-        var aclMgr = Components.classes["@inverse.ca/calendar/caldav-acl-manager;1"]
+        let aclMgr = Components.classes["@inverse.ca/calendar/caldav-acl-manager;1"]
                                .getService(Components.interfaces.nsISupports)
                                .wrappedJSObject;
         aclMgr.calendarEntry(gCalendar.uri);
@@ -36,4 +36,3 @@ function SCDoCreateCalendar() {
 
     return window.SCOldDoCreateCalendar();
 }
-

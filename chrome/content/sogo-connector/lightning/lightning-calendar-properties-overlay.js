@@ -23,11 +23,12 @@ onLoad = function ltn_onLoad() {
     gCalendar = window.arguments[0].calendar;
 
     if (gCalendar.type == "caldav") {
-        var aclMgr = Components.classes["@inverse.ca/calendar/caldav-acl-manager;1"].getService().wrappedJSObject;
-        var calAclEntry = aclMgr.calendarEntry(gCalendar.uri);
-        var i = 0;
+        let aclMgr = Components.classes["@inverse.ca/calendar/caldav-acl-manager;1"]
+                               .getService().wrappedJSObject;
+        let calAclEntry = aclMgr.calendarEntry(gCalendar.uri);
+        let i = 0;
 
-        var menuPopup = document.getElementById("email-identity-menupopup");
+        let menuPopup = document.getElementById("email-identity-menupopup");
 
         while (calAclEntry.ownerIdentities != null && i < calAclEntry.ownerIdentities.length) {
             addMenuItem(menuPopup, calAclEntry.ownerIdentities[i].identityName, calAclEntry.ownerIdentities[i].key);
@@ -40,7 +41,7 @@ onLoad = function ltn_onLoad() {
             addMenuItem(menuPopup, ltnGetString("lightning", "imipNoIdentity"), "none");
         }
 
-        var menuList = document.getElementById("email-identity-menulist");
+        let menuList = document.getElementById("email-identity-menulist");
         menuList.selectedIndex = 0;
 
     } else {

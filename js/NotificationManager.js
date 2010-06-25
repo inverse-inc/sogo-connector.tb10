@@ -29,7 +29,7 @@ NotificationManager.prototype = {
     wrappedJSObject: null,
 
     registerObserver: function(notification, observer) {
-        var observers = this.notifications[notification];
+        let observers = this.notifications[notification];
         if (!observers) {
             observers = [];
             this.notifications[notification] = observers;
@@ -42,10 +42,10 @@ NotificationManager.prototype = {
             throw Components.results.NS_ERROR_FAILURE;
     },
     unregisterObserver: function(notification, observer) {
-        var unregistered = false;
-        var observers = this.notifications[notification];
+        let unregistered = false;
+        let observers = this.notifications[notification];
         if (observers) {
-            var idx = observers.indexOf(observer);
+            let idx = observers.indexOf(observer);
             if (idx > -1) {
                 observers.splice(idx, 1);
                 unregistered = true;
@@ -58,9 +58,9 @@ NotificationManager.prototype = {
 
     postNotification: function(notification, data) {
         //     dump("posting '" + notification + "'\n");
-        var observers = this.notifications[notification];
+        let observers = this.notifications[notification];
         if (observers)
-            for (var i = 0; i < observers.length; i++)
+            for (let i = 0; i < observers.length; i++)
                 observers[i].handleNotification(notification, data);
     },
 

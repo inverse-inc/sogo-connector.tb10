@@ -20,6 +20,6 @@
  */
 
 function SCExportTask(event) {
-    var tree = getTaskTree();
+    let tree = getTaskTree();
     saveEventsToFile(tree.getSelectedItems({}));
 }

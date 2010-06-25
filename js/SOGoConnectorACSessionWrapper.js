@@ -20,9 +20,9 @@
  */
 
 function jsInclude(files, target) {
-    var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+    let loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
                            .getService(Components.interfaces.mozIJSSubScriptLoader);
-    for (var i = 0; i < files.length; i++) {
+    for (let i = 0; i < files.length; i++) {
         try {
             loader.loadSubScript(files[i], target);
         }
@@ -71,11 +71,11 @@ SOGoConnectorACSessionWrapper.prototype = {
     results: null,
 
     initSessions: function() {
-        var names = new Array();
-        var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+        let names = new Array();
+        let prefs = Components.classes["@mozilla.org/preferences-service;1"]
                               .getService(Components.interfaces.nsIPrefBranch);
 
-        var autocompleteLocal = false;
+        let autocompleteLocal = false;
         try {
             autocompleteLocal = prefs.getBoolPref("mail.enable_autocomplete");
         }
@@ -85,7 +85,7 @@ SOGoConnectorACSessionWrapper.prototype = {
         if (autocompleteLocal)
             names.push("addrbook");
 
-        var autocompleteLdap = false;
+        let autocompleteLdap = false;
         try {
             autocompleteLdap = prefs.getBoolPref("ldap_2.autoComplete.useDirectory");
         }
@@ -93,16 +93,16 @@ SOGoConnectorACSessionWrapper.prototype = {
             autocompleteLdap = false;
         }
 
-        var serverURL;
+        let serverURL;
         if (autocompleteLdap) {
-            var autocompleteDirectory = prefs.getCharPref("ldap_2.autoComplete.directoryServer");
+            let autocompleteDirectory = prefs.getCharPref("ldap_2.autoComplete.directoryServer");
             if (isAutoCompleteDirectoryServerCardDAV()) {
                 // 				dump("carddav\n");
                 serverURL = Components.classes["@mozilla.org/network/standard-url;1"]
                                       .createInstance(Components.interfaces.nsIURI);
                 try {
-                    var cardDavURL = prefs.getCharPref(autocompleteDirectory +".uri");
-                    var cardDavPrefix = "carddav://";
+                    let cardDavURL = prefs.getCharPref(autocompleteDirectory +".uri");
+                    let cardDavPrefix = "carddav://";
                     serverURL.spec = cardDavURL.substr(cardDavPrefix.length);
                     // 																								 Components.interfaces.nsISupportsString)
                     // 						.data;
@@ -130,12 +130,12 @@ SOGoConnectorACSessionWrapper.prototype = {
             }
         }
 
-        var sessions = new Array();
-        var listeners = new Array();
-        for (var i = 0; i < names.length; i++) {
+        let sessions = new Array();
+        let listeners = new Array();
+        for (let i = 0; i < names.length; i++) {
             try {
                 //  				dump("session name: " + names[i] + "\n");
-                var session;
+                let session;
                 if (names[i] == "carddav") {
                     session = Components.classes["@mozilla.org/autocompleteSession;1?type=" + names[i]]
                                         .createInstance(Components.interfaces.nsICardDAVAutoCompleteSession);
@@ -162,15 +162,15 @@ SOGoConnectorACSessionWrapper.prototype = {
     },
 
     /* nsIAutoCompleteSession */
-    onAutoComplete: function(searchString, previousSearchResult, listener) {
-        //  		dump("SOGoConnectorACSessionWrapper.prototype.onAutoComplete\n");
+    //  onAutoComplete: function(searchString, previousSearchResult, listener) {
+    // //  		dump("SOGoConnectorACSessionWrapper.prototype.onAutoComplete\n");
 
-        for (var i = 0; i < this.sessions.length; i++) {
-            var session = this.sessions[i];
-            session.onAutoComplete(searchString, previousSearchResult,
-                                   this.listeners[i]);
-        }
-    },
+    // 		for (let i = 0; i < this.sessions.length; i++) {
+    // 			let session = this.sessions[i];
+    // 			session.onAutoComplete(searchString, previousSearchResult,
+    // 														 this                          .listeners[i]);
+    // 		}
+    // 	},
     onStartLookup: function (searchString, previousSearchResult, listener) {
         //  		dump("SOGoConnectorACSessionWrapper.prototype.onStartLookup\n");
 
@@ -180,8 +180,8 @@ SOGoConnectorACSessionWrapper.prototype = {
         this.searchString = searchString;
 
         // 		dump("searching '" + searchString + "'\n");
-        for (var i = 0; i < this.sessions.length; i++) {
-            var session = this.sessions[i];
+        for (let i = 0; i < this.sessions.length; i++) {
+            let session = this.sessions[i];
             session.onStartLookup(searchString, previousSearchResult,
                                   this.listeners[i]);
         }
@@ -190,8 +190,8 @@ SOGoConnectorACSessionWrapper.prototype = {
         //  		dump("SOGoConnectorACSessionWrapper.prototype.onStopLookup\n");
 
         this._reset();
-        for (var i = 0; i < this.sessions.length; i++) {
-            var session = this.sessions[i];
+        for (let i = 0; i < this.sessions.length; i++) {
+            let session = this.sessions[i];
             session.onStopLookup();
         }
     },
@@ -213,8 +213,8 @@ SOGoConnectorACSessionWrapper.prototype = {
                 this._fillResults(result.items);
 
             if (!this.waiting) {
-                var returnStatus = 0;
-                var returnResults = null;
+                let returnStatus = 0;
+                let returnResults = null;
                 if (this.results) {
                     returnStatus = 1;
                     returnResults = this._buildResults();
@@ -226,22 +226,22 @@ SOGoConnectorACSessionWrapper.prototype = {
     },
     _fillResults: function(results) {
         if (results) {
-            for (var i = 0; i < results.Count(); i++) {
+            for (let i = 0; i < results.Count(); i++) {
                 try {
-                    var item = results.GetElementAt(i)
+                    let item = results.GetElementAt(i)
                                       .QueryInterface(Components.interfaces.nsIAutoCompleteItem);
                     if (!this.results)
                         this.results = {};
-                    var key = item.value;
+                    let key = item.value;
                     if (key) {
-                        var index = key.indexOf("<");
-                        var hasFN = false;
+                        let index = key.indexOf("<");
+                        let hasFN = false;
                         if (index > -1) {
                             hasFN = true;
-                            var lastIndex = key.indexOf(">");
+                            let lastIndex = key.indexOf(">");
                             key = key.substr(index + 1, lastIndex - index - 1);
                         }
-                        var data = this.results[key];
+                        let data = this.results[key];
                         if (!data
                             || (!data.hasFN && hasFN))
                             this.results[key] = {value: item.value,
@@ -259,18 +259,18 @@ SOGoConnectorACSessionWrapper.prototype = {
         }
     },
     _buildResults: function() {
-        var resultsArray = Components.classes["@mozilla.org/supports-array;1"]
+        let resultsArray = Components.classes["@mozilla.org/supports-array;1"]
                                      .createInstance(Components.interfaces.nsISupportsArray);
-        for (var key in this.results) {
-            var value = this.results[key].value;
-            var item = Components.classes["@mozilla.org/autocomplete/item;1"]
+        for (let key in this.results) {
+            let value = this.results[key].value;
+            let item = Components.classes["@mozilla.org/autocomplete/item;1"]
                                  .createInstance(Components.interfaces.nsIAutoCompleteItem);
             item.className = "remote-abook";
             item.comment = this.results[key].comment;
             item.value = value;
             resultsArray.AppendElement(item);
         }
-        var results = Components.classes["@mozilla.org/autocomplete/results;1"]
+        let results = Components.classes["@mozilla.org/autocomplete/results;1"]
                                 .createInstance(Components.interfaces.nsIAutoCompleteResults);
         results.defaultItemIndex = 0;
         results.items = resultsArray;

@@ -20,9 +20,9 @@
  */
 
 function jsInclude(files, target) {
-    var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+    let loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
                            .getService(Components.interfaces.mozIJSSubScriptLoader);
-    for (var i = 0; i < files.length; i++) {
+    for (let i = 0; i < files.length; i++) {
         try {
             loader.loadSubScript(files[i], target);
         }
@@ -40,7 +40,7 @@ function OnLoadHandler() {
 }
 
 function SCNewCardOKButton() {
-    var result = this.OldNewCardOKButton();
+    let result = this.OldNewCardOKButton();
     if (result) {
         setDocumentDirty(true);
         saveCard(true);

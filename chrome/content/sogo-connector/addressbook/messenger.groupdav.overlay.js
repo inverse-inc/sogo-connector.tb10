@@ -20,9 +20,9 @@
  */
 
 function jsInclude(files, target) {
-    var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+    let loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
                            .getService(Components.interfaces.mozIJSSubScriptLoader);
-    for (var i = 0; i < files.length; i++) {
+    for (let i = 0; i < files.length; i++) {
         try {
             loader.loadSubScript(files[i], target);
         }
@@ -47,11 +47,11 @@ jsInclude(["chrome://sogo-connector/content/addressbook/folder-handling.js",
  * it contains the observers needed by the addressBook and the cards dialog
  */
 
-var groupdavSynchronizationObserver = {
+let groupdavSynchronizationObserver = {
     count: 0,
     handleNotification: function(notification, data) {
-        var active = (this.count > 0);
-        var throbber = document.getElementById("navigator-throbber");
+        let active = (this.count > 0);
+        let throbber = document.getElementById("navigator-throbber");
         /* Throbber may not exist, thus we need to check the returned value. */
         if (notification == "groupdav.synchronization.start") {
             this.count++;
@@ -75,7 +75,7 @@ var groupdavSynchronizationObserver = {
 function OnLoadMessengerOverlay() {
     /* if SOGo Integrator is present, we let it take the startup procedures */
 
-    var nmgr = Components.classes["@inverse.ca/notification-manager;1"]
+    let nmgr = Components.classes["@inverse.ca/notification-manager;1"]
                          .getService(Components.interfaces.inverseIJSNotificationManager)
                          .wrappedJSObject;
     nmgr.registerObserver("groupdav.synchronization.start",
@@ -95,7 +95,7 @@ function OnLoadMessengerOverlay() {
 }
 
 function SCUnloadHandler(event) {
-    var nmgr = Components.classes["@inverse.ca/notification-manager;1"]
+    let nmgr = Components.classes["@inverse.ca/notification-manager;1"]
                          .getService(Components.interfaces.inverseIJSNotificationManager)
                          .wrappedJSObject;
     nmgr.unregisterObserver("groupdav.synchronization.start",
@@ -105,11 +105,11 @@ function SCUnloadHandler(event) {
 }
 
 function cleanupAddressBooks() {
-    var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+    let prefs = Components.classes["@mozilla.org/preferences-service;1"]
                           .getService(Components.interfaces.nsIPrefBranch);
 
     // 	_cleanupLocalStore();
-    var uniqueChildren = _uniqueChildren(prefs, "ldap_2.servers", 2);
+    let uniqueChildren = _uniqueChildren(prefs, "ldap_2.servers", 2);
     _cleanupABRemains(prefs, uniqueChildren);
     uniqueChildren = _uniqueChildren(prefs, "ldap_2.servers", 2);
     _cleanupBogusAB(prefs, uniqueChildren);
@@ -121,24 +121,12 @@ function cleanupAddressBooks() {
     _migrateOldCardDAVDirs(prefs, uniqueChildren);
 }
 
-// function _cleanupLocalStore() {
-// 	var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-//     .getService(Components.interfaces.nsIRDFService);
-// 	var ds = rdf.GetDataSource("rdf:local-store");
-// 	var nodes = ds.GetAllResources();
-// 	while (nodes.hasMoreElements()) {
-// 		var currentChild = nodes.getNext()
-// 			.QueryInterface(Components.interfaces.nsIRDFResource);
-// 		dump("currentChild: " + currentChild.Value + "\n");
-// 	}
-// }
-
 function _uniqueChildren(prefs, path, dots) {
-    var count = {};
-    var children = prefs.getChildList(path, count);
-    var uniqueChildren = {};
-    for (var i = 0; i < children.length; i++) {
-        var leaves = children[i].split(".");
+    let count = {};
+    let children = prefs.getChildList(path, count);
+    let uniqueChildren = {};
+    for (let i = 0; i < children.length; i++) {
+        let leaves = children[i].split(".");
         uniqueChildren[leaves[dots]] = true;
     }
 
@@ -146,12 +134,12 @@ function _uniqueChildren(prefs, path, dots) {
 }
 
 function _cleanupABRemains(prefs, uniqueChildren) {
-    var path = "ldap_2.servers";
+    let path = "ldap_2.servers";
 
-    for (var key in uniqueChildren) {
-        var branchRef = path + "." + key;
-        var count = {};
-        var children = prefs.getChildList(branchRef, count);
+    for (let key in uniqueChildren) {
+        let branchRef = path + "." + key;
+        let count = {};
+        let children = prefs.getChildList(branchRef, count);
         if (children.length < 2) {
             if (children[0] == (branchRef + ".position"))
                 prefs.deleteBranch(branchRef);
@@ -160,31 +148,20 @@ function _cleanupABRemains(prefs, uniqueChildren) {
 }
 
 function _cleanupBogusAB(prefs, uniqueChildren) {
-    var path = "ldap_2.servers";
+    let path = "ldap_2.servers";
 
-    for (var key in uniqueChildren) {
+    for (let key in uniqueChildren) {
         if (key != "default") {
-            var uriRef = path + "." + key + ".uri";
-            var uri = null;
+            let uriRef = path + "." + key + ".uri";
+            let uri = null;
             // 			dump("trying: " + uriRef + "\n");
             try {
-                //  			uri = "carddav://" + prefs.getCharPref(uriRef);
                 uri = prefs.getCharPref(uriRef);
                 if (uri.indexOf("moz-abldapdirectory:") == 0) {
                     dump("deleting: " + path + "." + key + "\n");
                     prefs.deleteBranch(path + "." + key);
                     // 			dump("uri: " + uri + "\n");
                 }
-                // 				else if (uri.indexOf("carddav:") == 0) {
-                // 					try {
-                // 						prefs.getCharPref("extensions.ca.inverse.addressbook.groupdav"
-                // 															+ ".ldap_2.servers." + key + ".name");
-                // 					}
-                // 					catch(e) {
-                // 						dump("deleting: " + path + "." + key + "\n");
-                // 						prefs.deleteBranch(path + "." + key);
-                // 					};
-                // 				}
             }
             catch(e) {};
         }
@@ -193,8 +170,8 @@ function _cleanupBogusAB(prefs, uniqueChildren) {
 
 function _cleanupOrphanDAVAB(prefs, uniqueChildren) {
     var	path = "extensions.ca.inverse.addressbook.groupdav.ldap_2.servers";
-    for (var key in uniqueChildren) {
-        var otherRef = "ldap_2.servers." + key + ".description";
+    for (let key in uniqueChildren) {
+        let otherRef = "ldap_2.servers." + key + ".description";
         // 		dump("XXXX otherRef: " + otherRef + "\n");
         try {
             prefs.getCharPref(otherRef);
@@ -209,14 +186,14 @@ function _cleanupOrphanDAVAB(prefs, uniqueChildren) {
 
 function _migrateOldCardDAVDirs(prefs, uniqueChildren) {
     var	path = "extensions.ca.inverse.addressbook.groupdav.ldap_2.servers.";
-    for (var key in uniqueChildren) {
-        var fullPath = path + key;
+    for (let key in uniqueChildren) {
+        let fullPath = path + key;
         try {
-            var isCardDAV = (prefs.getCharPref(fullPath + ".readOnly") == "true");
+            let isCardDAV = (prefs.getCharPref(fullPath + ".readOnly") == "true");
             if (isCardDAV) {
                 dump("######### trying to migrate " + key + "\n");
-                var description = "" + prefs.getCharPref(fullPath + ".name");
-                var url = "" + prefs.getCharPref(fullPath + ".url");
+                let description = "" + prefs.getCharPref(fullPath + ".name");
+                let url = "" + prefs.getCharPref(fullPath + ".url");
                 dump("description: " + description + "\n");
                 dump("url: " + url + "\n");
                 if (description.length > 0
@@ -239,16 +216,16 @@ function _migrateOldCardDAVDirs(prefs, uniqueChildren) {
 }
 
 function startFolderSync() {
-    var rdfService = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+    let rdfService = Components.classes["@mozilla.org/rdf/rdf-service;1"]
                                .getService(Components.interfaces.nsIRDFService);
-    var parentDir = rdfService.GetResource("moz-abdirectory://")
+    let parentDir = rdfService.GetResource("moz-abdirectory://")
                               .QueryInterface(Components.interfaces.nsIAbDirectory);
-    var children = parentDir.childNodes;
+    let children = parentDir.childNodes;
     while (children.hasMoreElements()) {
-        var ab = children.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-        var realAB = ab.QueryInterface(Components.interfaces.nsIAbDirectory);
+        let ab = children.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+        let realAB = ab.QueryInterface(Components.interfaces.nsIAbDirectory);
         if (isGroupdavDirectory(ab.Value)) {
-            var synchronizer = new GroupDavSynchronizer(ab.Value, false);
+            let synchronizer = new GroupDavSynchronizer(ab.Value, false);
             synchronizer.start();
         }
     }

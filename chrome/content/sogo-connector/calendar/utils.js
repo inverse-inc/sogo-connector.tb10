@@ -22,10 +22,10 @@
 function isCalendarWritable(aCalendar) {
     // INVERSE - BEGIN
     if (aCalendar.type == "caldav") {
-        var aclMgr = Components.classes["@inverse.ca/calendar/caldav-acl-manager;1"]
+        let aclMgr = Components.classes["@inverse.ca/calendar/caldav-acl-manager;1"]
                                .getService(Components.interfaces.nsISupports)
                                .wrappedJSObject;
-        var entry = aclMgr.calendarEntry(aCalendar.uri);
+        let entry = aclMgr.calendarEntry(aCalendar.uri);
         if (entry.isCalendarReady()) {
             return (!aCalendar.getProperty("disabled") &&
                     !aCalendar.readOnly &&
@@ -51,13 +51,13 @@ function SCModifyEventWithDialogObserver(aItem, job, aPromptOccurrence) {
 SCModifyEventWithDialogObserver.prototype = {
     onLoad: function(aCalendar) {
         aCalendar.removeObserver(this);
-        var thisObserver = this;
-        var getItemListener = {
+        let thisObserver = this;
+        let getItemListener = {
             onGetResult: function (aCalendar, aStatus, aItemType,
                                    aDetail, aCount, aItems) {
-                var parentItem = aItems[0];
-                var rID = thisObserver.arguments.itemArg.recurrenceId;
-                var item;
+                let parentItem = aItems[0];
+                let rID = thisObserver.arguments.itemArg.recurrenceId;
+                let item;
                 if (rID) {
                     item = parentItem.recurrenceInfo.getOccurrenceFor(rID);
                 } else {
@@ -85,9 +85,9 @@ SCModifyEventWithDialogObserver.prototype = {
 };
 
 function SCModifyEventWithDialog(aItem, job, aPrompt) {
-    var calendar = aItem.calendar;
+    let calendar = aItem.calendar;
     if (calendar.type == "caldav") {
-        var refreshObserver = new SCModifyEventWithDialogObserver(aItem,
+        let refreshObserver = new SCModifyEventWithDialogObserver(aItem,
                                                                   job,
                                                                   aPrompt);
         calendar.addObserver(refreshObserver);

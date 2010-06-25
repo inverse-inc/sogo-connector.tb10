@@ -19,12 +19,12 @@
  * Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-var initInterval = -1;
-var componentEntry = null;
-var component = null;
+let initInterval = -1;
+let componentEntry = null;
+let component = null;
 
 function SCReadyCallback() {
-    var ready = componentEntry.isComponentReady();
+    let ready = componentEntry.isComponentReady();
     //         dump("ready: " + ready + "\n");
     if (ready) {
         clearInterval(initInterval);
@@ -33,21 +33,21 @@ function SCReadyCallback() {
 }
 
 function SCOnLoadHandler(event) {
-    // var fbhandler = Components.classes["@inverse.ca/calendar/fburl-freebusy-provider;1"]
+    // let fbhandler = Components.classes["@inverse.ca/calendar/fburl-freebusy-provider;1"]
     //     .getService().wrappedJSObject;
     // fbhandler.register();
 
-    var calendar = window.arguments[0].calendar.wrappedJSObject;
+    let calendar = window.arguments[0].calendar.wrappedJSObject;
     component = window.arguments[0].calendarEvent;
 
     if (calendar.type == "caldav") {
-        var mgr = Components.classes["@inverse.ca/calendar/caldav-acl-manager;1"]
+        let mgr = Components.classes["@inverse.ca/calendar/caldav-acl-manager;1"]
                             .getService(Components.interfaces.nsISupports)
                             .wrappedJSObject;
 
-        var componentURL = null;
+        let componentURL = null;
         if (component.id) {
-            var cache = calendar.mItemInfoCache;
+            let cache = calendar.mItemInfoCache;
             if (!cache)
                 cache = calendar.mUncachedCalendar.wrappedJSObject.mItemInfoCache;
             if (cache) {
@@ -68,7 +68,7 @@ function SCOnLoadHandler(event) {
     }
 
     if (!window.arguments[0].calendarEvent.id) {
-        var calendarList = document.getElementById("item-calendar");
+        let calendarList = document.getElementById("item-calendar");
         calendarList.addEventListener("command",
                                       SCOnChangeCalendar,
                                       false);
@@ -76,15 +76,15 @@ function SCOnLoadHandler(event) {
 }
 
 function eventHasAttendees() {
-    var attendees = component.getAttendees({});
+    let attendees = component.getAttendees({});
 
     return (attendees.length > 0);
 }
 
 function getWindowAttendeeById(attendeeID) {
-    var attendee = null;
+    let attendee = null;
 
-    var i = 0;
+    let i = 0;
     while (!attendee && i < window.attendees.length)
         if (window.attendees[i].id.toLowerCase() == attendeeID)
             attendee = window.attendees[i];
@@ -95,15 +95,15 @@ function getWindowAttendeeById(attendeeID) {
 }
 
 function getUserAsAttendee(delegated) {
-    var attendee = null;
+    let attendee = null;
 
-    var i = 0;
-    var userAddresses = (delegated
+    let i = 0;
+    let userAddresses = (delegated
                          ? componentEntry.parentCalendarEntry.ownerAddresses
                          : componentEntry.parentCalendarEntry.userAddresses);
     while (!attendee && i < userAddresses.length) {
         //                 dump("test address: " + userAddresses[i] + "\n");
-        var curAttendee = getWindowAttendeeById(userAddresses[i].toLowerCase());
+        let curAttendee = getWindowAttendeeById(userAddresses[i].toLowerCase());
         if (curAttendee)
             attendee = curAttendee;
         else
@@ -133,28 +133,28 @@ function _makeChildNodesReadOnly(node) {
             node.setAttribute("disabled", "true");
         else {
             //                         dump("node: " + node.localName + "\n");
-            for (var i = 0; i < node.childNodes.length; i++)
+            for (let i = 0; i < node.childNodes.length; i++)
                 _makeChildNodesReadOnly(node.childNodes[i]);
         }
     }
 }
 
 function SCUpdateCustomFields() {
-    var fixedLabel = document.getElementById("event-grid-fixedConfidentialLabel");
-    var nodes = document.getElementById("button-privacy")
+    let fixedLabel = document.getElementById("event-grid-fixedConfidentialLabel");
+    let nodes = document.getElementById("button-privacy")
                         .getElementsByTagName("menuitem");
     nodes[1].label = fixedLabel.value;
 }
 
 function SCOnChangeCalendar(event) {
-    var calendarList = document.getElementById("item-calendar");
-    var calendar = calendarList.selectedItem.calendar;
+    let calendarList = document.getElementById("item-calendar");
+    let calendar = calendarList.selectedItem.calendar;
 
     componentEntry = null;
     //         dump("calendar: " + calendar + "\n");
     //         dump("calendar.name: " + calendar.name + "\n");
     if (calendar.type == "caldav") {
-        var mgr = Components.classes["@inverse.ca/calendar/caldav-acl-manager;1"]
+        let mgr = Components.classes["@inverse.ca/calendar/caldav-acl-manager;1"]
                             .getService(Components.interfaces.nsISupports)
                             .wrappedJSObject;
         componentEntry = mgr.componentEntry(calendar.uri, null);
@@ -163,7 +163,7 @@ function SCOnChangeCalendar(event) {
 }
 
 function SCGetCalendarManager() {
-    var mgr = new SCCalendarManager();
+    let mgr = new SCCalendarManager();
 
     return mgr;
 }
@@ -178,22 +178,22 @@ function SCCalendarManager() {
 SCCalendarManager.prototype = {
     realMgr: null,
     getCalendars: function SCGetCalendars(arg) {
-        var calendars = this.realMgr.getCalendars(arg);
-        var aclMgr = Components.classes["@inverse.ca/calendar/caldav-acl-manager;1"]
+        let calendars = this.realMgr.getCalendars(arg);
+        let aclMgr = Components.classes["@inverse.ca/calendar/caldav-acl-manager;1"]
                                .getService(Components.interfaces.nsISupports)
                                .wrappedJSObject;
 
-        var isNew = !(window.arguments[0].calendarEvent.id);
+        let isNew = !(window.arguments[0].calendarEvent.id);
 
         //         dump("this url: " + window.arguments[0].calendar.uri.spec + "\n");
 
-        var result = [];
-        for (var i = 0; i < calendars.length; i++) {
-            var isIncluded = true;
+        let result = [];
+        for (let i = 0; i < calendars.length; i++) {
+            let isIncluded = true;
             if (calendars[i].type == "caldav") {
                 //                                 dump("{ ");
                 //                 dump("current url: " + calendars[i].uri.spec + "\n");
-                var entry = aclMgr.calendarEntry(calendars[i].uri);
+                let entry = aclMgr.calendarEntry(calendars[i].uri);
                 isIncluded = (entry.isCalendarReady() && (entry.userCanAddComponents()
                                                           || (!isNew && window.arguments[0].calendar
                                                               == calendars[i])));

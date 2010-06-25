@@ -19,26 +19,26 @@
  * Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-var logLevelVal = {
+let logLevelVal = {
     debug : 3,
     info  : 2,
     warn  : 1,
     error : 0
 };
 
-var gLogLevel = logLevelVal.debug; //TODO: This value should change to WARN around version 0.8
-var logFile;
-var logFileName;
-var logPath;
+let gLogLevel = logLevelVal.debug; //TODO: This value should change to WARN around version 0.8
+let logFile;
+let logFileName;
+let logPath;
 
-var maxLogFileSize = 1024 * 1024;
-var LOG_LEVEL_PREF	= "extensions.ca.inverse.logLevel";
-var LOG_FILE 		= "extensions.ca.inverse.sogo.connector.log";
+let maxLogFileSize = 1024 * 1024;
+let LOG_LEVEL_PREF	= "extensions.ca.inverse.logLevel";
+let LOG_FILE 		= "extensions.ca.inverse.sogo.connector.log";
 
 initLogFile(LOG_FILE);
 
 function initLogFile(fileName){
-    var prefService = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+    let prefService = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
     if (prefService.prefHasUserValue(LOG_LEVEL_PREF)){
         gLogLevel = prefService.getIntPref(LOG_LEVEL_PREF);
     }else{
@@ -57,8 +57,8 @@ function initLogFile(fileName){
         throw e;
     }
     // get the path to the user's home (profile) directory
-    var dirService = new Components.Constructor("@mozilla.org/file/directory_service;1","nsIProperties");
-    var userProfileDir;
+    let dirService = new Components.Constructor("@mozilla.org/file/directory_service;1","nsIProperties");
+    let userProfileDir;
     try{
         userProfileDir = (new dirService()).get("ProfD", Components.interfaces.nsIFile); //nsIFile
         logPath=userProfileDir.path;
@@ -74,12 +74,11 @@ function initLogFile(fileName){
     }
 
     logFileName = logPath + fileName;
-    var file = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
+    let file = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
     file.initWithPath(logFileName);
-    if (!file.exists()) {
+    if (!file.exists()){
         file.create(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0664);
-    }
-    else if (file.fileSize > maxLogFileSize ){
+    }else	if (file.fileSize > maxLogFileSize ){
         file.moveTo(null, fileName + ".bak");
         file.initWithPath(logFileName);
         file.create(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0664);
@@ -90,7 +89,7 @@ function initLogFile(fileName){
 function logDebug(message){
     if (message[message.length-1] != "\n")
         message += "\n";
-    dump("DEBUG: " + message);
+    dump ("DEBUG: " + message)l
     return;
     if (gLogLevel >= logLevelVal.debug){
         xulFileWrite(logFileName, new Date().toString() + " [DEBUG] " + message + "\n");
@@ -134,15 +133,15 @@ function exceptionHandler(win,boxtitle,exception){
 }
 
 function xulReadFile(path, charset){
-    var data = null;
+    let data = null;
     try {
         dump("you are a B***");
-        var file = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
+        let file = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
         file.initWithPath(path);
 
         data = new String();
-        var fiStream = Components.classes['@mozilla.org/network/file-input-stream;1'].createInstance(Components.interfaces.nsIFileInputStream);
-        var siStream = Components.classes['@mozilla.org/scriptableinputstream;1'].createInstance(Components.interfaces.nsIScriptableInputStream);
+        let fiStream = Components.classes['@mozilla.org/network/file-input-stream;1'].createInstance(Components.interfaces.nsIFileInputStream);
+        let siStream = Components.classes['@mozilla.org/scriptableinputstream;1'].createInstance(Components.interfaces.nsIScriptableInputStream);
         fiStream.init(file, 1, 0, false);
         siStream.init(fiStream);
         data += siStream.read(-1);
@@ -157,20 +156,18 @@ function xulReadFile(path, charset){
 }
 
 function xulFileWrite(filePath, content){
-    var rc = false;
+    let rc = false;
 
     try{
         if (typeof netscape != "undefined")
             netscape.security.PrivilegeManager.enablePrivilege ("UniversalXPConnect");
-        var file = Components.classes["@mozilla.org/file/local;1"]
-                             .createInstance(Components.interfaces.nsILocalFile);
+        let file = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
         file.initWithPath(filePath);
         if (!file.exists()) {
             messageBox(window,"Message",'Creating new file ' + filePath);
             file.create(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0644);
         }
-        var outputStream = Components.classes["@mozilla.org/network/file-output-stream;1"]
-                                     .createInstance(Components.interfaces.nsIFileOutputStream);
+        let outputStream = Components.classes["@mozilla.org/network/file-output-stream;1"].createInstance(Components.interfaces.nsIFileOutputStream);
         outputStream.init(file, 0x04 | 0x10, 00004, null);
         outputStream.write(content, content.length);
         outputStream.flush();
@@ -187,15 +184,14 @@ function xulFileWrite(filePath, content){
 
 //Using Mozilla password manager to retrieve the password
 function getPassword(host, user){
-    var password = "";
+    let password = "";
 
-    var dhost= new Object();
-    var duser= new Object();
-    var pass= new Object();
+    let dhost= new Object();
+    let duser= new Object();
+    let pass= new Object();
     try {
-        var pmInternal = Components.classes["@mozilla.org/passwordmanager;1"]
-                                   .createInstance(Components.interfaces.nsIPasswordManagerInternal);
-        var ret = pmInternal.findPasswordEntry(host,user,"",dhost,duser,pass);
+        let pmInternal = Components.classes["@mozilla.org/passwordmanager;1"].createInstance(Components.interfaces.nsIPasswordManagerInternal);
+        let ret=pmInternal.findPasswordEntry(host,user,"",dhost,duser,pass);
         password = pass.value;
     }
     catch(e) {}
@@ -205,7 +201,7 @@ function getPassword(host, user){
 
 //Using Mozilla password manager to save the password
 function setPassword(host, user, pwd) {
-    var passwordManager = Components.classes["@mozilla.org/passwordmanager;1"]
+    let passwordManager = Components.classes["@mozilla.org/passwordmanager;1"]
                                     .createInstance(Components.interfaces.nsIPasswordManager);
     try {
         passwordManager.removeUser(host,user);
@@ -217,11 +213,11 @@ function setPassword(host, user, pwd) {
 }
 
 function backtrace(aDepth) {
-    var depth = aDepth || 10;
-    var stack = "";
-    var frame = arguments.callee.caller;
+    let depth = aDepth || 10;
+    let stack = "";
+    let frame = arguments.callee.caller;
 
-    for (var i = 1; i <= depth; i++) {
+    for (let i = 1; i <= depth; i++) {
         stack += i+": "+ frame.name + "\n";
         frame = frame.caller;
         if (!frame){
@@ -234,15 +230,15 @@ function backtrace(aDepth) {
 
 // Returns a decimal number with a 1 digit decimal portion
 function getThunderbirdMajorVersionNumber() {
-    var fullThunderbirdVersion = Components.classes["@mozilla.org/xre/app-info;1"].createInstance(Components.interfaces.nsIXULAppInfo).version;
+    let fullThunderbirdVersion = Components.classes["@mozilla.org/xre/app-info;1"].createInstance(Components.interfaces.nsIXULAppInfo).version;
 
     return fullThunderbirdVersion.substr(0,3);
 }
 
 String.repeat = function(pattern, times) {
-    var newString = "";
+    let newString = "";
 
-    for (var i = 0; i < times; i++) {
+    for (let i = 0; i < times; i++) {
         newString += pattern;
     }
 
@@ -256,9 +252,9 @@ function objectDumper() {
 objectDumper.prototype = {
     indent: 0,
     dump: function(object) {
-        var text = "";
+        let text = "";
 
-        var oType = typeof object;
+        let oType = typeof object;
         if (oType == "function")
             text += this._dumpFunction(object);
         else if (oType == "string"
@@ -278,7 +274,7 @@ objectDumper.prototype = {
         return "" + object;
     },
     _dumpObject: function(object) {
-        var text = "";
+        let text = "";
 
         if (object instanceof Array)
             text += this._dumpArray(object);
@@ -290,11 +286,11 @@ objectDumper.prototype = {
         return text;
     },
     _dumpArray: function(object) {
-        var text = "[";
+        let text = "[";
 
         if (object.length > 0) {
             text += this.dump(object[0]);
-            for (var i = 1; i < object.length; i++) {
+            for (let i = 1; i < object.length; i++) {
                 text += ", " + this.dump(object[i]);
             }
         }
@@ -306,12 +302,12 @@ objectDumper.prototype = {
         return text;
     },
     _dumpCustomObject: function(object) {
-        var braceIndentation = String.repeat(" ", this.indent);
-        var text = "{";
+        let braceIndentation = String.repeat(" ", this.indent);
+        let text = "{";
 
         this.indent += 2;
-        var indentation = String.repeat(" ", this.indent);
-        for (var key in object) {
+        let indentation = String.repeat(" ", this.indent);
+        for (let key in object) {
             try {
                 text += indentation + key + ": " + this.dump(object[key]) + "\n";
             }
@@ -327,6 +323,6 @@ objectDumper.prototype = {
 };
 
 function dumpObject(object) {
-    var dumper = new objectDumper();
+    let dumper = new objectDumper();
     return dumper.dump(object);
 }

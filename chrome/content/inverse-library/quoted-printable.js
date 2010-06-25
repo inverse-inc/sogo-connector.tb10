@@ -1,24 +1,3 @@
-/* quoted-printable.js - This file is part of "SOGo Connector", a Thunderbird extension.
- *
- * Copyright: Inverse inc., 2006-2010
- *    Author: Robert Bolduc, Wolfgang Sourdeau
- *     Email: support@inverse.ca
- *       URL: http://inverse.ca
- *
- * "SOGo Connector" is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 as published by
- * the Free Software Foundation;
- *
- * "SOGo Connector" is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
- * details.
- *
- * You should have received a copy of the GNU General Public License along with
- * "SOGo Connector"; if not, write to the Free Software Foundation, Inc., 51
- * Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
- */
-
 function QuotedPrintableDecoder() {
     this.mCharset = "iso-8859-1";
 }
@@ -32,15 +11,15 @@ QuotedPrintableDecoder.prototype = {
     },
 
     decode: function(value) {
-        var decoded = [];
+        let decoded = [];
 
-        var count = 0;
-        var i = 0;
+        let count = 0;
+        let i = 0;
         while (i < value.length) {
-            var currentChar = value[i];
+            let currentChar = value[i];
             if (currentChar == "=") {
-                var hexValue = (value[i+1] + value[i+2]).toLowerCase();
-                var decodedChar = String.fromCharCode(this._decodeHEX(hexValue));
+                let hexValue = (value[i+1] + value[i+2]).toLowerCase();
+                let decodedChar = String.fromCharCode(this._decodeHEX(hexValue));
                 decoded.push(decodedChar);
                 i += 3;
             }
@@ -51,22 +30,22 @@ QuotedPrintableDecoder.prototype = {
             count++;
         }
 
-        var converter = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
+        let converter = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
                                   .createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
         converter.charset = this.charset;
 
         return converter.ConvertToUnicode(decoded.join(""));
     },
     _decodeHEX: function(string) {
-        var t = 0;
-        var currentInt = 0;
-        var charCode0 = "0".charCodeAt(0);
-        var charCodea = "a".charCodeAt(0);
-        var charCodez = "z".charCodeAt(0);
+        let t = 0;
+        let currentInt = 0;
+        let charCode0 = "0".charCodeAt(0);
+        let charCodea = "a".charCodeAt(0);
+        let charCodez = "z".charCodeAt(0);
 
-        for (var i = 0; i < string.length; i++) {
-            var code = string.charCodeAt(i);
-            currentInt = code - charCode0;
+        for (let i = 0; i < string.length; i++) {
+            let code = string.charCodeAt(i);
+            let currentInt = code - charCode0;
             if (currentInt > 9)
                 currentInt = 10 + code - charCodea;
             t = t * 16 + currentInt;
@@ -86,8 +65,8 @@ function QuotedPrintableEncoder() {
 
 QuotedPrintableEncoder.prototype = {
     Encode: function(InputText) {
-        var re = new RegExp("\r\n","g");
-        var SplitText, i, s="";
+        let re = new RegExp("\r\n","g");
+        let SplitText, i, s="";
         SplitText = InputText.split(re);
         for (i=0; i<SplitText.length; ++i)
             s += this.EncodeLine(SplitText[i]) + "\r\n";
@@ -95,7 +74,7 @@ QuotedPrintableEncoder.prototype = {
         return s.substring(0, s.length - 2);
     },
     EncodeLine: function(Text) {
-        var SplitText, i, s="", c=256;
+        let SplitText, i, s="", c=256;
         if (Text.length == 0)
             return "";
         for (i=0; i<Text.length-1; ++i)
@@ -115,7 +94,7 @@ QuotedPrintableEncoder.prototype = {
         return SplitText;
     },
     EncodeCharacter: function(Character, UnAltered) {
-        var i, x, Alter=true;
+        let i, x, Alter=true;
         for (i=0; i<UnAltered.length; i+=2)
             if (Character >= UnAltered.charCodeAt(i) && Character <= UnAltered.charCodeAt(i+1))
                 Alter=false;

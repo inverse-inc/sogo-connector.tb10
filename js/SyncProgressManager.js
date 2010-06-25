@@ -38,14 +38,14 @@ SyncProgressManager.prototype = {
         //     dump("register: " + url + " (" + total + ")\n");
         if (!this.nrAddressBooks)
             this.nservice.postNotification("groupdav.synchronization.start");
-        var newAddressBook = {count: 0, total: total};
+        let newAddressBook = {count: 0, total: total};
         this.addressbooks[url] = newAddressBook;
         this.nrAddressBooks++;
         this.nservice.postNotification("groupdav.synchronization.addressbook.registered", url);
     },
     unregisterAddressBook: function(url) {
         //     dump("unregister: " + url + "\n");
-        var addressbook = this.addressbooks[url];
+        let addressbook = this.addressbooks[url];
 
         if (addressbook) {
             delete this.addressbooks[url];
@@ -60,7 +60,7 @@ SyncProgressManager.prototype = {
     },
     updateAddressBook: function(url) {
         //     dump("update: " + url + "\n");
-        var addressbook = this.addressbooks[url];
+        let addressbook = this.addressbooks[url];
 
         if (addressbook) {
             this.addressbooks[url].count++;
@@ -73,14 +73,14 @@ SyncProgressManager.prototype = {
     },
 
     hasAddressBook: function(url) {
-        var addressbook = this.addressbooks[url];
+        let addressbook = this.addressbooks[url];
 
         return (addressbook != null);
     },
     progressForAddressBook: function(url) {
-        var progress = -1;
+        let progress = -1;
 
-        var addressbook = this.addressbooks[url];
+        let addressbook = this.addressbooks[url];
         if (addressbook)
             progress = (addressbook.count / addressbook.total);
         else
@@ -89,13 +89,13 @@ SyncProgressManager.prototype = {
         return progress;
     },
     globalProgress: function() {
-        var progress = -1;
+        let progress = -1;
 
-        var globalCount = 0;
-        var globalTotal = 0;
+        let globalCount = 0;
+        let globalTotal = 0;
 
-        for (var url in this.addressbooks) {
-            var addressbook = this.addressbooks[url];
+        for (let url in this.addressbooks) {
+            let addressbook = this.addressbooks[url];
             globalCount += addressbook.count;
             globalTotal += addressbook.total;
         }
