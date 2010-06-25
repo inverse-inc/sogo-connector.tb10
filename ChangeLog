@@ -1,5 +1,11 @@
 2010-06-24  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* chrome/content/sogo-connector/general/vcards.utils.js:
+	(list2vlist): the "list" argument is now passed as a nsIAbCard.
+	(card2vcard): adapted to make use of getAttribute.
+	(importFromVcard): no longer take the "customFields" argument, as
+	it's no longer needed thanks to the new nsIAbCard API.
+
 	* chrome/content/sogo-connector/addressbook/contactspanel-overlay.js:
 	temporarily disabled.
 

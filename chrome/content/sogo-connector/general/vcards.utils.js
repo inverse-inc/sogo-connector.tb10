@@ -20,9 +20,9 @@
  */
 
 function jsInclude(files, target) {
-    var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+    let loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
                            .getService(Components.interfaces.mozIJSSubScriptLoader);
-    for (var i = 0; i < files.length; i++) {
+    for (let i = 0; i < files.length; i++) {
         try {
             loader.loadSubScript(files[i], target);
         }
@@ -66,23 +66,23 @@ function unescapedFromCard(theString) {
  accurately separated;
  No support yet for embedded directories (VCALENDAR) */
 function versitParse(versitString) {
-    var parseResult = new Array();
-    var currentLine = {};
-    var isEscaped = false;
-    var type = 0; /* 0 = tag, 1 = parameters, 2 = value */
-    var parameters = {};
-    var values = new Array();
+    let parseResult = new Array();
+    let currentLine = {};
+    let isEscaped = false;
+    let type = 0; /* 0 = tag, 1 = parameters, 2 = value */
+    let parameters = {};
+    let values = new Array();
 
-    var tag = "";
-    var parameterName = "type";
-    var parameter = "";
-    var value = "";
+    let tag = "";
+    let parameterName = "type";
+    let parameter = "";
+    let value = "";
 
-    var currentChar = 0;
+    let currentChar = 0;
     while (currentChar < versitString.length) {
-        var character = versitString[currentChar];
+        let character = versitString[currentChar];
         if (isEscaped) {
-            var lowerChar = character.toLowerCase();
+            let lowerChar = character.toLowerCase();
             if (lowerChar == "n")
                 character = "\n";
             else if (lowerChar == "r")
@@ -121,9 +121,9 @@ function versitParse(versitString) {
                     else if (character == "\r" && versitString[currentChar+1] == "\n") {
                         /* some implementations do not comply and fold their lines
                          qp-style but without escaping their crlf... */
-                        var lastLine = parseResult[parseResult.length-1];
-                        var values = lastLine["values"];
-                        var lastValue = values[values.length-1];
+                        let lastLine = parseResult[parseResult.length-1];
+                        let values = lastLine["values"];
+                        let lastValue = values[values.length-1];
                         if (lastValue[lastValue.length-1] == "=") {
                             values[values.length-1]
                                 = lastValue.substr(0, lastValue.length-1) + tag;
@@ -167,7 +167,7 @@ function versitParse(versitString) {
                             value = "";
                         }
                         else if (character == "\n") {
-                            var nextChar = versitString[currentChar+1];
+                            let nextChar = versitString[currentChar+1];
                             if (typeof nextChar != "undefined" && nextChar == " ")
                                 currentChar++;
                             else {
@@ -201,251 +201,261 @@ function versitParse(versitString) {
  * of custom fields that are not part of a Thunderbird card.
  *
  **************************************************************************/
-function importFromVcard(vCardString, customFields) {
-    var card = null;
-    if (!vCardString || vCardString == "")
-        dump("'vCardString' is empty\n" + backtrace() + "\n");
-    else {
-        var vcard = versitParse(vCardString);
-        // 	var cardDump = dumpObject(vcard);
-        // 	logInfo("vcard dump:\n" + cardDump);
-        card = CreateCardFromVCF(vcard, customFields);
+function importFromVcard(vCardString// , customFields
+                        ) {
+                            let card = null;
+                            if (!vCardString || vCardString == "")
+                                dump("'vCardString' is empty\n" + backtrace() + "\n");
+                            else {
+                                let vcard = versitParse(vCardString);
+                                // 	let cardDump = dumpObject(vcard);
+                                // 	logInfo("vcard dump:\n" + cardDump);
+                                card = CreateCardFromVCF(vcard// , customFields
+                                                        );
 
-        // dump("card content:\n" + vCardString + "\n");
-    }
+                                // dump("card content:\n" + vCardString + "\n");
+                            }
 
-    return card;
-}
+                            return card;
+                        }
 
 // outParameters must be an array, to enable the fonction to pass back the value
 // of custom fields that are not part of a Thunderbird card.
-function CreateCardFromVCF(vcard, outParameters) {
-    var version = "2.1";
-    var defaultCharset = "iso-8859-1"; /* 0 = latin 1, 1 = utf-8 */
-    var card = Components.classes["@inverse.ca/addressbook/volatile-abcard;1"]
-                         .createInstance(Components.interfaces.nsIAbCard).wrappedJSObject;
+function CreateCardFromVCF(vcard// , outParameters
+                          ) {
+                              let version = "2.1";
+                              let defaultCharset = "iso-8859-1"; /* 0 = latin 1, 1 = utf-8 */
+                              // let card = Components.classes["@inverse.ca/addressbook/volatile-abcard;1"]
+                              // 	.createInstance(Components.interfaces.nsIAbCard).wrappedJSObject;
 
-    outParameters["fburl"] = "";
-    outParameters["uid"] = "";
-    outParameters["groupDavVcardCompatibility"] = "";
+                              let card = Components.classes["@mozilla.org/addressbook/moz-abmdbcard;1"]
+                                                   .createInstance(Components.interfaces.nsIAbCard);
 
-    for (var i = 0; i < vcard.length; i++) {
-        if (vcard[i]["tag"] == "version") {
-            version = vcard[i]["values"][0];
+                              // outParameters["fburl"] = "";
+                              // outParameters["uid"] = "";
+                              // outParameters["groupDavVcardCompatibility"] = "";
+
+                              for (let i = 0; i < vcard.length; i++) {
+                                  if (vcard[i]["tag"] == "version") {
+                                      version = vcard[i]["values"][0];
+                                  }
+                              }
+                              if (version[0] == "3")
+                                  defaultCharset = "utf-8";
+
+                              for (i = 0; i < vcard.length; i++) {
+                                  let tag = vcard[i]["tag"];
+                                  let charset = defaultCharset;
+                                  let encoding = null;
+
+                                  let parameters = vcard[i]["parameters"];
+                                  if (parameters) {
+                                      for (let parameter in parameters) {
+                                          if (parameter == "encoding")
+                                              encoding = parameters[parameter][0].toLowerCase();
+                                          if (parameter == "charset")
+                                              charset = parameters[parameter][0].toLowerCase();
+                                      }
+                                  }
+                                  else
+                                      parameters = {};
+
+                                  let values = decodedValues(vcard[i]["values"], charset, encoding);
+                                  InsertCardData(card, tag, parameters, values// , outParameters
+                                                );
+                              }
+
+                              return card;
+                          }
+
+let _insertCardMethods = {
+    _upperTypes: function(types) {
+        let upperTypes = [];
+        if (types && types.length > 0) {
+            let preTypes = types.join(",").split(",");
+            for (let i = 0; i < preTypes.length; i++)
+                upperTypes.push(preTypes[i].toUpperCase());
         }
-    }
-    if (version[0] == "3")
-        defaultCharset = "utf-8";
 
-    for (var i = 0; i < vcard.length; i++) {
-        var tag = vcard[i]["tag"];
-        var charset = defaultCharset;
-        var encoding = null;
+        return upperTypes;
+    },
 
-        var parameters = vcard[i]["parameters"];
-        if (parameters) {
-            for (var parameter in parameters) {
-                if (parameter == "encoding")
-                    encoding = parameters[parameter][0].toLowerCase();
-                if (parameter == "charset")
-                    charset = parameters[parameter][0].toLowerCase();
+    n: function(props, parameters, values) {
+        props.extend({ "LastName": values[0],
+                       "FirstName": values[1] });
+    },
+    fn: function(props, parameters, values) {
+        props.extend({ "DisplayName": values[0] });
+    },
+    nickname: function(props, parameters, values) {
+        props.extend({ "NickName": values[0] });
+    },
+    org: function(props, parameters, values) {
+        props.extend({ "Company": values[0],
+                       "Department": values[1] });
+    },
+    tel: function(props, parameters, values) {
+        let abTypes = { "FAX": "FaxNumber",
+                        "CELL": "CellularNumber",
+                        "PAGER": "FaxNumber",
+                        "HOME": "HomePhone",
+                        "WORK": "WorkPhone" };
+        /* This array guarantees the order in which the keys will be checked */
+        let knownType = false;
+        let cardCheckTypes = [ "FAX", "CELL", "PAGER", "HOME", "WORK" ];
+        if (parameters["type"] && parameters["type"].length > 0) {
+            let types = this._upperTypes(parameters["type"]);
+
+            for (let i = 0; !knownType && i < cardCheckTypes.length; i++) {
+                let type = cardCheckTypes[i];
+                if (types.indexOf(type) > -1) {
+                    let abType = abTypes[type];
+                    props[abType] = values[0];
+                    knownType = true;
+                }
             }
         }
-        else
-            parameters = {};
 
-        var values = decodedValues(vcard[i]["values"], charset, encoding);
-        InsertCardData(card, tag, parameters, values, outParameters);
-    }
-
-    return card;
-}
-
-var _insertCardMethods = {
-    n: function(card, parameters, values) {
-        if (values[0])
-            card.lastName = values[0];
-        if (values[1])
-            card.firstName = values[1];
-    },
-    fn: function(card, parameters, values) {
-        card.displayName = values[0];
-    },
-    nickname: function(card, parameters, values) {
-        card.nickName = values[0];
-    },
-    org: function(card, parameters, values) {
-        if (values[0])
-            card.company = values[0];
-        if (values[1])
-            card.department = values[1];
-    },
-    tel: function(card, parameters, values) {
-        var types = [];
-        if (parameters["type"]) {
-            var preTypes = parameters["type"].join(",").split(",");
-            for each (var preType in preTypes) {
-                types.push(preType.toUpperCase());
+        if (!knownType) {
+            let addTypes = [ "WorkPhone", "HomePhone" ];
+            for (let i = 0; !knownType && i < addTypes.length; i++) {
+                let type = addTypes[i];
+                if (!props[type] || props[type].length == 0) {
+                    props[type] = values[0];
+                    knownType = true;
+                }
             }
         }
-        var knownType = false;
-        if (types.indexOf("FAX") > -1) {
-            card.faxNumber = values[0];
-            knownType = true;
-        } else if (types.indexOf("CELL") > -1) {
-            card.cellularNumber = values[0];
-            knownType = true;
-        } else if (types.indexOf("PAGER") > -1) {
-            card.pagerNumber = values[0];
-            knownType = true;
-        } else if (types.indexOf("HOME") > -1) {
-            card.homePhone = values[0];
-            knownType = true;
-        } else if (types.indexOf("WORK") > -1) {
-            card.workPhone = values[0];
-            knownType = true;
-        }
-        if (!knownType)
-            if (card.workPhone.length == 0)
-                card.workPhone = values[0];
-        else if (card.homePhone.length == 0)
-        card.homePhone = values[0];
     },
-    adr: function(card, parameters, values) {
-        var types = new Array();
-        var preTypes;
-        if (parameters["type"]) {
-            preTypes = parameters["type"].join(",").split(",");
-        } else {
-            preTypes = null;
-        }
-        if (preTypes)
-            for (var i = 0; i < preTypes.length; i++)
-                types[i] = preTypes[i].toUpperCase();
+    adr: function(props, parameters, values) {
+        let types = this._upperTypes(parameters["type"]);
         if (types.indexOf("WORK") > -1) {
-            if (values[0])
-                card.workAddress2 = values[0];
-            if (values[2])
-                card.workAddress = values[2];
-            if (values[3])
-                card.workCity = values[3];
-            if (values[4])
-                card.workState = values[4];
-            if (values[5])
-                card.workZipCode = values[5];
-            if (values[6])
-                card.workCountry = values[6];
+            props.extend({ "WorkAddress2": values[0],
+                           "WorkAddress": values[2],
+                           "WorkCity": values[3],
+                           "WorkZipCode": values[5],
+                           "WorkCountry": values[6] });
         }
         else {
-            if (values[0])
-                card.homeAddress2 = values[0];
-            if (values[2])
-                card.homeAddress = values[2];
-            if (values[3])
-                card.homeCity = values[3];
-            if (values[4])
-                card.homeState = values[4];
-            if (values[5])
-                card.homeZipCode = values[5];
-            if (values[6])
-                card.homeCountry = values[6];
+            props.extend({ "HomeAddress2": values[0],
+                           "HomeAddress": values[2],
+                           "HomeCity": values[3],
+                           "HomeState": values[4],
+                           "HomeZipCode": values[5],
+                           "HomeCountry": values[6] });
         }
+
+        return props;
     },
-    email: function(card, parameters, values) {
-        var types = new Array();
-        var preTypes;
-        if (parameters["type"]) {
-            preTypes = parameters["type"].join(",").split(",");
-        } else {
-            preTypes = null;
-        }
-        if (preTypes)
-            for (var i = 0; i < preTypes.length; i++)
-                types[i] = preTypes[i].toUpperCase();
+    email: function(props, parameters, values) {
+        let types = this._upperTypes(parameters["type"]);
         if (types.indexOf("PREF") > -1) {
-            if (card.primaryEmail.length)
-                card.secondEmail = card.primaryEmail;
-            card.primaryEmail = values[0];
+            if (props["PrimaryEmail"] && props["PrimaryEmail"].length > 0) {
+                props["SecondEmail"] = props["PrimaryEmail"];
+            }
+            props["PrimaryEmail"] = values[0];
         }
         else {
-            if (card.primaryEmail.length)
-                card.secondEmail = values[0];
-            else
-                card.primaryEmail = values[0];
+            if (props["PrimaryEmail"] && props["PrimaryEmail"].length > 0) {
+                props["SecondEmail"] = values[0];
+            }
+            else {
+                props["PrimaryEmail"] = values[0];
+            }
         }
     },
-    url: function(card, parameters, values) {
-        var types = new Array();
-        var preTypes;
-        if (parameters["type"]) {
-            preTypes = parameters["type"].join(",").split(",");
-        } else {
-            preTypes = null;
+    url: function(props, parameters, values) {
+        let types = this._upperTypes(parameters["type"]);
+        let propName = ((types.indexOf("WORK") > -1)
+                        ? "WebPage1"
+                        : "WebPage2" );
+        props[propName] = values[0];
+    },
+    title: function(props, parameters, values) {
+        props["JobTitle"] = values[0];
+    },
+    bday: function(props, parameters, values) {
+        if (values[0].length > 0) {
+            let subValues = values[0].split("-");
+            props.extend({ "BirthYear": subValues[0],
+                           "BirthMonth": subValues[1],
+                           "BirthDay": subValues[2] });
         }
-        if (preTypes)
-            for (var i = 0; i < preTypes.length; i++)
-                types[i] = preTypes[i].toUpperCase();
-        if (types.indexOf("WORK") > -1) {
-            card.webPage1 = values[0];
-        } else {
-            card.webPage2 = values[0];
-        }
     },
-    title: function(card, parameters, values) {
-        card.jobTitle = values[0];
+    "x-aim": function(props, parameters, values) {
+        props["_AimScreenName"] = values[0];
     },
-    bday: function(card, parameters, values) {
-        card.birthYear = values[0];
-        card.birthMonth = values[1];
-        card.birthDay = values[2];
+    "x-mozilla-html": function(props, parameters, values) {
+        let value = ((values[0].toLowerCase() == "true")
+                     ? 2
+                     : 1);
+        props["PreferMailFormat"] = value;
     },
-    "x-aim": function(card, parameters, values) {
-        card.aimScreenName = values[0];
+    note: function(props, parameters, values) {
+        props["Notes"] = values.join(";");
     },
-    "x-mozilla-html": function(card, parameters, values) {
-        if (values[0].toLowerCase() == "true")
-            card.preferMailFormat = true;
-        else
-            card.preferMailFormat = false;
+    custom1: function(props, parameters, values) {
+        props["Custom1"] = values[0];
     },
-    note: function(card, parameters, values) {
-        card.notes = values.join(";");
+    custom2: function(props, parameters, values) {
+        props["Custom2"] = values[0];
     },
-    custom1: function(card, parameters, values) {
-        card.custom1 = values[0];
+    custom3: function(props, parameters, values) {
+        props["Custom3"] = values[0];
     },
-    custom2: function(card, parameters, values) {
-        card.custom2 = values[0];
+    custom4: function(props, parameters, values) {
+        props["Custom4"] = values[0];
     },
-    custom3: function(card, parameters, values) {
-        card.custom3 = values[0];
+
+    /* external properties */
+    uid: function(props, parameters, values) {
+        props["CardUID"] = values[0];
     },
-    custom4: function(card, parameters, values) {
-        card.custom4 = values[0];
+
+    fburl: function(props, parameters, values) {
+        props["CalFBURL"] = values[0];
     },
-    begin: function(card, parameters, values) {
+
+    /* ignored properties */
+    begin: function(props, parameters, values) {
     },
-    end: function(card, parameters, values) {
+    end: function(props, parameters, values) {
     }
 };
 
-function InsertCardData(card, tag, parameters, values, outParameters) {
+function InsertCardData(card, tag, parameters, values) {
     // 	logInfo("InsertCardData: " + tag + "\n");
 
+    let properties = {};
+    properties.extend = function Object_extend(otherObj) {
+        for (let k in otherObj) {
+            this[k] = otherObj[k];
+        }
+    };
+
     if (typeof _insertCardMethods[tag] != "undefined")
-        _insertCardMethods[tag](card, parameters, values);
+        _insertCardMethods[tag](properties, parameters, values);
     else
-        outParameters[tag] = values.join(";");
+        properties[tag] = values.join(";");
+
+    delete (properties["extend"]);
+
+    for (let k in properties) {
+        // dump("trying prop: " + k + " = " + properties[k] + "\n");
+        if (properties[k].length > 0) {
+            card.setProperty(k, properties[k]);
+        }
+    }
 }
 
 function decodedValues(values, charset, encoding) {
-    var newValues = [];
+    let newValues = [];
 
-    var decoder = new QuotedPrintableDecoder();
+    let decoder = new QuotedPrintableDecoder();
     decoder.charset = charset;
 
-    for (var i = 0; i < values.length; i++) {
-        var decodedValue = null;
+    for (let i = 0; i < values.length; i++) {
+        let decodedValue = null;
         if (encoding) {
             //  			dump("encoding: " + encoding + "\n");
             //  			dump("initial value: ^" + values[i] + "$\n");
@@ -464,7 +474,7 @@ function decodedValues(values, charset, encoding) {
         if (charset == "utf-8")
             newValues.push(decodedValue);
         else {
-            var converter = Components.classes["@mozilla.org/intl/utf8converterservice;1"]
+            let converter = Components.classes["@mozilla.org/intl/utf8converterservice;1"]
                                       .getService(Components.interfaces.nsIUTF8ConverterService);
             newValues.push(converter.convertStringToUTF8(decodedValue, charset, false));
         }
@@ -475,168 +485,185 @@ function decodedValues(values, charset, encoding) {
     return newValues;
 }
 
-function card2vcard(oldCard) {
-    var card = oldCard.QueryInterface(Components.interfaces.nsIAbMDBCard);
-
-    var data ="";
-    var vCard = ("BEGIN:VCARD\r\n"
+function card2vcard(card) {
+    let vCard = ("BEGIN:VCARD\r\n"
                  + "VERSION:3.0\r\n"
                  + "PRODID:-//Inverse inc.//SOGo Connector 1.0//EN\r\n");
-    var uid = card.getStringAttribute("groupDavKey");
-    if (!uid || uid == "")
+    let uid = card.getProperty("CardUID", "");
+    if (!uid.length) {
+        uid = card.getProperty("groupDavKey", "");
+        card.setProperty("CardUID", uid);
+    }
+    if (!uid.length) {
         uid = new UUID();
-    vCard += "UID:"+ uid + "\r\n";
+        card.setProperty("CardUID", uid);
+    }
+    vCard += "UID:" + uid + "\r\n";
 
-    if (card.lastName != "" || card.firstName != "")
-        vCard += "N:"+ card.lastName + ";" + card.firstName + "\r\n";
+    let lastName = card.getProperty("LastName", "");
+    let firstName = card.getProperty("FirstName", "");
+    if (lastName.length || firstName.length)
+        vCard += "N:" + lastName + ";" + firstName + "\r\n";
 
-    if (card.displayName != "")
-        vCard += "FN:" + card.displayName +"\r\n";
+    let displayName = card.getProperty("DisplayName", "");
+    if (displayName.length)
+        vCard += "FN:" + displayName + "\r\n";
 
-    if (! (card.company == "" && card.department == ""))
-        vCard += "ORG:"+card.company+";"+card.department+"\r\n";
+    let company = card.getProperty("Company", "");
+    let department = card.getProperty("Department", "");
+    if (company.length || department.length)
+        vCard += "ORG:" +company+ ";" +department+ "\r\n";
 
-    if (card.nickName != "")
-        vCard += "NICKNAME:"+card.nickName+"\r\n";
+    let nickName = card.getProperty("NickName", "");
+    if (nickName.length)
+        vCard += "NICKNAME:" +nickName+ "\r\n";
 
-    data = "ADR;TYPE=work:" + card.workAddress2 + ";;"+card.workAddress+";"+card.workCity+";"+card.workState+";"+card                                  .workZipCode+";"+card.workCountry+"\r\n";
-    if (data != "DR;TYPE=WORK,POSTAL:;;;;;;\r\n")
-        vCard += data;
+    let workAddress = card.getProperty("WorkAddress", "");
+    let workAddress2 = card.getProperty("WorkAddress2", "");
+    let workCity = card.getProperty("WorkCity", "");
+    let workState = card.getProperty("WorkState", "");
+    let workZipCode = card.getProperty("WorkZipCode", "");
+    let workCountry = card.getProperty("WorkCountry", "");
+    if ((workAddress + workAddress2 + workCity + workState + workZipCode
+         + workCountry).length)
+        vCard += "ADR;TYPE=work:" + workAddress2 + ";;" +workAddress+ ";" +workCity+ ";" +workState+ ";" +workZipCode+ ";" +workCountry+ "\r\n";
 
-    data = "ADR;TYPE=home:" + card.homeAddress2 + ";;"+card.homeAddress+";"+card.homeCity+";"+card.homeState+";"+card                                  .homeZipCode+";"+card.homeCountry+"\r\n";
-    if (data != "ADR;TYPE=HOME,POSTAL::;;;;;;\r\n")
-        vCard += data;
+    let homeAddress = card.getProperty("HomeAddress", "");
+    let homeAddress2 = card.getProperty("HomeAddress2", "");
+    let homeCity = card.getProperty("HomeCity", "");
+    let homeState = card.getProperty("HomeState", "");
+    let homeZipCode = card.getProperty("HomeZipCode", "");
+    let homeCountry = card.getProperty("HomeCountry", "");
+    if ((homeAddress + homeAddress2 + homeCity + homeState + homeZipCode
+         + homeCountry).length)
+        vCard += "ADR;TYPE=home:" + homeAddress2 + ";;" +homeAddress+ ";" +homeCity+ ";" +homeState+ ";" +homeZipCode+ ";" +homeCountry+ "\r\n";
 
-    if (card.workPhone != "")
-        vCard += "TEL;TYPE=work:"+ card.workPhone+"\r\n";
+    let workPhone = card.getProperty("WorkPhone", "");
+    if (workPhone.length)
+        vCard += "TEL;TYPE=work:" + workPhone+ "\r\n";
 
-    if (card.homePhone != "")
-        vCard += "TEL;TYPE=home:"+ card.homePhone+"\r\n";
+    let homePhone = card.getProperty("HomePhone", "");
+    if (homePhone.length)
+        vCard += "TEL;TYPE=home:" + homePhone+ "\r\n";
 
-    if (card.cellularNumber != "")
-        vCard += "TEL;TYPE=cell:"+ card.cellularNumber+"\r\n";
+    let cellularNumber = card.getProperty("CellularNumber", "");
+    if (cellularNumber.length)
+        vCard += "TEL;TYPE=cell:" + cellularNumber + "\r\n";
 
-    if (card.faxNumber != "")
-        vCard += "TEL;TYPE=fax:"+ card.faxNumber+"\r\n";
+    let faxNumber = card.getProperty("FaxNumber", "");
+    if (faxNumber.length)
+        vCard += "TEL;TYPE=fax:" + faxNumber+ "\r\n";
 
-    if (card.pagerNumber)
-        vCard += "TEL;TYPE=pager:"+ card.pagerNumber + "\r\n";
+    let pagerNumber = card.getProperty("PagerNumber", "");
+    if (pagerNumber.length)
+        vCard += "TEL;TYPE=pager:" + pagerNumber + "\r\n";
 
-    if (card.preferMailFormat != ""){
-        var value = "";
-        switch (card.preferMailFormat){
-        case 0:
-            break;
-        case 2:
-            value = "TRUE";
-            break;
-        case 1:
-            value = "FALSE";
-            break;
-        }
+    let preferMailFormat = card.getProperty("PreferMailFormat", 0);
+    if (preferMailFormat) {
+        let value = ((preferMailFormat == 2)
+                     ? "TRUE"
+                     : "FALSE");
         vCard += "X-MOZILLA-HTML:" + value + "\r\n";
     }
-    if (card.primaryEmail != "")
-        vCard += "EMAIL;TYPE=work:"+ card.primaryEmail+"\r\n";
 
-    if (card.secondEmail != "")
-        vCard += "EMAIL;TYPE=home:"+ card.secondEmail+"\r\n";
+    let primaryEmail = card.getProperty("PrimaryEmail", "");
+    let secondEmail = card.getProperty("SecondEmail", "");
 
-    if (card.webPage2 != "")
-        vCard += "URL;TYPE=home:"+ card.webPage2+"\r\n";
+    if (primaryEmail.length) {
+        vCard += "EMAIL;TYPE=work:" + primaryEmail + "\r\n";
+        if (secondEmail.length)
+            vCard += "EMAIL;TYPE=home:" + secondEmail+ "\r\n";
+    }
+    else if (secondEmail.length)
+    vCard += "EMAIL;TYPE=work:" + secondEmail + "\r\n";
 
-    if (card.jobTitle != "")
-        vCard += "TITLE:"+ card.jobTitle+"\r\n";
+    let webPage1 = card.getProperty("WebPage1", "");
+    if (webPage1.length)
+        vCard += "URL;TYPE=work:" + webPage1 + "\r\n";
 
-    if (card.webPage1 != "")
-        vCard += "URL;TYPE=work:"+ card.webPage1+"\r\n";
+    let webPage2 = card.getProperty("WebPage2", "");
+    if (webPage2.length)
+        vCard += "URL;TYPE=home:" + webPage2 + "\r\n";
 
-    if (card.birthYear != "" && card.birthMonth != "" && card.birthDay !="")
-        vCard += "BDAY:"+card.birthYear+"-"+card.birthMonth+"-"+card.birthDay+"\r\n";
+    let jobTitle = card.getProperty("JobTitle", "");
+    if (jobTitle.length)
+        vCard += "TITLE:" + jobTitle + "\r\n";
 
-    if (card.custom1 != "")
-        vCard += "CUSTOM1:"+ card.custom1 + "\r\n";
+    let birthYear = card.getProperty("BirthYear", 0);
+    let birthMonth = card.getProperty("BirthMonth", 0);
+    let birthDay = card.getProperty("BirthDay", 0);
+    if (birthYear && birthMonth && birthDay)
+        vCard += "BDAY:" + birthYear + "-" + birthMonth + "-" + birthDay + "\r\n";
 
-    if (card.custom2 != "")
-        vCard += "CUSTOM2:"+ card.custom2 + "\r\n";
+    for (let i = 1; i < 5; i++) {
+        let custom = card.getProperty("Custom" + i, "");
+        if (custom.length)
+            vCard += "CUSTOM" + i + ":" + custom + "\r\n";
+    }
 
-    if (card.custom3 != "")
-        vCard += "CUSTOM3:"+ card.custom3 + "\r\n";
-
-    if (card.custom4 != "")
-        vCard += "CUSTOM4:"+ card.custom4 + "\r\n";
-
-    if (card.notes != ""){
-        var cleanedNote = "NOTE:"+card.notes.replace(/\n/g, "\\" + "r\\" + "n");
-
-        if (cleanedNote.size <= lineMaxSize){
-            vcard += cleaneNote;
-        }else{
-            var lineMaxSize = 79;
-            var size = lineMaxSize;
-            var pos = 0;
-            while (pos < cleanedNote.length){
-                size =(pos + lineMaxSize < cleanedNote.length) ? lineMaxSize : (cleanedNote.length - pos);
-                vCard += cleanedNote.substr(pos, size) + "\r\n ";
-                pos += lineMaxSize;
-            }
-            vCard = vCard.substr(0, vCard.length-1);//removing the unecessary white space
+    let notes = card.getProperty("Notes", "");
+    if (notes.length) {
+        let data = "NOTE:" + notes.replace(/\n/g, "\\r\\n");
+        vCard += data.substr(0, 77) + "\r\n";
+        let i = 77;
+        data = data.substr(77);
+        while (data.length) {
+            vCard += " " + rest.substr(0, 77) + "\r\n";
+            data = data.substr(77);
         }
     }
 
-    if ( card.aimScreenName != "")
-        vCard += "X-AIM:" + card.aimScreenName + "\r\n";
+    let aimScreenName = card.getProperty("_AimScreenName", "");
+    if (aimScreenName.length)
+        vCard += "X-AIM:" + aimScreenName + "\r\n";
 
-    var fbUrl = card.getStringAttribute("calFBURL");
-    if (fbUrl && fbUrl.length > 0) {
-        data = "FBURL:" + fbUrl;
-        vCard = vCard + data + "\r\n";
+    let fbUrl = card.getProperty("CalFBURL", "");
+    if (fbUrl.length) {
+        vCard += "FBURL:" + fbUrl + "\r\n";
     }
 
-    var groupDavVcardCompatibilityField = card.getStringAttribute("groupDavVcardCompatibility");
-    if (groupDavVcardCompatibilityField) {
-        vCard += groupDavVcardCompatibilityField + "\r\n";
-    }
     vCard += "END:VCARD\r\n\r\n";
 
     return vCard;
 }
 
 /* VLIST */
-function updateListFromVList(list, vListString, cards) {
-    // 	var listCard = list.QueryInterface(Components.interfaces.nsIAbCard);
-    list = list.QueryInterface(Components.interfaces.nsIAbDirectory);
-    var listRsrc = list.QueryInterface(Components.interfaces.nsIRDFResource);
-    var uriParts = listRsrc.Value.split("/");
-    var parentURI = uriParts[0] + "//" + uriParts[2];
-    // 	dump("updating list: uri: " + listRsrc.Value
-    // 			 + "; parentURI: " + parentURI + "\n");
-    // 	dump("content:\n" + vListString + "\n");
+function updateListFromVList(listCard, vListString, cards) {
+    let abManager = Components.classes["@mozilla.org/abmanager;1"]
+                              .getService(Components.interfaces.nsIAbManager);
+    let listURI = listCard.mailListURI;
+    let list = abManager.getDirectory(listURI);
+    let listUpdated = false;
 
-    var listUpdated = false;
-
-    list.addressLists.Clear();
-    var parsedString = versitParse(vListString);
-    for (var i = 0; i < parsedString.length; i++) {
-        var line = parsedString[i];
-        if (line.tag == "fn")
+    list.addressLists.clear();
+    let parsedString = versitParse(vListString);
+    for (let i = 0; i < parsedString.length; i++) {
+        let line = parsedString[i];
+        if (line.tag == "fn") {
+            listCard.displayName = line.values[0];
+            listCard.lastName = line.values[0];
             list.dirName = line.values[0];
-        else if (line.tag == "nickname")
-        list.listNickName = line.values[0];
-        else if (line.tag == "description")
-        list.description = line.values[0];
+        }
+        else if (line.tag == "nickname") {
+            listCard.setProperty("NickName", line.values[0]);
+            list.listNickName = line.values[0];
+        }
+        else if (line.tag == "description") {
+            listCard.setProperty("Notes", line.values[0]);
+            list.description = line.values[0];
+        }
         else if (line.tag == "card") {
-            var card = cards[line.values[0]];
+            let card = cards[line.values[0]];
             // 			dump("card '" + line.values[0] + "': ");
             if (!card) {
-                var email = line.parameters["email"][0];
+                let email = line.parameters["email"][0];
                 if (email) {
                     listUpdated = true;
                     card = _findCardWithEmail(cards, email);
                 }
             }
             if (card)
-                list.addressLists.AppendElement(card);
+                list.addressLists.appendElement(card, false);
             else {
                 listUpdated = true;
                 dump("card with uid '" + line.values[0]
@@ -645,17 +672,17 @@ function updateListFromVList(list, vListString, cards) {
         }
     }
 
-    list.editMailListToDatabase(parentURI, null);
+    // list.editMailListToDatabase(list.QueryInterface(Components.interfaces.nsIAbCard));
 
     return listUpdated;
 }
 
 function _findCardWithEmail(cards, email) {
-    var card = null;
+    let card = null;
 
-    var cmpEmail = email.toLowerCase();
+    let cmpEmail = email.toLowerCase();
 
-    for (var k in cards) {
+    for (let k in cards) {
         if (cards[k].primaryEmail.toLowerCase() == cmpEmail)
             card = cards[k];
     }
@@ -663,39 +690,42 @@ function _findCardWithEmail(cards, email) {
     return card;
 }
 
-function list2vlist(uid, list) {
-    list = list.QueryInterface(Components.interfaces.nsIAbDirectory);
-    var vList = ("BEGIN:VLIST\r\n"
+function list2vlist(uid, listCard) {
+    let vList = ("BEGIN:VLIST\r\n"
                  + "PRODID:-//Inverse inc.//SOGo Connector 1.0//EN\r\n"
                  + "VERSION:1.0\r\n"
                  + "UID:" + uid + "\r\n");
-    vList += "FN:" + list.dirName + "\r\n";
-    var data = "" + list.listNickName;
+    vList += "FN:" + listCard.getProperty("DisplayName", "") + "\r\n";
+    let data = listCard.getProperty("NickName", "");
     if (data.length)
         vList += "NICKNAME:" + data + "\r\n";
-    var data = "" + list.description;
+    data = "" + listCard.getProperty("Notes", "");
     if (data.length)
         vList += "DESCRIPTION:" + data + "\r\n";
 
-    var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-                        .getService(Components.interfaces.nsIRDFService);
-    var ds = Components.classes["@mozilla.org/rdf/datasource;1?name=addressdirectory"]
-                       .getService(Components.interfaces.nsIRDFDataSource);
-    var childSrc = rdf.GetResource("http://home.netscape.com/NC-rdf#CardChild");
-    var cards = ds.GetTargets(list, childSrc, false);
+    let abManager = Components.classes["@mozilla.org/abmanager;1"]
+                              .getService(Components.interfaces.nsIAbManager);
+    let listDir = abManager.getDirectory(listCard.mailListURI);
+    let cards = listDir.childCards;
     while (cards.hasMoreElements()) {
-        var card = cards.getNext().QueryInterface(Components.interfaces.nsIAbCard);
-        var mdbCard = card.QueryInterface(Components.interfaces.nsIAbMDBCard);
-        var entry = "CARD";
-        var key = "" + mdbCard.getStringAttribute("groupDavKey");
-        if (!key.length)
-            throw "card has no GroupDAV identifier key";
-        if (card.primaryEmail.length)
-            entry += ";EMAIL=" + card.primaryEmail;
-        if (card.displayName.length)
-            entry += ";FN=" + card.displayName;
-        entry += ":" + key + "\r\n";
-        vList += entry;
+        let card = cards.getNext().QueryInterface(Components.interfaces.nsIAbCard);
+        let key = card.getProperty("groupDavKey", "");
+        if (key.length) {
+            let entry = "CARD";
+            if (card.primaryEmail.length) {
+                entry += ";EMAIL=" + card.primaryEmail;
+            }
+            if (card.displayName.length) {
+                entry += ";FN=" + card.displayName;
+            }
+            entry += ":" + key + "\r\n";
+            vList += entry;
+        }
+        else {
+            dump("*** card has no GroupDAV identifier key\n"
+                 + "  primaryEmail: " + card.primaryEmail + "\n"
+                 + "  displayName: " + card.displayName + "\n");
+        }
     }
 
     vList += "END:VLIST";
