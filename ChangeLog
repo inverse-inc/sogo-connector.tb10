@@ -1,5 +1,8 @@
 2010-06-24  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* chrome/content/sogo-connector/addressbook/contactspanel-overlay.js:
+	temporarily disabled.
+
 	* chrome/content/sogo-connector/addressbook/autocomplete-common.js:
 	renamed to messengercompose-overlay.js.
 
