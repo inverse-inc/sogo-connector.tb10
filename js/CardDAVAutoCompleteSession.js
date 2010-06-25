@@ -1,4 +1,4 @@
-/* CardDavAutoCompleteSession.js - This file is part of "SOGo Connector", a Thunderbird extension.
+/* CardDAVAutoCompleteSession.js - This file is part of "SOGo Connector", a Thunderbird extension.
  *
  * Copyright: Inverse inc., 2006-2010
  *    Author: Robert Bolduc, Wolfgang Sourdeau
@@ -20,9 +20,9 @@
  */
 
 function jsInclude(files, target) {
-    var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+    let loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
                            .getService(Components.interfaces.mozIJSSubScriptLoader);
-    for (var i = 0; i < files.length; i++) {
+    for (let i = 0; i < files.length; i++) {
         try {
             loader.loadSubScript(files[i], target);
         }
@@ -32,7 +32,7 @@ function jsInclude(files, target) {
     }
 }
 
-jsInclude(["chrome://sogo-connector/content/general/webdav.inverse.ca.js",
+jsInclude(["chrome://inverse-library/content/sogoWebDAV.js",
            "chrome://sogo-connector/content/general/vcards.utils.js"]);
 
 /***********************************************************
@@ -56,13 +56,13 @@ jsInclude(["chrome://sogo-connector/content/general/webdav.inverse.ca.js",
  ***********************************************************/
 
 //class constructor
-function CardDavAutoCompleteSession() {
-    dump("CardDavAutoCompleteSession constructor!\n");
+function CardDAVAutoCompleteSession() {
+    // dump("CardDavAutoCompleteSession constructor!\n");
 
-    var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+    let prefService = Components.classes["@mozilla.org/preferences-service;1"]
                                 .getService(Components.interfaces.nsIPrefBranch);
     try {
-        var attribute = prefService
+        let attribute = prefService
             .getCharPref("sogo-connector.autoComplete.commentAttribute");
         if (attribute && attribute.length > 0) {
             this.commentAttribute = attribute;
@@ -73,7 +73,7 @@ function CardDavAutoCompleteSession() {
     }
 };
 
-CardDavAutoCompleteSession.prototype = {
+CardDAVAutoCompleteSession.prototype = {
     active: false,
     listener: null,
     searchString: null,
@@ -82,22 +82,31 @@ CardDavAutoCompleteSession.prototype = {
 
     mUrl: null,
     get serverURL() { return this.mUrl; },
-    set serverURL(value) { this.mUrl = value },
+    set serverURL(value) { this.mUrl = value; },
 
-    onAutoComplete: function(searchString, previousSearchResult, listener) {
-        dump("CardDavAutoCompleteSession.prototype.onAutoComplete: " + searchString
-             + "\n");
-    },
+    /* nsIAutoCompleteSession */
     onStartLookup: function (searchString, previousSearchResult, listener) {
-        dump("CardDavAutoCompleteSession.onStartLookup\n");
+        // dump("CardDavAutoCompleteSession.onStartLookup\n");
         if (listener) {
             if (this.mUrl) {
-                var url = this.mUrl.spec;
+                let url = this.mUrl.spec;
                 if (url) {
                     this.active = true;
                     this.listener = listener;
                     this.searchString = searchString;
-                    this.lastRequest = AsyncCardDavReport(url, searchString, this);
+
+                    this.lastRequest = Date.now();
+                    let report = new sogoWebDAV(url, this, this.lastRequest);
+                    report.requestXMLResponse = true;
+                    report.report('<?xml version="1.0" encoding="UTF-8"?>'
+                                  + '<C:addressbook-query xmlns:D="DAV:"'
+                                  + ' xmlns:C="urn:ietf:params:xml:ns:carddav">'
+                                  + '<D:prop><D:getetag/><C:addressbook-data/></D:prop>'
+                                  + '<C:filter><C:prop-filter name="mail">'
+                                  + '<C:text-match collation="i;unicasemap" match-type="starts-with">'
+                                  + xmlEscape(searchString)
+                                  + '</C:text-match></C:prop-filter></C:filter>'
+                                  + '</C:addressbook-query>');
                 }
                 else {
                     dump("no url in CardDavAutoCompleteSession.prototype.onStartLookup\n");
@@ -118,47 +127,52 @@ CardDavAutoCompleteSession.prototype = {
         this.active = false;
         // 	 dump("CardDavAutoCompleteSession.prototype.onStopLookup\n");
     },
+    onAutoComplete: function(searchString, previousSearchResult, listener) {
+        // dump("CardDavAutoCompleteSession.prototype.onAutoComplete: " + searchString
+        //      + "\n");
+    },
+
     onDAVQueryComplete: function(status, result, headers, data) {
         if (this.active && data == this.lastRequest && result) {
-            // dump("on dav query complete... " + new Date() + "\n");
-            var resultArray = Components.classes["@mozilla.org/supports-array;1"]
+            let resultArray = Components.classes["@mozilla.org/supports-array;1"]
                                         .createInstance(Components.interfaces.nsISupportsArray);
-
-            var parser = Components.classes["@mozilla.org/xmlextras/domparser;1"]
-                                   .createInstance(Components.interfaces.nsIDOMParser);
-            var domResult = parser.parseFromString(result, "text/xml");
-            var nodeList = domResult.getElementsByTagName("addressbook-data");
-            for (var i = 0; i < nodeList.length; i++) {
-                var customFields = {};
-                var card = importFromVcard(nodeList[i].textContent, customFields);
-                var fn = card.displayName;
-                var email = card.primaryEmail;
-                var comment = null;
+            let nodeList = result.getElementsByTagNameNS("urn:ietf:params:xml:ns:carddav",
+                                                         "addressbook-data");
+            for (let i = 0; i < nodeList.length; i++) {
+                let customFields = {};
+                let card = importFromVcard(nodeList[i].textContent, customFields);
+                let fn = card.displayName;
+                let email = card.primaryEmail;
+                let comment = null;
                 if (this.commentAttribute)
                     comment = card[this.commentAttribute];
                 if (email.length)
-                    resultArray.AppendElement(formatAutoCompleteItem(fn, email, comment));
-                email = card.secondEmail;
+                    resultArray.AppendElement(formatAutoCompleteItem(fn, email,
+                                                                     comment),
+                                              null);
+                email = card.getProperty("SecondEmail", "");
                 if (email.length)
-                    resultArray.AppendElement(formatAutoCompleteItem(fn, email, comment));
+                    resultArray.AppendElement(formatAutoCompleteItem(fn, email,
+                                                                     comment),
+                                              null);
             }
-
-            // 		 dump("=======> resultArray.Count: " + resultArray.Count() + "\n");
+            // dump("  resultArray.length: " + resultArray.Count() + "\n");
 
             if (nodeList.length > 0) {
-                var matchFound = 1; //nsIAutoCompleteStatus::matchFound
+                let matchFound = 1; //nsIAutoCompleteStatus::matchFound
 
-                var results = Components.classes["@mozilla.org/autocomplete/results;1"]
+                let results = Components.classes["@mozilla.org/autocomplete/results;1"]
                                         .createInstance(Components.interfaces.nsIAutoCompleteResults);
                 results.items = resultArray;
                 results.defaultItemIndex = 0;
                 results.searchString = this.searchString;
 
-                dump("sending result: " + new Date () + "\n");
+                // dump("sending result: " + new Date () + "\n");
                 this.listener.onAutoComplete(results, matchFound);
             }
             else {
-                var noMatch = 0; //nsIAutoCompleteStatus::noMatch
+                // dump("sending NO result: " + new Date () + "\n");
+                let noMatch = 0; //nsIAutoCompleteStatus::noMatch
                 this.listener.onAutoComplete(null, noMatch);
             }
         }
@@ -173,7 +187,7 @@ CardDavAutoCompleteSession.prototype = {
 };
 
 function formatAutoCompleteItem (fn, email, comment) {
-    var item = Components.classes["@mozilla.org/autocomplete/item;1"]
+    let item = Components.classes["@mozilla.org/autocomplete/item;1"]
                          .createInstance(Components.interfaces.nsIAutoCompleteItem);
     item.className = "remote-abook";
     if (!comment)
