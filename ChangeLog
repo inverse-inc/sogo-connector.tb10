@@ -1,5 +1,10 @@
 2010-06-24  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* chrome/content/sogo-connector/general/sync.addressbook.groupdav.js:
+	make use of the new API provided by nsIAbDirectory and nsIAbCard.
+	The latter obsoletes the SOGoConnectorVolatileABCard
+	implementation.
+
 	* js/CalDAVAclManager.js: adapted code to new interfaces. We now
 	make use of getElementsByTagNameNS where we used to use
 	getElementsByTagName. Otherwise, most elements would not be found.
