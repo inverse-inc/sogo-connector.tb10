@@ -19,16 +19,12 @@
  * Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-// var loader = Components .classes["@mozilla.org/moz/jssubscript-loader;1"]
-//     .getService(Components.interfaces.mozIJSSubScriptLoader);
-// loader.loadSubScript("chrome://sogo-connector/content/general/mozilla.utils.inverse.ca.js");
-
 /* STACK method from lightning */
 function backtrace(aDepth) {
-    var depth = aDepth || 50;
-    var stack = "";
-    var frame = Components.stack.caller;
-    for (var i = 1; i <= depth && frame; i++) {
+    let depth = aDepth || 50;
+    let stack = "";
+    let frame = Components.stack.caller;
+    for (let i = 1; i <= depth && frame; i++) {
         stack += i + ": [" + frame.filename + ":" +
             frame.lineNumber + "] " + frame.name + "\n";
         frame = frame.caller;
@@ -41,7 +37,7 @@ function fixURL(url) {
         dump("fixURL: no URL! - backtrace\n" + backtrace());
         throw("fixURL: no URL!\n");
     }
-    var fixedURL = url;
+    let fixedURL = url;
     if (fixedURL[fixedURL.length-1] != '/')
         fixedURL += '/';
 
@@ -53,7 +49,7 @@ function xmlEscape(text) {
 }
 
 function xmlUnescape(text) {
-    var s = (""+text).replace(/&lt;/g, "<", "g");
+    let s = (""+text).replace(/&lt;/g, "<", "g");
     s = s.replace(/&gt;/g, ">", "g");
     s = s.replace(/&amp;/g, "&",  "g");
 
@@ -61,10 +57,10 @@ function xmlUnescape(text) {
 }
 
 function statusCode(status) {
-    var code = -1;
+    let code = -1;
 
     if (status.indexOf("HTTP/1.1") == 0) {
-        var words = status.split(" ");
+        let words = status.split(" ");
         code = parseInt(words[1]);
     }
 
@@ -84,8 +80,8 @@ CalDAVAclManager.prototype = {
     identityCount: 0,
     accountMgr: null,
     calendarEntry: function calendarEntry(calendarURI) {
-        var url = fixURL(calendarURI.spec);
-        var entry = this.calendars[url];
+        let url = fixURL(calendarURI.spec);
+        let entry = this.calendars[url];
         if (!entry) {
             entry = new CalDAVAclCalendarEntry(calendarURI);
             this.calendars[url] = entry;
@@ -95,10 +91,10 @@ CalDAVAclManager.prototype = {
         return entry;
     },
     componentEntry: function componentEntry(calendarURI, componentURL) {
-        var calendarURL = fixURL(calendarURI.spec);
-        var calendar = this.calendarEntry(calendarURI);
+        let calendarURL = fixURL(calendarURI.spec);
+        let calendar = this.calendarEntry(calendarURI);
 
-        var entry = null;
+        let entry = null;
         if (componentURL)
             entry = calendar.entries[componentURL];
         if (!entry) {
@@ -115,8 +111,8 @@ CalDAVAclManager.prototype = {
         return entry;
     },
     refresh: function refresh(calendarURI) {
-        var url = fixURL(calendarURI.spec);
-        var calendar = this.calendars[url];
+        let url = fixURL(calendarURI.spec);
+        let calendar = this.calendars[url];
         if (calendar) {
             calendar.userPrincipals = [];
             calendar.userPrivileges = [];
@@ -131,15 +127,15 @@ CalDAVAclManager.prototype = {
     onDAVQueryComplete: function onDAVQueryComplete(status, url, headers,
                                                     response, data) {
         // dump("callback for method: " + data.method + "\n");
-        /* Warning, the url returned as parameter is not always the
-         calendar URL since we also query user principals and items. */
-        var fixedURL = fixURL(data.calendar);
+        /* Warning, the url returned as parameter is not always the calendar URL
+         since we also query user principals and items. */
+        let fixedURL = fixURL(data.calendar);
         if (status > 498) {
             dump("an anomally occured during request '" + data.method + "'.\n"
                  + "  Code: " + status + "\n"
                  + "We remove the calendar entry to give it a chance of"
                  + " succeeding later.\n");
-            var observerService = Components.classes["@mozilla.org/observer-service;1"]
+            let observerService = Components.classes["@mozilla.org/observer-service;1"]
                                             .getService(Components.interfaces.nsIObserverService);
             if (data.component) {
                 observerService.notifyObservers(null,
@@ -163,10 +159,10 @@ CalDAVAclManager.prototype = {
                  + "  Code: " + status + "\n"
                  + "We keep the ACL entry but mark it as having no support.\n");
             if (data.component) {
-                var observerService = Components.classes["@mozilla.org/observer-service;1"]
+                let observerService = Components.classes["@mozilla.org/observer-service;1"]
                                                 .getService(Components.interfaces.nsIObserverService);
-                var compEntry = this.calendars[fixedURL].entries[data.component];
-                var compData = {
+                let compEntry = this.calendars[fixedURL].entries[data.component];
+                let compData = {
                     component: data.component,
                     entry: compEntry
                 };
@@ -178,11 +174,11 @@ CalDAVAclManager.prototype = {
             } else {
                 dump("   query url: " + url + "\n");
                 dump("   calendar url: " + fixedURL + "\n");
-                var entry = this.calendars[fixedURL];
-                var wasReady = entry.isCalendarReady();
+                let entry = this.calendars[fixedURL];
+                let wasReady = entry.isCalendarReady();
                 this._markWithNoAccessControl(fixedURL);
                 if (!wasReady) {
-                    var observerService = Components.classes["@mozilla.org/observer-service;1"]
+                    let observerService = Components.classes["@mozilla.org/observer-service;1"]
                                                     .getService(Components.interfaces.nsIObserverService);
                     observerService.notifyObservers(null, "caldav-acl-loaded",
                                                     this.calendars[fixedURL].uri.spec);
@@ -190,22 +186,27 @@ CalDAVAclManager.prototype = {
             }
         }
         else {
-            if (data.method == "acl-options")
+            if (data.method == "acl-options") {
                 this._optionsCallback(status, url, headers, response, data);
-            else if (data.method == "collection-set")
-            this._collectionSetCallback(status, url, headers, response, data);
-            else if (data.method == "principal-match")
-            this._principalMatchCallback(status, url, headers, response, data);
-            else if (data.method == "user-address-set")
-            this._userAddressSetCallback(status, url, headers, response, data);
-            else if (data.method == "component-privilege-set")
-            this._componentPrivilegeSetCallback(status, url, headers,
+            }
+            else if (data.method == "collection-set") {
+                this._collectionSetCallback(status, url, headers, response, data);
+            }
+            else if (data.method == "principal-match") {
+                this._principalMatchCallback(status, url, headers, response, data);
+            }
+            else if (data.method == "user-address-set") {
+                this._userAddressSetCallback(status, url, headers, response, data);
+            }
+            else if (data.method == "component-privilege-set") {
+                this._componentPrivilegeSetCallback(status, url, headers,
                                                 response, data);
+            }
         }
     },
     _markWithNoAccessControl: function _markWithNoAccessControl(url) {
         // dump(url + " marked without access control\n");
-        var calendar = this.calendars[url];
+        let calendar = this.calendars[url];
         calendar.hasAccessControl = false;
         calendar.userPrincipals = null;
         calendar.userPrivileges = null;
@@ -220,16 +221,16 @@ CalDAVAclManager.prototype = {
     },
     _optionsCallback: function _optionsCallback(status, url, headers,
                                                 response, data) {
-        var dav = headers["dav"];
+        let dav = headers["dav"];
         // dump("options callback: " + url +  " HTTP/1.1 " + status + "\n");
         // dump("headers:\n");
-        // for (var k in headers)
+        // for (let k in headers)
         // dump("  " + k + ": " + headers[k] + "\n");
-        var calURL = fixURL(url);
+        let calURL = fixURL(url);
         // dump("dav: " + dav + "\n");
         if (dav && dav.indexOf("access-control") > -1) {
             this.calendars[calURL].hasAccessControl = true;
-            var propfind = ("<?xml version='1.0' encoding='UTF-8'?>\n"
+            let propfind = ("<?xml version='1.0' encoding='UTF-8'?>\n"
                             + "<D:propfind xmlns:D='DAV:'><D:prop><D:principal-collection-set/><D:owner/><D:current-user-privilege-set/></D:prop></D:propfind>");
             this.xmlRequest(url, "PROPFIND", propfind,
                             {'content-type': "application/xml; charset=utf-8",
@@ -242,21 +243,21 @@ CalDAVAclManager.prototype = {
     _collectionSetCallback: function _collectionSetCallback(status, url, headers,
                                                             response, data) {
         if (status == 207) {
-            var calURL = fixURL(url);
-            var xParser = Components.classes['@mozilla.org/xmlextras/domparser;1']
+            let calURL = fixURL(url);
+            let xParser = Components.classes['@mozilla.org/xmlextras/domparser;1']
                                     .getService(Components.interfaces.nsIDOMParser);
-            var queryDoc = xParser.parseFromString(response, "application/xml");
-            var nodes = queryDoc.getElementsByTagName("principal-collection-set");
-            var address = "";
+            let queryDoc = xParser.parseFromString(response, "application/xml");
+            let nodes = queryDoc.getElementsByTagNameNS("DAV:", "principal-collection-set");
+            let address = "";
             if (nodes.length) {
-                var node = nodes[0];
-                var subnodes = node.childNodes;
-                for (var i = 0; i < subnodes.length; i++) {
+                let node = nodes[0];
+                let subnodes = node.childNodes;
+                for (let i = 0; i < subnodes.length; i++) {
                     if (subnodes[i].nodeType
                         == Components.interfaces.nsIDOMNode.ELEMENT_NODE) {
-                        var value = subnodes[i].childNodes[0].nodeValue;
+                        let value = subnodes[i].childNodes[0].nodeValue;
                         if (value.indexOf("/") == 0) {
-                            var clone = this.calendars[url].uri.clone();
+                            let clone = this.calendars[url].uri.clone();
                             clone.path = value;
                             address = clone.spec;
                         }
@@ -265,26 +266,26 @@ CalDAVAclManager.prototype = {
                     }
                 }
 
-                nodes = queryDoc.getElementsByTagName("owner");
+                nodes = queryDoc.getElementsByTagNameNS("DAV:", "owner");
                 if (nodes.length) {
                     //                     dump("owner nodes: " + nodes.length + "\n");
-                    subnodes = nodes[0].childNodes;
-                    for (i = 0; i < subnodes.length; i++) {
+                    let subnodes = nodes[0].childNodes;
+                    for (let i = 0; i < subnodes.length; i++) {
                         if (subnodes[i].nodeType
                             == Components.interfaces.nsIDOMNode.ELEMENT_NODE) {
-                            var value = subnodes[i].childNodes[0].nodeValue;
-                            var owner;
+                            let owner;
+                            let value = subnodes[i].childNodes[0].nodeValue;
                             if (value.indexOf("/") == 0) {
-                                var clone = this.calendars[url].uri.clone();
+                                let clone = this.calendars[url].uri.clone();
                                 clone.path = value;
                                 owner = clone.spec;
                             }
                             else
                                 owner = value;
                             //                             dump("acl owner: " + owner + "\n");
-                            var fixedURL = fixURL(owner);
+                            let fixedURL = fixURL(owner);
                             this.calendars[calURL].ownerPrincipal = fixedURL;
-                            var propfind = ("<?xml version='1.0' encoding='UTF-8'?>\n"
+                            let propfind = ("<?xml version='1.0' encoding='UTF-8'?>\n"
                                             + "<D:propfind xmlns:D='DAV:' xmlns:C='urn:ietf:params:xml:ns:caldav'><D:prop><C:calendar-user-address-set/><D:displayname/></D:prop></D:propfind>");
                             this.xmlRequest(fixedURL, "PROPFIND", propfind,
                                             {'content-type': "application/xml; charset=utf-8",
@@ -295,7 +296,7 @@ CalDAVAclManager.prototype = {
                     }
                 }
                 if (address && address.length) {
-                    var report = ("<?xml version='1.0' encoding='UTF-8'?>\n"
+                    let report = ("<?xml version='1.0' encoding='UTF-8'?>\n"
                                   + "<D:principal-match xmlns:D='DAV:'><D:self/></D:principal-match>");
                     this.xmlRequest(address, "REPORT", report,
                                     {'depth': "0",
@@ -314,26 +315,25 @@ CalDAVAclManager.prototype = {
     },
     _principalMatchCallback: function _principalMatchCallback(status, url, headers,
                                                               response, data) {
-
-        var calendar = this.calendars[data.calendar];
+        let calendar = this.calendars[data.calendar];
 
         if (status == 207) {
-            var xParser = Components.classes['@mozilla.org/xmlextras/domparser;1']
+            let xParser = Components.classes['@mozilla.org/xmlextras/domparser;1']
                                     .getService(Components.interfaces.nsIDOMParser);
-            var queryDoc = xParser.parseFromString(response, "application/xml");
-            var hrefs = queryDoc.getElementsByTagName("href");
-            var principals = [];
+            let queryDoc = xParser.parseFromString(response, "application/xml");
+            let hrefs = queryDoc.getElementsByTagNameNS("DAV:", "href");
+            let principals = [];
 
-            for (var i = 0; i < hrefs.length; i++) {
-                var href = "" + hrefs[i].childNodes[0].nodeValue;
+            for (let i = 0; i < hrefs.length; i++) {
+                let href = "" + hrefs[i].childNodes[0].nodeValue;
                 if (href.indexOf("/") == 0) {
-                    var clone = calendar.uri.clone();
+                    let clone = calendar.uri.clone();
                     clone.path = href;
                     href = clone.spec;
                 }
 
-                var fixedURL = fixURL(href);
-                var propfind = ("<?xml version='1.0' encoding='UTF-8'?>\n"
+                let fixedURL = fixURL(href);
+                let propfind = ("<?xml version='1.0' encoding='UTF-8'?>\n"
                                 + "<D:propfind xmlns:D='DAV:' xmlns:C='urn:ietf:params:xml:ns:caldav'><D:prop><C:calendar-user-address-set/><D:displayname/></D:prop></D:propfind>");
                 this.xmlRequest(fixedURL, "PROPFIND", propfind,
                                 {'content-type': "application/xml; charset=utf-8",
@@ -352,37 +352,37 @@ CalDAVAclManager.prototype = {
     _userAddressSetCallback: function _collectionSetCallback(status, url, headers,
                                                              response, data) {
         if (status == 207) {
-            var xParser = Components.classes['@mozilla.org/xmlextras/domparser;1']
+            let xParser = Components.classes['@mozilla.org/xmlextras/domparser;1']
                                     .getService(Components.interfaces.nsIDOMParser);
-            var queryDoc = xParser.parseFromString(response, "application/xml");
+            let queryDoc = xParser.parseFromString(response, "application/xml");
 
-            var addressValues = this._parseCalendarUserAddressSet(queryDoc, data.calendar);
+            let addressValues = this._parseCalendarUserAddressSet(queryDoc, data.calendar);
 
-            var addressesKey = data.who + "Addresses";
-            var identitiesKey = data.who + "Identities";
+            let addressesKey = data.who + "Addresses";
+            let identitiesKey = data.who + "Identities";
 
             //dump("url: " + url + " addressesKey: " + addressesKey + " identitiesKey: " + identitiesKey + "\n");
 
-            var addresses = this.calendars[data.calendar][addressesKey];
+            let addresses = this.calendars[data.calendar][addressesKey];
             if (!addresses) {
                 addresses = [];
                 this.calendars[data.calendar][addressesKey] = addresses;
             }
-            for (var address in addressValues)
+            for (let address in addressValues)
                 if (addresses.indexOf(address) == -1) {
                     addresses.push(address);
                 }
 
             dump("identities for calendar: " + data.calendar + "\n");
             dump("  type: " + data.who + "\n");
-            var identities = this.calendars[data.calendar][identitiesKey];
+            let identities = this.calendars[data.calendar][identitiesKey];
             if (!identities) {
                 identities = [];
                 this.calendars[data.calendar][identitiesKey] = identities;
             }
-            var displayName = this._parsePrincipalDisplayName(queryDoc);
+            let displayName = this._parsePrincipalDisplayName(queryDoc);
             if (displayName != null) {
-                for (address in addressValues) {
+                for (let address in addressValues) {
                     dump("  address: " + address + "\n");
                     if (address.search("mailto:", "i") == 0) {
                         this._appendIdentity(identities, displayName,
@@ -395,7 +395,7 @@ CalDAVAclManager.prototype = {
                 //                 dump("acl complete for " + data.calendar
                 //                      + "; nbrAddressSets: " +
                 //                      this.calendars[data.calendar].nbrAddressSets + "\n");
-                var observerService = Components.classes["@mozilla.org/observer-service;1"]
+                let observerService = Components.classes["@mozilla.org/observer-service;1"]
                                                 .getService(Components.interfaces.nsIObserverService);
                 observerService.notifyObservers(null, "caldav-acl-loaded", this.calendars[data.calendar].uri.spec);
             } else {
@@ -406,18 +406,18 @@ CalDAVAclManager.prototype = {
     _initAccountMgr: function _initAccountMgr() {
         this.accountMgr = Components.classes["@mozilla.org/messenger/account-manager;1"]
                                     .getService(Components.interfaces.nsIMsgAccountManager);
-        var defaultAccount = this.accountMgr.defaultAccount;
+        let defaultAccount = this.accountMgr.defaultAccount;
 
-        var identities = this.accountMgr.allIdentities.QueryInterface(Components.interfaces.nsICollection);
-        var values = [];
-        var current = 0;
-        var max = 0;
+        let identities = this.accountMgr.allIdentities.QueryInterface(Components.interfaces.nsICollection);
+        let values = [];
+        let current = 0;
+        let max = 0;
 
         // We get the identities we use for mail accounts. We also
         // get the highest key which will be used as the basis when
         // adding new identities (so we don't overwrite keys...)
-        for (var i = identities.Count()-1; i >= 0; i--) {
-            var identity = identities.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgIdentity);
+        for (let i = identities.Count()-1; i >= 0; i--) {
+            let identity = identities.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgIdentity);
             if (identity.key.indexOf("caldav_") == 0) {
                 if (identity.email) {
                     values.push(identity.key);
@@ -434,13 +434,13 @@ CalDAVAclManager.prototype = {
 
         // We now remove every other caldav_ pref other than the ones we
         // use in our mail accounts.
-        var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+        let prefService = Components.classes["@mozilla.org/preferences-service;1"]
                                     .getService(Components.interfaces.nsIPrefService);
-        var prefBranch = prefService.getBranch("mail.identity.");
-        var prefs = prefBranch.getChildList("", {});
-        for each (var pref in prefs) {
+        let prefBranch = prefService.getBranch("mail.identity.");
+        let prefs = prefBranch.getChildList("", {});
+        for each (let pref in prefs) {
             if (pref.indexOf("caldav_") == 0) {
-                var key = pref.substring(0, pref.indexOf("."));
+                let key = pref.substring(0, pref.indexOf("."));
                 if (values.indexOf(key) < 0) {
                     dump("CalDAVAclManager._initAccountMgr: removing useless"
                          +" identity branch: '" + key + "'\n");
@@ -451,14 +451,14 @@ CalDAVAclManager.prototype = {
         this.identityCount = max + 1;
     },
     _findIdentity: function _findIdentity(email, displayName) {
-        var identity = null;
-        var lowEmail = email.toLowerCase();
-        var lowDisplayName = displayName.toLowerCase();
+        let identity = null;
+        let lowEmail = email.toLowerCase();
+        let lowDisplayName = displayName.toLowerCase();
 
-        var identities = this.accountMgr.allIdentities.QueryInterface(Components.interfaces.nsICollection);
-        var i = 0;
+        let identities = this.accountMgr.allIdentities.QueryInterface(Components.interfaces.nsICollection);
+        let i = 0;
         while (!identity && i < identities.Count()) {
-            var currentIdentity = identities.GetElementAt(i)
+            let currentIdentity = identities.GetElementAt(i)
                                             .QueryInterface(Components.interfaces.nsIMsgIdentity);
             if (currentIdentity.email.toLowerCase() == lowEmail
                 && currentIdentity.fullName.toLowerCase() == lowDisplayName)
@@ -470,10 +470,10 @@ CalDAVAclManager.prototype = {
         return identity;
     },
     _identitiesHaveEmail: function _identitiesHaveEmail(identities, email) {
-        var haveEmail = false;
-        var lowEmail = email.toLowerCase();
+        let haveEmail = false;
+        let lowEmail = email.toLowerCase();
 
-        var i = 0;
+        let i = 0;
         while (!haveEmail && i < identities.length) {
             if (identities[i].email.toLowerCase() == lowEmail)
                 haveEmail = true;
@@ -488,10 +488,11 @@ CalDAVAclManager.prototype = {
         if (!this.accountMgr)
             this._initAccountMgr();
 
-        var newIdentity = this._findIdentity(email, displayName);
+        let newIdentity = this._findIdentity(email, displayName);
         if (!newIdentity) {
-            newIdentity = Components.classes["@mozilla.org/messenger/identity;1"]
-                                    .createInstance(Components.interfaces.nsIMsgIdentity);
+            let newIdentity = Components.classes["@mozilla.org/messenger/identity;1"]
+                                        .createInstance(Components
+                                        .interfaces.nsIMsgIdentity);
             newIdentity.key = "caldav_" + this.identityCount;
             newIdentity.identityName = String(displayName + " <" + email + ">");
             newIdentity.fullName = String(displayName);
@@ -511,17 +512,17 @@ CalDAVAclManager.prototype = {
     _parseCalendarUserAddressSet: function
     _parseCalendarUserAddressSet(queryDoc,
                                  calendarURL) {
-        var values = {};
-        var nodes = queryDoc.getElementsByTagName("calendar-user-address-set");
-        for (var i = 0; i < nodes.length; i++) {
-            var childNodes = nodes[i].childNodes;
-            for (var j = 0; j < childNodes.length; j++) {
+        let values = {};
+        let nodes = queryDoc.getElementsByTagNameNS("{urn:ietf:params:xml:ns:caldav}",
+                                                    "calendar-user-address-set");
+        for (let i = 0; i < nodes.length; i++) {
+            let childNodes = nodes[i].childNodes;
+            for (let j = 0; j < childNodes.length; j++) {
                 if (childNodes[j].nodeType
                     == Components.interfaces.nsIDOMNode.ELEMENT_NODE) {
-                    var value = "" + childNodes[j].childNodes[0].nodeValue;
-                    var address;
+                    let value = "" + childNodes[j].childNodes[0].nodeValue;
                     if (value.indexOf("/") == 0) {
-                        var clone = this.calendars[calendarURL].uri.clone();
+                        let clone = this.calendars[calendarURL].uri.clone();
                         clone.path = value;
                         address = "" + clone.spec;
                     }
@@ -535,14 +536,14 @@ CalDAVAclManager.prototype = {
         return values;
     },
     _parsePrincipalDisplayName: function _parsePrincipalDisplayName(queryDoc) {
-        var displayName;
+        let displayName;
 
-        var nodes = queryDoc.getElementsByTagName("displayname");
+        let nodes = queryDoc.getElementsByTagNameNS("DAV:", "displayname");
         if (nodes.length) {
             displayName = "";
-            var childNodes = nodes[0].childNodes;
+            let childNodes = nodes[0].childNodes;
             // dump ( "childNodes: " + childNodes.length + "\n");
-            for (var i = 0; i < childNodes.length; i++) {
+            for (let i = 0; i < childNodes.length; i++) {
                 if (childNodes[i].nodeType
                     == Components.interfaces.nsIDOMNode.TEXT_NODE)
                     displayName += xmlUnescape(childNodes[i].nodeValue);
@@ -557,38 +558,40 @@ CalDAVAclManager.prototype = {
     /* component controller */
     _queryComponent: function _queryComponent(entry, url, calendarURL) {
         // dump("queryCompoennt\n");
-        var propfind = ("<?xml version='1.0' encoding='UTF-8'?>\n"
+        let propfind = ("<?xml version='1.0' encoding='UTF-8'?>\n"
                         + "<D:propfind xmlns:D='DAV:'><D:prop><D:current-user-privilege-set/></D:prop></D:propfind>");
         this.xmlRequest(url, "PROPFIND", propfind,
                         {'content-type': "application/xml; charset=utf-8",
                          'depth': "0"},
                         {method: "component-privilege-set",
-                         entry: entry, calendar: calendarURL, component: url});
+                         entry: entry,
+                         calendar: calendarURL,
+                         component: url});
     },
     _componentPrivilegeSetCallback: function
     _componentPrivilegeSetCallback(status, url, headers, response, data) {
-        var xParser = Components.classes['@mozilla.org/xmlextras/domparser;1']
+        let xParser = Components.classes['@mozilla.org/xmlextras/domparser;1']
                                 .getService(Components.interfaces.nsIDOMParser);
-        var queryDoc = xParser.parseFromString(response, "application/xml");
+        let queryDoc = xParser.parseFromString(response, "application/xml");
         // dump("\n\n\ncomponent-privilege-set:\n" + response + "\n\n\n");
 
         data.entry.userPrivileges = this._parsePrivileges(queryDoc);
-        var observerService = Components.classes["@mozilla.org/observer-service;1"]
+        let observerService = Components.classes["@mozilla.org/observer-service;1"]
                                         .getService(Components.interfaces.nsIObserverService);
         observerService.notifyObservers(null, "caldav-component-acl-loaded",
                                         data.component);
     },
     _parsePrivileges: function _parsePrivileges(queryDoc) {
-        var privileges = [];
-        var nodes = queryDoc.getElementsByTagName("privilege");
-        for (var i = 0; i < nodes.length; i++) {
-            var subnodes = nodes[i].childNodes;
-            for (var j = 0; j < subnodes.length; j++)
+        let privileges = [];
+        let nodes = queryDoc.getElementsByTagNameNS("DAV:", "privilege");
+        for (let i = 0; i < nodes.length; i++) {
+            let subnodes = nodes[i].childNodes;
+            for (let j = 0; j < subnodes.length; j++)
                 if (subnodes[j].nodeType
                     == Components.interfaces.nsIDOMNode.ELEMENT_NODE) {
-                    var ns = subnodes[j].namespaceURI;
-                    var tag = subnodes[j].localName;
-                    var privilege = "{" + ns + "}" + tag;
+                    let ns = subnodes[j].namespaceURI;
+                    let tag = subnodes[j].localName;
+                    let privilege = "{" + ns + "}" + tag;
                     // dump(arguments.callee.caller.name + " privilege: " + privilege + "\n");
                     privileges.push(privilege);
                 }
@@ -597,13 +600,13 @@ CalDAVAclManager.prototype = {
         return privileges;
     },
     xmlRequest: function xmlRequest(url, method, parameters, headers, data) {
-        var request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
+        let request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
                                 .createInstance(Components.interfaces.nsIJSXMLHttpRequest);
         //         dump("method: " + method + "\n");
         //         dump("url: " + url + "\n");
         request.open(method, url, true);
         if (headers)
-            for (var header in headers)
+            for (let header in headers)
                 request.setRequestHeader(header, headers[header]);
         request.url = fixURL(url);
         request.client = this;
@@ -614,15 +617,20 @@ CalDAVAclManager.prototype = {
         request.onreadystatechange = function() {
             if (request.readyState == 4) {
                 if (request.client) {
-                    var status = 499;
+                    let status;
+                    let textHeaders;
                     try {
                         status = request.status;
+                        textHeaders = request.getAllResponseHeaders();
                     }
-                    catch(e) { dump("CalDAVAclManager: trapped exception: "
-                                    + e + "\n"); }
-
-                    var responseText;
-                    var headers = {};
+                    catch(e) {
+                        dump("CalDAVAclManager: trapped exception: "
+                             + e + "\n");
+                        status = 499;
+                        textHeaders = "";
+                    }
+                    let responseText;
+                    let headers = {};
                     try {
                         if (status == 499) {
                             responseText = "";
@@ -631,13 +639,13 @@ CalDAVAclManager.prototype = {
                         }
                         else {
                             responseText = request.responseText;
-                            var textHeaders = request.getAllResponseHeaders().split("\n");
-                            for (var i = 0; i < textHeaders.length; i++) {
-                                var line = textHeaders[i].replace(/\r$/, "", "g");
+                            let headersArray = textHeaders.split("\n");
+                            for (let i = 0; i < headersArray.length; i++) {
+                                let line = headersArray[i].replace(/\r$/, "", "g");
                                 if (line.length) {
-                                    var elems = line.split(":");
-                                    var key = elems[0].toLowerCase();
-                                    var value = elems[1].replace(/(^[         ]+|[         ]+$)/, "", "g");
+                                    let elems = line.split(":");
+                                    let key = elems[0].toLowerCase();
+                                    let value = elems[1].replace(/(^[         ]+|[         ]+$)/, "", "g");
                                     headers[key] = value;
                                 }
                             }
@@ -685,6 +693,7 @@ CalDAVAclCalendarEntry.prototype = {
     entries: null,
 
     isCalendarReady: function isCalendarReady() {
+
         // dump (typeof(this.hasAccessControl)+ "\n"
         // + typeof(this.userPrincipals)+ "\n"
         // + typeof(this.userPrivileges)+ "\n"
@@ -701,9 +710,9 @@ CalDAVAclCalendarEntry.prototype = {
                 && typeof(this.ownerPrincipal) != "undefined");
     },
     userIsOwner: function userIsOwner() {
-        var result = false;
+        let result = false;
 
-        var i = 0;
+        let i = 0;
 
         if (this.hasAccessControl) {
             while (!result && typeof(this.userPrincipals) != "undefined" && i < this.userPrincipals.length) {
@@ -763,9 +772,9 @@ CalDAVAclComponentEntry.prototype = {
         // dump("this.parentCalendarEntry.userPrivileges: "
         // + this.parentCalendarEntry.userPrivileges + "\n");
 
-        var result;
+        let result;
         if (this.parentCalendarEntry.hasAccessControl) {
-            var index = (this.url
+            let index = (this.url
                          ? this.userPrivileges.indexOf("{DAV:}write")
                          : this.parentCalendarEntry.userPrivileges.indexOf("{DAV:}bind"));
             result = (index > -1);
