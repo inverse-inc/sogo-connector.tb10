@@ -1,5 +1,18 @@
 2010-06-24  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* js/SOGoConnectorVolatileABCard.js: dropped obsolete class
+	module.
+
+	* js/CardDAVAutoCompleteSession.js: same as below.
+
+	* js/CardDAVDirectory.js: renamed from abdavdirectory.js. Adapted
+	code to new interfaces.
+
+	* js/CardDAVDirectoryFactory.js: renamed from
+	abdavdirectoryfactory.js
+	(CardDAVDirectoryFactory.prototype.getDirectories:) remove useless
+	exception handling.
+
 	* chrome/content/inverse-library/sogoWebDAV.js: (sogoWebDAV:)
 	added a new "synchronous" parameter for triggering synchronous
 	requests. By default, this.synchronous is set to false, when not
