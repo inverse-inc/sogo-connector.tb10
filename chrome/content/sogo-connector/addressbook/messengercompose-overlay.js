@@ -1,4 +1,4 @@
-/* autocomplete-common.js - This file is part of "SOGo Connector", a Thunderbird extension.
+/* messengercompose-overlay.js - This file is part of "SOGo Connector", a Thunderbird extension.
  *
  * Copyright: Inverse inc., 2006-2010
  *    Author: Robert Bolduc, Wolfgang Sourdeau
@@ -19,17 +19,17 @@
  * Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-var SISetupLdapAutoCompleteSessionOld;
+let SISetupLdapAutoCompleteSessionOld;
 
 /*
  * This overlay adds cardDAV functionalities to autoCompletion
  */
 
 function autoCompleteDirectoryIsCardDav() {
-    var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+    let prefService = Components.classes["@mozilla.org/preferences-service;1"]
                                 .getService(Components.interfaces.nsIPrefBranch);
-    var autocompleteDirectory = prefService.getCharPref("ldap_2.autoComplete.directoryServer");
-    var uri = null;
+    let autocompleteDirectory = prefService.getCharPref("ldap_2.autoComplete.directoryServer");
+    let uri = null;
     if (autocompleteDirectory && autocompleteDirectory.length) {
         try {
             dump("autocompleteDirectory: " + autocompleteDirectory + "\n");
@@ -39,16 +39,18 @@ function autoCompleteDirectoryIsCardDav() {
         }
     }
 
+    dump("autocomplete URI: " + uri + "\n");
+
     return (uri && uri.indexOf("carddav://") == 0);
 }
 
 function setupCardDavAutoCompleteSession() {
-    var autocompleteDirectory;
-    // 	var prevAutocompleteDirectory = gCurrentAutocompleteDirectory;
+    let autocompleteDirectory;
+    // 	let prevAutocompleteDirectory = gCurrentAutocompleteDirectory;
 
-    var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+    let prefService = Components.classes["@mozilla.org/preferences-service;1"]
                                 .getService(Components.interfaces.nsIPrefBranch);
-    var autocompleteLdap = prefService.getBoolPref("ldap_2.autoComplete.useDirectory");
+    let autocompleteLdap = prefService.getBoolPref("ldap_2.autoComplete.useDirectory");
     if (autocompleteLdap) {
         autocompleteDirectory
             = prefService.getCharPref("ldap_2.autoComplete.directoryServer");
@@ -64,7 +66,7 @@ function setupCardDavAutoCompleteSession() {
     // global with a partially setup session.	we'll assign the temp
     // into the global after we're done setting up the session
     //
-    var cardDAVSession;
+    let cardDAVSession;
     if (gLDAPSession)
         cardDAVSession = gLDAPSession;
     else
@@ -83,19 +85,19 @@ function setupCardDavAutoCompleteSession() {
                 // if we make it here, we know that session initialization has
                 // succeeded; add the session for all recipients, and
                 // remember that we've done so
-                var showComment = false;
-                prefService = Components.classes["@mozilla.org/preferences-service;1"]
-                                        .getService(Components.interfaces.nsIPrefBranch);
+                let showComment = false;
+                let prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                                            .getService(Components.interfaces.nsIPrefBranch);
                 try {
-                    var attribute = prefService.getCharPref("sogo-connector.autoComplete.commentAttribute");
+                    let attribute = prefService.getCharPref("sogo-connector.autoComplete.commentAttribute");
                     if (attribute && attribute.length > 0)
                         showComment = true;
                 }
                 catch(e) {
                 }
 
-                for (var i = 1; i <= awGetMaxRecipients(); i++) {
-                    var autoCompleteWidget
+                for (let i = 1; i <= awGetMaxRecipients(); i++) {
+                    let autoCompleteWidget
                         = document.getElementById(autocompleteWidgetPrefix + "#" + i);
                     if (autoCompleteWidget) {
                         autoCompleteWidget.addSession(cardDAVSession);
@@ -113,12 +115,12 @@ function setupCardDavAutoCompleteSession() {
     else {
         if (gCurrentAutocompleteDirectory) {
             // Remove observer on the directory server since we are not doing Ldap autocompletion
-            // 			.RemoveDirectorySettingsObserver(gCurrentAutocompleteDirectory);
+            //  .RemoveDirectorySettingsObserver(gCurrentAutocompleteDirectory);
             gCurrentAutocompleteDirectory = null;
         }
         if (gLDAPSession && gSessionAdded) {
-            for (var i = 1; i <= awGetMaxRecipients(); i++) {
-                var autoCompleteWidget
+            for (let i = 1; i <= awGetMaxRecipients(); i++) {
+                let autoCompleteWidget
                     = document.getElementById(autocompleteWidgetPrefix + "#" + i);
                 autoCompleteWidget.removeSession(gLDAPSession);
             }
@@ -130,9 +132,9 @@ function setupCardDavAutoCompleteSession() {
         // 			dump("******** autocompleteDirectory: " + autocompleteDirectory + "\n");
         // 			dump(gPrefs.getCharPref(autocompleteDirectory +".uri"));
         // 			dump("\n");
-        var prefix = "carddav://";
-        var uri = "" + gPrefs.getCharPref(autocompleteDirectory +".uri");
-        var serverURL = Components.classes["@mozilla.org/network/standard-url;1"]
+        let prefix = "carddav://";
+        let uri = "" + gPrefs.getCharPref(autocompleteDirectory +".uri");
+        let serverURL = Components.classes["@mozilla.org/network/standard-url;1"]
                                   .createInstance(Components.interfaces.nsIURL);
         serverURL.spec = uri.substring(prefix.length);
         // 		dump("uri: " + uri + "\n");
@@ -147,8 +149,8 @@ function setupCardDavAutoCompleteSession() {
     gSetupLdapAutocomplete = true;
 }
 
-function SISetupLdapAutoCompleteSession() {
-    // 	dump("override called\n");
+function SCSetupLdapAutoCompleteSession() {
+    dump("override called\n");
     if (autoCompleteDirectoryIsCardDav())
         setupCardDavAutoCompleteSession();
     else
@@ -157,11 +159,11 @@ function SISetupLdapAutoCompleteSession() {
 
 // See the ComposeLoad() function in Thunderbird 2.0. It warns
 // you about the showComment kungfu.
-function SIComposeLoad() {
+function SCComposeLoad() {
     try {
-        var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+        let prefService = Components.classes["@mozilla.org/preferences-service;1"]
                                     .getService(Components.interfaces.nsIPrefBranch);
-        var attribute = prefService.getCharPref("sogo-connector.autoComplete.commentAttribute");
+        let attribute = prefService.getCharPref("sogo-connector.autoComplete.commentAttribute");
         if (attribute && attribute.length > 0)
             document.getElementById('addressCol2#1').showCommentColumn = true;
     }
@@ -171,9 +173,11 @@ function SIComposeLoad() {
     ComposeLoad();
 }
 
-function SIOnAutoCompleteLoadListener() {
-    SISetupLdapAutoCompleteSessionOld = setupLdapAutocompleteSession;
-    setupLdapAutocompleteSession = SISetupLdapAutoCompleteSession;
+function SCOnAutoCompleteLoadListener() {
+    dump("coucou autocomplete\n");
+    SCComposeLoad();
+    // SCSetupLdapAutoCompleteSessionOld = setupLdapAutocompleteSession;
+    // setupLdapAutocompleteSession = SCSetupLdapAutoCompleteSession;
 }
 
-window.addEventListener("load", SIOnAutoCompleteLoadListener, false);
+window.addEventListener("load", SCOnAutoCompleteLoadListener, false);

@@ -23,15 +23,12 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA	
 -->
 
-<?xul-overlay href="chrome://communicator/content/contentAreaContextOverlay.xul"?>
 <!DOCTYPE overlay SYSTEM "chrome://sogo-connector/locale/ca.inverse.abMainWindow.groupdav.dtd">
 
 <overlay id="ca.inverse.messenger.compose.carddav" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <window id="msgcomposeWindow" onload="SIComposeLoad()">
-    <script type="text/javascript">
-      var autocompleteWidgetPrefix = "addressCol2";
-    </script>
-    <script type="application/x-javascript"
-      src="chrome://sogo-connector/content/addressbook/autocomplete-common.js"/>	
-  </window>
+  <script type="text/javascript">
+    var autocompleteWidgetPrefix = "addressCol2";
+  </script>
+  <script type="application/x-javascript"
+          src="chrome://sogo-connector/content/addressbook/messengercompose-overlay.js"/>	
 </overlay>
