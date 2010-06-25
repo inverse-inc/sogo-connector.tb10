@@ -1,5 +1,9 @@
 2010-06-24  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* chrome/content/sogo-connector/addressbook/cardedit-overlay-common.js:
+	removed the reference to "gSynchIsRunning", which has been made
+	useless a long time ago.
+
 	* chrome/content/sogo-connector/general/vcards.utils.js:
 	(list2vlist): the "list" argument is now passed as a nsIAbCard.
 	(card2vcard): adapted to make use of getAttribute.

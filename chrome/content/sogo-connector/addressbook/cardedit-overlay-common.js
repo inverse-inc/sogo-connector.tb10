@@ -20,9 +20,9 @@
  */
 
 function jsInclude(files, target) {
-    var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+    let loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
                            .getService(Components.interfaces.mozIJSSubScriptLoader);
-    for (var i = 0; i < files.length; i++) {
+    for (let i = 0; i < files.length; i++) {
         try {
             loader.loadSubScript(files[i], target);
         }
@@ -41,26 +41,27 @@ jsInclude(["chrome://sogo-connector/content/general/sync.addressbook.groupdav.js
  *
  **********************************************************************************************/
 
-var documentDirty = false;
+let documentDirty = false;
 
-// Reference to the Addressbook window, to use functions in webdav.inverse.ca.js.
 // This is necessary to allow the listener of webdavPutString  and the upload Observer to remain in scope
 // since the dialog is closed before the listener can do its job.
-var messengerWindow = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+let messengerWindow = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                                 .getService(Components.interfaces.nsIWindowMediator)
                                 .getMostRecentWindow("mail:3pane");
 
-var abWindow = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+let abWindow = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                          .getService(Components.interfaces.nsIWindowMediator)
                          .getMostRecentWindow("mail:addressbook");
 
 function getUri() {
-    var uri;
+    let uri;
 
-    if (document.getElementById("abPopup"))
+    if (document.getElementById("abPopup")) {
         uri = document.getElementById("abPopup").value;
-    else if (window.arguments[0].abURI)
-    uri = window.arguments[0].abURI;
+    }
+    else if (window.arguments[0].abURI) {
+        uri = window.arguments[0].abURI;
+    }
     else
         uri = window.arguments[0].selectedAB;
 
@@ -73,27 +74,19 @@ function setDocumentDirty(boolValue) {
 
 function saveCard(isNewCard) {
     try {
-        var parentURI = getUri();
-        var uriParts = parentURI.split("/");
+        let parentURI = getUri();
+        let uriParts = parentURI.split("/");
         parentURI = uriParts[0] + "//" + uriParts[2];
 
-        var isMdbCard;
-        try {
-            gEditCard.card.QueryInterface(Components.interfaces.nsIAbMDBCard);
-            isMdbCard = true;
-        }
-        catch(ex) {
-            isMdbCard = false;
-        }
-
         if (documentDirty
-            && isMdbCard
             && isGroupdavDirectory(parentURI)) {
-            var mdbCard
-                = gEditCard.card.QueryInterface(Components.interfaces.nsIAbMDBCard);
-            var version = mdbCard.getStringAttribute("groupDavVersion");
-            if (version && version != "")
-                mdbCard.setStringAttribute("groupDavVersion", "-1");
+            gEditCard.card.setProperty("groupDavVersion", "-1");
+            version = gEditCard.card.getProperty("groupDavVersion", null);
+
+            let abManager = Components.classes["@mozilla.org/abmanager;1"]
+                                      .getService(Components.interfaces.nsIAbManager);
+            let ab = abManager.getDirectory(parentURI);
+            ab.modifyCard(gEditCard.card);
 
             // We make sure we try the messenger window and if it's closed, the address book
             // window. It might fail if both of them are closed and we still have a composition
@@ -105,25 +98,22 @@ function saveCard(isNewCard) {
 
             setDocumentDirty(false);
         }
-        if (abWindow)
-            abWindow.gSynchIsRunning = false;
     }
     catch(e) {
-        if (abWindow)
-            abWindow.gSynchIsRunning = false;
         messengerWindow.exceptionHandler(null, "saveCard", e);
     }
 }
 
 function inverseSetupFieldsEventHandlers() {
-    var tabPanelElement = document.getElementById("abTabPanels");
-    var menulists = tabPanelElement.getElementsByTagName("menulist");
-    for (var i = 0; i < menulists.length; i++)
+    let tabPanelElement = document.getElementById("abTabPanels");
+    let menulists = tabPanelElement.getElementsByTagName("menulist");
+    let i;
+    for (i = 0; i < menulists.length; i++)
         menulists[i].addEventListener("mouseup", setDocumentDirty, true);
 
-    var textboxes = tabPanelElement.getElementsByTagName("textbox");
+    let textboxes = tabPanelElement.getElementsByTagName("textbox");
 
-    for (var i = 0; i < textboxes.length; i++)
+    for (i = 0; i < textboxes.length; i++)
         textboxes[i].addEventListener("change", setDocumentDirty, true);
 }
 
@@ -134,9 +124,10 @@ function inverseSetupFieldsEventHandlers() {
 // }
 
 function isLDAPDirectory(uri) {
-    var ab = GetDirectoryFromURI(uri);
+    let ab = GetDirectoryFromURI(uri);
 
     return (ab.isRemote && !isCardDavDirectory(uri));
 }
 
 window.addEventListener("load", inverseSetupFieldsEventHandlers, false);
+

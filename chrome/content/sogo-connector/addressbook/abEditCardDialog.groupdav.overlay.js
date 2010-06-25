@@ -20,9 +20,9 @@
  */
 
 function jsInclude(files, target) {
-    var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+    let loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
                            .getService(Components.interfaces.mozIJSSubScriptLoader);
-    for (var i = 0; i < files.length; i++) {
+    for (let i = 0; i < files.length; i++) {
         try {
             loader.loadSubScript(files[i], target);
         }
@@ -33,75 +33,40 @@ function jsInclude(files, target) {
 }
 
 jsInclude(["chrome://sogo-connector/content/common/common-dav.js",
-           "chrome://inverse-library/content/simpleLdapQuery.js",
            "chrome://sogo-connector/content/addressbook/cardedit-overlay-common.js"]);
 
 function UpdateFBUrl() {
     // LDAP Directories
     try {
-        var card = gEditCard.card.QueryInterface(Components.interfaces.nsIAbMDBCard);
-        var fbUrlInput = document.getElementById("FbUrl");
-        card.setStringAttribute("calFBURL", fbUrlInput.value);
+        let fbUrlInput = document.getElementById("FbUrl");
+        gEditCard.card.setProperty("CalFBURL", fbUrlInput.value);
     }
     catch (e) {
+        dump("$$$$$$$$$$$ exception caught\n");
         //	   cardproperty.setCardValue("calFBURL", fbUrlInput.value);
     }
 }
 
-function ReadLdapFbUrl() {
-    var url = "";
-
-    var prefs = Components.classes["@mozilla.org/preferences;1"]
-                          .getService(Components.interfaces.nsIPref);
-    var branch = gEditCard.abURI.split("://")[1];
-    var uriSpec = prefs.GetCharPref(branch + ".uri");
-    var uri = Components.classes["@mozilla.org/network/ldap-url;1"].createInstance(Components.interfaces.nsILDAPURL);
-    uri.spec = uriSpec;
-    uri.filter = "(cn=" + gEditCard.card.displayName + ")";
-    uri.setAttributes(1, ["calFBURL"]);
-    try {
-        var ldapQuery = new simpleLdapQuery();
-        var result = ldapQuery.getQueryResults(uri, 3);
-        if (result)
-            url = result.split("=")[1];
-    }
-    catch(e) {
-        dump("exception:" + e + "\n");
-        throw(e);
-    }
-
-    return url;
-}
-
 function LoadFBUrl() {
-    var fbUrlInput = document.getElementById("FbUrl");
-
-    var uri = getUri();
-    var ab = GetDirectoryFromURI(uri);
+    let fbUrlInput = document.getElementById("FbUrl");
+    let uri = getUri();
+    let ab = GetDirectoryFromURI(uri);
     if (ab.isRemote) {
         if (isCardDavDirectory(uri)) {
-            var card = gEditCard.card.QueryInterface(Components.interfaces.nsIAbMDBCard);
-            fbUrlInput.value = card.getStringAttribute("calFBURL");
+            fbUrlInput.value = gEditCard.getProperty("CalFBURL", "");
         }
-        else
-            // LDAP Directories
-            fbUrlInput.value = ReadLdapFbUrl();
         fbUrlInput.setAttribute("readonly", "true");
     }
     else {
-        try {
-            var card = gEditCard.card.QueryInterface(Components.interfaces.nsIAbMDBCard);
-            fbUrlInput.value = card.getStringAttribute("calFBURL");
-        }
-        catch (e) {};
+        fbUrlInput.value = gEditCard.card.getProperty("CalFBURL", "");
     }
 }
 
 /* event handlers */
 function SCEditCardOKButton() {
-    var result = this.OldEditCardOKButton();
+    let result = this.OldEditCardOKButton();
     if (result) {
-        var ab = GetDirectoryFromURI(gEditCard.abURI);
+        let ab = GetDirectoryFromURI(gEditCard.abURI);
         if (!ab.isRemote) {
             setDocumentDirty(true);
             UpdateFBUrl();
@@ -110,21 +75,13 @@ function SCEditCardOKButton() {
     }
 
     return result;
-    // 	var uri = getUri();
-    // 	var ab = GetDirectoryFromURI(uri);
-    // 	if (!ab.isRemote) {
-    // 		UpdateFBUrl();
-    // 		return saveCard(false);
-    // // 		EditCardOKButtonOverlay();
-    // 	}
 }
 
 /* starting... */
 function OnLoadHandler() {
     LoadFBUrl();
-    var uri = getUri();
-    dump("uri: " + uri + "\n");
-    var ab = GetDirectoryFromURI(uri);
+    let uri = getUri();
+    let ab = GetDirectoryFromURI(uri);
     if (!ab.isRemote) {
         this.OldEditCardOKButton = this.EditCardOKButton;
         this.EditCardOKButton = this.SCEditCardOKButton;
