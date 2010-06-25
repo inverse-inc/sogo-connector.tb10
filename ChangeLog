@@ -1,5 +1,8 @@
 2010-06-24  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* chrome/content/sogo-connector/addressbook/folder-handling.js:
+	adapted to make use of the new nsIAbManager API.
+
 	* chrome/content/sogo-connector/addressbook/cardedit-overlay-common.js:
 	removed the reference to "gSynchIsRunning", which has been made
 	useless a long time ago.
