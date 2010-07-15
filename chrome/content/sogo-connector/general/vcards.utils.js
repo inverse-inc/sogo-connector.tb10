@@ -203,70 +203,70 @@ function versitParse(versitString) {
  **************************************************************************/
 function importFromVcard(vCardString// , customFields
                         ) {
-                            let card = null;
-                            if (!vCardString || vCardString == "")
-                                dump("'vCardString' is empty\n" + backtrace() + "\n");
-                            else {
-                                let vcard = versitParse(vCardString);
-                                // 	let cardDump = dumpObject(vcard);
-                                // 	logInfo("vcard dump:\n" + cardDump);
-                                card = CreateCardFromVCF(vcard// , customFields
-                                                        );
+    let card = null;
+    if (!vCardString || vCardString == "")
+        dump("'vCardString' is empty\n" + backtrace() + "\n");
+    else {
+        let vcard = versitParse(vCardString);
+        // 	let cardDump = dumpObject(vcard);
+        // 	logInfo("vcard dump:\n" + cardDump);
+        card = CreateCardFromVCF(vcard// , customFields
+                                );
 
-                                // dump("card content:\n" + vCardString + "\n");
-                            }
+        // dump("card content:\n" + vCardString + "\n");
+    }
 
-                            return card;
-                        }
+    return card;
+}
 
 // outParameters must be an array, to enable the fonction to pass back the value
 // of custom fields that are not part of a Thunderbird card.
 function CreateCardFromVCF(vcard// , outParameters
                           ) {
-                              let version = "2.1";
-                              let defaultCharset = "iso-8859-1"; /* 0 = latin 1, 1 = utf-8 */
-                              // let card = Components.classes["@inverse.ca/addressbook/volatile-abcard;1"]
-                              // 	.createInstance(Components.interfaces.nsIAbCard).wrappedJSObject;
+    let version = "2.1";
+    let defaultCharset = "iso-8859-1"; /* 0 = latin 1, 1 = utf-8 */
+    // let card = Components.classes["@inverse.ca/addressbook/volatile-abcard;1"]
+    // 	.createInstance(Components.interfaces.nsIAbCard).wrappedJSObject;
 
-                              let card = Components.classes["@mozilla.org/addressbook/moz-abmdbcard;1"]
-                                                   .createInstance(Components.interfaces.nsIAbCard);
+    let card = Components.classes["@mozilla.org/addressbook/moz-abmdbcard;1"]
+                         .createInstance(Components.interfaces.nsIAbCard);
 
-                              // outParameters["fburl"] = "";
-                              // outParameters["uid"] = "";
-                              // outParameters["groupDavVcardCompatibility"] = "";
+    // outParameters["fburl"] = "";
+    // outParameters["uid"] = "";
+    // outParameters["groupDavVcardCompatibility"] = "";
 
-                              for (let i = 0; i < vcard.length; i++) {
-                                  if (vcard[i]["tag"] == "version") {
-                                      version = vcard[i]["values"][0];
-                                  }
-                              }
-                              if (version[0] == "3")
-                                  defaultCharset = "utf-8";
+    for (let i = 0; i < vcard.length; i++) {
+        if (vcard[i]["tag"] == "version") {
+            version = vcard[i]["values"][0];
+        }
+    }
+    if (version[0] == "3")
+        defaultCharset = "utf-8";
 
-                              for (i = 0; i < vcard.length; i++) {
-                                  let tag = vcard[i]["tag"];
-                                  let charset = defaultCharset;
-                                  let encoding = null;
+    for (i = 0; i < vcard.length; i++) {
+        let tag = vcard[i]["tag"];
+        let charset = defaultCharset;
+        let encoding = null;
 
-                                  let parameters = vcard[i]["parameters"];
-                                  if (parameters) {
-                                      for (let parameter in parameters) {
-                                          if (parameter == "encoding")
-                                              encoding = parameters[parameter][0].toLowerCase();
-                                          if (parameter == "charset")
-                                              charset = parameters[parameter][0].toLowerCase();
-                                      }
-                                  }
-                                  else
-                                      parameters = {};
+        let parameters = vcard[i]["parameters"];
+        if (parameters) {
+            for (let parameter in parameters) {
+                if (parameter == "encoding")
+                    encoding = parameters[parameter][0].toLowerCase();
+                if (parameter == "charset")
+                    charset = parameters[parameter][0].toLowerCase();
+            }
+        }
+        else
+            parameters = {};
 
-                                  let values = decodedValues(vcard[i]["values"], charset, encoding);
-                                  InsertCardData(card, tag, parameters, values// , outParameters
-                                                );
-                              }
+        let values = decodedValues(vcard[i]["values"], charset, encoding);
+        InsertCardData(card, tag, parameters, values// , outParameters
+                      );
+    }
 
-                              return card;
-                          }
+    return card;
+}
 
 let _insertCardMethods = {
     _upperTypes: function(types) {
