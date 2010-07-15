@@ -89,7 +89,7 @@ function initLogFile(fileName){
 function logDebug(message){
     if (message[message.length-1] != "\n")
         message += "\n";
-    dump ("DEBUG: " + message)l
+    dump("DEBUG: " + message);
     return;
     if (gLogLevel >= logLevelVal.debug){
         xulFileWrite(logFileName, new Date().toString() + " [DEBUG] " + message + "\n");
