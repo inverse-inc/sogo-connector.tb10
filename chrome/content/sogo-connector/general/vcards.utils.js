@@ -310,7 +310,10 @@ let _insertCardMethods = {
                 let type = cardCheckTypes[i];
                 if (types.indexOf(type) > -1) {
                     let abType = abTypes[type];
-                    props[abType] = values[0];
+                    if ((type != "WORK" && types.indexOf("WORK") > -1)
+                        || (!props[abType] || props[abType].length == 0)) {
+                        props[abType] = values[0];
+                    }
                     knownType = true;
                 }
             }
@@ -330,14 +333,14 @@ let _insertCardMethods = {
     adr: function(props, parameters, values) {
         let types = this._upperTypes(parameters["type"]);
         if (types.indexOf("WORK") > -1) {
-            props.extend({ "WorkAddress2": values[0],
+            props.extend({ "WorkAddress2": values[1],
                            "WorkAddress": values[2],
                            "WorkCity": values[3],
                            "WorkZipCode": values[5],
                            "WorkCountry": values[6] });
         }
         else {
-            props.extend({ "HomeAddress2": values[0],
+            props.extend({ "HomeAddress2": values[1],
                            "HomeAddress": values[2],
                            "HomeCity": values[3],
                            "HomeState": values[4],
@@ -349,7 +352,7 @@ let _insertCardMethods = {
     },
     email: function(props, parameters, values) {
         let types = this._upperTypes(parameters["type"]);
-        if (types.indexOf("PREF") > -1) {
+        if (types.indexOf("PREF") > -1 || types.indexOf("WORK") > -1) {
             if (props["PrimaryEmail"] && props["PrimaryEmail"].length > 0) {
                 props["SecondEmail"] = props["PrimaryEmail"];
             }
@@ -526,7 +529,7 @@ function card2vcard(card) {
     let workCountry = card.getProperty("WorkCountry", "");
     if ((workAddress + workAddress2 + workCity + workState + workZipCode
          + workCountry).length)
-        vCard += "ADR;TYPE=work:" + workAddress2 + ";;" +workAddress+ ";" +workCity+ ";" +workState+ ";" +workZipCode+ ";" +workCountry+ "\r\n";
+        vCard += "ADR;TYPE=work:;" + workAddress2 + ";" +workAddress+ ";" +workCity+ ";" +workState+ ";" +workZipCode+ ";" +workCountry+ "\r\n";
 
     let homeAddress = card.getProperty("HomeAddress", "");
     let homeAddress2 = card.getProperty("HomeAddress2", "");
@@ -536,7 +539,7 @@ function card2vcard(card) {
     let homeCountry = card.getProperty("HomeCountry", "");
     if ((homeAddress + homeAddress2 + homeCity + homeState + homeZipCode
          + homeCountry).length)
-        vCard += "ADR;TYPE=home:" + homeAddress2 + ";;" +homeAddress+ ";" +homeCity+ ";" +homeState+ ";" +homeZipCode+ ";" +homeCountry+ "\r\n";
+        vCard += "ADR;TYPE=home:;" + homeAddress2 + ";" +homeAddress+ ";" +homeCity+ ";" +homeState+ ";" +homeZipCode+ ";" +homeCountry+ "\r\n";
 
     let workPhone = card.getProperty("WorkPhone", "");
     if (workPhone.length)

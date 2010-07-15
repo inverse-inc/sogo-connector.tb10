@@ -1,3 +1,19 @@
+2010-07-01  Ludovic Marcotte  <lmarcotte@inverse.ca>
+
+	* chrome/content/sogo-connector/general/vcards.utils.js
+	We not only consider the "PREF" parameter when setting
+	the primary email but also the "WORK" value.
+	* chrome/content/sogo-connector/general/vcards.utils.js
+	in the adr function, we correctly consider the "extended"
+	address attribute by using index 1 and not 0
+	* chrome/content/sogo-connector/general/vcards.utils.js
+	in the tel function, we now overwrite the fax number only
+	if it's a WORK fax or if the value isn't already set
+	* chrome/content/sogo-connector/general/vcards.utils.js
+	in the card2vcard function, we correctly set the pobox
+	attribute (to none) instead of setting the street address
+	geographical attribute to none
+
 2010-07-15  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* js/CalDAVAclManager.js: (_parseCalendarUserAddressSet): fixed
