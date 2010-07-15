@@ -1,3 +1,9 @@
+2010-07-15  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* js/CalDAVAclManager.js: (_parseCalendarUserAddressSet): fixed
+	invocation getElementsByTagNameNS by using the
+	"urn:ietf:params:xml:ns:caldav" namespace without braces...
+
 2010-06-24  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* chrome/content/sogo-connector/addressbook/folder-handling.js:

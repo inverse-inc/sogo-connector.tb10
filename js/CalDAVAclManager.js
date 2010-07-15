@@ -368,13 +368,14 @@ CalDAVAclManager.prototype = {
                 addresses = [];
                 this.calendars[data.calendar][addressesKey] = addresses;
             }
-            for (let address in addressValues)
+            for (let address in addressValues) {
                 if (addresses.indexOf(address) == -1) {
                     addresses.push(address);
                 }
+            }
 
-            dump("identities for calendar: " + data.calendar + "\n");
-            dump("  type: " + data.who + "\n");
+            // dump("identities for calendar: " + data.calendar + "\n");
+            // dump("  type: " + data.who + "\n");
             let identities = this.calendars[data.calendar][identitiesKey];
             if (!identities) {
                 identities = [];
@@ -383,7 +384,6 @@ CalDAVAclManager.prototype = {
             let displayName = this._parsePrincipalDisplayName(queryDoc);
             if (displayName != null) {
                 for (let address in addressValues) {
-                    dump("  address: " + address + "\n");
                     if (address.search("mailto:", "i") == 0) {
                         this._appendIdentity(identities, displayName,
                                              address.substr(7), this.calendars[data.calendar]);
@@ -513,7 +513,7 @@ CalDAVAclManager.prototype = {
     _parseCalendarUserAddressSet(queryDoc,
                                  calendarURL) {
         let values = {};
-        let nodes = queryDoc.getElementsByTagNameNS("{urn:ietf:params:xml:ns:caldav}",
+        let nodes = queryDoc.getElementsByTagNameNS("urn:ietf:params:xml:ns:caldav",
                                                     "calendar-user-address-set");
         for (let i = 0; i < nodes.length; i++) {
             let childNodes = nodes[i].childNodes;
