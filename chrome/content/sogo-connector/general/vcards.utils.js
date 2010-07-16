@@ -353,10 +353,10 @@ let _insertCardMethods = {
     email: function(props, parameters, values) {
         let types = this._upperTypes(parameters["type"]);
         if (types.indexOf("PREF") > -1 || types.indexOf("WORK") > -1) {
-            if (props["PrimaryEmail"] && props["PrimaryEmail"].length > 0) {
-                props["SecondEmail"] = props["PrimaryEmail"];
-            }
             props["PrimaryEmail"] = values[0];
+        }
+        else if (types.indexOf("HOME") > -1) {
+            props["SecondEmail"] = values[0];
         }
         else {
             if (props["PrimaryEmail"] && props["PrimaryEmail"].length > 0) {

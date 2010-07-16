@@ -1,3 +1,9 @@
+2010-07-16  Ludovic Marcotte  <lmarcotte@inverse.ca>
+
+	* chrome/content/sogo-connector/general/vcards.utils.js
+	(_insertCardMethods.email): assign the "home" emails as the
+	secondary email.
+
 2010-07-01  Ludovic Marcotte  <lmarcotte@inverse.ca>
 
 	* chrome/content/sogo-connector/general/vcards.utils.js
