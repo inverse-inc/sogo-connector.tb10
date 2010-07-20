@@ -1,3 +1,9 @@
+2010-07-20  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* chrome/content/sogo-connector/general/vcards.utils.js:
+	(InsertCardData): ignore properties with a value of "undefined" to
+	avoid an exception during conversion.
+
 2010-07-16  Ludovic Marcotte  <lmarcotte@inverse.ca>
 
 	* chrome/content/sogo-connector/general/vcards.utils.js

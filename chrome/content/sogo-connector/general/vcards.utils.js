@@ -243,7 +243,7 @@ function CreateCardFromVCF(vcard// , outParameters
     if (version[0] == "3")
         defaultCharset = "utf-8";
 
-    for (i = 0; i < vcard.length; i++) {
+    for (let i = 0; i < vcard.length; i++) {
         let tag = vcard[i]["tag"];
         let charset = defaultCharset;
         let encoding = null;
@@ -444,8 +444,7 @@ function InsertCardData(card, tag, parameters, values) {
     delete (properties["extend"]);
 
     for (let k in properties) {
-        // dump("trying prop: " + k + " = " + properties[k] + "\n");
-        if (properties[k].length > 0) {
+        if (properties[k] && properties[k].length > 0) {
             card.setProperty(k, properties[k]);
         }
     }
