@@ -1,5 +1,10 @@
 2010-07-20  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* js/CalDAVAclManager.js: (CalDAVAclManager._appendIdentity):
+	the "newIdentity" pushed in the array would keep its null value
+	because it would not be redefined properly (double use of "let" in
+	the conditional block).
+
 	* chrome/content/sogo-connector/general/vcards.utils.js:
 	(InsertCardData): ignore properties with a value of "undefined" to
 	avoid an exception during conversion.

@@ -381,6 +381,7 @@ CalDAVAclManager.prototype = {
                 identities = [];
                 this.calendars[data.calendar][identitiesKey] = identities;
             }
+
             let displayName = this._parsePrincipalDisplayName(queryDoc);
             if (displayName != null) {
                 for (let address in addressValues) {
@@ -490,9 +491,8 @@ CalDAVAclManager.prototype = {
 
         let newIdentity = this._findIdentity(email, displayName);
         if (!newIdentity) {
-            let newIdentity = Components.classes["@mozilla.org/messenger/identity;1"]
-                                        .createInstance(Components
-                                        .interfaces.nsIMsgIdentity);
+            newIdentity = Components.classes["@mozilla.org/messenger/identity;1"]
+                                    .createInstance(Components.interfaces.nsIMsgIdentity);
             newIdentity.key = "caldav_" + this.identityCount;
             newIdentity.identityName = String(displayName + " <" + email + ">");
             newIdentity.fullName = String(displayName);
@@ -521,6 +521,7 @@ CalDAVAclManager.prototype = {
                 if (childNodes[j].nodeType
                     == Components.interfaces.nsIDOMNode.ELEMENT_NODE) {
                     let value = "" + childNodes[j].childNodes[0].nodeValue;
+                    let address;
                     if (value.indexOf("/") == 0) {
                         let clone = this.calendars[calendarURL].uri.clone();
                         clone.path = value;
