@@ -461,10 +461,18 @@ function decodedValues(values, charset, encoding) {
         if (encoding) {
             //  			dump("encoding: " + encoding + "\n");
             //  			dump("initial value: ^" + values[i] + "$\n");
-            if (encoding == "quoted-printable")
+            if (encoding == "quoted-printable") {
                 decodedValue = decoder.decode(values[i]);
-            else if (encoding == "base64")
-            decodedValue = window.atob(values[i]);
+            }
+            else if (encoding == "base64") {
+                try {
+                    decodedValue = window.atob(values[i]);
+                }
+                catch(e) {
+                    dump("vcards.utils.js: failed to decode '" + values[i] +
+                         "'\n" + e + "\n\n Stack:\n" + e.stack + "\n\n");
+                }
+            }
             else {
                 dump("Unsupported encoding for vcard value: " + encoding);
                 decodedValue = values[i];
