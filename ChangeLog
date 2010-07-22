@@ -1,5 +1,8 @@
 2010-07-22  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* js/CardDAVDirectory.js: added and implemented the
+	nsISecurityCheckedComponent and nsIClassInfo interfaces.
+
 	* js/CardDAVDirectoryFactory.js:
 	(CardDAVDirectoryFactory.getDirectories): updated method to use
 	the abmanager rather than the rdf service.

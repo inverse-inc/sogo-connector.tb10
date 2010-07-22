@@ -72,28 +72,28 @@ CardDAVDirectory.prototype = {
 
     /* nsIRDFResource */
     get Value() {
-        // 		dump("CardDAVDirectory.js: Value (" + this.mValue + ")\n");
+        dump("CardDAVDirectory.js: Value (" + this.mValue + ")\n");
         return this.mValue;
     },
 
     get ValueUTF8() {
-        // 	 dump("CardDAVDirectory.js: ValueUTF8: " + value + "\n");
+        dump("CardDAVDirectory.js: ValueUTF8: " + value + "\n");
         let conv = Components.classes["@mozilla.org/intl/utf8converterservice;1"]
                              .createInstance(Components.interfaces.nsIUTF8ConverterService);
         return conv.convertStringToUTF8(this.Value, "iso-8859-1", false);
     },
 
     Init: function(uri) {
-        // dump("CardDAVDirectory.js: Init: uri = " + uri + "\n");
+        dump("CardDAVDirectory.js: Init: uri = " + uri + "\n");
         // 	 dump("backtrace: " + backtrace() + "\n\n");
         if (uri.indexOf(gABPrefix) == 0) {
             let prefName = uri.substr(gABPrefix.length);
-            let quMark = prefName.indexOf("?");
+            let quMark = uri.indexOf("?");
             if (quMark > 1) {
-                this.mQuery = prefName.substr(quMark);
-                prefName = prefName.substr(0, quMark);
+                this.mQuery = uri.substr(quMark);
+                prefName = prefName.substr(0, quMark - gABPrefix.length);
             }
-            this.mValue = uri;
+            this.mValue = gABPrefix + prefName;
             this.mDirPrefId = prefName;
             this._load();
         }
@@ -122,10 +122,12 @@ CardDAVDirectory.prototype = {
     },
 
     GetDelegate: function(key, IID, result) {
+        dump("CardDAVDirectory.js: unimplemented 'GetDelegate'\n");
         throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
     },
 
     ReleaseDelegate: function(key) {
+        dump("CardDAVDirectory.js: unimplemented 'ReleaseDelegate'\n");
         throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
     },
 
@@ -161,7 +163,9 @@ CardDAVDirectory.prototype = {
 
     /* nsIAbDirectory */
     get propertiesChromeURI() {
+        return "chrome://sogo-connector/content/addressbook/preferences.addressbook.groupdav.xul";
         dump("unimp\n");
+// "chrome://sogo-connector/content/addressbook/preferences.addressbook.groupdav.xul"
         throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
     },
 
@@ -405,14 +409,69 @@ CardDAVDirectory.prototype = {
         throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
     },
 
+    /* nsISecurityCheckedComponent */
+    canCreateWrapper: function(aIID) {
+        dump("CardDAVDirectory.js: canCreateWrapper: aIID: " + aIID + "\n");
+
+        return ((aIID.equals(Components.interfaces.nsIRDFResource)
+                 || aIID.equals(Components.interfaces.nsIRDFNode)
+                 || aIID.equals(Components.interfaces.nsIAbDirectory)
+                 || aIID.equals(Components.interfaces.nsISupports))
+                ? "AllAccess"
+                : "NoAccess");
+    },
+
+    canCallMethod: function(aIID, methodName) {
+        dump("CardDAVDirectory.js: canCallMethod: aIID: " + aIID + "; methodName: " + methodName + "\n");
+        return "AllAccess";
+    },
+
+    canGetProperty: function(aIID, propertyName) {
+        dump("CardDAVDirectory.js: canGetProperty: aIID: " + aIID + "; methodName: " + methodName + "\n");
+        return "AllAccess";
+    },
+
+    canSetProperty: function(aIID, propertyName) {
+        dump("CardDAVDirectory.js: canSetProperty: aIID: " + aIID + "; methodName: " + methodName + "\n");
+        return "AllAccess";
+    },
+
+    /* nsIClassInfo */
+    getInterfaces: function(aCount) {
+        dump("CardDAVDirectory.js: getInterfaces\n");
+        let ifaces = [ Components.interfaces.nsIRDFResource,
+                       Components.interfaces.nsIRDFNode,
+                       Components.interfaces.nsIAbDirectory,
+                       Components.interfaces.nsISecurityCheckedComponent,
+                       Components.interfaces.nsIClassInfo,
+                       Components.interfaces.nsISupports ];
+        aCount.value = ifaces.length;
+
+        return ifaces;
+    },
+
+    getHelperForLanguage: function(language) {
+        dump("CardDAVDirectory.js: getHelperForLanguage: " + language + "\n");
+        return null;
+    },
+
+    contractID: "@mozilla.org/rdf/resource-factory;1?name=moz-abdavdirectory",
+    classDescription: "Class description",
+    classID: Components.ID("{2e3aa298-a1f9-4aef-9f80-ca430ce6e55b}"),
+    implementationLanguage: Components.interfaces.nsIProgrammingLanguage.JAVASCRIPT,
+    flags: 0,
+
     /* nsISupports */
     QueryInterface: function(aIID) {
-        // dump("  QueryInterface: "  + aIID + "\n");
         if (!aIID.equals(Components.interfaces.nsIRDFResource)
             && !aIID.equals(Components.interfaces.nsIRDFNode)
             && !aIID.equals(Components.interfaces.nsIAbDirectory)
-            && !aIID.equals(Components.interfaces.nsISupports))
+            && !aIID.equals(Components.interfaces.nsISecurityCheckedComponent)
+            && !aIID.equals(Components.interfaces.nsIClassInfo)
+            && !aIID.equals(Components.interfaces.nsISupports)) {
+            dump("CardDAVDirectory.js: NO INTERFACE: "  + aIID + "\n");
             throw Components.results.NS_ERROR_NO_INTERFACE;
+        }
 
         return this;
     },
