@@ -27,17 +27,19 @@ function CardDAVDirectoryFactory() {
 //class definition
 CardDAVDirectoryFactory.prototype = {
     getDirectories: function(aDirName, aURI, aPrefId) {
-        // dump("CALLED getDirectories"
-        //      + "\n  aDirName: " + aDirName
-        //      + "\n  aURI: " + aURI
-        //      + "\n  aPrefId: " + aPrefId + "\n");
+        dump("CardDAVDirectoryFactory.js: getDirectories"
+             + "\n  aDirName: " + aDirName
+             + "\n  aURI: " + aURI
+             + "\n  aPrefId: " + aPrefId + "\n");
 
         let baseArray = Components.classes["@mozilla.org/array;1"]
                                   .createInstance(Components.interfaces.nsIMutableArray);
-        let rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-                            .getService(Components.interfaces.nsIRDFService);
-        let directory = rdf.GetResource("moz-abdavdirectory://" + aPrefId)
-                           .QueryInterface(Components.interfaces.nsIAbDirectory);
+        let abManager = Components.classes["@mozilla.org/abmanager;1"]
+                                  .getService(Components.interfaces.nsIAbManager);
+        if (aURI.indexOf("carddav://") == 0) {
+            aURI = "moz-abdavdirectory://" + aPrefId;
+        }
+        let directory = abManager.getDirectory(aURI);
         baseArray.appendElement(directory, false);
         let directoryEnum = baseArray.enumerate();
 
@@ -46,14 +48,16 @@ CardDAVDirectoryFactory.prototype = {
 
     //void deleteDirectory ( nsIAbDirectory directory )
     deleteDirectory: function(directory) {
-        dump("CALLED deleteDirectory: function(directory)\n");
+        dump("CardDAVDirectoryFactory.js: deleteDirectory: directory: " + directory + "\n");
         // throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
     },
 
     QueryInterface: function(aIID) {
         if (!aIID.equals(Components.interfaces.nsIAbDirFactory)
-            && !aIID.equals(Components.interfaces.nsISupports))
+            && !aIID.equals(Components.interfaces.nsISupports)) {
+            dump("CardDAVDirectoryFactory.js: NO INTERFACE: "  + aIID + "\n");
             throw Components.results.NS_ERROR_NO_INTERFACE;
+        }
 
         return this;
     }

@@ -1,3 +1,9 @@
+2010-07-22  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* js/CardDAVDirectoryFactory.js:
+	(CardDAVDirectoryFactory.getDirectories): updated method to use
+	the abmanager rather than the rdf service.
+
 2010-07-20  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* js/CalDAVAclManager.js: (CalDAVAclManager._appendIdentity):
