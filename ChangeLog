@@ -1,5 +1,9 @@
 2010-07-22  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* chrome/content/sogo-connector/lightning/messenger-overlay-sidebar.js:
+	removed module, made useless by direct inclusion of
+	calendar/utils.js in the template.
+
 	* chrome/content/sogo-connector/calendar/calendar-invitations-list.xml:
 	repatches from version in Lightning 1.0rc2.
 
