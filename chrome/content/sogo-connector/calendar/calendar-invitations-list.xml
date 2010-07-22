@@ -18,8 +18,11 @@
    - Portions created by the Initial Developer are Copyright (C) 2006
    - the Initial Developer. All Rights Reserved.
    -
-   - Contributor(s): Thomas Benisch <thomas.benisch@sun.com>
+   - Contributor(s):
+   -   Thomas Benisch <thomas.benisch@sun.com>
    -   Philipp Kewisch <mozilla@kewis.ch>
+   -   Martin Schroeder <mschroeder@mozilla.x-home.org>
+   -   Simon Vaillancourt <simon.at.orcl@gmail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -72,6 +75,7 @@
           <xul:label anonid="recurrence" crop="end"/>
           <xul:label anonid="location" crop="end"/>
           <xul:label anonid="organizer" crop="end"/>
+          <xul:label anonid="attendee" crop="end"/>
           <xul:label anonid="spacer" value="" hidden="true"/>
         </xul:vbox>
         <xul:vbox>
@@ -79,12 +83,12 @@
             class="calendar-invitations-richlistitem-accept-button
             calendar-invitations-richlistitem-button"
             label="&calendar.invitations.list.accept.button.label;"
-            hidden="true" oncommand="accept();"/>
+            oncommand="accept();"/>
           <xul:button anonid="decline"
             class="calendar-invitations-richlistitem-decline-button
             calendar-invitations-richlistitem-button"
             label="&calendar.invitations.list.decline.button.label;"
-            hidden="true" oncommand="decline();"/>
+            oncommand="decline();"/>
         </xul:vbox>
       </xul:hbox>
     </content>
@@ -143,6 +147,7 @@
           var recurrentEventText = "&calendar.invitations.list.recurrentevent.text;";
           var locationText = "&calendar.invitations.list.location.text;";
           var organizerText = "&calendar.invitations.list.organizer.text;";
+          var attendeeText = "&calendar.invitations.list.attendee.text;";
           var noneText = "&calendar.invitations.list.none.text;";
           <![CDATA[
             this.mCalendarItem = aItem;
@@ -197,6 +202,19 @@
                 }
             }
             organizerLabel.setAttribute("value", organizerString);
+
+            let attendeeLabel = document.getAnonymousElementByAttribute(
+                this, "anonid", "attendee");
+            let attendeeString = attendeeText;
+            let att = aItem.calendar.getInvitedAttendee(aItem);;
+            if (att) {
+                if (att.commonName && att.commonName.length > 0) {
+                    attendeeString += att.commonName;
+                } else if (att.id) {
+                    attendeeString += att.id.replace(/^mailto:/i, "");
+                }
+            }
+            attendeeLabel.setAttribute("value", attendeeString);
           ]]>
         </body>
       </method>
@@ -244,26 +262,5 @@
         ]]></body>
       </method>
     </implementation>
-
-    <handlers>
-      <handler event="DOMAttrModified"><![CDATA[
-        if (event.attrName != "selected" ||
-            event.originalTarget.getAttribute("anonid") !=
-            "invitations-listitem") {
-          return;
-        }
-        var acceptButton = document.getAnonymousElementByAttribute(
-            this, "anonid", "accept");
-        var declineButton = document.getAnonymousElementByAttribute(
-            this, "anonid", "decline");
-        if (event.newValue == "true") {
-            acceptButton.removeAttribute("hidden");
-            declineButton.removeAttribute("hidden");
-        } else if (event.newValue == "false") {
-            acceptButton.setAttribute("hidden", "true");
-            declineButton.setAttribute("hidden", "true");
-        }
-      ]]></handler>
-    </handlers>
   </binding>
 </bindings>
