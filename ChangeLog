@@ -1,5 +1,8 @@
 2010-07-22  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* chrome/content/sogo-connector/calendar/calendars-list-overlay.{js,xul}:
+	modifications migrated to Lightning, making this module useless.
+
 	* chrome/content/sogo-connector/general/vcards.utils.js:
 	(decodedValues) catch the exception occuring when a wrong base64
 	content is being decoded.
