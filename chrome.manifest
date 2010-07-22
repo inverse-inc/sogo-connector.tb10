@@ -22,7 +22,7 @@ overlay chrome://messenger/content/addressbook/pref-editdirectories.xul chrome:/
 
 style chrome://sogo-connector/content/addressbook/addressbook.groupdav.overlay.xul chrome://sogo-connector/skin/addressbook/addressbook.groupdav.overlay.css
 
-overlay	chrome://calendar/content/calendar-event-dialog.xul chrome://sogo-connector/content/calendar/calendar-event-dialog.xul
+# overlay	chrome://calendar/content/calendar-event-dialog.xul chrome://sogo-connector/content/calendar/calendar-event-dialog.xul
 overlay	chrome://calendar/content/calendar-event-dialog-attendees.xul chrome://sogo-connector/content/calendar/calendar-event-dialog-attendees.xul
 overlay chrome://calendar/content/calendar-calendars-list.xul chrome://sogo-connector/content/calendar/calendars-list-overlay.xul
 overlay chrome://calendar/content/calendar-common-sets.xul chrome://sogo-connector/content/calendar/calendar-common-sets.xul
