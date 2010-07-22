@@ -9,7 +9,7 @@
 	calendar/utils.js in the template.
 
 	* chrome/content/sogo-connector/calendar/calendar-invitations-list.xml:
-	repatches from version in Lightning 1.0rc2.
+	repatched from version in Lightning 1.0rc2.
 
 	* js/CalDAVAclManager.js: migrated to lightning 1.0b2 (Inverse
 	edition).
