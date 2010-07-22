@@ -77,7 +77,7 @@ CardDAVDirectory.prototype = {
     },
 
     get ValueUTF8() {
-        dump("CardDAVDirectory.js: ValueUTF8: " + value + "\n");
+        dump("CardDAVDirectory.js: ValueUTF8: " + this.mValue + "\n");
         let conv = Components.classes["@mozilla.org/intl/utf8converterservice;1"]
                              .createInstance(Components.interfaces.nsIUTF8ConverterService);
         return conv.convertStringToUTF8(this.Value, "iso-8859-1", false);
@@ -207,6 +207,8 @@ CardDAVDirectory.prototype = {
     },
 
     get URI() {
+        /* Should return the moz-abdavdirectory:// uri instead of the
+         carddav:// one */
         return this.mURI;
     },
 
