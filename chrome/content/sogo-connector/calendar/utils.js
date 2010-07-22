@@ -19,29 +19,6 @@
  * Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-function isCalendarWritable(aCalendar) {
-    // INVERSE - BEGIN
-    if (aCalendar.type == "caldav") {
-        let aclMgr = Components.classes["@inverse.ca/calendar/caldav-acl-manager;1"]
-                               .getService(Components.interfaces.nsISupports)
-                               .wrappedJSObject;
-        let entry = aclMgr.calendarEntry(aCalendar.uri);
-        if (entry.isCalendarReady()) {
-            return (!aCalendar.getProperty("disabled") &&
-                    !aCalendar.readOnly &&
-                    (entry.userIsOwner() || entry.userCanAddComponents()) &&
-                    (!getIOService().offline ||
-                     aCalendar.getProperty("requiresNetwork") === false));
-        }
-    }
-    // INVERSE- END
-
-    return (!aCalendar.getProperty("disabled") &&
-            !aCalendar.readOnly &&
-            (!getIOService().offline ||
-             aCalendar.getProperty("requiresNetwork") === false));
-}
-
 function SCModifyEventWithDialogObserver(aItem, job, aPromptOccurrence) {
     this.arguments = { itemArg: aItem,
                        jobArg: job,
