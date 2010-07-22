@@ -1,5 +1,8 @@
 2010-07-22  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* js/CalDAVAclManager.js: migrated to lightning 1.0b2 (Inverse
+	edition).
+
 	* js/CardDAVDirectory.js: added and implemented the
 	nsISecurityCheckedComponent and nsIClassInfo interfaces.
 
