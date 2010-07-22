@@ -1,5 +1,8 @@
 2010-07-22  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* chrome/content/sogo-connector/lightning/lightning-calendar-properties-overlay.js:
+	modifications migrated to Lightning, making this module useless.
+
 	* chrome/content/sogo-connector/calendar/utils.js:
 	(isCalendarWriteable): acl modifications migrated to Lightning,
 	making this implementation useless.
