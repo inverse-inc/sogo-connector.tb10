@@ -79,9 +79,9 @@ function SCEditListOKButton() {
                               .getMostRecentWindow("mail:addressbook");
 
             if (!w)
-                let w = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                                  .getService(Components.interfaces.nsIWindowMediator)
-                                  .getMostRecentWindow("mail:3pane");
+                w = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                              .getService(Components.interfaces.nsIWindowMediator)
+                              .getMostRecentWindow("mail:3pane");
 
             let attributes = new GroupDAVListAttributes(listURI);
             attributes.version = "-1";
