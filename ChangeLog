@@ -1,6 +1,6 @@
 2010-07-22  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
-	* chrome/content/sogo-connector/addressbook/pref-editdirectories.overlay.xul:
+	* chrome/content/sogo-connector/addressbook/pref-editdirectories.overlay.{xul,js}:
 	removed module, obsoleted by the use of "propertiesChromeURI" to
 	edit directory properties.
 
