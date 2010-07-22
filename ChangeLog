@@ -1,5 +1,8 @@
 2010-07-22  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* chrome/content/sogo-connector/addressbook/pref-editdirectories.overlay.js:
+	(SCEditDirectory) updated to last version of AbEditDirectory.
+
 	* chrome/content/sogo-connector/lightning/lightning-calendar-properties-overlay.js:
 	modifications migrated to Lightning, making this module useless.
 
