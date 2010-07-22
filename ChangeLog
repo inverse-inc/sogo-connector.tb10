@@ -1,5 +1,9 @@
 2010-07-22  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* chrome/content/sogo-connector/addressbook/pref-editdirectories.overlay.xul:
+	removed module, obsoleted by the use of "propertiesChromeURI" to
+	edit directory properties.
+
 	* chrome/content/sogo-connector/addressbook/pref-editdirectories.overlay.js:
 	(SCEditDirectory) updated to last version of AbEditDirectory.
 
