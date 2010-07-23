@@ -25,6 +25,7 @@ style chrome://sogo-connector/content/addressbook/addressbook.groupdav.overlay.x
 
 # search of attendees in CardDAV ab
 overlay	chrome://calendar/content/calendar-event-dialog-attendees.xul chrome://sogo-connector/content/calendar/calendar-event-dialog-attendees.xul
+
 # exporting tasks
 overlay chrome://calendar/content/calendar-common-sets.xul chrome://sogo-connector/content/calendar/calendar-common-sets.xul
 
