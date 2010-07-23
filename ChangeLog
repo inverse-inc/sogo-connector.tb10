@@ -1,3 +1,10 @@
+2010-07-23  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* js/SOGoConnectorACSessionWrapper.js:
+	(SOGoConnectorACSessionWrapper.initSessions): disabled the
+	"addrbook" ac source since it's no longer available (what a
+	mess!).
+
 2010-07-22  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* chrome/content/sogo-connector/calendar/calendars-list-overlay.{js,xul}:

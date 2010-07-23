@@ -71,19 +71,19 @@ SOGoConnectorACSessionWrapper.prototype = {
     results: null,
 
     initSessions: function() {
-        let names = new Array();
+        let names = [];
         let prefs = Components.classes["@mozilla.org/preferences-service;1"]
                               .getService(Components.interfaces.nsIPrefBranch);
 
-        let autocompleteLocal = false;
-        try {
-            autocompleteLocal = prefs.getBoolPref("mail.enable_autocomplete");
-        }
-        catch(e) {
-            autocompleteLocal = false;
-        }
-        if (autocompleteLocal)
-            names.push("addrbook");
+        // let autocompleteLocal = false;
+        // try {
+        //     autocompleteLocal = prefs.getBoolPref("mail.enable_autocomplete");
+        // }
+        // catch(e) {
+        //     autocompleteLocal = false;
+        // }
+        // if (autocompleteLocal)
+        //     names.push("addrbook");
 
         let autocompleteLdap = false;
         try {
@@ -130,24 +130,25 @@ SOGoConnectorACSessionWrapper.prototype = {
             }
         }
 
-        let sessions = new Array();
-        let listeners = new Array();
+        let sessions = [];
+        let listeners = [];
         for (let i = 0; i < names.length; i++) {
+            let className = "@mozilla.org/autocompleteSession;1?type=" + names[i];
             try {
                 //  				dump("session name: " + names[i] + "\n");
                 let session;
                 if (names[i] == "carddav") {
-                    session = Components.classes["@mozilla.org/autocompleteSession;1?type=" + names[i]]
+                    session = Components.classes[className]
                                         .createInstance(Components.interfaces.nsICardDAVAutoCompleteSession);
                     session.serverURL = serverURL;
                 }
                 else if (names[i] == "ldap") {
-                    session = Components.classes["@mozilla.org/autocompleteSession;1?type=" + names[i]]
+                    session = Components.classes[className]
                                         .createInstance(Components.interfaces.nsILDAPAutoCompleteSession);
                     session.serverURL = serverURL;
                 }
                 else
-                    session = Components.classes["@mozilla.org/autocompleteSession;1?type=" + names[i]]
+                    session = Components.classes[className]
                                         .createInstance(Components.interfaces.nsIAutoCompleteSession);
                 sessions.push(session.QueryInterface(Components.interfaces.nsIAutoCompleteSession));
             }
