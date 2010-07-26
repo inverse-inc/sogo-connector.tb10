@@ -36,7 +36,18 @@ jsInclude(["chrome://sogo-connector/content/addressbook/folder-handling.js",
            "chrome://sogo-connector/content/general/preference.service.addressbook.groupdav.js",
            "chrome://sogo-connector/content/general/mozilla.utils.inverse.ca.js"]);
 
-// let fromPreferences = false;
+function SCGetCurrentDirectory() {
+    let directory = null;
+
+    if (window.arguments.length > 0) {
+        let args = window.arguments[0];
+        if (args) {
+            directory = args.selectedDirectory;
+        }
+    }
+
+    return directory;
+}
 
 function onAccept() {
     let prefMsgBundle = document.getElementById("preferencesMsgId");
@@ -55,51 +66,37 @@ function onAccept() {
     }
 
     let readOnly = document.getElementById("readOnly").checked;
-    if (readOnly)
+    if (readOnly) {
         onAcceptCardDAV();
-    else
+    }
+    else {
         onAcceptWebDAV();
+    }
 
     return true;
 }
 
 function onAcceptCardDAV() {
-    let url = document.getElementById("groupdavURL").value;
     let description = document.getElementById("description").value;
 
-    let directoryURI = SCGetCurrentDirectoryURI();
-    if (directoryURI) {
-        let directory = SCGetDirectoryFromURI(directoryURI);
-        if (directory && directory.dirPrefId.length > 0) {
-            directory.dirName = description;
-
-
-            // let rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-            //                     .getService(Components.interfaces.nsIRDFService);
-            // let parentDir = rdf.GetResource("moz-abdirectory://")
-            //                    .QueryInterface(Components.interfaces.nsIAbDirectory);
-            // parentDir.modifyDirectory(directory, properties);
-        }
-        else
-            throw("invalid CardDAV directory: " + uri + "\n");
+    let directory = SCGetCurrentDirectory();
+    if (directory) {
+        directory.dirName = description;
     }
-    else
+    else {
+        let url = document.getElementById("groupdavURL").value;
         SCCreateCardDAVDirectory(description, url);
+    }
 }
 
 function onAcceptWebDAV() {
     let prefId;
 
     let description = document.getElementById("description").value;
-    let uri = SCGetCurrentDirectoryURI();
-    if (uri) {
-        let directory = SCGetDirectoryFromURI(uri);
-        if (directory && directory.dirPrefId.length > 0) {
-            directory.dirName = description;
-            prefId = directory.dirPrefId;
-        }
-        else
-            throw("invalid WebDAV directory: " + uri + "\n");
+    let directory = SCGetCurrentDirectory();
+    if (directory && directory.dirPrefId.length > 0) {
+        directory.dirName = description;
+        prefId = directory.dirPrefId;
     }
     else {
         // adding a new Addressbook
@@ -115,49 +112,30 @@ function onAcceptWebDAV() {
     groupdavPrefService.setURL(document.getElementById("groupdavURL").value);
 }
 
-function SCGetCurrentDirectoryURI() {
-    let uri;
-
-    if (window.arguments && window.arguments[0])
-        uri = window.arguments[0];
-    else
-        uri = null;
-
-    return uri;
-}
-
 function onLoad() {
-    // TODO	add download now for cardDAV, the tab is currently hidden
+    let directory = SCGetCurrentDirectory();
+    if (directory) {
+        let uri = directory.URI;
+        let readOnly = (uri.indexOf("moz-abdavdirectory://") == 0);
+        let roElem = document.getElementById("readOnly");
+        roElem.setAttribute("checked", readOnly);
+        roElem.disabled = true;
 
-    let uri = SCGetCurrentDirectoryURI();
-    if (uri) {
-        let directory = SCGetDirectoryFromURI(uri);
-        if (directory) {
-            let readOnly = (uri.indexOf("moz-abdavdirectory://") == 0);
-            let roElem = document.getElementById("readOnly");
-            roElem.setAttribute("checked", readOnly);
-            roElem.disabled = true;
+        let description = "";
+        let url = "";
 
-            let description = "";
-            let url = "";
-
-            if (readOnly) {
-                description = directory.dirName;
-                let cardDavPrefix = "carddav://";
-                let dUrl = directory.URI;
-                if (dUrl.indexOf(cardDavPrefix) == 0)
-                    url = dUrl.substr(cardDavPrefix.length);
-            }
-            else {
-                let groupdavPrefService = new GroupdavPreferenceService(directory.dirPrefId);
-                description = directory.dirName;
-                url = groupdavPrefService.getURL();
-            }
-            document.getElementById("description").value = description;
-            document.getElementById("groupdavURL").value = url;
+        if (readOnly) {
+            description = directory.dirName;
+            directory = directory.wrappedJSObject;
+            url = directory.serverURL;
         }
-        else
-            throw("invalid WebDAV directory: " + uri + "\n");
+        else {
+            let groupdavPrefService = new GroupdavPreferenceService(directory.dirPrefId);
+            description = directory.dirName;
+            url = groupdavPrefService.getURL();
+        }
+        document.getElementById("description").value = description;
+        document.getElementById("groupdavURL").value = url;
     }
 }
 

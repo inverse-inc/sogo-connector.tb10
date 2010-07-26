@@ -62,9 +62,10 @@ function AbNewGroupDavContacts(){
                       "", "chrome,modal=yes,resizable=no,centerscreen", null);
 }
 
-function openGroupdavPreferences(abUri) {
+function openGroupdavPreferences(directory) {
     window.openDialog("chrome://sogo-connector/content/addressbook/preferences.addressbook.groupdav.xul",
-                      "", "chrome,modal=yes,resizable=no,centerscreen", abUri);
+                      "", "chrome,modal=yes,resizable=no,centerscreen",
+                      { selectedDirectory: directory});
 }
 
 function SCOpenDeleteFailureDialog(directory) {
@@ -254,19 +255,17 @@ abDirTreeObserver._pushCardKey = function(card, cards) {
         cards.push(key);
 };
 
-// Override AbDeleteDirectory() to delete DAV preferences
-//Overidde AbEditSelectedDirectory function in chrome://messenger/content/addressbook/abCommon.js
 function SCAbEditSelectedDirectory() {
+    /* This method is no longer used for CardDAV addressbooks, since we now
+       return a proper "propertiesChromeURI" attribute. */
     let abUri = GetSelectedDirectory();
-    // 	dump("editselected\n");
-    // 	dump("abUri: " + abUri + "\n");
-    // 	dump("gSelectedDir: " + gSelectedDir + "\n");
-
-    if (isGroupdavDirectory(abUri)
-        || isCardDavDirectory(abUri))
-        openGroupdavPreferences(abUri);
-    else
+    if (isGroupdavDirectory(abUri)) {
+        let directory = SCGetDirectoryFromURI(abUri);
+        openGroupdavPreferences(directory);
+    }
+    else {
         this.SCAbEditSelectedDirectoryOriginal();
+    }
 }
 
 let deleteManager = {
@@ -405,6 +404,7 @@ function SCAbConfirmDelete(types) {
 }
 
 function SCAbDelete() {
+    dump("SCAbDelete: gSelectedDir: " + gSelectedDir + "\n");
     if (isGroupdavDirectory(gSelectedDir)) {
         let types = GetSelectedCardTypes();
         if (types != kNothingSelected && SCAbConfirmDelete(types)) {
@@ -418,27 +418,25 @@ function SCAbDelete() {
 }
 
 /* AbDeleteDirectory done cleanly... */
-function SCAbDeleteDirectory() {
+function SCAbDeleteDirectory(aURI) {
     let result = false;
 
-    let selectedDir = GetSelectedDirectory();
-    if (selectedDir) {
-        if (isGroupdavDirectory(selectedDir)
-            || isCardDavDirectory(selectedDir)) {
-            // 			dump("pouet\n");
-            result = (SCAbConfirmDeleteDirectory(selectedDir)
-                      && SCDeleteDAVDirectory(selectedDir));
-        }
-        else {
-            // 			dump("pouet dasdsa\n");
-            let directory = SCGetDirectoryFromURI(selectedDir);
-            if (!(directory.isMailList
-                  && _SCDeleteListAsDirectory(directory, selectedDir)))
-                this.SCAbDeleteDirectoryOriginal();
-        }
-    }
+    dump("SCAbDeleteDirectory: aURI: " + aURI + "\n");
+    dump("  backtrace:\n" + backtrace() + "\n\n");
 
-    return result;
+    if (isGroupdavDirectory(aURI)) {
+        // || isCardDavDirectory(selectedDir)) {
+        // 			dump("pouet\n");
+        result = (SCAbConfirmDeleteDirectory(aURI)
+                  && SCDeleteDAVDirectory(aURI));
+    }
+    else {
+        // 			dump("pouet dasdsa\n");
+        let directory = SCGetDirectoryFromURI(aURI);
+        if (!(directory.isMailList
+              && _SCDeleteListAsDirectory(directory, selectedDir)))
+            this.SCAbDeleteDirectoryOriginal(aURI);
+    }
 }
 
 function _SCDeleteListAsDirectory(directory, selectedDir) {

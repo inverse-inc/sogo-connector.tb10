@@ -1,3 +1,23 @@
+2010-07-26  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* js/CardDAVDirectory.js: adjusted code to handle the change below.
+
+	* chrome/content/sogo-connector/addressbook/folder-handling.js:
+	(SCCreateCardDAVDirectory): directories are now created with the
+	"carddav" scheme rather that the hackish "carddav://http" scheme.
+
+	* chrome/content/sogo-connector/addressbook/addressbook.groupdav.overlay.js:
+	(SCAbDeleteDirectory) now take the ab URI as argument, to match AbDeleteDirectory.
+
+	* chrome/content/sogo-connector/addressbook/preferences.addressbook.groupdav.js:
+	(onAcceptCardDAV): cleaned up code.
+	(onLoad): cleaned up code.
+
+	* chrome/content/sogo-connector/addressbook/addressbook.groupdav.overlay.js:
+	(openGroupdavPreferences): now mimicks the behaviour of
+	Thunderbird, so that the pref-editdirectories overlay could be
+	adapted for handling via nsIAbDirectory::propertiesChromeURI.
+
 2010-07-23  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* js/SOGoConnectorACSessionWrapper.js:

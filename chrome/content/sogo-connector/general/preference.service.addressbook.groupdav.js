@@ -68,7 +68,7 @@ function isGroupdavDirectory(abURI) {
 function isCardDavDirectory(abURI){
     let value = false;
 
-    if (abURI && abURI.search("carddav://") == 0) {
+    if (abURI && abURI.search("carddav") == 0) {
         dump("isCardDavDirectory Wrong URI for a CardDAV entry: " + abURI
              + "\n" + backtrace() + "\n\n");
         throw("isCardDavDirectory Wrong URI for a CardDAV entry: " + abURI);
@@ -83,7 +83,7 @@ function isCardDavDirectory(abURI){
         let prefName = abURI.substr(abdavPrefix.length);
         try {
             let uri = prefs.getCharPref(prefName + ".uri");
-            value = (uri.search("carddav://") == 0);
+            value = (uri.search("carddav") == 0);
         }
         catch(e) {
             dump("uri for " + prefName + " not found\n");

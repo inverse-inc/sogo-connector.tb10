@@ -36,10 +36,7 @@ CardDAVDirectoryFactory.prototype = {
                                   .createInstance(Components.interfaces.nsIMutableArray);
         let abManager = Components.classes["@mozilla.org/abmanager;1"]
                                   .getService(Components.interfaces.nsIAbManager);
-        if (aURI.indexOf("carddav://") == 0) {
-            aURI = "moz-abdavdirectory://" + aPrefId;
-        }
-        let directory = abManager.getDirectory(aURI);
+        let directory = abManager.getDirectory("moz-abdavdirectory://" + aPrefId);
         baseArray.appendElement(directory, false);
         let directoryEnum = baseArray.enumerate();
 

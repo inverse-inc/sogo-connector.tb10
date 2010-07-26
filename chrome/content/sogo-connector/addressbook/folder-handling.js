@@ -49,7 +49,7 @@ function SCGetDirectoryFromURI(uri) {
 function SCCreateCardDAVDirectory(description, url) {
     let abMgr = Components.classes["@mozilla.org/abmanager;1"]
                           .getService(Components.interfaces.nsIAbManager);
-    let prefId = abMgr.newAddressBook(description, "carddav://" + url, 0);
+    let prefId = abMgr.newAddressBook(description, url.replace(/^http/, "carddav"), 0);
 
     return SCGetDirectoryFromURI("moz-abdavdirectory://" + prefId);
 }
@@ -78,23 +78,23 @@ function SCDeleteDirectoryWithURI(uri) {
 }
 
 function SCDeleteDirectory(directory) {
-    dump("SCDeleteDirectory: "  + directory + "\n");
+    let abURI = directory.URI;
 
-    /* We need to use the nsIRDFResource interface here as identifier because
-     the value of .URI returns the "carddav://http..." url on CardDAV dirs.
-     Note that this problem does not happen with MDB/GroupDAV dirs, where
-     the .URI and the .Value props have the same apparent value. */
-    let rdfAB = directory.QueryInterface(Components.interfaces.nsIRDFResource);
-    let rdfValue = rdfAB.Value;
-    dump("   delete rdfValue: " + rdfValue + "\n" );
+    dump("SCDeleteDirectory: "  + directory + "\n"
+         + "   delete abURI: " + abURI + "\n");
 
     let abMgr = Components.classes["@mozilla.org/abmanager;1"]
                           .getService(Components.interfaces.nsIAbManager);
+    let abEnum = abMgr.directories;
+    while (abEnum.hasMoreElements()) {
+        let ab = abEnum.GetNext().QueryInterface(Components.interfaces.nsIAbDirectory);
+        dump("ab.URI: " + ab.URI + "\n");
+    }
     try {
-        abMgr.deleteAddressBook(rdfValue);
+        abMgr.deleteAddressBook(abURI);
     }
     catch(e) {
-        dump("folder-handling.js: failed to delete '" + rdfValue + "'\n" + e);
+        dump("folder-handling.js: failed to delete '" + abURI + "'\n" + e);
         if (e.fileName)
             dump ("\nFile: " + e.fileName
                   + "\nLine: " + e.lineNumber
@@ -108,7 +108,7 @@ function SCDeleteDirectory(directory) {
     prefService.deleteBranch(prefBranch + ".position");
 
     let clearPrefsRequired
-        = (prefService.getCharPref("mail.collect_addressbook") == rdfValue
+        = (prefService.getCharPref("mail.collect_addressbook") == abURI
            && (prefService.getBoolPref("mail.collect_email_address_outgoing")
                || prefService.getBoolPref("mail.collect_email_address_incoming")
                || prefService.getBoolPref("mail.collect_email_address_newsgroup")));

@@ -102,8 +102,7 @@ SOGoConnectorACSessionWrapper.prototype = {
                                       .createInstance(Components.interfaces.nsIURI);
                 try {
                     let cardDavURL = prefs.getCharPref(autocompleteDirectory +".uri");
-                    let cardDavPrefix = "carddav://";
-                    serverURL.spec = cardDavURL.substr(cardDavPrefix.length);
+                    serverURL.spec = cardDavURL.replace(/^carddav/, "http");
                     // 																								 Components.interfaces.nsISupportsString)
                     // 						.data;
                     names.push("carddav");

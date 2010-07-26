@@ -41,7 +41,7 @@ function autoCompleteDirectoryIsCardDav() {
 
     dump("autocomplete URI: " + uri + "\n");
 
-    return (uri && uri.indexOf("carddav://") == 0);
+    return (uri && uri.indexOf("carddav") == 0);
 }
 
 function setupCardDavAutoCompleteSession() {
@@ -132,11 +132,10 @@ function setupCardDavAutoCompleteSession() {
         // 			dump("******** autocompleteDirectory: " + autocompleteDirectory + "\n");
         // 			dump(gPrefs.getCharPref(autocompleteDirectory +".uri"));
         // 			dump("\n");
-        let prefix = "carddav://";
         let uri = "" + gPrefs.getCharPref(autocompleteDirectory +".uri");
         let serverURL = Components.classes["@mozilla.org/network/standard-url;1"]
                                   .createInstance(Components.interfaces.nsIURL);
-        serverURL.spec = uri.substring(prefix.length);
+        serverURL.spec = uri.replace(/^carddav/, "http");
         // 		dump("uri: " + uri + "\n");
         // 			dump("serverURL.spec: " + serverURL.spec +"\n");
         cardDAVSession.QueryInterface(Components.interfaces.nsICardDAVAutoCompleteSession)
