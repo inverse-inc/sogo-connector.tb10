@@ -63,6 +63,14 @@ const componentData =
       categoryEntry: "sogo-connector-autocomplete-session",
       service: false},
 
+     // {classID: Components.ID("{eeee51aa-d758-4f6f-8cba-222aa47ab6ee}"),
+     //  contractID: "@mozilla.org/network/protocol;1?name=carddav",
+     //  script: "CardDAVProtocol.js",
+     //  constructor: "CardDAVProtocol",
+     //  category: "inverse-extensions",
+     //  categoryEntry: "carddav-protocol",
+     //  service: false},
+
      {classID: Components.ID("{2e3aa298-a1f9-4aef-9f80-ca430ce6e55b}"),
       contractID: "@mozilla.org/rdf/resource-factory;1?name=moz-abdavdirectory",
       script: "CardDAVDirectory.js",
@@ -73,6 +81,13 @@ const componentData =
 
      {classID: Components.ID("{868e510b-d758-4f6f-8cba-c223347ab644}"),
       contractID: "@mozilla.org/addressbook/directory-factory;1?name=carddav",
+      script: "CardDAVDirectoryFactory.js",
+      constructor: "CardDAVDirectoryFactory",
+      category: "inverse-extensions",
+      categoryEntry: "carddav-directory-factory",
+      service: true},
+     {classID: Components.ID("{868e510b-d758-4f6f-8cba-c223347ab644}"),
+      contractID: "@mozilla.org/addressbook/directory-factory;1?name=carddavs",
       script: "CardDAVDirectoryFactory.js",
       constructor: "CardDAVDirectoryFactory",
       category: "inverse-extensions",
