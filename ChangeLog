@@ -1,5 +1,8 @@
 2010-07-27  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* chrome/content/sogo-connector/addressbook/abEditCardDialog.groupdav.overlay.js:
+	(LoadFBUrl): typo.
+
 	* chrome/content/sogo-connector/calendar/calendar-event-dialog-attendees.xml:
 	removed "setupAutocompleteCardDAV", made obsolete by the following change.
 

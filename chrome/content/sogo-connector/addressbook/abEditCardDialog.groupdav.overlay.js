@@ -53,7 +53,7 @@ function LoadFBUrl() {
     let ab = GetDirectoryFromURI(uri);
     if (ab.isRemote) {
         if (isCardDavDirectory(uri)) {
-            fbUrlInput.value = gEditCard.getProperty("CalFBURL", "");
+            fbUrlInput.value = gEditCard.card.getProperty("CalFBURL", "");
         }
         fbUrlInput.setAttribute("readonly", "true");
     }
