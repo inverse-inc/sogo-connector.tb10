@@ -85,11 +85,6 @@ function SCDeleteDirectory(directory) {
 
     let abMgr = Components.classes["@mozilla.org/abmanager;1"]
                           .getService(Components.interfaces.nsIAbManager);
-    let abEnum = abMgr.directories;
-    while (abEnum.hasMoreElements()) {
-        let ab = abEnum.GetNext().QueryInterface(Components.interfaces.nsIAbDirectory);
-        dump("ab.URI: " + ab.URI + "\n");
-    }
     try {
         abMgr.deleteAddressBook(abURI);
     }
