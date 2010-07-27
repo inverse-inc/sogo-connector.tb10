@@ -108,7 +108,15 @@ CardDAVDirectory.prototype = {
         try {
             let branch = service.getBranch(prefName + ".");
             this.mDescription = branch.getCharPref("description");
-            this.mURI = branch.getCharPref("uri");
+            let uri = branch.getCharPref("uri");
+
+            /* migration code for old-style URI */
+            if (uri.indexOf("carddav://http") == 0) {
+                uri = "carddav" + uri.substr(14);
+                branch.setCharPref("uri", uri);
+            }
+
+            this.mURI = uri;
         }
         catch(e) {
             dump("directory-properties: exception (new directory '" + prefName

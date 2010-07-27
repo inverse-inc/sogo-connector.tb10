@@ -1,5 +1,8 @@
 2010-07-27  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* js/CardDAVDirectory.js: (CardDAVDirectory._load): added
+	migration code from old to new CardDAV uris.
+
 	* chrome/content/sogo-connector/addressbook/abEditCardDialog.groupdav.overlay.js:
 	(LoadFBUrl): typo.
 
