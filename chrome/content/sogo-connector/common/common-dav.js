@@ -57,7 +57,7 @@ function isAutoCompleteDirectoryServerCardDAV() {
     let result = false;
 
     let uri = getAutoCompleteCardDAVUri(autoCompleteDirectoryPreferencesPrefix);
-    dump("uri: " + uri + "\n");
+    // dump("uri: " + uri + "\n");
     if (uri)
         result = isCardDavDirectory(uri);
 
