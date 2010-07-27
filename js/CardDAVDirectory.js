@@ -304,7 +304,7 @@ CardDAVDirectory.prototype = {
         throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
     },
 
-    deleteDirectory: function ( directory ) {
+    deleteDirectory: function (directory) {
         dump("CardDAVDirectory.js: unimplemented 'deleteDirectory'\n");
         // dump("CardDAVDirectory.js: ============>CALLED deleteDirectory!!!\n");
         throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
@@ -332,9 +332,18 @@ CardDAVDirectory.prototype = {
     },
 
     useForAutocomplete: function(aIdentityKey) {
-        dump("CardDAVDirectory.js: unimplemented 'useForAutoComplete'\n");
-        throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-        return true;
+        let rc = false;
+
+        let prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                              .getService(Components.interfaces.nsIPrefBranch);
+        try {
+            let autocompleteLdap = prefs.getBoolPref("ldap_2.autoComplete.useDirectory");
+            let autocompleteDirectory = prefs.getCharPref("ldap_2.autoComplete.directoryServer");
+            rc = (autocompleteDirectory == this.mDirPrefId);
+        }
+        catch(e) {}
+
+        return rc;
     },
 
     get supportsMailingLists() {

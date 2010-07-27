@@ -1,3 +1,15 @@
+2010-07-27  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* chrome/content/sogo-connector/calendar/calendar-event-dialog-attendees.xml:
+	removed "setupAutocompleteCardDAV", made obsolete by the following change.
+
+	* chrome/content/sogo-connector/addressbook/messengercompose-overlay.{js,xul}:
+	overlay made obsolete by the following change.
+
+	* js/CardDAVDirectory.js: (CardDAVDirectory.useForAutocomplete):
+	implemented method to enable autocomplete in the composition
+	window.
+
 2010-07-26  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* js/CardDAVDirectory.js: adjusted code to handle the change below.

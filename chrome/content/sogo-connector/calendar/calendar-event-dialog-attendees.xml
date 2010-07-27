@@ -5,319 +5,40 @@
   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <binding id="inverse-attendees-list"
     extends="chrome://calendar/content/calendar-event-dialog-attendees.xml#attendees-list">
-
     <implementation>
-      <field name="inverseParentAutocompleteOverride">null</field>
-
       <constructor>
         <![CDATA[
-		 var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
-			      .getService(Components.interfaces.mozIJSSubScriptLoader);
-		 loader.loadSubScript("chrome://sogo-connector/content/common/common-dav.js");
+          var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+                                 .getService(Components.interfaces.mozIJSSubScriptLoader);
+          loader.loadSubScript("chrome://sogo-connector/content/common/common-dav.js");
 
-		 this.inverseParentSetupAutocomplete = this.setupAutocomplete;
-		 this.setupAutocomplete = this.inverseSetupAutocomplete;
+          this.inverseParentSetupAutocomplete = this.setupAutocomplete;
+          this.setupAutocomplete = this.inverseSetupAutocomplete;
 
-		 var template = document
-		   .getAnonymousElementByAttribute(this, "anonid", "input");
-		 template.setAttribute("searchSessions", "sogo-connector");
-
-		 var prefService = Components
-		   .classes["@mozilla.org/preferences-service;1"]
-		   .getService(Components.interfaces.nsIPrefBranch);
-		 try {
-		   var attribute = prefService
-		     .getCharPref("sogo-connector.autoComplete.commentAttribute");
-		   if (attribute && attribute.length > 0)
-		     template.showCommentColumn = true;
-		 }
-		 catch(e) {
-		 }
-
-		 ]]>
-      </constructor>
-
-      <method name="inverseSetupAutocomplete">
-				<body>
-					<![CDATA[
-					if (isAutoCompleteDirectoryServerCardDAV()) {
-//					dump("isCardDAV\n");
-	          this.setupAutocompleteCardDAV();
-					}
-					else {
-//					dump("NOT isCarDdav\n");
-
-					  this.inverseParentSetupAutocomplete();
-					}
-					]]>
-				</body>
-      </method>
-
-      <method name="setupAutocompleteCardDAV">
-				<body>
-					<![CDATA[
-					dump("setupAutocompleteCardDAV\n");
-	var autocompleteLdap = false;
-	var autocompleteDirectory = null;	
-	var prevAutocompleteDirectory = this.mCurrentAutocompleteDirectory;
-	var i;
-
-	autocompleteLdap = this.mPrefs.getBoolPref("ldap_2.autoComplete.useDirectory");
-	if (autocompleteLdap)
-		autocompleteDirectory = this.mPrefs.getCharPref("ldap_2.autoComplete.directoryServer");
-
-	// use a temporary to do the setup so that we don't overwrite the
-	// global, then have some problem and throw an exception, and leave the
-	// global with a partially setup session.	we'll assign the temp
-	// into the global after we're done setting up the session
-	//
-	var cardDAVSession;
-	if (this.mLDAPSession) {
-		cardDAVSession = this.mLDAPSession;
-	} else {
-		cardDAVSession = Components.classes["@mozilla.org/autocompleteSession;1?type=sogo-connector"]
-					.createInstance(Components.interfaces.nsISOGoConnectorACSessionWrapper);
-	}
-
-	if (autocompleteDirectory && ! this.mIsOffline) { 
-		// Add observer on the directory server we are autocompleting against
-		// only if current server is different from previous.
-		// Remove observer if current server is different from previous			 
-		this.mCurrentAutocompleteDirectory = autocompleteDirectory;
-		if (prevAutocompleteDirectory) {
-			if (prevAutocompleteDirectory != this.mCurrentAutocompleteDirectory) { 
-				this.removeDirectorySettingsObserver(prevAutocompleteDirectory);
-				this.addDirectorySettingsObserver();
-			}
-		}else{
-			this.addDirectorySettingsObserver();
-		}
-		// fill in the session params if there is a session
-		if (cardDAVSession) {
-			if (!this.mSessionAdded) {
-				// if we make it here, we know that session initialization has
-				// succeeded; add the session for all recipients, and 
-				// remember that we've done so
-				var autoCompleteWidget;
-				for (i=1; i <= this.mMaxAttendees; i++) {
-					autoCompleteWidget = this.getInputElement(i);
-					if (autoCompleteWidget) {
-					  // ldap searches don't insert a default entry with the default domain appended to it
-					  // so reduce the minimum results for a popup to 2 in this case. 
-						autoCompleteWidget.minResultsForPopup = 2;
-					}
-				}
-				this.mSessionAdded = true;
-			}
-		}
-	}else {
-		if (this.mCurrentAutocompleteDirectory) {
-			// Remove observer on the directory server since we are not doing Ldap autocompletion.
-			this.removeDirectorySettingsObserver(this.mCurrentAutocompleteDirectory);
-			this.mCurrentAutocompleteDirectory = null;
-		}
-		if (this.mLDAPSession && this.mSessionAdded) {
-			for (i=1; i <= awGetMaxRecipients(); i++) {
-				document.getElementById("addressCol2#" + i).removeSession(this.mLDAPSession);
-			}
-			this.mSessionAdded = false;
-		}
-	}
-
-	this.mLDAPSession = cardDAVSession;
-	this.mSetupLdapAutocomplete = true;
-	  ]]>
-	</body>
-      </method>
-
-<!--		 
-      <constructor>
-        <![CDATA[
-			  	Components.classes["@mozilla.org/moz/jssubscript-loader;1"].getService(Components.interfaces.mozIJSSubScriptLoader).loadSubScript("chrome://sogo-connector/content/common/common-dav.js");
-              this.inverseParentOnInitialize = this.onInitialize;
-              this.inverseParentAppendAttendee = this.appendAttendee;
-
-              this.onInitialize = this.inverseOnInitialize;
-              this.appendAttendee = this.inverseAppendAttendee;
-			  
-          var observer = {
-            observe: function(subject, topic, value) {
-                // catch the exception and ignore it, so that if LDAP setup 
-                // fails, the entire window doesn't get horked
-                try {
-			  				if (isAutoCompleteDirectoryServerCardDAV()){
-			  					dump("You are a pickle");
-			  				}else{
-			  					dump("You are doomed");
-                    		self.setupAutocomplete();
-			  				}
-                }
-                catch (ex) {}
-            }
+          var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                                      .getService(Components.interfaces.nsIPrefBranch);
+          try {
+              let attribute = prefService.getCharPref("sogo-connector.autoComplete.commentAttribute");
+              if (attribute && attribute.length > 0) {
+                  let template = document.getAnonymousElementByAttribute(this, "anonid", "input");
+                  template.showCommentColumn = true;
+              }
           }
-			  
+          catch(e) {
+          }
         ]]>
       </constructor>
 
-      <method name="inverseOnInitialize">
+      <method name="inverseSetupAutocomplete">
         <body>
           <![CDATA[
-                var args = window.arguments[0];
-                var organizer = args.organizer;
-                var attendees = args.attendees;
-                var calendar = args.calendar;
-
-                // set 'mIsReadOnly' if the calendar is read-only
-                if (calendar && calendar.readOnly)
-                  this.mIsReadOnly = true;
-
-                // assume we're the organizer [in case that the calendar
-                // does not support the concept of identities]. '
-                this.mIsInvitation = false;
-
-                if (organizer) {
-                  var tmpId = organizer.id;
-                  if (tmpId.substring(0, 6) == "MAILTO")
-                    tmpId = tmpId.replace("MAILTO:", "mailto:");
-                  this.mOrganizerID = tmpId;
-                }
-                else
-                  this.mOrganizerID = "";
-                var listbox = document.getAnonymousElementByAttribute(this, "anonid", "listbox");
-                var template = document.getAnonymousElementByAttribute(this, "anonid", "item");
-                template.focus();
-
-                if(this.mIsReadOnly || this.mIsInvitation)
-                  listbox.setAttribute("disabled","true");
-            
-                if(this.mOrganizerID && this.mOrganizerID != "") {
-                   if(!organizer) {
-                      organizer = this.createAttendee();
-                      organizer.id = this.mOrganizerID;
-                      organizer.role = "CHAIR";
-                      organizer.participationStatus = "ACCEPTED";
-                   } else {
-                      if(!organizer.id)
-                         organizer.id = this.mOrganizerID;
-                      if(!organizer.role)
-                         organizer.role = "CHAIR";
-                      if(!organizer.participationStatus)
-                         organizer.participationStatus = "ACCEPTED";
-                   }
-                   try {
-                      var provider = calendar.QueryInterface(Components.interfaces.calIWcapCalendar);
-                      var props = provider.getCalendarProperties("X-S1CS-CALPROPS-COMMON-NAME",{});
-                      if(props.length > 0)
-                         organizer.commonName = props[0];
-                   }
-                   catch(e) {}
-                }
-
-                var numRowsAdded = 0;
-                if(attendees.length > 0) {
-                   for each(var attendee in attendees) {
-                      this.appendAttendee(attendee,listbox,template,false);
-                      numRowsAdded++;
-                   }
-                }
-                if(numRowsAdded == 0) {
-                   this.appendAttendee(null,listbox,template,false);
-                }
-
-                // detach the template item from the listbox, but hold the reference.
-                // until this function returns we add at least a single copy of this template back again.
-                listbox.removeChild(template);
-
-                this.addDirectoryServerObserver();
-                
-                this.setFocus(this.mMaxAttendees);
-          ]]>
-        </body>
-      </method>
-
-      <method name="inverseAppendAttendee">
-        <parameter name="aAttendee"/>
-        <parameter name="aParentNode"/>
-        <parameter name="aTemplateNode"/>
-        <parameter name="aDisableIfOrganizer"/>
-        <body>
-          <![CDATA[
-                if (aAttendee && aAttendee.id.substring(0, 6) == "MAILTO") {
-                  aAttendee = aAttendee.clone();
-                  var tmpId = aAttendee.id;
-                  aAttendee.id = tmpId.replace("MAILTO:", "mailto:");
-                }
-                return this.inverseParentAppendAttendee(aAttendee, aParentNode, aTemplateNode, aDisableIfOrganizer);
-          ]]>
-        </body>
-      </method>
-
-      <property name="attendees">
-        <getter>
-          <![CDATA[
-          ]]>
-        </getter>
-      </property>
-
-      <property name="organizer">
-        <getter>
-          <![CDATA[
-          ]]>
-        </getter>
-      </property>
-
-      <method name="onModify">
-        <body>
-          <![CDATA[
-            var list = [];
-            for (var i=1; i<=this.mMaxAttendees; i++)
-            {
-              // retrieve the string from the appropriate row
-              var input = this.getInputElement(i);
-              var fieldValue = input.value;
-
-              // parse the string to break this down to individual names and addresses
-              var email = "";
-              var emailAddresses = {};
-              var names = {};
-              var fullNames = {};
-              var numAddresses = this.mHeaderParser.parseHeadersWithArray(fieldValue,emailAddresses,names,fullNames);
-
-              if(emailAddresses.value.length > 0) {
-
-                // if the new address has no 'mailto'-prefix but seems
-                // to look like an email-address, we prepend the prefix.
-                // this also allows for non-email-addresses.
-                email = emailAddresses.value[0];
-                if (email.indexOf("mailto:") != 0)
-                  if (email.indexOf("@") >= 0)
-                    email = "mailto:" + email;
-              }
-
-              var isdirty = false;
-              if(input.hasAttribute("dirty"))
-                isdirty = input.getAttribute("dirty");
-              input.removeAttribute("dirty");
-              var entry = { dirty: isdirty, calid: email };
-              list.push(entry);
+            /* CardDAV directories will return "true" to "isAutocomplete" making the previous method obsolete and redundant. */
+            if (!isAutoCompleteDirectoryServerCardDAV()) {
+                this.inverseParentSetupAutocomplete();
             }
-
-            var event = document.createEvent('Events'); 
-            event.initEvent('modify', true, false);
-            event.details = list;
-            this.dispatchEvent(event);
           ]]>
         </body>
       </method>
--->
     </implementation>
   </binding>
 </bindings>
-<!--
-Local variables:
-tab-width: 2
-c-tab-always-indent: t
-indent-tabs-mode: t
-c-basic-offset: 2
-End:
--->
