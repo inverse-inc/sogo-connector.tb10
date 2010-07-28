@@ -511,6 +511,21 @@ function decodedValues(values, charset, encoding) {
     return newValues;
 }
 
+function foldedLine(line) {
+    var linePart = line.substr(0, 75);
+    var newLine = linePart;
+    var pos = linePart.length;
+    var length = line.length - linePart.length;
+    while (length > 0) {
+        linePart = line.substr(pos, 74);
+        newLine += "\r\n " + linePart;
+        pos += linePart.length;
+        length -= linePart.length;
+    }
+
+    return newLine;
+}
+
 function card2vcard(card) {
     let vCard = ("BEGIN:VCARD\r\n"
                  + "VERSION:3.0\r\n"
@@ -524,25 +539,25 @@ function card2vcard(card) {
         uid = new UUID();
         card.setProperty("CardUID", uid);
     }
-    vCard += "UID:" + uid + "\r\n";
+    vCard += foldedLine("UID:" + uid) + "\r\n";
 
     let lastName = card.getProperty("LastName", "");
     let firstName = card.getProperty("FirstName", "");
     if (lastName.length || firstName.length)
-        vCard += "N:" + lastName + ";" + firstName + "\r\n";
+        vCard += foldedLine("N:" + lastName + ";" + firstName) + "\r\n";
 
     let displayName = card.getProperty("DisplayName", "");
     if (displayName.length)
-        vCard += "FN:" + displayName + "\r\n";
+        vCard += foldedLine("FN:" + displayName) + "\r\n";
 
     let company = card.getProperty("Company", "");
     let department = card.getProperty("Department", "");
     if (company.length || department.length)
-        vCard += "ORG:" +company+ ";" +department+ "\r\n";
+        vCard += foldedLine("ORG:" + company+ ";" + department) + "\r\n";
 
     let nickName = card.getProperty("NickName", "");
     if (nickName.length)
-        vCard += "NICKNAME:" +nickName+ "\r\n";
+        vCard += foldedLine("NICKNAME:" + nickName) + "\r\n";
 
     let workAddress = card.getProperty("WorkAddress", "");
     let workAddress2 = card.getProperty("WorkAddress2", "");
@@ -552,7 +567,12 @@ function card2vcard(card) {
     let workCountry = card.getProperty("WorkCountry", "");
     if ((workAddress + workAddress2 + workCity + workState + workZipCode
          + workCountry).length)
-        vCard += "ADR;TYPE=work:;" + workAddress2 + ";" +workAddress+ ";" +workCity+ ";" +workState+ ";" +workZipCode+ ";" +workCountry+ "\r\n";
+        vCard += foldedLine("ADR;TYPE=work:;" + workAddress2
+                            + ";" + workAddress
+                            + ";" + workCity
+                            + ";" + workState
+                            + ";" + workZipCode
+                            + ";" + workCountry) + "\r\n";
 
     let homeAddress = card.getProperty("HomeAddress", "");
     let homeAddress2 = card.getProperty("HomeAddress2", "");
@@ -562,27 +582,32 @@ function card2vcard(card) {
     let homeCountry = card.getProperty("HomeCountry", "");
     if ((homeAddress + homeAddress2 + homeCity + homeState + homeZipCode
          + homeCountry).length)
-        vCard += "ADR;TYPE=home:;" + homeAddress2 + ";" +homeAddress+ ";" +homeCity+ ";" +homeState+ ";" +homeZipCode+ ";" +homeCountry+ "\r\n";
+        vCard += foldedLine("ADR;TYPE=home:;" + homeAddress2
+                            + ";" + homeAddress
+                            + ";" + homeCity
+                            + ";" + homeState
+                            + ";" + homeZipCode
+                            + ";" + homeCountry) + "\r\n";
 
     let workPhone = card.getProperty("WorkPhone", "");
     if (workPhone.length)
-        vCard += "TEL;TYPE=work:" + workPhone+ "\r\n";
+        vCard += foldedLine("TEL;TYPE=work:" + workPhone) + "\r\n";
 
     let homePhone = card.getProperty("HomePhone", "");
     if (homePhone.length)
-        vCard += "TEL;TYPE=home:" + homePhone+ "\r\n";
+        vCard += foldedLine("TEL;TYPE=home:" + homePhone) + "\r\n";
 
     let cellularNumber = card.getProperty("CellularNumber", "");
     if (cellularNumber.length)
-        vCard += "TEL;TYPE=cell:" + cellularNumber + "\r\n";
+        vCard += foldedLine("TEL;TYPE=cell:" + cellularNumber) + "\r\n";
 
     let faxNumber = card.getProperty("FaxNumber", "");
     if (faxNumber.length)
-        vCard += "TEL;TYPE=fax:" + faxNumber+ "\r\n";
+        vCard += foldedLine("TEL;TYPE=fax:" + faxNumber) + "\r\n";
 
     let pagerNumber = card.getProperty("PagerNumber", "");
     if (pagerNumber.length)
-        vCard += "TEL;TYPE=pager:" + pagerNumber + "\r\n";
+        vCard += foldedLine("TEL;TYPE=pager:" + pagerNumber) + "\r\n";
 
     let preferMailFormat = card.getProperty("PreferMailFormat", 0);
     if (preferMailFormat) {
@@ -596,56 +621,50 @@ function card2vcard(card) {
     let secondEmail = card.getProperty("SecondEmail", "");
 
     if (primaryEmail.length) {
-        vCard += "EMAIL;TYPE=work:" + primaryEmail + "\r\n";
+        vCard += foldedLine("EMAIL;TYPE=work:" + primaryEmail) + "\r\n";
         if (secondEmail.length)
-            vCard += "EMAIL;TYPE=home:" + secondEmail+ "\r\n";
+            vCard += foldedLine("EMAIL;TYPE=home:" + secondEmail) + "\r\n";
     }
-    else if (secondEmail.length)
-    vCard += "EMAIL;TYPE=work:" + secondEmail + "\r\n";
+    else if (secondEmail.length) {
+        vCard += foldedLine("EMAIL;TYPE=work:" + secondEmail) + "\r\n";
+    }
 
     let webPage1 = card.getProperty("WebPage1", "");
     if (webPage1.length)
-        vCard += "URL;TYPE=work:" + webPage1 + "\r\n";
+        vCard += foldedLine("URL;TYPE=work:" + webPage1) + "\r\n";
 
     let webPage2 = card.getProperty("WebPage2", "");
     if (webPage2.length)
-        vCard += "URL;TYPE=home:" + webPage2 + "\r\n";
+        vCard += foldedLine("URL;TYPE=home:" + webPage2) + "\r\n";
 
     let jobTitle = card.getProperty("JobTitle", "");
     if (jobTitle.length)
-        vCard += "TITLE:" + jobTitle + "\r\n";
+        vCard += foldedLine("TITLE:" + jobTitle) + "\r\n";
 
     let birthYear = card.getProperty("BirthYear", 0);
     let birthMonth = card.getProperty("BirthMonth", 0);
     let birthDay = card.getProperty("BirthDay", 0);
     if (birthYear && birthMonth && birthDay)
-        vCard += "BDAY:" + birthYear + "-" + birthMonth + "-" + birthDay + "\r\n";
+        vCard += foldedLine("BDAY:" + birthYear + "-" + birthMonth + "-" + birthDay) + "\r\n";
 
     for (let i = 1; i < 5; i++) {
         let custom = card.getProperty("Custom" + i, "");
         if (custom.length)
-            vCard += "CUSTOM" + i + ":" + custom + "\r\n";
+            vCard += foldedLine("CUSTOM" + i + ":" + custom) + "\r\n";
     }
 
     let notes = card.getProperty("Notes", "");
     if (notes.length) {
-        let data = "NOTE:" + notes.replace(/\n/g, "\\r\\n");
-        vCard += data.substr(0, 77) + "\r\n";
-        let i = 77;
-        data = data.substr(77);
-        while (data.length) {
-            vCard += " " + rest.substr(0, 77) + "\r\n";
-            data = data.substr(77);
-        }
+        vCard += foldedLine("NOTE:" + notes.replace(/\n/g, "\\r\\n")) + "\r\n";
     }
 
     let aimScreenName = card.getProperty("_AimScreenName", "");
     if (aimScreenName.length)
-        vCard += "X-AIM:" + aimScreenName + "\r\n";
+        vCard += foldedLine("X-AIM:" + aimScreenName) + "\r\n";
 
     let fbUrl = card.getProperty("CalFBURL", "");
     if (fbUrl.length) {
-        vCard += "FBURL:" + fbUrl + "\r\n";
+        vCard += foldedLine("FBURL:" + fbUrl) + "\r\n";
     }
 
     vCard += "END:VCARD\r\n\r\n";

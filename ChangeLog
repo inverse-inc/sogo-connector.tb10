@@ -6,6 +6,9 @@
 	Also, "WorkState" was simply ignored.
 	(decodedValues): added code to sanitize and prevent any character
 	conversion with base64 values.
+	(foldedLine): new function that properly fold the line passed as
+	parameter.
+	(card2vcard): make use of the new function above.
 
 	* js/CardDAVDirectory.js: (CardDAVDirectory.cardForEmailAddress):
 	implemented method, along with a caching mechanism to avoid
