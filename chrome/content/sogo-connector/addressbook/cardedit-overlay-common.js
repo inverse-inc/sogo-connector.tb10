@@ -81,7 +81,6 @@ function saveCard(isNewCard) {
         if (documentDirty
             && isGroupdavDirectory(parentURI)) {
             gEditCard.card.setProperty("groupDavVersion", "-1");
-            version = gEditCard.card.getProperty("groupDavVersion", null);
 
             let abManager = Components.classes["@mozilla.org/abmanager;1"]
                                       .getService(Components.interfaces.nsIAbManager);
