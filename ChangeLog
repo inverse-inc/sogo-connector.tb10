@@ -1,5 +1,12 @@
 2010-07-28  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* chrome/content/sogo-connector/general/vcards.utils.js:
+	(_insertCardMethods.tel): the "PAGER" vcard type must be mapped to
+	the "PagerNumber" attribute rather than "FaxNumber".
+	Also, "WorkState" was simply ignored.
+	(decodedValues): added code to sanitize and prevent any character
+	conversion with base64 values.
+
 	* js/CardDAVDirectory.js: (CardDAVDirectory.cardForEmailAddress):
 	implemented method, along with a caching mechanism to avoid
 	fetching the same card more than once from the server.

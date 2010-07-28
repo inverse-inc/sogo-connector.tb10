@@ -297,7 +297,7 @@ let _insertCardMethods = {
     tel: function(props, parameters, values) {
         let abTypes = { "FAX": "FaxNumber",
                         "CELL": "CellularNumber",
-                        "PAGER": "FaxNumber",
+                        "PAGER": "PagerNumber",
                         "HOME": "HomePhone",
                         "WORK": "WorkPhone" };
         /* This array guarantees the order in which the keys will be checked */
@@ -336,6 +336,7 @@ let _insertCardMethods = {
             props.extend({ "WorkAddress2": values[1],
                            "WorkAddress": values[2],
                            "WorkCity": values[3],
+                           "WorkState": values[4],
                            "WorkZipCode": values[5],
                            "WorkCountry": values[6] });
         }
@@ -450,6 +451,18 @@ function InsertCardData(card, tag, parameters, values) {
     }
 }
 
+function sanitizeBase64(value) {
+    // dump("oldValue:\n" + value + "\n");
+    value = value.replace("\r", "", "g");
+    value = value.replace("\n", "", "g");
+    value = value.replace("\t", "", "g");
+    value = value.replace(" ", "", "g");
+
+    // dump("newValue:\n" + value + "\n");
+
+    return value;
+}
+
 function decodedValues(values, charset, encoding) {
     let newValues = [];
 
@@ -461,8 +474,9 @@ function decodedValues(values, charset, encoding) {
         if (encoding) {
             //  			dump("encoding: " + encoding + "\n");
             //  			dump("initial value: ^" + values[i] + "$\n");
+            var saneb64Value = sanitizeBase64(values[i]);
             if (encoding == "quoted-printable") {
-                decodedValue = decoder.decode(values[i]);
+                decodedValue = decoder.decode(saneb64Value);
             }
             else if (encoding == "base64") {
                 try {
@@ -481,8 +495,10 @@ function decodedValues(values, charset, encoding) {
         }
         else
             decodedValue = values[i];
-        if (charset == "utf-8")
+        if (charset == "utf-8"
+            || (encoding && (encoding == "base64" || encoding == "b"))) {
             newValues.push(decodedValue);
+        }
         else {
             let converter = Components.classes["@mozilla.org/intl/utf8converterservice;1"]
                                       .getService(Components.interfaces.nsIUTF8ConverterService);
