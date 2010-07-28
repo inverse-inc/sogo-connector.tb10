@@ -51,6 +51,8 @@ function CardDAVDirectory() {
     this.mDescription = "";
     this.mURI = "";
 
+    this.mCardCache = {};
+
     this.wrappedJSObject = this;
 }
 
@@ -58,6 +60,7 @@ CardDAVDirectory.prototype = {
     wrappedJSObject: null,
     directoryProperties: null,
     mAddressLists: null,
+    mCardCache: null,
 
     mDirPrefId: null,
     mDescription: null,
@@ -155,8 +158,26 @@ CardDAVDirectory.prototype = {
     },
 
     cardForEmailAddress: function(emailAddress) {
-        dump("CardDAVDirecory: cardForEmailAddress: unimp\n");
-        throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+        // dump("CardDAVDirectory: cardForEmailAddress: " + emailAddress + "\n");
+        let card = this.mCardCache[emailAddress];
+        if (card) {
+            if (!(card instanceof Components.interfaces.nsIAbCard)) {
+                card = null;
+            }
+        }
+        else {
+            let card = null;
+            let httpURL = this.serverURL;
+            if (httpURL) {
+                let resultArray = this._serverQuery(httpURL, emailAddress);
+                if (resultArray.length > 0) {
+                    card = resultArray.queryElementAt(0, Components.interfaces.nsIAbCard);
+                }
+            }
+            this.mCardCache[emailAddress] = (card ? card : "none");
+        }
+
+        return card;
     },
 
     getCardFromProperty: function(aProperty, aValue, aCaseSensitive) {
