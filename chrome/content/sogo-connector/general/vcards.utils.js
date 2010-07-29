@@ -43,8 +43,8 @@ function escapedForCards(theString) {
     theString = theString.replace(/,/g, "\\,");
     theString = theString.replace(/;/g, "\\;");
     theString = theString.replace(/,/g, "\\,");
-    //  theString.replace(/\n/g, "\\n,");
-    //  theString.replace(/\r/g, "\\r,");
+    // theString.replace(/\n/g, "\\n,");
+    // theString.replace(/\r/g, "\\r,");
 
     return theString;
 }
@@ -54,8 +54,8 @@ function unescapedFromCard(theString) {
     theString = theString.replace(/\,/g, ",");
     theString = theString.replace(/\;/g, ";");
     theString = theString.replace(/\,/g, ",");
-    //  theString.replace(/\\n/g, "\n,");
-    //  theString.replace(/\\r/g, "\r,");
+    // theString.replace(/\\n/g, "\n,");
+    // theString.replace(/\\r/g, "\r,");
 
     return theString;
 }
@@ -171,8 +171,8 @@ function versitParse(versitString) {
                             if (typeof nextChar != "undefined" && nextChar == " ")
                                 currentChar++;
                             else {
-                                // 								dump("tag: ^" + currentLine["tag"] + "$\n");
-                                // 								dump("value: ^" + value + "$\n");
+                                // dump("tag: ^" + currentLine["tag"] + "$\n");
+                                // dump("value: ^" + value + "$\n");
                                 values.push(value);
                                 currentLine["values"] = values;
                                 parseResult.push(currentLine);
@@ -201,39 +201,29 @@ function versitParse(versitString) {
  * of custom fields that are not part of a Thunderbird card.
  *
  **************************************************************************/
-function importFromVcard(vCardString// , customFields
-                        ) {
+function importFromVcard(vCardString) {
     let card = null;
     if (!vCardString || vCardString == "")
         dump("'vCardString' is empty\n" + backtrace() + "\n");
     else {
         let vcard = versitParse(vCardString);
-        // 	let cardDump = dumpObject(vcard);
-        // 	logInfo("vcard dump:\n" + cardDump);
-        card = CreateCardFromVCF(vcard// , customFields
-                                );
-
-        // dump("card content:\n" + vCardString + "\n");
+        // let cardDump = dumpObject(vcard);
+        // logInfo("vcard dump:\n" + cardDump);
+        card = CreateCardFromVCF(vcard);
     }
+
+    // dump("card content:\n" + vCardString + "\n");
 
     return card;
 }
 
 // outParameters must be an array, to enable the fonction to pass back the value
 // of custom fields that are not part of a Thunderbird card.
-function CreateCardFromVCF(vcard// , outParameters
-                          ) {
+function CreateCardFromVCF(vcard) {
     let version = "2.1";
     let defaultCharset = "iso-8859-1"; /* 0 = latin 1, 1 = utf-8 */
-    // let card = Components.classes["@inverse.ca/addressbook/volatile-abcard;1"]
-    // 	.createInstance(Components.interfaces.nsIAbCard).wrappedJSObject;
-
     let card = Components.classes["@mozilla.org/addressbook/moz-abmdbcard;1"]
                          .createInstance(Components.interfaces.nsIAbCard);
-
-    // outParameters["fburl"] = "";
-    // outParameters["uid"] = "";
-    // outParameters["groupDavVcardCompatibility"] = "";
 
     for (let i = 0; i < vcard.length; i++) {
         if (vcard[i]["tag"] == "version") {
@@ -261,8 +251,7 @@ function CreateCardFromVCF(vcard// , outParameters
             parameters = {};
 
         let values = decodedValues(vcard[i]["values"], charset, encoding);
-        InsertCardData(card, tag, parameters, values// , outParameters
-                      );
+        InsertCardData(card, tag, parameters, values);
     }
 
     return card;
@@ -398,6 +387,24 @@ let _insertCardMethods = {
     note: function(props, parameters, values) {
         props["Notes"] = values.join(";");
     },
+    photo: function(props, parameters, values) {
+        if (values.length > 0) {
+            if (parameters["value"] && parameters["value"] == "uri") {
+                props["PhotoType"] = "web";
+                props["PhotoURI"] = values[0];
+                props["PhotoName"] = "(void)";
+            }
+            else {
+                let photoName = importPhoto(parameters["type"],
+                                            values[0]);
+                if (photoName) {
+                    props["PhotoType"] = "file";
+                    props["PhotoURI"] = "(void)";
+                    props["PhotoName"] = photoName;
+                }
+            }
+        }
+    },
     custom1: function(props, parameters, values) {
         props["Custom1"] = values[0];
     },
@@ -428,7 +435,7 @@ let _insertCardMethods = {
 };
 
 function InsertCardData(card, tag, parameters, values) {
-    // 	logInfo("InsertCardData: " + tag + "\n");
+    // logInfo("InsertCardData: " + tag + "\n");
 
     let properties = {};
     properties.extend = function Object_extend(otherObj) {
@@ -446,7 +453,18 @@ function InsertCardData(card, tag, parameters, values) {
 
     for (let k in properties) {
         if (properties[k] && properties[k].length > 0) {
-            card.setProperty(k, properties[k]);
+            // if (k == "PhotoURI" || k == "PhotoName") {
+            //     dump(k + ": " + properties[k] + "\n");
+            // }
+            if (properties[k] == "(void)") {
+                card.deleteProperty(k);
+            }
+            else {
+                card.setProperty(k, properties[k]);
+            }
+            // if (k == "PhotoURI" || k == "PhotoName") {
+            //     dump("  card value: " + card.getProperty(k, "(nil)") + "\n");
+            // }
         }
     }
 }
@@ -472,13 +490,13 @@ function decodedValues(values, charset, encoding) {
     for (let i = 0; i < values.length; i++) {
         let decodedValue = null;
         if (encoding) {
-            //  			dump("encoding: " + encoding + "\n");
-            //  			dump("initial value: ^" + values[i] + "$\n");
+            // dump("encoding: " + encoding + "\n");
+            // dump("initial value: ^" + values[i] + "$\n");
             var saneb64Value = sanitizeBase64(values[i]);
             if (encoding == "quoted-printable") {
                 decodedValue = decoder.decode(saneb64Value);
             }
-            else if (encoding == "base64") {
+            else if (encoding == "b" || encoding == "base64") {
                 try {
                     decodedValue = window.atob(values[i]);
                 }
@@ -488,10 +506,10 @@ function decodedValues(values, charset, encoding) {
                 }
             }
             else {
-                dump("Unsupported encoding for vcard value: " + encoding);
+                dump("Unsupported encoding for vcard value: " + encoding + "\n");
                 decodedValue = values[i];
             }
-            //  			dump("decoded: " + decodedValue + "\n");
+            // dump("decoded: " + decodedValue + "\n");
         }
         else
             decodedValue = values[i];
@@ -506,7 +524,7 @@ function decodedValues(values, charset, encoding) {
         }
     }
 
-    // 	logInfo("newValues: " + dumpObject(newValues));
+    // logInfo("newValues: " + dumpObject(newValues));
 
     return newValues;
 }
@@ -667,9 +685,171 @@ function card2vcard(card) {
         vCard += foldedLine("FBURL:" + fbUrl) + "\r\n";
     }
 
+    /*   - PhotoName : filename in Photos/
+     *   - PhotoType : web or file
+     *   - PhotoURI : uri (file:// or http://)
+     */
+
+    let photoType = card.getProperty("PhotoType", "file");
+    if (photoType == "web") {
+        let photoUri = card.getProperty("PhotoURI", null);
+        if (photoUri) {
+            vCard += foldedLine("PHOTO;VALUE=uri:" + photoUri) + "\r\n";
+        }
+    }
+    else { /* always "file" */
+        let name = card.getProperty("PhotoName", null);
+        if (name) {
+            let photoType = deducePhotoTypeFromExt(name);
+            if (photoType) {
+                let content = photoContent(name);
+                if (content) {
+                    vCard += foldedLine("PHOTO;ENCODING=b;TYPE=" + photoType
+                                        + ":" + btoa(content)) + "\r\n";
+                }
+            }
+        }
+    }
+
     vCard += "END:VCARD\r\n\r\n";
 
     return vCard;
+}
+
+function deducePhotoTypeFromExt(photoName) {
+    let type = null;
+
+    let dotParts = photoName.split(".");
+    if (dotParts.length > 1) {
+        let lastPart = (dotParts[dotParts.length - 1]).toUpperCase();
+        if (lastPart == "JPG") {
+            type = "JPEG";
+        }
+        else if (lastPart == "PNG") {
+            type = "PNG";
+        }
+        else if (lastPart == "GIF") {
+            type = "GIF";
+        }
+        else
+            dump("vcards.utils.js: unhandled image extension: "
+                 + lastPart + "\n");
+    }
+
+    return type;
+}
+
+function photoFileFromName(photoName) {
+    let file = Components.classes["@mozilla.org/file/directory_service;1"]
+                         .getService(Components.interfaces.nsIProperties)
+                         .get("ProfD", Components.interfaces.nsIFile);
+    file.append("Photos");
+    file.append(photoName);
+
+    return file;
+}
+
+function photoContent(photoName) {
+    let content = null;
+
+    let file = photoFileFromName(photoName);
+    let rd;
+    try {
+        /* If the file does not exists, the following does not return but
+         throws an exception. Too simple otherwise... */
+        rd = file.isReadable();
+    }
+    catch(e) {
+        rd = false;
+    }
+    if (rd) {
+        let fileStream = Components.classes["@mozilla.org/network/file-input-stream;1"]
+                                   .createInstance(Components.interfaces.nsIFileInputStream);
+        fileStream.init(file, -1, -1, false);
+        let byteStream = Components.classes["@mozilla.org/binaryinputstream;1"]
+                                   .createInstance(Components.interfaces.nsIBinaryInputStream);
+        byteStream.setInputStream(fileStream);
+        content = byteStream.readBytes(byteStream.available());
+        dump("vcards.utils.js: content of file '" + photoName + "' read successfully\n");
+        byteStream.close();
+        fileStream.close();
+    }
+    else {
+        dump("vcards.utils.js: file named '" + photoName + "' cannot be read\n");
+    }
+
+    return content;
+}
+
+function importPhoto(photoType, content) {
+    let photoName = null;
+
+    if (content && content.length > 0) {
+        let ext = deducePhotoExtFromTypes(photoType);
+        if (ext) {
+            photoName = saveImportedPhoto(content, ext);
+        }
+        else {
+            dump("vcards.utils: no extension returned for photo file\n");
+        }
+    }
+    else {
+        dump("vcards.utils: no content provided\n");
+    }
+
+    return photoName;
+}
+
+function deducePhotoExtFromTypes(photoTypes) {
+    let ext = null;
+
+    if (photoTypes && photoTypes.length > 0) {
+        let upperType = photoTypes[0].toUpperCase();
+        if (upperType == "JPEG") {
+            ext = "jpg";
+        }
+        else if (upperType == "PNG") {
+            ext = "png";
+        }
+        else if (upperType == "GIF") {
+            ext = "gif";
+        }
+        else
+            dump("vcards.utils.js: unhandled image type: "
+                 + photoType + "\n");
+    }
+
+    return ext;
+}
+
+function saveImportedPhoto(content, ext) {
+    let photoName = (new UUID()) + "." + ext;
+
+    let file = photoFileFromName(photoName);
+    let fileStream = Components.classes["@mozilla.org/network/file-output-stream;1"]
+                               .createInstance(Components.interfaces.nsIFileOutputStream);
+    fileStream.init(file, -1, -1, false);
+    let byteStream = Components.classes["@mozilla.org/binaryoutputstream;1"]
+                               .createInstance(Components.interfaces.nsIBinaryOutputStream);
+    byteStream.setOutputStream(fileStream);
+    byteStream.writeBytes(content, content.length);
+    dump("vcards.utils.js: content of file '" + photoName + "' written successfully\n");
+    byteStream.close();
+    fileStream.close();
+
+    return photoName;
+}
+
+function deletePhotoFile(photoName) {
+    let file = photoFileFromName(photoName);
+    try {
+        file.remove(false);
+    }
+    catch(e) {
+        dump("vcards.utils.js: photo named '" + photoName + "' could not be"
+             + " deleted (ignored)\n");
+        dump("Exception: " + e + "\n");
+    }
 }
 
 /* VLIST */
@@ -699,7 +879,7 @@ function updateListFromVList(listCard, vListString, cards) {
         }
         else if (line.tag == "card") {
             let card = cards[line.values[0]];
-            // 			dump("card '" + line.values[0] + "': ");
+            // dump("card '" + line.values[0] + "': ");
             if (!card) {
                 let email = line.parameters["email"][0];
                 if (email) {
@@ -775,7 +955,7 @@ function list2vlist(uid, listCard) {
 
     vList += "END:VLIST";
 
-    // 	dump("vList:\n" + vList + "\n");
+    // dump("vList:\n" + vList + "\n");
 
     return vList;
 }

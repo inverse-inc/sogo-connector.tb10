@@ -456,8 +456,21 @@ GroupDavSynchronizer.prototype = {
         dump("' received card key: " + key + "\n");
         if (this.localCardPointerHash[key]) {
             dump("  existing card\n");
-            this.localCardPointerHash[key].copy(card);
-            this.gAddressBook.modifyCard(this.localCardPointerHash[key]);
+
+            /* we must delete the previous photo file to avoid duplicating it with
+             another name */
+            let oldCard = this.localCardPointerHash[key];
+
+            let oldPhotoName = oldCard.getProperty("PhotoName", null);
+            let newPhotoName = card.getProperty("PhotoName", null);
+            if (oldPhotoName && oldPhotoName != newPhotoName) {
+                deletePhotoFile(oldPhotoName);
+                oldCard.deleteProperty("PhotoURI");
+                /* TODO: BUG: we should load the photo into the cache when it has
+                 been imported with a URL value. */
+            }
+            oldCard.copy(card);
+            this.gAddressBook.modifyCard(oldCard);
         } else {
             dump("  new card\n");
             this.gAddressBook.addCard(card);

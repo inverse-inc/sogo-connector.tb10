@@ -1,3 +1,16 @@
+2010-07-29  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* chrome/content/sogo-connector/general/sync.addressbook.groupdav.js:
+	(GroupDavSynchronizer.importCard): added code to drop the old
+	image cache when a photo is present in the old card and is being
+	replaced in the new card.
+
+	* chrome/content/sogo-connector/general/vcards.utils.js:
+	(card2vcard): added code to export the contact photo when
+	available.
+	(importFromVCard): added code import a contact photo when one is
+	present in the vcard.
+
 2010-07-28  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* chrome/content/sogo-connector/general/vcards.utils.js:
