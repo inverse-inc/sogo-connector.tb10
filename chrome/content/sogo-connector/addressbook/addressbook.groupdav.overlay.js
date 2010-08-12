@@ -434,7 +434,7 @@ function SCAbDeleteDirectory(aURI) {
         // 			dump("pouet dasdsa\n");
         let directory = SCGetDirectoryFromURI(aURI);
         if (!(directory.isMailList
-              && _SCDeleteListAsDirectory(directory, selectedDir)))
+              && _SCDeleteListAsDirectory(directory, aURI)))
             this.SCAbDeleteDirectoryOriginal(aURI);
     }
 }
