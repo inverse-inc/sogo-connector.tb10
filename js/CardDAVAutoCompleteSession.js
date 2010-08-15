@@ -101,7 +101,7 @@ CardDAVAutoCompleteSession.prototype = {
                     report.report('<?xml version="1.0" encoding="UTF-8"?>'
                                   + '<C:addressbook-query xmlns:D="DAV:"'
                                   + ' xmlns:C="urn:ietf:params:xml:ns:carddav">'
-                                  + '<D:prop><D:getetag/><C:addressbook-data/></D:prop>'
+                                  + '<D:prop><D:getetag/><C:address-data/></D:prop>'
                                   + '<C:filter><C:prop-filter name="mail">'
                                   + '<C:text-match collation="i;unicasemap" match-type="starts-with">'
                                   + xmlEscape(searchString)
@@ -137,7 +137,7 @@ CardDAVAutoCompleteSession.prototype = {
             let resultArray = Components.classes["@mozilla.org/supports-array;1"]
                                         .createInstance(Components.interfaces.nsISupportsArray);
             let nodeList = result.getElementsByTagNameNS("urn:ietf:params:xml:ns:carddav",
-                                                         "addressbook-data");
+                                                         "address-data");
             for (let i = 0; i < nodeList.length; i++) {
                 let customFields = {};
                 let card = importFromVcard(nodeList[i].textContent, customFields);
