@@ -3,6 +3,14 @@
 	* chrome/content/sogo-connector/addressbook/addressbook.groupdav.overlay.js
 	Fixed a typo that would make list non-deletable.
 
+2010-08-12  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* js/CardDAVAutoCompleteSession.js:
+	(CardDAVAutoCompleteSession.onDAVQueryComplete): same as below.
+
+	* js/CardDAVDirectory.js: (CardDAVDirectory._serverQuery):
+	requests "address-data" instead of "addressbook-data".
+
 2010-07-29  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* chrome/content/sogo-connector/general/sync.addressbook.groupdav.js:

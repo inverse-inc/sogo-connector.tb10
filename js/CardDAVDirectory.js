@@ -293,7 +293,7 @@ CardDAVDirectory.prototype = {
         let req = ('<?xml version="1.0" encoding="UTF-8"?>'
                    + '<C:addressbook-query xmlns:D="DAV:"'
                    + ' xmlns:C="urn:ietf:params:xml:ns:carddav">'
-                   + '<D:prop><D:getetag/><C:addressbook-data/></D:prop>'
+                   + '<D:prop><D:getetag/><C:address-data/></D:prop>'
                    + '<C:filter><C:prop-filter name="mail">'
                    + '<C:text-match collation="i;unicasemap" match-type="starts-with">'
                    + xmlEscape(criteria)
@@ -306,7 +306,7 @@ CardDAVDirectory.prototype = {
                                     .createInstance(Components.interfaces.nsIMutableArray);
         if (doc) {
             let nodeList = doc.getElementsByTagNameNS("urn:ietf:params:xml:ns:carddav",
-                                                      "addressbook-data");
+                                                      "address-data");
             for (let i = 0; i < nodeList.length; i++) {
                 let card = importFromVcard(nodeList[i].textContent);
                 resultArray.appendElement(card, null);
