@@ -63,13 +63,13 @@ const componentData =
       categoryEntry: "sogo-connector-autocomplete-session",
       service: false},
 
-     // {classID: Components.ID("{eeee51aa-d758-4f6f-8cba-222aa47ab6ee}"),
-     //  contractID: "@mozilla.org/network/protocol;1?name=carddav",
-     //  script: "CardDAVProtocol.js",
-     //  constructor: "CardDAVProtocol",
-     //  category: "inverse-extensions",
-     //  categoryEntry: "carddav-protocol",
-     //  service: false},
+     {classID: Components.ID("{688f57fc-2ac6-42df-38b1-8df9f4bafed4}"),
+      contractID: "@mozilla.org/autocomplete/search;1?name=addrbook-sogo-connector",
+      script: "SOGoConnectorAutocompleteSearch.js",
+      constructor: "SOGoConnectorAutocompleteSearch",
+      category: "inverse-extensions",
+      categoryEntry: "sogo-connector-autocomplete-search",
+      service: true},
 
      {classID: Components.ID("{2e3aa298-a1f9-4aef-9f80-ca430ce6e55b}"),
       contractID: "@mozilla.org/rdf/resource-factory;1?name=moz-abdavdirectory",
@@ -135,8 +135,9 @@ let componentRegistry = {
             let f = appdir.clone();
             f.append(scriptName);
 
+            let fileurl;
             try {
-                let fileurl = iosvc.newFileURI(f);
+                fileurl = iosvc.newFileURI(f);
                 loader.loadSubScript(fileurl.spec, null);
             }
             catch (e) {

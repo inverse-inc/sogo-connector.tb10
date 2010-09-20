@@ -40,5 +40,8 @@ overlay chrome://calendar/content/calendar-invitations-dialog.xul chrome://sogo-
 # inclusion of utils.js, need must be determined
 overlay	chrome://lightning/content/messenger-overlay-sidebar.xul chrome://sogo-connector/content/lightning/messenger-overlay-sidebar.xul
 
+# autocomplete in composition dialog, with support for "comment" fields in CardDAV addressbooks
+overlay chrome://messenger/content/messengercompose/messengercompose.xul chrome://sogo-connector/content/addressbook/messengercompose-overlay.xul
+
 # autocomplete in delegation dialog
 overlay chrome://lightning/content/imip-delegate-dialog.xul chrome://sogo-connector/content/lightning/imip-delegate-dialog.xul

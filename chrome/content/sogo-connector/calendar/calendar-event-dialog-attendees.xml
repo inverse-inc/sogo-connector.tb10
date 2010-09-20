@@ -11,9 +11,9 @@
           var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
                                  .getService(Components.interfaces.mozIJSSubScriptLoader);
           loader.loadSubScript("chrome://sogo-connector/content/common/common-dav.js");
-
-          this.inverseParentSetupAutocomplete = this.setupAutocomplete;
-          this.setupAutocomplete = this.inverseSetupAutocomplete;
+          if (isAutoCompleteDirectoryServerCardDAV()) {
+              this.setupAutocomplete = this.inverseSetupAutocomplete;
+          }
 
           var prefService = Components.classes["@mozilla.org/preferences-service;1"]
                                       .getService(Components.interfaces.nsIPrefBranch);
@@ -21,7 +21,13 @@
               let attribute = prefService.getCharPref("sogo-connector.autoComplete.commentAttribute");
               if (attribute && attribute.length > 0) {
                   let template = document.getAnonymousElementByAttribute(this, "anonid", "input");
-                  template.showCommentColumn = true;
+        
+                  let acValue = template.getAttribute("autocompletesearch");
+                  if (acValue && acValue.length > 0) {
+                      acValue = acValue.replace(/(^| )addrbook($| )/, "$1addrbook-sogo-connector$2");
+                      template.setAttribute("autocompletesearch", acValue);
+                      template.showCommentColumn = true;
+                  }
               }
           }
           catch(e) {
@@ -32,10 +38,7 @@
       <method name="inverseSetupAutocomplete">
         <body>
           <![CDATA[
-            /* CardDAV directories will return "true" to "isAutocomplete" making the previous method obsolete and redundant. */
-            if (!isAutoCompleteDirectoryServerCardDAV()) {
-                this.inverseParentSetupAutocomplete();
-            }
+          // Noop, we prevent a crash with CardDAV by doing nothing
           ]]>
         </body>
       </method>

@@ -3,6 +3,6 @@
 <?xml-stylesheet
   href="chrome://sogo-connector/content/calendar/calendar-event-dialog.css" ?>
 
-<overlay id="inverseCalendarEventDialogFreebusyOverlay"
+<overlay id="inverseCalendarEventDialogAttendeesOverlay"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 </overlay>
