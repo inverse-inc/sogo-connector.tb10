@@ -265,10 +265,8 @@ CardDAVDirectory.prototype = {
         // dump("CardDAVDirecory: childCards\n");
         let resultArray = null;
 
-        let reg = new RegExp(/\?\(.*\(.*,.*,(.*)\).*\)\)/);
-        if (reg.test(this.mQuery)) {
-            let criteria = unescape(RegExp.$1);
-
+        let criteria = this._extractCriteria();
+        if (criteria) {
             let httpURL = this.serverURL;
             if (httpURL) {
                 resultArray = this._serverQuery(httpURL, criteria);
@@ -281,6 +279,30 @@ CardDAVDirectory.prototype = {
 
         return (resultArray ? resultArray.enumerate() : null);
     },
+    _extractCriteria: function() {
+        let criteria = null;
+
+        if (this.mQuery && this.mQuery.length > 0) {
+            let prefix = "(DisplayName,bw,";
+            let dn = this.mQuery.indexOf(prefix);
+            if (dn > -1) {
+                let start = dn + prefix.length;
+                let end = this.mQuery.indexOf(")");
+                if (end > -1) {
+                    criteria = this.mQuery.substr(start, end - start);
+                    if (criteria.length > 0) {
+                        criteria = decodeURI(criteria);
+                    }
+                    else {
+                        criteria = null;
+                    }
+                }
+            }
+        }
+
+        return criteria;
+    },
+
     _serverQuery: function(url, criteria) {
         // dump("serverQuery: url: " + url + "; crite: " + criteria + "\n");
         let doc = null;

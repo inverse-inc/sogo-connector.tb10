@@ -1,3 +1,10 @@
+2010-09-27  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* js/CardDAVDirectory.js: (childCards) replaced the current
+	regexp-based method with one that relies on expected parts in the
+	request string, to avoid messed up results when the expression
+	changes between versions of Thunderbird.
+
 2010-09-20  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* reenabled autocomplete comment in composition window and
