@@ -1,5 +1,12 @@
+2010-10-05  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* js/CardDAVDirectory.js: (_extractCriteria): search for
+	""(DisplayName,c," prefix and then for "(DisplayName,bw," in order
+	to fix the directory searches. Also, the parameter end needs to be
+	search from the prefix start rather than 0.
+
 2010-10-05  Ludovic Marcotte  <lmarcotte@inverse.ca>
-	
+
 	* chrome/content/sogo-connector/general/sync.addressbook.groupdav.js
 	and chrome/content/sogo-connector/general/vcards.utils.js
 	Added workarounds for eGroupware and bumped version number to 3.103pre1

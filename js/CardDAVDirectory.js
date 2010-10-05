@@ -283,14 +283,22 @@ CardDAVDirectory.prototype = {
         let criteria = null;
 
         if (this.mQuery && this.mQuery.length > 0) {
-            let prefix = "(DisplayName,bw,";
+            let prefix = "(DisplayName,c,";
             let dn = this.mQuery.indexOf(prefix);
+            if (dn == -1) {
+                prefix = "(DisplayName,bw,";
+                dn = this.mQuery.indexOf(prefix);
+            }
             if (dn > -1) {
+                // dump("prefix found\n");
                 let start = dn + prefix.length;
-                let end = this.mQuery.indexOf(")");
+                let end = this.mQuery.indexOf(")", start);
                 if (end > -1) {
+                    // dump("end found\n");
+                    // dump("query: " + this.mQuery + "; start: " + start + "; end: " + end + "\n");
                     criteria = this.mQuery.substr(start, end - start);
                     if (criteria.length > 0) {
+                        // dump("criteria found\n");
                         criteria = decodeURI(criteria);
                     }
                     else {
@@ -299,6 +307,8 @@ CardDAVDirectory.prototype = {
                 }
             }
         }
+
+        // dump("extracted criteria: " + criteria);
 
         return criteria;
     },
