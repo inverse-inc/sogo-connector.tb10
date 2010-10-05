@@ -828,7 +828,16 @@ function saveImportedPhoto(content, ext) {
     let file = photoFileFromName(photoName);
     let fileStream = Components.classes["@mozilla.org/network/file-output-stream;1"]
                                .createInstance(Components.interfaces.nsIFileOutputStream);
-    fileStream.init(file, -1, -1, false);
+
+    try {
+      fileStream.init(file, -1, -1, false);
+    }
+    catch(e) {
+      dump("photoName: " + photoName + "\n");
+      dump("file: " + file + "\n");
+      return null;
+    }
+
     let byteStream = Components.classes["@mozilla.org/binaryoutputstream;1"]
                                .createInstance(Components.interfaces.nsIBinaryOutputStream);
     byteStream.setOutputStream(fileStream);

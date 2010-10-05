@@ -1,3 +1,9 @@
+2010-10-05  Ludovic Marcotte  <lmarcotte@inverse.ca>
+	
+	* chrome/content/sogo-connector/general/sync.addressbook.groupdav.js
+	and chrome/content/sogo-connector/general/vcards.utils.js
+	Added workarounds for eGroupware and bumped version number to 3.103pre1
+
 2010-09-27  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* js/CardDAVDirectory.js: (childCards) replaced the current

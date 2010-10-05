@@ -735,7 +735,12 @@ GroupDavSynchronizer.prototype = {
                         if (propstat["status"][0].indexOf("HTTP/1.1 200") == 0) {
                             let prop = propstat["prop"][0];
                             if (href != this.gURL) {
-                                let contType = prop["getcontenttype"][0];
+			        let contType = "text/vcard";
+				
+				// temporary workaround for eGroupware
+				if (prop["getcontenttype"])
+				  contType = prop["getcontenttype"][0];
+
                                 if (contType == "text/x-vcard"
                                     || contType == "text/vcard"
                                     || contType == "text/x-vlist") {
