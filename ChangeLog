@@ -1,3 +1,9 @@
+2010-10-08  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* chrome/content/sogo-connector/general/vcards.utils.js:
+	(card2VCard): properly escape each vcard value using
+	"escapedForCard".
+
 2010-10-05  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* js/CardDAVDirectory.js: (_extractCriteria): search for
