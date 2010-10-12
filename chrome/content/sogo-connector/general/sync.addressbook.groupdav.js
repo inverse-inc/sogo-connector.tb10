@@ -735,16 +735,18 @@ GroupDavSynchronizer.prototype = {
                         if (propstat["status"][0].indexOf("HTTP/1.1 200") == 0) {
                             let prop = propstat["prop"][0];
                             if (href != this.gURL) {
-			        let contType = "text/vcard";
-				
-				// temporary workaround for eGroupware
-				if (prop["getcontenttype"])
-				  contType = prop["getcontenttype"][0];
+			      
+			      // We make sure getcontenttype is defined. If not defined (for example, if
+			      // we receive the collection in the response with no getcontenttype (like
+			      // eGroupware sends over, we just ignore it.
+			      if (typeof(prop["getcontenttype"]) == "undefined")
+				continue;
+
+			        let contType = prop["getcontenttype"][0];
 
                                 if (contType == "text/x-vcard"
                                     || contType == "text/vcard"
                                     || contType == "text/x-vlist") {
-                                    // 						dump(key + " is vcard\n");
                                     let version = prop["getetag"][0];
                                     let keyArray = href.split("/");
                                     let key = keyArray[keyArray.length - 1];
