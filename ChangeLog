@@ -1,3 +1,9 @@
+2010-10-18  Ludovic Marcotte  <lmarcotte@inverse.ca>
+
+	* chrome/content/sogo-connector/addressbook/folder-handling.js
+	Wrapped around calls to the prefService in a try/catch block
+	in case we get exceptions
+
 2010-10-12  Ludovic Marcotte  <lmarcotte@inverse.ca>
 
         * chrome/content/sogo-connector/general/sync.addressbook.groupdav.js

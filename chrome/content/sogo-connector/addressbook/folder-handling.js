@@ -102,13 +102,19 @@ function SCDeleteDirectory(directory) {
     dump("  dirPrefId: "  + prefBranch + "\n");
     prefService.deleteBranch(prefBranch + ".position");
 
-    let clearPrefsRequired
-        = (prefService.getCharPref("mail.collect_addressbook") == abURI
-           && (prefService.getBoolPref("mail.collect_email_address_outgoing")
-               || prefService.getBoolPref("mail.collect_email_address_incoming")
-               || prefService.getBoolPref("mail.collect_email_address_newsgroup")));
-
-    if (clearPrefsRequired) {
+    let clearPrefsRequired = false;
+    try {
+        clearPrefsRequired
+            = (prefService.getCharPref("mail.collect_addressbook") == abURI
+               && (prefService.getBoolPref("mail.collect_email_address_outgoing")
+                   || prefService.getBoolPref("mail.collect_email_address_incoming")
+                   || prefService.getBoolPref("mail.collect_email_address_newsgroup")));
+   }
+   catch(e) {
+        dump("Exception occured in SCDeleteDirectory() - " + e);
+   }
+   
+   if (clearPrefsRequired) {
         prefService.setBoolPref("mail.collect_email_address_outgoing", false);
         prefService.setBoolPref("mail.collect_email_address_incoming", false);
         prefService.setBoolPref("mail.collect_email_address_newsgroup", false);
