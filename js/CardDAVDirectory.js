@@ -181,12 +181,25 @@ CardDAVDirectory.prototype = {
     },
 
     getCardFromProperty: function(aProperty, aValue, aCaseSensitive) {
-        dump("CardDAVDirecory: getCardFromProperty: unimp\n");
-        throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+        let card = null;
+
+        if (aProperty == "PrimaryEmail" || aProperty == "SecondEmail") {
+            card = this.cardForEmailAddress(aValue);
+        }
+        else {
+            dump("CardDAVDirecory: getCardFromProperty: unimp\n"
+                 + "  aProperty: " + aProperty + "\n"
+                 + "  aValue: " + aValue + "\n");
+            throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+        }
+
+        return card;
     },
 
     getCardsFromProperty: function(aProperty, aValue, aCaseSensitive) {
-        dump("CardDAVDirecory: getCardsFromProperty: unimp\n");
+        dump("CardDAVDirecory: getCardsFromProperty: unimp\n"
+             + "  aProperty: " + aProperty + "\n"
+             + "  aValue: " + aValue + "\n");
         throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
     },
 

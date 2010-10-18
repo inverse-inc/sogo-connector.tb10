@@ -1,3 +1,9 @@
+2010-10-18  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* js/CardDAVDirectory.js: (CardDAVDirectory.getCardFromProperty):
+	added support for searches on attributes named "PrimaryEmail" and
+	"SecondEmail", which are redirected to this.cardForEmailAddress.
+
 2010-10-18  Ludovic Marcotte  <lmarcotte@inverse.ca>
 
 	* chrome/content/sogo-connector/addressbook/folder-handling.js
