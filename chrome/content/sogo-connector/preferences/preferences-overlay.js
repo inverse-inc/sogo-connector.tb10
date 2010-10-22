@@ -90,7 +90,7 @@ let gSOGoConnectorPane = {
         },
         onEditCategory: function SCP_cCP_editCategory() {
             let list = document.getElementById("SOGoConnectorContactCategoriesList");
-            if (list.selectedItem > -1) {
+            if (list.selectedCount == 1) {
                 let this_ = this;
                 let saveObject = {
                     setCategoryName: function SCP_cCP_sO_setCategoryName(newName) {
