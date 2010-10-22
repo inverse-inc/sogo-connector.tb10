@@ -1,5 +1,8 @@
 2010-10-22  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* chrome/content/sogo-connector/preferences/preferences-overlay.js:
+	solved a bug where the listcols element would be removed.
+
 	* chrome/content/sogo-connector/addressbook/categories.js:
 	(setCategoriesAsArray): save categories even if the array is void.
 

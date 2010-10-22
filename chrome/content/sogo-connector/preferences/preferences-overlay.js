@@ -46,8 +46,8 @@ let gSOGoConnectorPane = {
 
             for (let i = 0; i < this.mCategoryList.length; i++) {
                 let newListItem = document.createElement("listitem");
+                newListItem.setAttribute("id", this.mCategoryList[i]);
                 let categoryName = document.createElement("listcell");
-                categoryName.setAttribute("id", this.mCategoryList[i]);
                 categoryName.setAttribute("label", this.mCategoryList[i]);
                 newListItem.appendChild(categoryName);
                 listbox.appendChild(newListItem);
@@ -111,21 +111,28 @@ let gSOGoConnectorPane = {
         onDeleteCategory: function SCP_cCP_deleteCategory() {
             let list = document.getElementById("SOGoConnectorContactCategoriesList");
             if (list.selectedCount > 0) {
-                // Remove category entry from listbox and gCategoryList.
-                let newSelection = list.selectedItem.nextSibling ||
-                    list.selectedItem.previousSibling;
-                let selectedItems = Array.slice(list.selectedItems).concat([]);
-                for (let i = list.selectedCount - 1; i >= 0; i--) {
-                    let item = selectedItems[i];
-                    if (item == newSelection) {
-                        newSelection = newSelection.nextSibling ||
-                            newSelection.previousSibling;
+                let selection = list.selectedItems.concat([]);
+                let lastItem = selection[selection.length-1];
+                let newSelection = selection.nextSibling;
+                if (!newSelection || newSelection.tagName != "listitem") {
+                    newSelection = selection[0].previousSibling;
+                    if (newSelection.tagName != "listitem") {
+                        newSelection = null;
                     }
-                    this.mCategoryList.splice(list.getIndexOfItem(item), 1);
-                    list.removeChild(item);
+                }
+                for (let i = 0; i < selection.length; i++) {
+                    list.removeChild(selection[i]);
                 }
                 list.selectedItem = newSelection;
                 this.updateButtons();
+
+                this.mCategoryList = [];
+                let newNodes = list.childNodes;
+                for (let i = 0; i < newNodes.length; i++) {
+                    if (newNodes[i].tagName == "listitem") {
+                        this.mCategoryList.push(newNodes[i].getAttribute("id"));
+                    }
+                }
                 SCContactCategories.setCategoriesAsArray(this.mCategoryList);
             }
         }
