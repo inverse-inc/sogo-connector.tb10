@@ -88,15 +88,15 @@ let SCContactCategories = {
         this._sortArray(catsArray);
 
         let initted = false;
-        let cats;
+        let cats = "";
         for (let i = 0; i < catsArray.length; i++) {
             let escaped = catsArray[i].replace(",", "\\,").replace(/(^[ ]+|[ ]+$)/, "", "g");
             if (escaped.length > 0) {
                 if (initted) {
-                    cats = cats + "," + escaped;
+                    cats += "," + escaped;
                 }
                 else {
-                    cats = escaped;
+                    cats += escaped;
                     initted = true;
                 }
             }

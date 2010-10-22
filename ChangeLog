@@ -1,5 +1,8 @@
 2010-10-22  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* chrome/content/sogo-connector/addressbook/categories.js:
+	(setCategoriesAsArray): save categories even if the array is void.
+
 	* chrome/content/sogo-connector/preferences/preferences-overlay.js:
 	new overlay module that adds a tab for SOGo preferences. This
 	currently only enables the edition of contacts categories but
