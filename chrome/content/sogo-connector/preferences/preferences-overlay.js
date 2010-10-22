@@ -15,6 +15,12 @@ jsInclude(["chrome://sogo-connector/content/addressbook/categories.js"]);
 
 let gSOGoConnectorPane = {
     init: function SCP_init() {
+        let appInfo = Components.classes["@mozilla.org/xre/app-info;1"]
+            .getService(Components.interfaces.nsIXULRuntime);
+        if (appInfo.OS == "Darwin") {
+            let prefwindow = document.getElementById("MailPreferences");
+            prefwindow.setAttribute("arch", "mac");
+        }
         this.contactCategoriesPane.init();
     },
 
