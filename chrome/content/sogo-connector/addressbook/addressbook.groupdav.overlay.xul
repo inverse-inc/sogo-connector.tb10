@@ -25,11 +25,17 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA	
 -->
 
-<!DOCTYPE overlay
-  SYSTEM "chrome://sogo-connector/locale/addressbook/ca.inverse.abMainWindow.groupdav.dtd">
+<!DOCTYPE overlay [
+    <!ENTITY % addressbookGroupDAVOverlayDTD SYSTEM "chrome://sogo-connector/locale/addressbook/ca.inverse.abMainWindow.groupdav.dtd">
+    <!ENTITY % messengerAbMainWindow SYSTEM "chrome://messenger/locale/addressbook/abMainWindow.dtd">
+    %addressbookGroupDAVOverlayDTD;
+    %messengerAbMainWindow;
+]>
 
 <?xml-stylesheet href="chrome://messenger/skin/addressbook/addressbook.css"
- type="text/css"?>
+  type="text/css"?>
+<?xml-stylesheet href="chrome://sogo-connector/skin/addressbook/addressbook.groupdav.overlay.css"
+  type="text/css"?>
 
 <overlay id="ca.inverse.addressbook.groupdav"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -44,6 +50,24 @@
   <toolbarpalette id="AddressBookToolbarPalette">
     <toolbarbutton id="button-groupdavSync" label="&GroupDavSync.label;" tooltiptext="&GroupDavSync.tooltip;" class="toolbarbutton-1" command="cmd_syncGroupdav"/>	  
   </toolbarpalette>
+
+  <toolbaritem id="search-container">
+    <toolbarbutton id="SCSearchCriteriaButton"
+      class="toolbarbutton-1"
+      type="menu"
+      label="&SearchCriteriaButton.label;"
+      insertbefore="peopleSearchInput"
+      >
+      <menupopup id="SCSearchCriteriaButtonMenu">
+        <menuitem type="radio" checked="true" label="&SearchNameOrEmail.label;" value="0"
+          sc-search-criteria=""
+          oncommand="SCSetSearchCriteria(this);"/>
+        <menuitem type="radio" label="&SearchCategory.label;" value="1"
+          sc-search-criteria="Categories"
+          oncommand="SCSetSearchCriteria(this);"/>
+      </menupopup>
+    </toolbarbutton>
+  </toolbaritem>
 
   <!-- <toolbar id="ab-bar2" -->
   <!--   defaultset="button-newcard,button-newlist,separator,button-editcard,button-newmessage,separator,button-abdelete,button-groupdavSync,spring,search-container,separator">		  -->

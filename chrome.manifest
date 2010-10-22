@@ -15,12 +15,11 @@ overlay	chrome://messenger/content/addressbook/addressbook.xul chrome://sogo-con
 overlay	chrome://messenger/content/addressbook/abNewCardDialog.xul chrome://sogo-connector/content/addressbook/abNewCardDialog.groupdav.overlay.xul
 overlay	chrome://messenger/content/addressbook/abEditCardDialog.xul chrome://sogo-connector/content/addressbook/abEditCardDialog.groupdav.overlay.xul
 overlay	chrome://messenger/content/addressbook/abMailListDialog.xul chrome://sogo-connector/content/addressbook/edit-list-overlay.xul
+overlay chrome://messenger/content/addressbook/abCardOverlay.xul chrome://sogo-connector/content/addressbook/common-card-overlay.xul
 # overlay chrome://messenger/content/addressbook/abContactsPanel.xul chrome://sogo-connector/content/addressbook/contactspanel-overlay.xul
 
-style chrome://sogo-connector/content/addressbook/addressbook.groupdav.overlay.xul chrome://sogo-connector/skin/addressbook/addressbook.groupdav.overlay.css
-
 # ACL (migrated) + fixed labels for "CONFIDENTIAL" privacy (TODO)
-## overlay	chrome://calendar/content/calendar-event-dialog.xul chrome://sogo-connector/content/calendar/calendar-event-dialog.xul
+## overlay chrome://calendar/content/calendar-event-dialog.xul chrome://sogo-connector/content/calendar/calendar-event-dialog.xul
 
 # search of attendees in CardDAV ab
 overlay	chrome://calendar/content/calendar-event-dialog-attendees.xul chrome://sogo-connector/content/calendar/calendar-event-dialog-attendees.xul
@@ -45,3 +44,6 @@ overlay chrome://messenger/content/messengercompose/messengercompose.xul chrome:
 
 # autocomplete in delegation dialog
 overlay chrome://lightning/content/imip-delegate-dialog.xul chrome://sogo-connector/content/lightning/imip-delegate-dialog.xul
+
+# preferences
+overlay chrome://messenger/content/preferences/preferences.xul chrome://sogo-connector/content/preferences/preferences-overlay.xul

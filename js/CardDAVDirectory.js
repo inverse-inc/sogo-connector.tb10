@@ -295,6 +295,8 @@ CardDAVDirectory.prototype = {
     _extractCriteria: function() {
         let criteria = null;
 
+        // see http://mxr.mozilla.org/comm-central/source/mailnews/addrbook/src/nsAbQueryStringToExpression.cpp#278
+
         if (this.mQuery && this.mQuery.length > 0) {
             let prefix = "(DisplayName,c,";
             let dn = this.mQuery.indexOf(prefix);

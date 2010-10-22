@@ -1,3 +1,19 @@
+2010-10-22  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* chrome/content/sogo-connector/preferences/preferences-overlay.js:
+	new overlay module that adds a tab for SOGo preferences. This
+	currently only enables the edition of contacts categories but
+	might be enhanced in the future.
+
+	* chrome/content/sogo-connector/addressbook/common-card-overlay.js:
+	new module that replaces and extend the removed
+	"cardedit-overlay-common.js". The additional code handles the
+	search on categories as well as the criteria menu button.
+
+	* chrome/content/sogo-connector/addressbook/categories.js: new
+	module that handles the saving and retrieving of contact
+	categories.
+
 2010-10-18  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* js/CardDAVDirectory.js: (CardDAVDirectory.getCardFromProperty):

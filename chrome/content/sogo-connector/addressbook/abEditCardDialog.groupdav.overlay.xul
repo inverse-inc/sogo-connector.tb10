@@ -35,17 +35,17 @@
      type="application/x-javascript"
      src="chrome://sogo-connector/content/addressbook/abEditCardDialog.groupdav.overlay.js"/>
   <tabs id="abTabs">
-    <tab label="&inverse.CalDAV.tab;"/>
+    <!-- <tab label="&inverse.CalDAV.tab;"/> -->
   </tabs>
 
   <tabpanels id="abTabPanels">
-    <vbox index="caldav" flex="1">
-      <vbox id="inverse">
-	<hbox flex="1">
-	  <label value="&inverse.FbUrl.label;" class="CardEditLabel"/>
-	  <textbox id="FbUrl" flex="1"/>
-	</hbox>
-      </vbox>
-    </vbox>
+    <!-- <vbox index="caldav" flex="1"> -->
+    <!--   <vbox id="inverse"> -->
+    <!--     <hbox flex="1"> -->
+    <!--       <label value="&inverse.FbUrl.label;" class="CardEditLabel"/> -->
+    <!--       <textbox id="FbUrl" flex="1"/> -->
+    <!--     </hbox> -->
+    <!--   </vbox> -->
+    <!-- </vbox> -->
   </tabpanels>
 </overlay>

@@ -548,7 +548,7 @@ function _updateProgressBar(pc) {
         progressBar.setAttribute("value", pc + "%");
 }
 
-function onLoadDAV() {
+function SCOnLoad() {
     let appInfo = Components.classes["@mozilla.org/xre/app-info;1"]
                             .getService(Components.interfaces.nsIXULRuntime);
     if (appInfo.OS == "Darwin") {
@@ -606,7 +606,22 @@ function onLoadDAV() {
                           groupdavSynchronizationObserver);
 }
 
-function onUnloadDAV() {
+function SCSetSearchCriteria(menuitem) {
+    let criteria = menuitem.getAttribute("sc-search-criteria");
+    if (criteria.length > 0) {
+        gQueryURIFormat = "?(or(" + criteria + ",c,@V))"; // the "or" is important here
+    }
+    else {
+        let nameOrEMailSearch = gPrefs.getComplexValue("mail.addr_book.quicksearchquery.format",
+                                                       Components.interfaces.nsIPrefLocalizedString).data;
+        gQueryURIFormat = nameOrEMailSearch;
+    }
+    gSearchInput.setAttribute("emptytext", menuitem.getAttribute("label"));
+    gSearchInput.focus();
+    onEnterInSearchBar();
+}
+
+function SCOnUnload() {
     let nmgr = Components.classes["@inverse.ca/notification-manager;1"]
                          .getService(Components.interfaces.inverseIJSNotificationManager)
                          .wrappedJSObject;
@@ -631,5 +646,5 @@ function SCCommandSynchronizeCallback(url, code, failures) {
     }
 }
 
-window.addEventListener("load", onLoadDAV, false);
-window.addEventListener("unload", onUnloadDAV, false);
+window.addEventListener("load", SCOnLoad, false);
+window.addEventListener("unload", SCOnUnload, false);

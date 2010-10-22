@@ -50,6 +50,28 @@ function escapedForCard(theString) {
     return theString;
 }
 
+/* multivalue -> nsIAbCard format, != versit format */
+function arrayToMultiValue(valueArray) {
+    let value;
+
+    let max = valueArray.length;
+    if (max > 0) {
+        value = escapedForCard(valueArray[0]);
+        for (let i = 1; i < max; i++) {
+            value += "\u001A" + escapedForCard(valueArray[i]);
+        }
+    }
+    else {
+        value = "";
+    }
+
+    return value;
+}
+
+function multiValueToArray(multiValue) {
+    return multiValue.split("\u001A");
+}
+
 function unescapedFromCard(theString) {
     theString = theString.replace(/\\/g, "\\");
     theString = theString.replace(/\,/g, ",");
@@ -385,6 +407,9 @@ let _insertCardMethods = {
                      : 1);
         props["PreferMailFormat"] = value;
     },
+    categories: function(props, parameters, values) {
+        props["Categories"] = arrayToMultiValue(values);
+    },
     note: function(props, parameters, values) {
         props["Notes"] = values.join(";");
     },
@@ -579,6 +604,10 @@ function card2vcard(card) {
     let nickName = card.getProperty("NickName", "");
     if (nickName.length)
         vCard += foldedLine("NICKNAME:" + escapedForCard(nickName)) + "\r\n";
+
+    let categories = card.getProperty("Categories", "");
+    if (categories.length)
+        vCard += foldedLine("CATEGORIES:" + escapedForCard(categories).split("\u001A").join(",")) + "\r\n";
 
     let workAddress = card.getProperty("WorkAddress", "");
     let workAddress2 = card.getProperty("WorkAddress2", "");

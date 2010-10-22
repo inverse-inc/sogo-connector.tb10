@@ -32,33 +32,16 @@ function jsInclude(files, target) {
     }
 }
 
-jsInclude(["chrome://sogo-connector/content/common/common-dav.js",
-           "chrome://sogo-connector/content/addressbook/cardedit-overlay-common.js"]);
+jsInclude(["chrome://sogo-connector/content/common/common-dav.js"]);
 
-function UpdateFBUrl() {
-    // LDAP Directories
-    try {
-        let fbUrlInput = document.getElementById("FbUrl");
-        gEditCard.card.setProperty("CalFBURL", fbUrlInput.value);
-    }
-    catch (e) {
-        dump("$$$$$$$$$$$ exception caught\n");
-        //	   cardproperty.setCardValue("calFBURL", fbUrlInput.value);
-    }
-}
-
-function LoadFBUrl() {
-    let fbUrlInput = document.getElementById("FbUrl");
+/* starting... */
+function OnLoadHandler() {
+    // LoadFBUrl();
     let uri = getUri();
     let ab = GetDirectoryFromURI(uri);
-    if (ab.isRemote) {
-        if (isCardDavDirectory(uri)) {
-            fbUrlInput.value = gEditCard.card.getProperty("CalFBURL", "");
-        }
-        fbUrlInput.setAttribute("readonly", "true");
-    }
-    else {
-        fbUrlInput.value = gEditCard.card.getProperty("CalFBURL", "");
+    if (!ab.isRemote) {
+        this.OldEditCardOKButton = this.EditCardOKButton;
+        this.EditCardOKButton = this.SCEditCardOKButton;
     }
 }
 
@@ -69,23 +52,12 @@ function SCEditCardOKButton() {
         let ab = GetDirectoryFromURI(gEditCard.abURI);
         if (!ab.isRemote) {
             setDocumentDirty(true);
-            UpdateFBUrl();
+            // UpdateFBUrl();
             saveCard(false);
         }
     }
 
     return result;
-}
-
-/* starting... */
-function OnLoadHandler() {
-    LoadFBUrl();
-    let uri = getUri();
-    let ab = GetDirectoryFromURI(uri);
-    if (!ab.isRemote) {
-        this.OldEditCardOKButton = this.EditCardOKButton;
-        this.EditCardOKButton = this.SCEditCardOKButton;
-    }
 }
 
 window.addEventListener("load", OnLoadHandler, false);

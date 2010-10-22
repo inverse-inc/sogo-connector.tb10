@@ -31,3 +31,6 @@
 <!ENTITY GroupDavConf.accesskey                  		"K">
 
 <!ENTITY addressbook.synchronize.label	"Synchronisierung:">
+
+<!ENTITY SearchCriteriaButton.label "Criteria">
+<!ENTITY SearchCategory.label "Category">
