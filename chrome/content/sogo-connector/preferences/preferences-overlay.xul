@@ -3,8 +3,8 @@
 <?xml-stylesheet href="chrome://sogo-connector/skin/preferences/preferences.css"?>
 
 <!DOCTYPE overlay [
-    <!ENTITY % preferencesDTD SYSTEM "chrome://sogo-connector/locale/preferences/preferences.dtd">
-    %preferencesDTD;
+    <!ENTITY % SCPreferencesDTD SYSTEM "chrome://sogo-connector/locale/preferences/preferences.dtd">
+    %SCPreferencesDTD;
 ]>
 
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">

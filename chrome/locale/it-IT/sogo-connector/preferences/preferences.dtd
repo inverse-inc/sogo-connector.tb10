@@ -13,6 +13,6 @@
 <!ENTITY pref.categories.overwrite.title "Warning: Duplicate name">
 <!ENTITY pref.categories.noBlankCategories "You must enter a category name.">
 
-<!ENTITY sogo-connector.preferences.contacts.categories.overwrite "A category already exists with that name. \n Do you want to overwrite it?>
+<!ENTITY sogo-connector.preferences.contacts.categories.overwrite "A category already exists with that name. \n Do you want to overwrite it?">
 <!ENTITY sogo-connector.preferences.contacts.categories.overwrite.title "Warning: Duplicate name">
 <!ENTITY sogo-connector.preferences.contacts.categories.noBlankCategories "You must enter a category name.">
