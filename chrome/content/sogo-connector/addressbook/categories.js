@@ -1,20 +1,3 @@
-// function jsInclude(files, target) {
-//     let loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
-//                            .getService(Components.interfaces.mozIJSSubScriptLoader);
-//     for (let i = 0; i < files.length; i++) {
-//         try {
-//             loader.loadSubScript(files[i], target);
-//         }
-//         catch(e) {
-//             dump("categories.js: failed to include '" + files[i] + "'\n" + e +
-//                  "\nFile: " + e.fileName +
-//                  "\nLine: " + e.lineNumber + "\n\n Stack:\n\n" + e.stack);
-//         }
-//     }
-// }
-
-// jsInclude(["chrome://sogo-connector/content/general/vcards.utils.js"]);
-
 let SCContactCategories = {
     getCategoriesAsString: function SCCC_getCategoriesAsString() {
         let cats = null;
