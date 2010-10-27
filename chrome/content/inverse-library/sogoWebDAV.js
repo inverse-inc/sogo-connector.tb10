@@ -204,8 +204,9 @@ function onXMLRequestReadyStateChange(request, synchronous) {
                             response = null;
                         }
                     }
-                    else
+                    else {
                         response = request.responseText;
+                    }
                 }
 
                 request.client.target.onDAVQueryComplete(status,
@@ -296,7 +297,8 @@ sogoWebDAV.prototype = {
             this._sendHTTPRequest(operation, parameters);
         }
         else if (operation == "PROPPATCH") {
-            this._sendHTTPRequest(operation, parameters);
+            let headers = { "content-type": "application/xml; charset=utf8" };
+            this._sendHTTPRequest(operation, parameters, headers);
         }
         else if (operation == "OPTIONS") {
             this._sendHTTPRequest(operation, parameters);

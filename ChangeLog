@@ -1,3 +1,9 @@
+2010-10-27  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* chrome/content/inverse-library/sogoWebDAV.js: ensure the
+	content-type is set to "application/xml; charset=utf8" for
+	PROPPATCH operations.
+
 2010-10-22  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* chrome/content/sogo-connector/preferences/preferences-overlay.js:
