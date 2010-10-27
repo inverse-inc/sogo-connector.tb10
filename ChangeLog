@@ -1,5 +1,8 @@
 2010-10-27  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* chrome/content/sogo-connector/general/vcards.utils.js: enhanced
+	handling of comma-separated values in the "CATEGORIES" vcard field.
+
 	* chrome/content/sogo-connector/addressbook/common-card-overlay.js:
 	add a load "pre" hook, caught by defining
 	SCOnCommonCardOverlayLoadPreHook as a function.
