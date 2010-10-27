@@ -1,5 +1,9 @@
 2010-10-27  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* chrome/content/sogo-connector/addressbook/common-card-overlay.js:
+	add a load "pre" hook, caught by defining
+	SCOnCommonCardOverlayLoadPreHook as a function.
+
 	* chrome/content/inverse-library/sogoWebDAV.js: ensure the
 	content-type is set to "application/xml; charset=utf8" for
 	PROPPATCH operations.

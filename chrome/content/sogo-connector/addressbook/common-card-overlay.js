@@ -35,6 +35,9 @@ let gSCCardValues = {
 };
 
 function SCOnCommonCardOverlayLoad() {
+    if (typeof(SCOnCommonCardOverlayLoadPreHook) == "function") {
+        SCOnCommonCardOverlayLoadPreHook();
+    }
     /* categories */
     /* migration from MoreFunctionsblabla */
     let cardCategoriesValue = gEditCard.card.getProperty("Category", "");
@@ -44,7 +47,7 @@ function SCOnCommonCardOverlayLoad() {
         gEditCard.card.setProperty("Category", "");
     }
 
-    let cardCategoriesValue = gEditCard.card.getProperty("Categories", "");
+    cardCategoriesValue = gEditCard.card.getProperty("Categories", "");
     let catsArray = multiValueToArray(cardCategoriesValue);
     gSCCardValues.categories = SCContactCategories.getCategoriesAsArray();
 
