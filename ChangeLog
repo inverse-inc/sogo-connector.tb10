@@ -1,5 +1,9 @@
 2010-10-27  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* chrome/content/sogo-connector/addressbook/cardview-overlay.xul:
+	new overlay for modifying the card view. Added code to display the
+	card categories.
+
 	* chrome/content/sogo-connector/general/vcards.utils.js: enhanced
 	handling of comma-separated values in the "CATEGORIES" vcard field.
 
