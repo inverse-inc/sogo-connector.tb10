@@ -1,4 +1,4 @@
-<!ENTITY sogo-connector.preferences.panes.categories.title "Catégories">
+<!ENTITY sogo-connector.preferences.panes.contacts.categories.title "Catégories de contact">
 <!ENTITY sogo-connector.preferences.contacts.categories.none.label "Aucune">
 <!ENTITY sogo-connector.preferences.contacts.categories.add.title "Ajouter une catégorie">
 <!ENTITY sogo-connector.preferences.contacts.categories.addButton.label "Ajouter...">

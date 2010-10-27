@@ -20,7 +20,7 @@
         onselect="gSOGoConnectorPane.tabSelectionChanged();">
         <tabs>
           <tab id="SOGoConnectorPreferencesTabCategories"
-            label="&sogo-connector.preferences.panes.categories.title;"/>
+            label="&sogo-connector.preferences.panes.contacts.categories.title;"/>
         </tabs>
 
         <tabpanels flex="1">

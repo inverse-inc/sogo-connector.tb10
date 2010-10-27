@@ -1,4 +1,4 @@
-<!ENTITY sogo-connector.preferences.panes.categories.title "Categories">
+<!ENTITY sogo-connector.preferences.panes.contacts.categories.title "Contact Categories">
 <!ENTITY sogo-connector.preferences.contacts.categories.none.label "None">
 <!ENTITY sogo-connector.preferences.contacts.categories.add.title "Add Category">
 <!ENTITY sogo-connector.preferences.contacts.categories.addButton.label "Add...">
@@ -8,10 +8,6 @@
 <!ENTITY sogo-connector.preferences.contacts.categories.editButton.accesskey "E">
 <!ENTITY sogo-connector.preferences.contacts.categories.removeButton.label "Remove">
 <!ENTITY sogo-connector.preferences.contacts.categories.removeButton.accesskey "R">
-
-<!ENTITY pref.categories.overwrite "A category already exists with that name. \n Do you want to overwrite it?">
-<!ENTITY pref.categories.overwrite.title "Warning: Duplicate name">
-<!ENTITY pref.categories.noBlankCategories "You must enter a category name.">
 
 <!ENTITY sogo-connector.preferences.contacts.categories.overwrite "A category already exists with that name. \n Do you want to overwrite it?">
 <!ENTITY sogo-connector.preferences.contacts.categories.overwrite.title "Warning: Duplicate name">
