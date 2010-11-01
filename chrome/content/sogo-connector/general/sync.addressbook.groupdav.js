@@ -453,7 +453,7 @@ GroupDavSynchronizer.prototype = {
                          String(this.serverDownloads[key].etag));
         // card.setProperty("groupDavVcardCompatibility",
         //                  vcardFieldsArray["groupDavVcardCompatibility"]);
-        dump("' received card key: " + key + "\n");
+        dump("  received card key: " + key + "\n");
         if (this.localCardPointerHash[key]) {
             dump("  existing card\n");
 
@@ -735,7 +735,7 @@ GroupDavSynchronizer.prototype = {
                         if (propstat["status"][0].indexOf("HTTP/1.1 200") == 0) {
                             let prop = propstat["prop"][0];
                             if (href != this.gURL) {
-			      
+
 			      // We make sure getcontenttype is defined. If not defined (for example, if
 			      // we receive the collection in the response with no getcontenttype (like
 			      // eGroupware sends over, we just ignore it.
