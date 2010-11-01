@@ -9,6 +9,8 @@ locale sogo-connector it-IT chrome/locale/it-IT/sogo-connector/
 
 content inverse-library chrome/content/inverse-library/
 
+style chrome://global/content/customizeToolbar.xul chrome://sogo-connector/skin/addressbook/addressbook.groupdav.overlay.css
+
 overlay chrome://messenger/content/messenger.xul chrome://sogo-connector/content/addressbook/messenger.groupdav.overlay.xul
 overlay chrome://messenger/content/messageWindow.xul chrome://sogo-connector/content/addressbook/messagewindow-overlay.xul
 overlay chrome://messenger/content/addressbook/addressbook.xul chrome://sogo-connector/content/addressbook/addressbook.groupdav.overlay.xul
