@@ -1,3 +1,12 @@
+2010-11-01  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* chrome/content/sogo-connector/addressbook/addressbook.groupdav.overlay.js:
+	(SCOnResultsTreeContextMenuPopup, SCResetCategoriesContextMenu)
+	(SCOnCategoriesContextMenuPopup)
+	(SCOnCategoriesContextMenuItemCommand): new functions needed to
+	handle categories from the new categories popup on the contact
+	entries.
+
 2010-10-27  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* chrome/content/sogo-connector/addressbook/cardview-overlay.xul:
