@@ -38,6 +38,7 @@ function jsInclude(files, target) {
 }
 
 jsInclude(["chrome://inverse-library/content/sogoWebDAV.js",
+           "chrome://sogo-connector/content/addressbook/categories.js",
            "chrome://sogo-connector/content/addressbook/folder-handling.js",
            "chrome://sogo-connector/content/common/common-dav.js",
            "chrome://sogo-connector/content/general/mozilla.utils.inverse.ca.js",
@@ -604,6 +605,121 @@ function SCOnLoad() {
                           groupdavSynchronizationObserver);
     nmgr.registerObserver("groupdav.synchronization.addressbook.updated",
                           groupdavSynchronizationObserver);
+
+    let popup = document.getElementById("abResultsTreeContext");
+    if (popup) {
+        popup.addEventListener("popupshowing", SCOnResultsTreeContextMenuPopup, false);
+    }
+
+    popup = document.getElementById("sc-categories-contextmenu-popup");
+    if (popup) {
+        popup.addEventListener("popupshowing", SCOnCategoriesContextMenuPopup, false);
+    }
+}
+
+function SCOnResultsTreeContextMenuPopup(event) {
+    if (this == event.target) { /* otherwise the reset will be executed when
+                                   any submenu pops up too... */
+        let cards = GetSelectedAbCards();
+        let rootEntry = document.getElementById("sc-categories-contextmenu");
+        rootEntry.disabled = (cards.length == 0);
+        if (!rootEntry.disabled) {
+            SCResetCategoriesContextMenu();
+        }
+    }
+}
+
+function SCResetCategoriesContextMenu() {
+    let popup = document.getElementById("sc-categories-contextmenu-popup");
+    while (popup.lastChild) {
+        popup.removeChild(popup.lastChild);
+    }
+
+    let catsArray = SCContactCategories.getCategoriesAsArray();
+    for (let i = 0; i < catsArray.length; i++) {
+        let newItem = document.createElement("menuitem");
+        newItem.setAttribute("label", catsArray[i]);
+        newItem.setAttribute("type", "checkbox");
+        newItem.setAttribute("autocheck", "false");
+        newItem.addEventListener("click",
+                                 SCOnCategoriesContextMenuItemCommand,
+                                 false);
+        popup.appendChild(newItem);
+    }
+}
+
+function SCOnCategoriesContextMenuPopup(event) {
+    let cards = GetSelectedAbCards();
+    if (cards.length > 0) {
+        let card = cards[0].QueryInterface(Components.interfaces.nsIAbCard);
+        let cats = card.getProperty("Categories", "");
+        if (cats.length > 0) {
+            let catsArray = cats.split("\u001A");
+            let popup = document.getElementById("sc-categories-contextmenu-popup");
+            let popupItems = popup.getElementsByTagName("menuitem");
+            for (var i = 0; i < popupItems.length; i++) {
+                let popupItem = popupItems[i];
+                if (popupItem.label
+                    && catsArray.indexOf(popupItem.label) > -1) {
+                    popupItem.setAttribute("checked", "true");
+                }
+            }
+        }
+    }
+}
+
+function SCOnCategoriesContextMenuItemCommand(event) {
+    let cards = GetSelectedAbCards();
+    if (cards.length > 0) {
+        let requireSync = false;
+        let abUri = GetSelectedDirectory();
+        let category = this.label;
+        let set = !this.hasAttribute("checked");
+        for (let i = 0; i < cards.length; i++) {
+            let card = cards[i];
+            let cats = card.getProperty("Categories", "");
+            let changed = false;
+            if (cats.length > 0) {
+                let catsArray = cats.split("\u001A");
+                let catIdx = catsArray.indexOf(category);
+                if (set) {
+                    if (catIdx == -1) {
+                        catsArray.push(category);
+                        changed = true;
+                    }
+                }
+                else {
+                    if (catIdx > -1) {
+                        catsArray.splice(catIdx, 1);
+                        changed = true;
+                    }
+                }
+                if (changed) {
+                    cats = catsArray.join("\u001A");
+                }
+            }
+            else {
+                if (set) {
+                    changed = true;
+                    cats = category;
+                }
+            }
+            if (changed) {
+                requireSync = true;
+                card.setProperty("Categories", cats);
+                card.setProperty("groupDavVersion", "-1");
+                let abManager = Components.classes["@mozilla.org/abmanager;1"]
+                                          .getService(Components.interfaces.nsIAbManager);
+                let ab = abManager.getDirectory(abUri);
+                ab.modifyCard(card);
+            }
+        }
+        if (requireSync) {
+            if (isGroupdavDirectory(abUri)) {
+                SynchronizeGroupdavAddressbook(abUri);
+            }
+        }
+    }
 }
 
 function SCSetSearchCriteria(menuitem) {

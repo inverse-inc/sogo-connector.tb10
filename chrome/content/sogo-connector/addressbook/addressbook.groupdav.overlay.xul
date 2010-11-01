@@ -27,8 +27,10 @@
 
 <!DOCTYPE overlay [
     <!ENTITY % addressbookGroupDAVOverlayDTD SYSTEM "chrome://sogo-connector/locale/addressbook/ca.inverse.abMainWindow.groupdav.dtd">
+    <!ENTITY % scCommonCardOverlayDTD SYSTEM "chrome://sogo-connector/locale/addressbook/common-card-overlay.dtd">
     <!ENTITY % messengerAbMainWindow SYSTEM "chrome://messenger/locale/addressbook/abMainWindow.dtd">
     %addressbookGroupDAVOverlayDTD;
+    %scCommonCardOverlayDTD;
     %messengerAbMainWindow;
 ]>
 
@@ -48,7 +50,7 @@
 
   <!--Add the GroupDAV synchronize button to the toolbar -->
   <toolbarpalette id="AddressBookToolbarPalette">
-    <toolbarbutton id="button-groupdavSync" label="&GroupDavSync.label;" tooltiptext="&GroupDavSync.tooltip;" class="toolbarbutton-1" command="cmd_syncGroupdav"/>	  
+    <toolbarbutton id="button-groupdavSync" label="&GroupDavSync.label;" tooltiptext="&GroupDavSync.tooltip;" class="toolbarbutton-1" command="cmd_syncGroupdav"/>
   </toolbarpalette>
 
   <toolbaritem id="search-container">
@@ -85,6 +87,13 @@
       <menuitem id="addGroupDav" label="&newGroupDavCmd.label;" accesskey="&newGroupDavCmd.accesskey;" oncommand="AbNewGroupDavContacts()"/>
     </menupopup>
   </menu>
+
+  <popup id="abResultsTreeContext">
+    <menu id="sc-categories-contextmenu" label="&sogo-connector.tabs.categories.label;" insertafter="abResultsTreeContext-properties">
+      <menupopup id="sc-categories-contextmenu-popup">
+      </menupopup>
+    </menu>
+  </popup>
 
   <statusbar id="status-bar">
     <statusbarpanel id="groupdavProgressPanel" collapsed="true">
