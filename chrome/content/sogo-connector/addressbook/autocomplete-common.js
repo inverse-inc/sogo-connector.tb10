@@ -1,32 +1,47 @@
-function SIACLoad() {
+function SCACLoad() {
     let prefService = Components.classes["@mozilla.org/preferences-service;1"]
-        .getService(Components.interfaces.nsIPrefBranch);
+                                .getService(Components.interfaces.nsIPrefBranch);
+    let delay = 0;
     try {
-        let attribute = prefService.getCharPref("sogo-connector.autoComplete.commentAttribute");
-        if (attribute && attribute.length > 0) {
-            let done = false;
-            let i = 1;
-            while (!done) {
-                var textbox = document.getElementById(autocompleteWidgetPrefix
-                                                      + "#" + i);
-                if (textbox) {
+        delay = parseInt(prefService.getIntPref("sogo-connector.autoComplete.delay"));
+    }
+    catch(e) {};
+
+    let hasAttribute = false;
+    try {
+        let attributeName = prefService.getCharPref("sogo-connector.autoComplete.commentAttribute");
+        if (attributeName && attributeName.length > 0) {
+            hasAttribute = true;
+        }
+    }
+    catch(e) {};
+
+    if (delay || attribute) {
+        let done = false;
+        let i = 1;
+        while (!done) {
+            let textbox = document.getElementById(autocompleteWidgetPrefix
+                                                  + "#" + i);
+            if (textbox) {
+                if (hasAttribute) {
                     let acValue = textbox.getAttribute("autocompletesearch");
                     if (acValue && acValue.length > 0) {
                         acValue = acValue.replace(/(^| )addrbook($| )/, "$1addrbook-sogo-connector$2");
                         textbox.setAttribute("autocompletesearch", acValue);
                         textbox.setAttribute("showCommentColumn", "true");
                         textbox.showCommentColumn = true;
-                        dump("CONFIGURED\n ");
                     }
-                    i++;
-                } else {
-                    done = true;
                 }
+                if (delay) {
+                    textbox.setAttribute("timeout", delay);
+                }
+
+                i++;
+            } else {
+                done = true;
             }
         }
     }
-    catch(e) {
-    }
 }
 
-window.addEventListener("load", SIACLoad, false);
+window.addEventListener("load", SCACLoad, false);

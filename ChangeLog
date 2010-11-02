@@ -1,3 +1,9 @@
+2010-11-02  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* chrome/content/sogo-connector/addressbook/autocomplete-common.js:
+	(SCACLoad): added the ability to specify an autocomplete delay via
+	"sogo-connector.autoComplete.delay".
+
 2010-11-01  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* chrome/content/sogo-connector/addressbook/addressbook.groupdav.overlay.js:
