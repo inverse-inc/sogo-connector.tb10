@@ -73,14 +73,16 @@ let SCContactCategories = {
         let initted = false;
         let cats = "";
         for (let i = 0; i < catsArray.length; i++) {
-            let escaped = catsArray[i].replace(",", "\\,").replace(/(^[ ]+|[ ]+$)/, "", "g");
-            if (escaped.length > 0) {
-                if (initted) {
-                    cats += "," + escaped;
-                }
-                else {
-                    cats += escaped;
-                    initted = true;
+            if (catsArray[i] && catsArray[i].length > 0) {
+                let escaped = catsArray[i].replace(",", "\\,").replace(/(^[ ]+|[ ]+$)/, "", "g");
+                if (escaped.length > 0) {
+                    if (initted) {
+                        cats += "," + escaped;
+                    }
+                    else {
+                        cats += escaped;
+                        initted = true;
+                    }
                 }
             }
         }
