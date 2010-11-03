@@ -42,17 +42,6 @@ function OnLoadHandler() {
 function SCNewCardOKButton() {
     let result = this.OldNewCardOKButton();
     if (result) {
-
-        /* Hack needed to ensure the existence of the "LastModifiedDate"
-           property, set as "0" on duplicate cards */
-        let abManager = Components.classes["@mozilla.org/abmanager;1"]
-            .getService(Components.interfaces.nsIAbManager);
-        let parentURI = getUri();
-        let uriParts = parentURI.split("/");
-        parentURI = uriParts[0] + "//" + uriParts[2];
-        let ab = abManager.getDirectory(parentURI);
-        ab.modifyCard(gEditCard.card);
-
         setDocumentDirty(true);
         saveCard(true);
     }

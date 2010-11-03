@@ -170,7 +170,6 @@ GroupDavSynchronizer.prototype = {
         // dump("  fillLocalCardHashes\n");
         let uploads = 0;
 
-        let duplicates = Components.classes["@mozilla.org/array;1"].createInstance(Components.interfaces.nsIMutableArray);
         let cards = this.gAddressBook.childCards;
         // dump("  ab: " + this.gAddressBook + "\n");
         // dump("  local cards: " + cards + "\n");
@@ -193,26 +192,12 @@ GroupDavSynchronizer.prototype = {
                 }
                 else {
                     // this.dumpCard(card);
-                    let lastModifiedDate = card.getProperty("LastModifiedDate", -1);
-                    if (lastModifiedDate == 0) {
-                        dump("bug: duplicate card '" + card.displayName
-                             + "' detected and marked for deletion\n");
-                        this.dumpCard(card);
-                        duplicates.appendElement(card, false);
-                    }
-                    else {
-                        dump("  new card '" + card.displayName + "' will be uploaded\n");
-                        key = new UUID() + ".vcf";
-                        this.localCardUploads[key] = card;
-                        uploads++;
-                    }
+                    dump("  new card '" + card.displayName + "' will be uploaded\n");
+                    key = new UUID() + ".vcf";
+                    this.localCardUploads[key] = card;
+                    uploads++;
                 }
             }
-        }
-
-        if (duplicates.length > 0) {
-            dump("duplicates: " + duplicates.length + "\n");
-            this.gAddressBook.deleteCards(duplicates);
         }
 
         if (uploads > 0) {
@@ -470,8 +455,8 @@ GroupDavSynchronizer.prototype = {
         if (this.localCardPointerHash[key]) {
             dump("  existing card\n");
 
-            /* we must delete the previous photo file to avoid duplicating it with
-             another name */
+            /* we must delete the previous photo file to avoid duplicating it
+             with another name */
             let oldCard = this.localCardPointerHash[key];
 
             let oldPhotoName = oldCard.getProperty("PhotoName", null);
@@ -487,11 +472,6 @@ GroupDavSynchronizer.prototype = {
         } else {
             dump("  new card\n");
             this.gAddressBook.addCard(card);
-
-            /* Hack needed to ensure the existence of the "LastModifiedDate"
-             property, set as "0" on duplicate cards */
-            this.gAddressBook.modifyCard(card);
-
             this.localCardPointerHash[key] = card;
         }
     },
