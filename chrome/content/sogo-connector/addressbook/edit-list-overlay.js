@@ -70,18 +70,17 @@ function SCEditListOKButton() {
     if (rc) {
         let listURI = window.arguments[0].listURI;
         let parentURI = GetParentDirectoryFromMailingListURI(listURI);
-        dump("listURI: " + parentURI + "\n");
 
         if (isGroupdavDirectory(parentURI)) {
-            dump("isGroupDAV\n");
             let w = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                               .getService(Components.interfaces.nsIWindowMediator)
                               .getMostRecentWindow("mail:addressbook");
 
-            if (!w)
+            if (!w) {
                 w = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                               .getService(Components.interfaces.nsIWindowMediator)
                               .getMostRecentWindow("mail:3pane");
+            }
 
             let attributes = new GroupDAVListAttributes(listURI);
             attributes.version = "-1";
