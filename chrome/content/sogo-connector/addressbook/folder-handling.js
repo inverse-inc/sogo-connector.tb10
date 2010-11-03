@@ -113,7 +113,7 @@ function SCDeleteDirectory(directory) {
    catch(e) {
         dump("Exception occured in SCDeleteDirectory() - " + e);
    }
-   
+
    if (clearPrefsRequired) {
         prefService.setBoolPref("mail.collect_email_address_outgoing", false);
         prefService.setBoolPref("mail.collect_email_address_incoming", false);
@@ -165,27 +165,4 @@ function SCDeleteDAVDirectory(uri) {
     }
 
     return result;
-}
-
-function SCCopyAddressBook(sourceAB, destAB) {
-    let childCards = sourceAB.childCards;
-    while (childCards.hasMoreElements()) {
-        destAB.addCard(childCards.getNext());
-    }
-
-    // let nodes = sourceAB.childNodes;
-    // while (nodes.hasMoreElements()) {
-    //     let currentList = nodes.getNext()
-    //                            .QueryInterface(Components.interfaces.nsIAbDirectory);
-    //     let newList = Components.classes["@mozilla.org/addressbook/directoryproperty;1"]
-    //                             .createInstance(Components.interfaces.nsIAbDirectory);
-    //     newList.dirName = currentList.dirName;
-    //     newList.listNickName = currentList.listNickName;
-    //     newList.description = currentList.description;
-
-    //     let childCards = SCGetChildCards(currentList);
-    //     for (let i = 0; i < childCards.length; i++)
-    //         newList.addressLists.AppendElement(childCards[i]);
-    //     destAB.addMailList(newList);
-    // }
 }
