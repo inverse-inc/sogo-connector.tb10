@@ -1,3 +1,15 @@
+2010-11-03  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* chrome/content/sogo-connector/addressbook/abNewCardDialog.groupdav.overlay.js:
+	(SCNewCardOKButton): invoke "editCard" on the newly
+	created card to force the initialization of "LastModifiedDate".
+
+	* chrome/content/sogo-connector/general/sync.addressbook.groupdav.js:
+	(GroupDavSynchronizer.fillLocalCardHashes) we now directly drop
+	locally all cards with a "LastModifiedDate" of 0.
+	(GroupDavSynchronizer.importCard) invoke "editCard" on the newly
+	created card to force the initialization of "LastModifiedDate".
+
 2010-11-02  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* chrome/content/sogo-connector/addressbook/autocomplete-common.js:

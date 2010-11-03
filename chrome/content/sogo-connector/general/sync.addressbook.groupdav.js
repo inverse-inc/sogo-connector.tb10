@@ -167,8 +167,10 @@ GroupDavSynchronizer.prototype = {
     },
     // Fill the Local Directory data structures for the syncronization
     fillLocalCardHashes: function() {
-        dump("  fillLocalCardHashes\n");
+        // dump("  fillLocalCardHashes\n");
         let uploads = 0;
+
+        let duplicates = Components.classes["@mozilla.org/array;1"].createInstance(Components.interfaces.nsIMutableArray);
         let cards = this.gAddressBook.childCards;
         // dump("  ab: " + this.gAddressBook + "\n");
         // dump("  local cards: " + cards + "\n");
@@ -180,7 +182,7 @@ GroupDavSynchronizer.prototype = {
                     // dump("  existing card '" + card.displayName + "' will be uploaded\n");
                     this.localCardPointerHash[key] = card;
                     let version = card.getProperty(kETagKey, "-1");
-                    dump("  version of candidate card: " + version + "\n");
+                    // dump("  version of candidate card: " + version + "\n");
                     this.localCardVersionHash[key] = version;
                     if (version == "-1") {
                         dump("  card set for upload: " + key + "\n");
@@ -190,13 +192,27 @@ GroupDavSynchronizer.prototype = {
                     // dump("xxxx localcard: " + key + "; version: " + version + "\n");
                 }
                 else {
-                    dump("  new card '" + card.displayName + "' will be uploaded\n");
-                    //   				dump("xxxx local addition....\n");
-                    key = new UUID() + ".vcf";
-                    this.localCardUploads[key] = card;
-                    uploads++;
+                    // this.dumpCard(card);
+                    let lastModifiedDate = card.getProperty("LastModifiedDate", -1);
+                    if (lastModifiedDate == 0) {
+                        dump("bug: duplicate card '" + card.displayName
+                             + "' detected and marked for deletion\n");
+                        this.dumpCard(card);
+                        duplicates.appendElement(card, false);
+                    }
+                    else {
+                        dump("  new card '" + card.displayName + "' will be uploaded\n");
+                        key = new UUID() + ".vcf";
+                        this.localCardUploads[key] = card;
+                        uploads++;
+                    }
                 }
             }
+        }
+
+        if (duplicates.length > 0) {
+            dump("duplicates: " + duplicates.length + "\n");
+            this.gAddressBook.deleteCards(duplicates);
         }
 
         if (uploads > 0) {
@@ -204,6 +220,7 @@ GroupDavSynchronizer.prototype = {
             this.updatesStatus |= SOGOC_UPDATES_CLIENTSIDE;
         }
     },
+
     fillLocalListHashes: function() {
         //  		dump("fillLocalListHashes\n");
         let lists = this.gAddressBook.childCards;
@@ -215,7 +232,7 @@ GroupDavSynchronizer.prototype = {
                 count++;
                 let attributes = new GroupDAVListAttributes(list.mailListURI);
                 let key = attributes.key;
-                dump("  list with key: " + key + "\n");
+                // dump("  list with key: " + key + "\n");
                 if (key) {
                     this.localListPointerHash[key] = list;
                     this.localListVersionHash[key] = attributes.version;
@@ -236,7 +253,7 @@ GroupDavSynchronizer.prototype = {
                 }
             }
         }
-        dump("  found " + count + " lists\n");
+        // dump("  found " + count + " lists\n");
 
         if (uploads > 0) {
             this.localUploads += uploads;
@@ -264,7 +281,7 @@ GroupDavSynchronizer.prototype = {
                           "http://calendarserver.org/ns/ getctag"], false);
     },
     downloadVcards: function() {
-        dump("  downloadVcards\n");
+        // dump("  downloadVcards\n");
         this.remainingDownloads = 0;
         let hasDownloads = false;
 
@@ -289,7 +306,7 @@ GroupDavSynchronizer.prototype = {
         }
     },
     downloadLists: function() {
-        dump("  downloadLists\n");
+        // dump("  downloadLists\n");
         this.remainingDownloads = 0;
         let hasDownloads = false;
 
@@ -381,8 +398,9 @@ GroupDavSynchronizer.prototype = {
         }
     },
     onCardUploadComplete: function(status, data, key, card, headers) {
+        // dump("status: " + status + "; data: " + data + "; key: " + key
+        //      + "; card: " + card + "; headers: " + headers + "\n");
         let cardURL = this.gURL + key;
-        dump("  onCardUploadComplete\n");
         if (status > 199 && status < 400) {
             let etag = headers["etag"];
             if (etag && etag.length) {
@@ -403,13 +421,8 @@ GroupDavSynchronizer.prototype = {
                     dump("  updated card with key: " + key + "\n");
                 }
                 dump("  uploaded card has etag: " + etag + "\n");
-                card.setProperty(kETagKey, String(etag));
-                // let cards = Components.classes["@mozilla.org/array;1"]
-                //                        .createInstance(Components.interfaces.nsIMutableArray);
-                // cards.appendElement(card, false);
-                // this.gAddressBook.deleteCards(cards);
+                card.setProperty(kETagKey, "" + String(etag));
                 this.gAddressBook.modifyCard(card);
-                // card.editCardToDatabase(this.gSelectedDirectoryURI);
             }
             else
                 dump("No etag returned for vcard uploaded at " + cardURL + ", ignored\n");
@@ -445,7 +458,7 @@ GroupDavSynchronizer.prototype = {
             throw string;
         }
 
-        dump("importCard\n");
+        // dump("importCard\n");
         let card = importFromVcard(data// , vcardFieldsArray
                                   );
         card.setProperty(kNameKey, String(key));
@@ -474,6 +487,11 @@ GroupDavSynchronizer.prototype = {
         } else {
             dump("  new card\n");
             this.gAddressBook.addCard(card);
+
+            /* Hack needed to ensure the existence of the "LastModifiedDate"
+             property, set as "0" on duplicate cards */
+            this.gAddressBook.modifyCard(card);
+
             this.localCardPointerHash[key] = card;
         }
     },
@@ -517,8 +535,8 @@ GroupDavSynchronizer.prototype = {
             throw "listDir not found for old list: " + listCard.mailListURI;
         }
         let listUpdated = updateListFromVList(listCard, data, this.localCardPointerHash);
-        dump("listDir.uri: " + listDir.URI
-             + "; listCard.uri: " + listCard.mailListURI + "\n");
+        // dump("listDir.uri: " + listDir.URI
+        //      + "; listCard.uri: " + listCard.mailListURI + "\n");
         listDir.editMailListToDatabase(listCard);
 
         let attributes = new GroupDAVListAttributes(listCard.mailListURI);
@@ -1187,6 +1205,43 @@ GroupDavSynchronizer.prototype = {
             }
             else
                 throw "Buggy situation (processMode )!";
+        }
+    },
+
+    // Debug helpers
+    dumpCard: function(card) {
+        dump("  * card properties:\n");
+        let props = card.properties;
+        let count = 0;
+        while (props.hasMoreElements()) {
+            let prop = props.getNext().QueryInterface(Components.interfaces.nsIProperty);
+            dump("  " + count + ") prop: " + prop + ";  name: " + prop.name + "; value: " + prop.value + "\n");
+            count++;
+        }
+        dump("  * done\n");
+    },
+    dumpCardNames: function() {
+        let cards = this.gAddressBook.childCards;
+        dump("  * card list\n");
+        dump("  ab.URI: " + this.gAddressBook.URI + "\n");
+        dump("  ab.isQuery: " + this.gAddressBook.isQuery + "\n");
+        let count = 0;
+        while (cards.hasMoreElements()) {
+            let card = cards.getNext().QueryInterface(Components.interfaces.nsIAbCard);
+            dump("  " + count + ") " + card.displayName
+                 +  ": " + card.getProperty("DbRowID", "")
+                 +  ": " + card.getProperty("RecordKey", "")
+                 +  ": " + card.getProperty("LastModifiedDate", "")
+                 + "\n");
+            count++;
+        }
+        dump("  * done\n");
+    },
+    dumpDeletedCards: function() {
+        let cards = this.gAddressBook.QueryInterface(Components.interfaces.nsIAbMDBDirectory).database.deletedCardList;
+        dump("  * " + cards.length + " deleted cards\n");
+        for (let i = 0; i < cards.length; i++) {
+            dump("    card: " + cards.queryElementAt(i, Components.interfaces.nsIAbCard) + "\n");
         }
     }
 };
