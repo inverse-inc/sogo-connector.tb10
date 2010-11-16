@@ -166,10 +166,15 @@ abDirTreeObserver.SCOnDrop = function(row, or) {
          interface to discover the target directory. */
         let sourceDirectory = gAbView.directory;
         let aDirTree = document.getElementById("dirTree");
-        let targetResource = aDirTree.builderView.getResourceAtIndex(row);
-        let targetURI = targetResource.Value;
+        let targetResource = aDirTree.builderView.getResourceAtIndex(row)
+                                     .QueryInterface(Components.interfaces.nsIAbDirectory);
+        let targetURI = targetResource.URI;
 
-        let cardKeys;
+        // dump("source dir: " + sourceDirectory + "\n");
+        // dump("  source uri: " + sourceDirectory.URI + "\n");
+        // dump("  target dir: " + targetURI + "\n");
+        // dump("  targetReource: " + targetResource + "\n");
+        let cardKeys = null;
         if (targetURI.indexOf(sourceDirectory.URI) != 0
             && isGroupdavDirectory(sourceDirectory.URI)) {
             if (dragSession.dragAction
@@ -178,8 +183,6 @@ abDirTreeObserver.SCOnDrop = function(row, or) {
             }
             this._resetDroppedCardsVersionFromSession(dragSession, gAbView);
         }
-        else
-            cardKeys = null;
 
         let proceed = true;
         try {
@@ -190,7 +193,16 @@ abDirTreeObserver.SCOnDrop = function(row, or) {
             dump("an exception occured: " + e + "\n");
         }
 
-        if (isGroupdavDirectory(targetURI)) {
+        if (targetResource.isMailList) {
+            let uriParts = targetURI.split("/");
+            let parentDirURI = uriParts[0] + "//" + uriParts[2];
+            if (isGroupdavDirectory(parentDirURI)) {
+                let attributes = new GroupDAVListAttributes(targetURI);
+                attributes.version = "-1";
+                SynchronizeGroupdavAddressbook(parentDirURI);
+            }
+        }
+        else if (isGroupdavDirectory(targetURI)) {
             SynchronizeGroupdavAddressbook(targetURI);
         }
 
@@ -300,7 +312,7 @@ abDirTreeObserver._pushCardKey = function(card, cards) {
 
 function SCAbEditSelectedDirectory() {
     /* This method is no longer used for CardDAV addressbooks, since we now
-       return a proper "propertiesChromeURI" attribute. */
+     return a proper "propertiesChromeURI" attribute. */
     let abUri = GetSelectedDirectory();
     if (isGroupdavDirectory(abUri)) {
         let directory = SCGetDirectoryFromURI(abUri);
@@ -661,7 +673,7 @@ function SCOnLoad() {
 
 function SCOnResultsTreeContextMenuPopup(event) {
     if (this == event.target) { /* otherwise the reset will be executed when
-                                   any submenu pops up too... */
+                                 any submenu pops up too... */
         let cards = GetSelectedAbCards();
         let rootEntry = document.getElementById("sc-categories-contextmenu");
         rootEntry.disabled = (cards.length == 0);
