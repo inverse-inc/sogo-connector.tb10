@@ -1013,6 +1013,7 @@ function list2vlist(uid, listCard) {
                               .getService(Components.interfaces.nsIAbManager);
     let listDir = abManager.getDirectory(listCard.mailListURI);
     let cards = listDir.childCards;
+    dump("cards: " + cards + "\n");
     while (cards.hasMoreElements()) {
         let card = cards.getNext().QueryInterface(Components.interfaces.nsIAbCard);
         let key = card.getProperty("groupDavKey", "");
