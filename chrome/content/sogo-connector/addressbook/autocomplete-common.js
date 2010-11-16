@@ -16,7 +16,7 @@ function SCACLoad() {
     }
     catch(e) {};
 
-    if (delay || attribute) {
+    if (delay || hasAttribute) {
         let done = false;
         let i = 1;
         while (!done) {

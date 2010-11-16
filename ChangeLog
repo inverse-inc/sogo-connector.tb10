@@ -1,3 +1,8 @@
+2010-11-16  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* chrome/content/sogo-connector/addressbook/autocomplete-common.js:
+	(SCACLoad): fixed typo.
+
 2010-11-03  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* chrome/content/sogo-connector/addressbook/folder-handling.js:
