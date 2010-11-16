@@ -171,10 +171,13 @@ abDirTreeObserver.SCOnDrop = function(row, or) {
 
         let cardKeys;
         if (targetURI.indexOf(sourceDirectory.URI) != 0
-            && isGroupdavDirectory(sourceDirectory.URI)
-            && (dragSession.dragAction
-                == Components.interfaces.nsIDragService.DRAGDROP_ACTION_MOVE))
-            cardKeys = this._getDroppedCardsKeysFromSession(dragSession, gAbView);
+            && isGroupdavDirectory(sourceDirectory.URI)) {
+            if (dragSession.dragAction
+                == Components.interfaces.nsIDragService.DRAGDROP_ACTION_MOVE) {
+                cardKeys = this._getDroppedCardsKeysFromSession(dragSession, gAbView);
+            }
+            this._resetDroppedCardsVersionFromSession(dragSession, gAbView);
+        }
         else
             cardKeys = null;
 
@@ -187,8 +190,9 @@ abDirTreeObserver.SCOnDrop = function(row, or) {
             dump("an exception occured: " + e + "\n");
         }
 
-        if (isGroupdavDirectory(targetURI))
+        if (isGroupdavDirectory(targetURI)) {
             SynchronizeGroupdavAddressbook(targetURI);
+        }
 
         if (cardKeys)
             dump("cardKeys: " + cardKeys.length + " to delete\n");
@@ -240,6 +244,43 @@ abDirTreeObserver._getDroppedCardsKeysFromSession = function(dragSession, abView
     return cards;
 };
 
+abDirTreeObserver._resetDroppedCardsVersionFromSession = function(dragSession, abView) {
+    let trans = Components.classes["@mozilla.org/widget/transferable;1"]
+                          .createInstance(Components.interfaces.nsITransferable);
+    trans.addDataFlavor("moz/abcard");
+
+    for (let i = 0; i < dragSession.numDropItems; i++) {
+        dragSession.getData(trans, i);
+        let dataObj = {};
+        let bestFlavor = {};
+        let len = {};
+        try {
+            trans.getAnyTransferData(bestFlavor, dataObj, len);
+            dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsString);
+            // 			dump("drop data = /" + dataObj.data + "/\n");
+            let transData = dataObj.data.split("\n");
+            let rows = transData[0].split(",");
+
+            for (let j = 0; j < rows.length; j++) {
+                let card = abView.getCardFromRow(rows[j]);
+                if (card) {
+                    if (card.isMailList) {
+                        let attributes = new GroupDAVListAttributes(card.mailListURI);
+                        attributes.version = "-1";
+                    }
+                    else {
+                        card.setProperty("groupDavVersion", "-1");
+                        abView.directory.modifyCard(card);
+                    }
+                }
+            }
+        }
+        catch (ex) {
+            dump("ex: " + ex + "\n");
+        }
+    }
+};
+
 abDirTreeObserver._pushCardKey = function(card, cards) {
     let key = null;
 
@@ -249,11 +290,12 @@ abDirTreeObserver._pushCardKey = function(card, cards) {
     }
     else {
         key = card.getProperty("groupDavKey", null);
-        dump("ke2y: " + key + "\n");
+        // dump("ke2y: " + key + "\n");
     }
 
-    if (key && key.length)
+    if (key && key.length) {
         cards.push(key);
+    }
 };
 
 function SCAbEditSelectedDirectory() {

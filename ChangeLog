@@ -1,5 +1,9 @@
 2010-11-16  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* chrome/content/sogo-connector/addressbook/addressbook.groupdav.overlay.js:
+	(SCOnDrop): set the card and list groupdav version to "-1" to
+	force their upload after the drop has happened.
+
 	* chrome/content/sogo-connector/addressbook/autocomplete-common.js:
 	(SCACLoad): fixed typo.
 
