@@ -28,10 +28,14 @@ function SCOnCreationOverlayLoad() {
 
 function SCDoCreateCalendar() {
     if (gCalendar.type == "caldav") {
-        let aclMgr = Components.classes["@inverse.ca/calendar/caldav-acl-manager;1"]
-                               .getService(Components.interfaces.nsISupports)
-                               .wrappedJSObject;
-        aclMgr.calendarEntry(gCalendar.uri);
+	try {
+        	let aclMgr = Components.classes["@inverse.ca/calendar/caldav-acl-manager;1"]
+                	               .getService(Components.interfaces.nsISupports)
+                        	       .wrappedJSObject;
+        	aclMgr.calendarEntry(gCalendar.uri);
+	} catch (Exception e) {
+	   dump("No ACL manager found - not using the Inverse Edition of Lightning.\n");
+	}
     }
 
     return window.SCOldDoCreateCalendar();

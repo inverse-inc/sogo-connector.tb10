@@ -1,3 +1,8 @@
+2011-02-02  Ludovic Marcotte  <lmarcotte@inverse.ca>
+
+	* chrome/content/sogo-connector/calendar/creation-overlay.js
+	We check if the ACL manager exists before trying to use it.
+
 2010-11-16  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* chrome/content/sogo-connector/addressbook/addressbook.groupdav.overlay.js:
