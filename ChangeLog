@@ -1,3 +1,8 @@
+2011-02-17  Francis Lachapelle  <flachapelle@inverse.ca>
+
+	* chrome/content/inverse-library/sogoWebDAV.js (xmlEscape): We now
+	encode all non-ascii characters with their HTML entity number representation.
+
 2011-02-02  Ludovic Marcotte  <lmarcotte@inverse.ca>
 
 	* chrome/content/sogo-connector/calendar/creation-overlay.js

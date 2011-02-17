@@ -95,7 +95,14 @@ XMLToJSONParser.prototype = {
 };
 
 function xmlEscape(text) {
-    return text.replace("&", "&amp;", "g").replace("<", "&lt;", "g");
+    let s = "";
+    for (var i = 0; i < text.length; i++) {
+	if (text.charCodeAt(i) > 127)
+	    s += '&#' + text.charCodeAt(i) + ';';
+	else
+	    s += text.charAt(i);
+    }
+    return s;
 }
 
 function xmlUnescape(text) {
