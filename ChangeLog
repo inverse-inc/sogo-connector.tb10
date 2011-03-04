@@ -1,3 +1,9 @@
+2011-03-04  Ludovic Marcotte  <lmarcotte@inverse.ca>
+
+	* js/CardDAVDirectory.js (cardForEmailAddress): We disable
+	the search in CardDAV based address books when displaying
+	emails - this is just too slow for now.
+
 2011-02-17  Francis Lachapelle  <flachapelle@inverse.ca>
 
 	* chrome/content/inverse-library/sogoWebDAV.js (xmlEscape): We now

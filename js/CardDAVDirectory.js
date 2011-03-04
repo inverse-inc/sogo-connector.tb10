@@ -159,7 +159,13 @@ CardDAVDirectory.prototype = {
 
     cardForEmailAddress: function(emailAddress) {
         // dump("CardDAVDirectory: cardForEmailAddress: " + emailAddress + "\n");
-        let card = this.mCardCache[emailAddress];
+    	// FIXME - we return null right away in order to prevent Thunderbird
+	// of search in all address books, so all CardDAV address books, when displaying
+	// an email. This can be very costly for slow networks. We might eventually add
+	// this back when we have proper caching in place.
+	return null;
+    	
+    	let card = this.mCardCache[emailAddress];
         if (card) {
             if (!(card instanceof Components.interfaces.nsIAbCard)) {
                 card = null;
