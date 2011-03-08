@@ -981,7 +981,7 @@ GroupDavSynchronizer.prototype = {
                 //         dump("upload new/updated card: " + cardURL + "\n");
                 this.remainingUploads++;
                 let request = new sogoWebDAV(cardURL, this, data);
-                request.put(vcard, "text/x-vcard; charset=utf-8");
+                request.put(vcard, "text/vcard; charset=utf-8");
             }
             else {
                 dump("new vcard could not be generated for update\n");

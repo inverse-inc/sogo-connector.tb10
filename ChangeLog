@@ -1,5 +1,10 @@
 2011-03-08  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* chrome/content/sogo-connector/general/sync.addressbook.groupdav.js
+	(GroupDavSynchronizer.uploadCards): upload cards with mime type
+	"text/vcard" instead of "text/x-vcards" since Apple does not give
+	a crap about standards.
+
 	* chrome/content/inverse-library/sogoWebDAV.js (xmlEscape):
 	restored escaping of "<" and "&" characters.
 
