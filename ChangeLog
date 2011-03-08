@@ -1,3 +1,8 @@
+2011-03-08  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* chrome/content/inverse-library/sogoWebDAV.js (xmlEscape):
+	restored escaping of "<" and "&" characters.
+
 2011-03-04  Ludovic Marcotte  <lmarcotte@inverse.ca>
 
 	* js/CardDAVDirectory.js (cardForEmailAddress): We disable
