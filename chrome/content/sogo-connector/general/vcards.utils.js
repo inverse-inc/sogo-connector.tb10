@@ -42,7 +42,6 @@ function escapedForCard(theString) {
     theString = theString.replace(/\\/g, "\\\\");
     theString = theString.replace(/,/g, "\\,");
     theString = theString.replace(/;/g, "\\;");
-    theString = theString.replace(/,/g, "\\,");
 
     // theString.replace(/\n/g, "\\n,");
     // theString.replace(/\r/g, "\\r,");

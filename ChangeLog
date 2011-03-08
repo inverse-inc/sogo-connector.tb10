@@ -1,5 +1,8 @@
 2011-03-08  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* chrome/content/sogo-connector/general/vcards.utils.js
+	(escapedForCard): removed one excessive escaping of commas.
+
 	* chrome/content/sogo-connector/addressbook/addressbook.groupdav.overlay.js
 	(SCAbDelete): add handling of the case where a card is deleted
 	from a contacts list from the addressbook window rather than the
