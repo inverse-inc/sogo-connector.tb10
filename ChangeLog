@@ -20,6 +20,8 @@
 	attribute prefixed with "unprocessed:".
 	(card2vcard): use the above keys to reconstruct the card with the
 	unhandled properties.
+	(_insertCardMethods.adr): added hack to fix bad address encoding
+	from iOS devices.
 
 2011-03-08  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 

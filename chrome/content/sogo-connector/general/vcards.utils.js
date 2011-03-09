@@ -351,6 +351,9 @@ let _insertCardMethods = {
     },
     adr: function(props, parameters, values) {
         let types = this._upperTypes(parameters["type"]);
+        /* Concat multi-line(feed) address field with commas (quirk for iOS) */
+        values[1] = values[1].split("\n").join(", ");
+        values[2] = values[2].split("\n").join(", ");
         if (types.indexOf("WORK") > -1) {
             props.extend({ "WorkAddress2": values[1],
                            "WorkAddress": values[2],
