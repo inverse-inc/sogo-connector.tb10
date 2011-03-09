@@ -224,13 +224,6 @@ function versitParse(versitString) {
 }
 
 /* VCARD */
-/**************************************************************************
- * Function to import directly the vcard.
- *
- * outParameters must be an array, to enable the fonction to pass back the value
- * of custom fields that are not part of a Thunderbird card.
- *
- **************************************************************************/
 function importFromVcard(vCardString) {
     let card = null;
     if (!vCardString || vCardString == "")
