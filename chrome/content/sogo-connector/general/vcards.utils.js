@@ -42,9 +42,9 @@ function escapedForCard(theString) {
     theString = theString.replace(/\\/g, "\\\\");
     theString = theString.replace(/,/g, "\\,");
     theString = theString.replace(/;/g, "\\;");
-
-    // theString.replace(/\n/g, "\\n,");
-    // theString.replace(/\r/g, "\\r,");
+    theString = theString.replace(/:/g, "\\:");
+    theString = theString.replace(/\r\n/g, "\\n");
+    theString = theString.replace(/\n/g, "\\n");
 
     return theString;
 }
@@ -72,12 +72,12 @@ function multiValueToArray(multiValue) {
 }
 
 function unescapedFromCard(theString) {
-    theString = theString.replace(/\\/g, "\\");
-    theString = theString.replace(/\,/g, ",");
-    theString = theString.replace(/\;/g, ";");
-    theString = theString.replace(/\,/g, ",");
-    // theString.replace(/\\n/g, "\n,");
-    // theString.replace(/\\r/g, "\r,");
+    theString = theString.replace(/\\\\/g, "\\");
+    theString = theString.replace(/\\,/g, ",");
+    theString = theString.replace(/\\:/g, ":");
+    theString = theString.replace(/\\;/g, ";");
+    theString = theString.replace(/\\n/g, "\n");
+    theString = theString.replace(/\\r/g, "\r");
 
     return theString;
 }
