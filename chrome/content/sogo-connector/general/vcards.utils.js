@@ -505,8 +505,12 @@ function InsertCardData(card, tag, parameters, values) {
 
     if (typeof _insertCardMethods[tag] != "undefined")
         _insertCardMethods[tag](properties, parameters, values);
-    else
-        properties[tag] = values.join(";");
+    else {
+        let joined = values.join("\u001A");
+        if (joined.length > 0) {
+            properties["unprocessed:" + tag] = joined;
+        }
+    }
 
     delete (properties["extend"]);
 
@@ -786,6 +790,26 @@ function card2vcard(card) {
                     vCard += foldedLine("PHOTO;ENCODING=b;TYPE=" + photoType
                                         + ":" + btoa(content)) + "\r\n";
                 }
+            }
+        }
+    }
+
+    let remainingProps = card.properties;
+    while (remainingProps.hasMoreElements()) {
+        let prop = remainingProps.getNext().QueryInterface(Components.interfaces.nsIProperty);
+        let propName = String(prop.name);
+        if (propName.indexOf("unprocessed:") == 0) {
+            let line = propName.substr(12).toUpperCase() + ":";
+            let joined = String(prop.value);
+            if (joined.length > 0) {
+                let values = joined.split("\u001A");
+                for (let i = 0; i < values.length; i++) {
+                    if (i > 1) {
+                        line += ";";
+                    }
+                    line += escapedForCard(values[i]);
+                }
+                vCard += foldedLine(line) + "\r\n";
             }
         }
     }

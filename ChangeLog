@@ -16,6 +16,10 @@
 	(saveImportedPhoto): force the creation of the photo file to
 	ensure all the parent hierarchy exists, enabling the saving of the
 	real data right after.
+	(InsertCardData): keep unprocessed tag values under a key
+	attribute prefixed with "unprocessed:".
+	(card2vcard): use the above keys to reconstruct the card with the
+	unhandled properties.
 
 2011-03-08  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
