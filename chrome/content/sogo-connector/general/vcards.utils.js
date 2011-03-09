@@ -551,16 +551,16 @@ function decodedValues(values, charset, encoding) {
         if (encoding) {
             // dump("encoding: " + encoding + "\n");
             // dump("initial value: ^" + values[i] + "$\n");
-            var saneb64Value = sanitizeBase64(values[i]);
             if (encoding == "quoted-printable") {
-                decodedValue = decoder.decode(saneb64Value);
+                decodedValue = decoder.decode(values[i]);
             }
             else if (encoding == "b" || encoding == "base64") {
+                let saneb64Value = sanitizeBase64(values[i]);
                 try {
-                    decodedValue = window.atob(values[i]);
+                    decodedValue = atob(saneb64Value);
                 }
                 catch(e) {
-                    dump("vcards.utils.js: failed to decode '" + values[i] +
+                    dump("vcards.utils.js: failed to decode '" + saneb64Value +
                          "'\n" + e + "\n\n Stack:\n" + e.stack + "\n\n");
                 }
             }

@@ -10,6 +10,9 @@
 	was specified, we must be receiving something from an Apple app...
 	(deducePhotoExtFromTypes): if the photo type is "BASE64", it must
 	come from an Apple app...
+	(decodedValues): "quoted-printable"-encoded values where sanitized
+	for base64 decoding, a confusion that prevented atob() from
+	working properly sometimes.
 
 2011-03-08  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
