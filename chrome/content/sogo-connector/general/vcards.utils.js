@@ -273,6 +273,13 @@ function CreateCardFromVCF(vcard) {
         else
             parameters = {};
 
+        if (tag == "photo" && !encoding) {
+            /* Apple: what are standards for, right?
+             iOS specifies the encoding as a vcard 2.1-style type attribute.
+             Therefore, no "encoding" parameter is provided. */
+            encoding = "b";
+        }
+
         let values = decodedValues(vcard[i]["values"], charset, encoding);
         InsertCardData(card, tag, parameters, values);
     }
@@ -877,7 +884,9 @@ function deducePhotoExtFromTypes(photoTypes) {
 
     if (photoTypes && photoTypes.length > 0) {
         let upperType = photoTypes[0].toUpperCase();
-        if (upperType == "JPEG") {
+        if (upperType == "JPEG"
+            || upperType == "BASE64" /* Apple: what are standards for,
+                                      right? */) {
             ext = "jpg";
         }
         else if (upperType == "PNG") {
@@ -888,7 +897,7 @@ function deducePhotoExtFromTypes(photoTypes) {
         }
         else
             dump("vcards.utils.js: unhandled image type: "
-                 + photoType + "\n");
+                 + upperType + "\n");
     }
 
     return ext;
