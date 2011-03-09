@@ -13,6 +13,9 @@
 	(decodedValues): "quoted-printable"-encoded values where sanitized
 	for base64 decoding, a confusion that prevented atob() from
 	working properly sometimes.
+	(saveImportedPhoto): force the creation of the photo file to
+	ensure all the parent hierarchy exists, enabling the saving of the
+	real data right after.
 
 2011-03-08  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 

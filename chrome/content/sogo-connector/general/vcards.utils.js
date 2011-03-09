@@ -907,6 +907,9 @@ function saveImportedPhoto(content, ext) {
     let photoName = (new UUID()) + "." + ext;
 
     let file = photoFileFromName(photoName);
+    /* 0700 is specified here because Thunderbird is too self-sufficient
+     to respect the environment umask */
+    file.create(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0700);
     let fileStream = Components.classes["@mozilla.org/network/file-output-stream;1"]
                                .createInstance(Components.interfaces.nsIFileOutputStream);
 
