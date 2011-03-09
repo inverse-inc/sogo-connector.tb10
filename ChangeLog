@@ -4,6 +4,8 @@
 	(escapeForCards): added escaping of ":", fixed handling of "\n" while ignoring "\r"
 	at all in the output and removed double escaping of ",".
 	(unescapedFromCard): double the "\" chars in the regexps.
+	(versitParse): added handling of Apple-style "grouped" tags by
+	ignoring the group label.
 
 2011-03-08  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 

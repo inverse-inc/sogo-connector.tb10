@@ -128,6 +128,10 @@ function versitParse(versitString) {
             else {
                 if (type == 0) {
                     if (character == ";") {
+                        let dotIdx = tag.indexOf(".");
+                        if (dotIdx > -1) {
+                            tag = tag.substr(dotIdx);
+                        }
                         currentLine["tag"] = tag.toLowerCase();
                         parameters = {};
                         parameterName = "type";
@@ -135,6 +139,10 @@ function versitParse(versitString) {
                         type = 1;
                     }
                     else if (character == ":") {
+                        let dotIdx = tag.indexOf(".");
+                        if (dotIdx > -1) {
+                            tag = tag.substr(dotIdx);
+                        }
                         currentLine["tag"] = tag.toLowerCase();
                         values = new Array();
                         value = "";
