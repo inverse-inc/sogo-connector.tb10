@@ -130,7 +130,7 @@ function versitParse(versitString) {
                     if (character == ";") {
                         let dotIdx = tag.indexOf(".");
                         if (dotIdx > -1) {
-                            tag = tag.substr(dotIdx);
+                            tag = tag.substr(dotIdx + 1);
                         }
                         currentLine["tag"] = tag.toLowerCase();
                         parameters = {};
@@ -141,7 +141,7 @@ function versitParse(versitString) {
                     else if (character == ":") {
                         let dotIdx = tag.indexOf(".");
                         if (dotIdx > -1) {
-                            tag = tag.substr(dotIdx);
+                            tag = tag.substr(dotIdx + 1);
                         }
                         currentLine["tag"] = tag.toLowerCase();
                         values = new Array();
@@ -494,7 +494,8 @@ let _insertCardMethods = {
 };
 
 function InsertCardData(card, tag, parameters, values) {
-    // logInfo("InsertCardData: " + tag + "\n");
+    // dump("InsertCardData: " + tag + "\n");
+    // dump("  values: " + values.join("|") + "\n");
 
     let properties = {};
     properties.extend = function Object_extend(otherObj) {
