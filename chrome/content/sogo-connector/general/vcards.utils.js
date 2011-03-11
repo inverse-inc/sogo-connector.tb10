@@ -240,8 +240,6 @@ function importFromVcard(vCardString) {
     return card;
 }
 
-// outParameters must be an array, to enable the fonction to pass back the value
-// of custom fields that are not part of a Thunderbird card.
 function CreateCardFromVCF(vcard) {
     let version = "2.1";
     let defaultCharset = "iso-8859-1"; /* 0 = latin 1, 1 = utf-8 */
@@ -493,6 +491,10 @@ let _insertCardMethods = {
     begin: function(props, parameters, values) {
     },
     end: function(props, parameters, values) {
+    },
+    prodid: function(props, parameters, values) {
+    },
+    version: function(props, parameters, values) {
     }
 };
 
@@ -802,16 +804,19 @@ function card2vcard(card) {
     while (remainingProps.hasMoreElements()) {
         let prop = remainingProps.getNext().QueryInterface(Components.interfaces.nsIProperty);
         let propName = String(prop.name);
-        if (propName.indexOf("unprocessed:") == 0) {
+        /* A bug in Thunderbird prevents the old unprocessed props from being removed, yay!
+         Hence the 3 last cases in this if clause...  */
+        if (propName.indexOf("unprocessed:") == 0
+            && propName.indexOf("unprocessed:prodid") == -1
+            && propName.indexOf("unprocessed:version") == -1
+            && propName.indexOf("unprocessed:.") == -1) {
             let line = propName.substr(12).toUpperCase() + ":";
             let joined = String(prop.value);
             if (joined.length > 0) {
                 let values = joined.split("\u001A");
-                for (let i = 0; i < values.length; i++) {
-                    if (i > 1) {
-                        line += ";";
-                    }
-                    line += escapedForCard(values[i]);
+                line += escapedForCard(values[0]);
+                for (let i = 1; i < values.length; i++) {
+                    line += ";" + escapedForCard(values[i]);
                 }
                 vCard += foldedLine(line) + "\r\n";
             }

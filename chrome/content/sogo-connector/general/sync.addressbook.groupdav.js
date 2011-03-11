@@ -467,6 +467,18 @@ GroupDavSynchronizer.prototype = {
                 /* TODO: BUG: we should load the photo into the cache when it has
                  been imported with a URL value. */
             }
+
+            /* FIXME: there is a thunderbird bug here which prevent the properties from actually be deleted... */
+            let allOldCardProperties = oldCard.properties;
+            while (allOldCardProperties.hasMoreElements()) {
+                let prop = allOldCardProperties.getNext().QueryInterface(Components.interfaces.nsIProperty);
+                let propName = String(prop.name);
+                if (propName.indexOf("unprocessed:") == 0) {
+                    oldCard.deleteProperty(propName);
+                }
+            }
+            this.gAddressBook.modifyCard(oldCard);
+
             oldCard.copy(card);
             this.gAddressBook.modifyCard(oldCard);
         } else {

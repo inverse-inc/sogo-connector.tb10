@@ -1,3 +1,10 @@
+2011-03-11  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* chrome/content/sogo-connector/general/vcards.utils.js
+	(_insertCardMethods:) added empty entries for "prodid" and
+	"version" to avoid letting them put in the "unprocessed:"
+	properties.
+
 2011-03-09  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* chrome/content/sogo-connector/general/vcards.utils.js
