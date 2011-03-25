@@ -444,7 +444,7 @@ function SCAbConfirmDelete(types) {
             let confirmDeleteMessage;
             if (types == kListsAndCards)
                 confirmDeleteMessage
-                = gAddressBookBundle.getString("confirmDeleteListsAndCards");
+                = gAddressBookBundle.getString("confirmDeleteListsAndContacts");
             else if (types == kMultipleListsOnly)
             confirmDeleteMessage
                 = gAddressBookBundle.getString("confirmDeleteMailingLists");
