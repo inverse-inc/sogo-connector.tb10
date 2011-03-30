@@ -32,5 +32,5 @@
 
 <!ENTITY addressbook.synchronize.label	"Sincronizzazione:">
 
-<!ENTITY SearchCriteriaButton.label "Criteria">
-<!ENTITY SearchCategory.label "Category">
+<!ENTITY SearchCriteriaButton.label "Criteri">
+<!ENTITY SearchCategory.label "Categoria">
