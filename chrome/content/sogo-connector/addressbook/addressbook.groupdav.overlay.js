@@ -444,7 +444,7 @@ function SCAbConfirmDelete(types) {
             let confirmDeleteMessage;
             if (types == kListsAndCards)
                 confirmDeleteMessage
-                = gAddressBookBundle.getString("confirmDeleteListsAndCards");
+                = gAddressBookBundle.getString("confirmDeleteListsAndContacts");
             else if (types == kMultipleListsOnly)
             confirmDeleteMessage
                 = gAddressBookBundle.getString("confirmDeleteMailingLists");
@@ -459,17 +459,40 @@ function SCAbConfirmDelete(types) {
 }
 
 function SCAbDelete() {
-    dump("SCAbDelete: gSelectedDir: " + gSelectedDir + "\n");
-    if (isGroupdavDirectory(gSelectedDir)) {
-        let types = GetSelectedCardTypes();
-        if (types != kNothingSelected && SCAbConfirmDelete(types)) {
-            let cards = GetSelectedAbCards();
-            // let abView = GetAbView();
-            DeleteGroupDAVCards(gSelectedDir, cards, true);
+    let deletePerformed = false;
+
+    if (gSelectedDir) {
+        if (isGroupdavDirectory(gSelectedDir)) {
+            let types = GetSelectedCardTypes();
+            if (types != kNothingSelected && SCAbConfirmDelete(types)) {
+                let cards = GetSelectedAbCards();
+                // let abView = GetAbView();
+                DeleteGroupDAVCards(gSelectedDir, cards, true);
+                deletePerformed = true;
+            }
+        }
+        else if (gSelectedDir.search("mab/MailList") > -1) {
+            let parentURI = GetParentDirectoryFromMailingListURI(gSelectedDir);
+            if (isGroupdavDirectory(parentURI)) {
+                let list = SCGetDirectoryFromURI(gSelectedDir);
+                let cards = GetSelectedAbCards();
+                let xpcomArray = Components.classes["@mozilla.org/array;1"]
+                                           .createInstance(Components.interfaces.nsIMutableArray);
+                for (let i = 0; i < cards.length; i++) {
+                    xpcomArray.appendElement(cards[i], false);
+                }
+                list.deleteCards(xpcomArray);
+                let attributes = new GroupDAVListAttributes(gSelectedDir);
+                attributes.version = "-1";
+                SynchronizeGroupdavAddressbook(parentURI);
+                deletePerformed = true;
+            }
         }
     }
-    else
+
+    if (!deletePerformed) {
         this.SCAbDeleteOriginal();
+    }
 }
 
 /* AbDeleteDirectory done cleanly... */

@@ -96,12 +96,25 @@ XMLToJSONParser.prototype = {
 
 function xmlEscape(text) {
     let s = "";
+
     for (var i = 0; i < text.length; i++) {
-	if (text.charCodeAt(i) > 127)
-	    s += '&#' + text.charCodeAt(i) + ';';
-	else
-	    s += text.charAt(i);
+        if (text[i] == "&") {
+	    s += "&amp;";
+        }
+        else if (text[i] == "<") {
+	    s += "&lt;";
+        }
+        else  {
+            let charCode = text.charCodeAt(i);
+	    if (charCode > 127) {
+	        s += '&#' + charCode + ';';
+            }
+	    else {
+	        s += text[i];
+            }
+        }
     }
+
     return s;
 }
 

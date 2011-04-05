@@ -42,10 +42,9 @@ function escapedForCard(theString) {
     theString = theString.replace(/\\/g, "\\\\");
     theString = theString.replace(/,/g, "\\,");
     theString = theString.replace(/;/g, "\\;");
-    theString = theString.replace(/,/g, "\\,");
-
-    // theString.replace(/\n/g, "\\n,");
-    // theString.replace(/\r/g, "\\r,");
+    theString = theString.replace(/:/g, "\\:");
+    theString = theString.replace(/\r\n/g, "\\n");
+    theString = theString.replace(/\n/g, "\\n");
 
     return theString;
 }
@@ -73,12 +72,12 @@ function multiValueToArray(multiValue) {
 }
 
 function unescapedFromCard(theString) {
-    theString = theString.replace(/\\/g, "\\");
-    theString = theString.replace(/\,/g, ",");
-    theString = theString.replace(/\;/g, ";");
-    theString = theString.replace(/\,/g, ",");
-    // theString.replace(/\\n/g, "\n,");
-    // theString.replace(/\\r/g, "\r,");
+    theString = theString.replace(/\\\\/g, "\\");
+    theString = theString.replace(/\\,/g, ",");
+    theString = theString.replace(/\\:/g, ":");
+    theString = theString.replace(/\\;/g, ";");
+    theString = theString.replace(/\\n/g, "\n");
+    theString = theString.replace(/\\r/g, "\r");
 
     return theString;
 }
@@ -129,6 +128,10 @@ function versitParse(versitString) {
             else {
                 if (type == 0) {
                     if (character == ";") {
+                        let dotIdx = tag.indexOf(".");
+                        if (dotIdx > -1) {
+                            tag = tag.substr(dotIdx + 1);
+                        }
                         currentLine["tag"] = tag.toLowerCase();
                         parameters = {};
                         parameterName = "type";
@@ -136,6 +139,10 @@ function versitParse(versitString) {
                         type = 1;
                     }
                     else if (character == ":") {
+                        let dotIdx = tag.indexOf(".");
+                        if (dotIdx > -1) {
+                            tag = tag.substr(dotIdx + 1);
+                        }
                         currentLine["tag"] = tag.toLowerCase();
                         values = new Array();
                         value = "";
@@ -217,13 +224,6 @@ function versitParse(versitString) {
 }
 
 /* VCARD */
-/**************************************************************************
- * Function to import directly the vcard.
- *
- * outParameters must be an array, to enable the fonction to pass back the value
- * of custom fields that are not part of a Thunderbird card.
- *
- **************************************************************************/
 function importFromVcard(vCardString) {
     let card = null;
     if (!vCardString || vCardString == "")
@@ -240,8 +240,6 @@ function importFromVcard(vCardString) {
     return card;
 }
 
-// outParameters must be an array, to enable the fonction to pass back the value
-// of custom fields that are not part of a Thunderbird card.
 function CreateCardFromVCF(vcard) {
     let version = "2.1";
     let defaultCharset = "iso-8859-1"; /* 0 = latin 1, 1 = utf-8 */
@@ -272,6 +270,13 @@ function CreateCardFromVCF(vcard) {
         }
         else
             parameters = {};
+
+        if (tag == "photo" && !encoding) {
+            /* Apple: what are standards for, right?
+             iOS specifies the encoding as a vcard 2.1-style type attribute.
+             Therefore, no "encoding" parameter is provided. */
+            encoding = "b";
+        }
 
         let values = decodedValues(vcard[i]["values"], charset, encoding);
         InsertCardData(card, tag, parameters, values);
@@ -344,6 +349,9 @@ let _insertCardMethods = {
     },
     adr: function(props, parameters, values) {
         let types = this._upperTypes(parameters["type"]);
+        /* Concat multi-line(feed) address field with commas (quirk for iOS) */
+        values[1] = values[1].split("\n").join(", ");
+        values[2] = values[2].split("\n").join(", ");
         if (types.indexOf("WORK") > -1) {
             props.extend({ "WorkAddress2": values[1],
                            "WorkAddress": values[2],
@@ -483,11 +491,16 @@ let _insertCardMethods = {
     begin: function(props, parameters, values) {
     },
     end: function(props, parameters, values) {
+    },
+    prodid: function(props, parameters, values) {
+    },
+    version: function(props, parameters, values) {
     }
 };
 
 function InsertCardData(card, tag, parameters, values) {
-    // logInfo("InsertCardData: " + tag + "\n");
+    // dump("InsertCardData: " + tag + "\n");
+    // dump("  values: " + values.join("|") + "\n");
 
     let properties = {};
     properties.extend = function Object_extend(otherObj) {
@@ -498,8 +511,12 @@ function InsertCardData(card, tag, parameters, values) {
 
     if (typeof _insertCardMethods[tag] != "undefined")
         _insertCardMethods[tag](properties, parameters, values);
-    else
-        properties[tag] = values.join(";");
+    else {
+        let joined = values.join("\u001A");
+        if (joined.length > 0) {
+            properties["unprocessed:" + tag] = joined;
+        }
+    }
 
     delete (properties["extend"]);
 
@@ -544,16 +561,16 @@ function decodedValues(values, charset, encoding) {
         if (encoding) {
             // dump("encoding: " + encoding + "\n");
             // dump("initial value: ^" + values[i] + "$\n");
-            var saneb64Value = sanitizeBase64(values[i]);
             if (encoding == "quoted-printable") {
-                decodedValue = decoder.decode(saneb64Value);
+                decodedValue = decoder.decode(values[i]);
             }
             else if (encoding == "b" || encoding == "base64") {
+                let saneb64Value = sanitizeBase64(values[i]);
                 try {
-                    decodedValue = window.atob(values[i]);
+                    decodedValue = atob(saneb64Value);
                 }
                 catch(e) {
-                    dump("vcards.utils.js: failed to decode '" + values[i] +
+                    dump("vcards.utils.js: failed to decode '" + saneb64Value +
                          "'\n" + e + "\n\n Stack:\n" + e.stack + "\n\n");
                 }
             }
@@ -783,6 +800,29 @@ function card2vcard(card) {
         }
     }
 
+    let remainingProps = card.properties;
+    while (remainingProps.hasMoreElements()) {
+        let prop = remainingProps.getNext().QueryInterface(Components.interfaces.nsIProperty);
+        let propName = String(prop.name);
+        /* A bug in Thunderbird prevents the old unprocessed props from being removed, yay!
+         Hence the 3 last cases in this if clause...  */
+        if (propName.indexOf("unprocessed:") == 0
+            && propName.indexOf("unprocessed:prodid") == -1
+            && propName.indexOf("unprocessed:version") == -1
+            && propName.indexOf("unprocessed:.") == -1) {
+            let line = propName.substr(12).toUpperCase() + ":";
+            let joined = String(prop.value);
+            if (joined.length > 0) {
+                let values = joined.split("\u001A");
+                line += escapedForCard(values[0]);
+                for (let i = 1; i < values.length; i++) {
+                    line += ";" + escapedForCard(values[i]);
+                }
+                vCard += foldedLine(line) + "\r\n";
+            }
+        }
+    }
+
     vCard += "END:VCARD\r\n\r\n";
 
     return vCard;
@@ -877,7 +917,9 @@ function deducePhotoExtFromTypes(photoTypes) {
 
     if (photoTypes && photoTypes.length > 0) {
         let upperType = photoTypes[0].toUpperCase();
-        if (upperType == "JPEG") {
+        if (upperType == "JPEG"
+            || upperType == "BASE64" /* Apple: what are standards for,
+                                      right? */) {
             ext = "jpg";
         }
         else if (upperType == "PNG") {
@@ -888,7 +930,7 @@ function deducePhotoExtFromTypes(photoTypes) {
         }
         else
             dump("vcards.utils.js: unhandled image type: "
-                 + photoType + "\n");
+                 + upperType + "\n");
     }
 
     return ext;
@@ -898,6 +940,9 @@ function saveImportedPhoto(content, ext) {
     let photoName = (new UUID()) + "." + ext;
 
     let file = photoFileFromName(photoName);
+    /* 0700 is specified here because Thunderbird is too self-sufficient
+     to respect the environment umask */
+    file.create(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0700);
     let fileStream = Components.classes["@mozilla.org/network/file-output-stream;1"]
                                .createInstance(Components.interfaces.nsIFileOutputStream);
 

@@ -1,3 +1,53 @@
+2011-03-11  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* chrome/content/sogo-connector/general/vcards.utils.js
+	(_insertCardMethods:) added empty entries for "prodid" and
+	"version" to avoid letting them put in the "unprocessed:"
+	properties.
+
+2011-03-09  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* chrome/content/sogo-connector/general/vcards.utils.js
+	(escapeForCards): added escaping of ":", fixed handling of "\n" while ignoring "\r"
+	at all in the output and removed double escaping of ",".
+	(unescapedFromCard): double the "\" chars in the regexps.
+	(versitParse): added handling of Apple-style "grouped" tags by
+	ignoring the group label.
+	(CreateCardFromVCF): if the current tag is "photo" and no encoding
+	was specified, we must be receiving something from an Apple app...
+	(deducePhotoExtFromTypes): if the photo type is "BASE64", it must
+	come from an Apple app...
+	(decodedValues): "quoted-printable"-encoded values where sanitized
+	for base64 decoding, a confusion that prevented atob() from
+	working properly sometimes.
+	(saveImportedPhoto): force the creation of the photo file to
+	ensure all the parent hierarchy exists, enabling the saving of the
+	real data right after.
+	(InsertCardData): keep unprocessed tag values under a key
+	attribute prefixed with "unprocessed:".
+	(card2vcard): use the above keys to reconstruct the card with the
+	unhandled properties.
+	(_insertCardMethods.adr): added hack to fix bad address encoding
+	from iOS devices.
+
+2011-03-08  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* chrome/content/sogo-connector/general/vcards.utils.js
+	(escapedForCard): removed one excessive escaping of commas.
+
+	* chrome/content/sogo-connector/addressbook/addressbook.groupdav.overlay.js
+	(SCAbDelete): add handling of the case where a card is deleted
+	from a contacts list from the addressbook window rather than the
+	list editor.
+
+	* chrome/content/sogo-connector/general/sync.addressbook.groupdav.js
+	(GroupDavSynchronizer.uploadCards): upload cards with mime type
+	"text/vcard" instead of "text/x-vcards" since Apple does not give
+	a crap about standards.
+
+	* chrome/content/inverse-library/sogoWebDAV.js (xmlEscape):
+	restored escaping of "<" and "&" characters.
+
 2011-03-04  Ludovic Marcotte  <lmarcotte@inverse.ca>
 
 	* js/CardDAVDirectory.js (cardForEmailAddress): We disable
