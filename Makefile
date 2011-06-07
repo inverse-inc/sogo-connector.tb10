@@ -1,5 +1,10 @@
 PACKAGE = sogo-connector
+
+ifeq ($(shell uname),Darwin)
+VERSION = $(shell grep em:version install.rdf | sed -E 's@(em:version=|"| )@@g')
+else
 VERSION = $(shell grep em:version install.rdf | sed -e 's@\(em:version=\|\"\|\ \)@@g')
+endif
 
 XPI_ARCHIVE = $(PACKAGE)-$(VERSION).xpi
 
@@ -23,18 +28,18 @@ MANIFEST-pre:
 	@echo install.rdf >> $@
 	@echo COPYING >> $@
 	@echo ChangeLog >> $@
-	@find -type f -name "*.xul" >> $@
-	@find -type f -name "*.xml" >> $@
-	@find -type f -name "*.dtd" >> $@
-	@find -type f -name "*.idl" >> $@
-	@find -type f -name "*.js" >> $@
-	@find -type f -name "*.css" >> $@
-	@find -type f -name "*.png" >> $@
-	@find -type f -name "*.gif" >> $@
-	@find -type f -name "*.jpg" >> $@
-	@find -type f -name "*.xpt" >> $@
-	@find -type f -name "*.properties" >> $@	
-	@find -type f -name "RELEASE-NOTES" >> $@	
+	@find . -type f -name "*.xul" >> $@
+	@find . -type f -name "*.xml" >> $@
+	@find . -type f -name "*.dtd" >> $@
+	@find . -type f -name "*.idl" >> $@
+	@find . -type f -name "*.js" >> $@
+	@find . -type f -name "*.css" >> $@
+	@find . -type f -name "*.png" >> $@
+	@find . -type f -name "*.gif" >> $@
+	@find . -type f -name "*.jpg" >> $@
+	@find . -type f -name "*.xpt" >> $@
+	@find . -type f -name "*.properties" >> $@	
+	@find . -type f -name "RELEASE-NOTES" >> $@	
 
 rest:
 	@make $(XPI_ARCHIVE)
@@ -47,7 +52,7 @@ $(XPI_ARCHIVE): $(FILENAMES)
 clean:
 	rm -f MANIFEST-pre $(XPI_ARCHIVE)
 	rm -f *.xpi
-	find -name "*~" -exec rm -f {} \;
+	find . -name "*~" -exec rm -f {} \;
 
 distclean: clean
 	rm -f MANIFEST
