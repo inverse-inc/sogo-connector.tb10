@@ -741,9 +741,16 @@ function card2vcard(card) {
     if (jobTitle.length)
         vCard += foldedLine("TITLE:" + jobTitle) + "\r\n";
 
+    function pad(num, count) {
+        let padNum = num + '';
+        while(padNum.length < count) {
+            padNum = "0" + padNum;
+        }
+        return padNum;
+    }
     let birthYear = card.getProperty("BirthYear", 0);
-    let birthMonth = card.getProperty("BirthMonth", 0);
-    let birthDay = card.getProperty("BirthDay", 0);
+    let birthMonth = pad(card.getProperty("BirthMonth", 0), 2);
+    let birthDay = pad(card.getProperty("BirthDay", 0), 2);
     if (birthYear && birthMonth && birthDay)
         vCard += foldedLine("BDAY:" + escapedForCard(birthYear)
                             + "-" + escapedForCard(birthMonth)
