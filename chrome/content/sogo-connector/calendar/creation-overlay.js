@@ -29,7 +29,7 @@ function SCOnCreationOverlayLoad() {
 function SCDoCreateCalendar() {
     if (gCalendar.type == "caldav") {
         let aclMgr = Components.classes["@inverse.ca/calendar/caldav-acl-manager;1"]
-                               .getService(Components.interfaces.nsISupports);
+                               .getService(Components.interfaces.calICalDAVACLManager);
         let opListener = {
             onGetResult: function(calendar, status, itemType, detail, count, items) {
             },
