@@ -99,18 +99,18 @@ function xmlEscape(text) {
 
     for (var i = 0; i < text.length; i++) {
         if (text[i] == "&") {
-	    s += "&amp;";
+            s += "&amp;";
         }
         else if (text[i] == "<") {
-	    s += "&lt;";
+            s += "&lt;";
         }
         else  {
             let charCode = text.charCodeAt(i);
-	    if (charCode > 127) {
-	        s += '&#' + charCode + ';';
+            if (charCode > 127) {
+                s += '&#' + charCode + ';';
             }
-	    else {
-	        s += text[i];
+            else {
+                s += text[i];
             }
         }
     }
@@ -126,123 +126,255 @@ function xmlUnescape(text) {
     return s;
 }
 
-function _parseHeaders(rawHeaders) {
-    let headers = {};
-
-    if (rawHeaders) {
-        let lines = rawHeaders.split("\n");
-        let currentKey = null;
-
-        for each (let line in lines) {
-            if (line.length) {
-                let firstChar = line.charCodeAt(0);
-                if (firstChar != 32 && firstChar != 9) {
-                    let keyEnd = line.indexOf(":");
-                    currentKey = line.substr(0, keyEnd).toLowerCase();
-                    let values = headers[currentKey];
-                    if (!values) {
-                        values = [];
-                        headers[currentKey] = values;
-                    }
-                    values.push(line.substr(keyEnd + 2));
-                }
-            }
-        }
-    }
-
-    return headers;
+/* from Lightning: cal.auth.Prompt */
+/**
+ * Calendar Auth prompt implementation. This instance of the auth prompt should
+ * be used by providers and other components that handle authentication using
+ * nsIAuthPrompt2 and friends.
+ *
+ * This implementation guarantees there are no request loops when an invalid
+ * password is stored in the login-manager.
+ *
+ * There is one instance of that object per calendar provider.
+ */
+function _sogoWebDAVPrompt() {
+    this.mReturnedLogins = {};
 }
 
-function onXMLRequestReadyStateChange(request, synchronous) {
-    // 	dump("xmlreadystatechange: " + request.readyState + "\n");
-    if (synchronous || request.readyState == 4) {
-        if (request.client.target) {
-            let status;
-            let responseHeaders;
-            try {
-                status = request.status;
-                responseHeaders = request.getAllResponseHeaders();
-            }
-            catch(e) {
-                dump("trapped exception: " + e + "\n");
-                status = 499;
-                responseHeaders = "";
-            }
-
-            try {
-                // 				dump("method: " + request.method + "\n");
-                // 				dump("status code: " + request.readyState + "\n");
-                let headers;
-                let response;
-                if (status == 499) {
-                    headers = {};
-                    response = "";
-                    dump("received status 499 for url: " + request.client.url + "\n");
+_sogoWebDAVPrompt.prototype = {
+    passwordManagerRemove: function calPasswordManagerRemove(aUsername, aHostName, aRealm) {
+        try {
+            let loginManager = Components.classes["@mozilla.org/login-manager;1"]
+                                         .getService(Components.interfaces.nsILoginManager);
+            let logins = loginManager.findLogins({}, aHostName, null, aRealm);
+            for each (let loginInfo in logins) {
+                if (loginInfo.username == aUsername) {
+                    loginManager.removeLogin(loginInfo);
+                    return true;
                 }
-                else {
-                    headers = _parseHeaders(responseHeaders);
-                    if (request.client.requestJSONResponse
-                        || request.client.requestXMLResponse) {
-                        let flatCType;
-                        if (headers["content-type"]) {
-                            flatCType = headers["content-type"][0];
-                        } else {
-                            flatCType = "";
-                        }
-
-                        /* The length must be > 0 to avoid attempts of passing empty
-                         responses to the XML parser, which would trigger an
-                         exception. */
-                        let flatCLength;
-                        if (headers["content-length"]) {
-                            flatCLength = parseInt(headers["content-length"][0]);
-                        } else {
-                            if (request.responseText) {
-                                /* The "Content-Length" header may not be present, for example
-                                 with a chunked transfer encoding. In that case we deduce
-                                 the length from the response string. */
-                                flatCLength = request.responseText.length;
-                            }
-                            else {
-                                dump("sogoWebDAV.js: response has no content-length"
-                                     + " and no response text\n");
-                                flatCLength = 0;
-                            }
-                        }
-                        if ((flatCType.indexOf("text/xml") == 0
-                             || flatCType.indexOf("application/xml") == 0)
-                            && flatCLength > 0 && request.responseXML) {
-                            if (request.client.requestJSONResponse) {
-                                let parser = new XMLToJSONParser(request.responseXML);
-                                response = parser;
-                            }
-                            else {
-                                response = request.responseXML;
-                            }
-                        }
-                        else {
-                            response = null;
-                        }
-                    }
-                    else {
-                        response = request.responseText;
-                    }
-                }
-
-                request.client.target.onDAVQueryComplete(status,
-                                                         response,
-                                                         headers,
-                                                         request.client.cbData);
             }
-            catch(e) {
-                dump("sogoWebDAV.js 1: an exception occured\n" + e + "\n"
-                     + e.fileName + ":" + e.lineNumber + "\n");
+        } catch (exc) {
+        }
+        return false;
+    },
+
+    getPasswordInfo: function capGPI(aPasswordRealm) {
+        let username;
+        let password;
+        let found = false;
+
+        let loginManager = Components.classes["@mozilla.org/login-manager;1"]
+                                     .getService(Components.interfaces.nsILoginManager);
+        let logins = loginManager.findLogins({}, aPasswordRealm.prePath, null, aPasswordRealm.realm);
+        dump("test1\n");
+        if (logins.length) {
+            username = logins[0].username;
+            password = logins[0].password;
+            found = true;
+        }
+        if (found) {
+            let keyStr = aPasswordRealm.prePath +":" + aPasswordRealm.realm;
+            let now = new Date();
+            // Remove the saved password if it was already returned less
+            // than 60 seconds ago. The reason for the timestamp check is that
+            // nsIHttpChannel can call the nsIAuthPrompt2 interface
+            // again in some situation. ie: When using Digest auth token
+            // expires.
+            if (this.mReturnedLogins[keyStr] &&
+                now.getTime() - this.mReturnedLogins[keyStr].getTime() < 60000) {
+                // cal.LOG("Credentials removed for: user=" + username + ", host="+aPasswordRealm.prePath+", realm="+aPasswordRealm.realm);
+                delete this.mReturnedLogins[keyStr];
+                this.passwordManagerRemove(username,
+                                           aPasswordRealm.prePath,
+                                           aPasswordRealm.realm);
+                dump("test2\n");
+                return {found: false, username: username};
+            }
+            else {
+                this.mReturnedLogins[keyStr] = now;
             }
         }
-        request.client = null;
-        request.onreadystatechange = null;
+        dump("test3\n");
+        return {found: found, username: username, password: password};
+    },
+
+    /**
+     * Requests a username and a password. Implementations will commonly show a
+     * dialog with a username and password field, depending on flags also a
+     * domain field.
+     *
+     * @param aChannel
+     *        The channel that requires authentication.
+     * @param level
+     *        One of the level constants NONE, PW_ENCRYPTED, SECURE.
+     * @param authInfo
+     *        Authentication information object. The implementation should fill in
+     *        this object with the information entered by the user before
+     *        returning.
+     *
+     * @retval true
+     *         Authentication can proceed using the values in the authInfo
+     *         object.
+     * @retval false
+     *         Authentication should be cancelled, usually because the user did
+     *         not provide username/password.
+     *
+     * @note   Exceptions thrown from this function will be treated like a
+     *         return value of false.
+     */
+    promptAuth: function capPA(aChannel, aLevel, aAuthInfo) {
+        let hostRealm = {};
+        hostRealm.prePath = aChannel.URI.prePath;
+        hostRealm.realm = aAuthInfo.realm;
+        let port = aChannel.URI.port;
+        if (port == -1) {
+            let IOService = Components.classes["@mozilla.org/network/io-service;1"]
+                                      .getService(Components.interfaces.nsIIOService2);
+            let handler = IOService.getProtocolHandler(aChannel.URI.scheme)
+                                   .QueryInterface(Components.interfaces.nsIProtocolHandler);
+            port = handler.defaultPort;
+        }
+        hostRealm.passwordRealm = aChannel.URI.host + ":" + port + " (" + aAuthInfo.realm + ")";
+
+        dump("test4\n");
+
+        let pw = this.getPasswordInfo(hostRealm);
+        aAuthInfo.username = pw.username;
+        if (pw && pw.found) {
+            aAuthInfo.password = pw.password;
+            dump("test5\n");
+            return true;
+        } else {
+            let prompter2 = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                                      .getService(Components.interfaces.nsIPromptFactory)
+                                      .getPrompt(null, Components.interfaces.nsIAuthPrompt2);
+            dump("test6\n");
+            return prompter2.promptAuth(aChannel, aLevel, aAuthInfo);
+        }
+    },
+
+    /**
+     * Asynchronously prompt the user for a username and password.
+     * This has largely the same semantics as promptAuth(),
+     * but must return immediately after calling and return the entered
+     * data in a callback.
+     *
+     * If the user closes the dialog using a cancel button or similar,
+     * the callback's nsIAuthPromptCallback::onAuthCancelled method must be
+     * called.
+     * Calling nsICancelable::cancel on the returned object SHOULD close the
+     * dialog and MUST call nsIAuthPromptCallback::onAuthCancelled on the provided
+     * callback.
+     *
+     * @throw NS_ERROR_NOT_IMPLEMENTED
+     *        Asynchronous authentication prompts are not supported;
+     *        the caller should fall back to promptUsernameAndPassword().
+     */
+    asyncPromptAuth : function capAPA(aChannel,   // nsIChannel
+                                      aCallback,  // nsIAuthPromptCallback
+                                      aContext,   // nsISupports
+                                      aLevel,     // PRUint32
+                                      aAuthInfo   // nsIAuthInformation
+                                ) {
+        dump("test7\n");
+        let hostRealm = {};
+        hostRealm.prePath = aChannel.URI.prePath;
+        hostRealm.realm = aAuthInfo.realm;
+        let port = aChannel.URI.port;
+        if (port == -1) {
+            let IOService = Components.classes["@mozilla.org/network/io-service;1"]
+                                      .getService(Components.interfaces.nsIIOService2);
+
+            let handler = IOService.getProtocolHandler(aChannel.URI.scheme)
+                                   .QueryInterface(Components.interfaces.nsIProtocolHandler);
+            port = handler.defaultPort;
+        }
+        hostRealm.passwordRealm = aChannel.URI.host + ":" + port + " (" + aAuthInfo.realm + ")";
+
+        let pw = this.getPasswordInfo(hostRealm);
+        aAuthInfo.username = pw.username;
+        if (pw && pw.found) {
+        dump("test10\n");
+            aAuthInfo.password = pw.password;
+            // We cannot call the callback directly here so call it from a timer
+            let timerCallback = {
+                notify: function(timer) {
+        dump("test8\n");
+                    aCallback.onAuthAvailable(aContext, aAuthInfo);
+                }
+            };
+            let timer = Components.classes["@mozilla.org/timer;1"]
+                        .createInstance(Components.interfaces.nsITimer);
+            timer.initWithCallback(timerCallback,
+                                   0,
+                                   Components.interfaces.nsITimer.TYPE_ONE_SHOT);
+        } else {
+        dump("test9\n");
+            let prompter2 = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                                      .getService(Components.interfaces.nsIPromptFactory)
+                                      .getPrompt(null, Components.interfaces.nsIAuthPrompt2);
+            prompter2.asyncPromptAuth(aChannel, aCallback, aContext, aLevel, aAuthInfo);
+        }
     }
-}
+};
+
+/* from Lightning: cal.BadCertHandler */
+/**
+ * Bad Certificate Handler for Network Requests. Shows the Network Exception
+ * Dialog if a certificate Problem occurs.
+ */
+_sogoWebDAVBadCertHandler = function calBadCertHandler(thisProvider) {
+    this.thisProvider = thisProvider;
+};
+
+_sogoWebDAVBadCertHandler.prototype = {
+    QueryInterface: function cBCL_QueryInterface(aIID) {
+        if (!aIID.equals(Components.interfaces.nsIBadCertListener2)
+            && !aIID.equals(Components.interfaces.nsISupports))
+            throw Components.results.NS_ERROR_NO_INTERFACE;
+        return this;
+    },
+
+    notifyCertProblem: function cBCL_notifyCertProblem(socketInfo, status, targetSite) {
+        if (!status) {
+            return true;
+        }
+
+        // Unfortunately we can't pass js objects using the window watcher, so
+        // we'll just take the first available calendar window. We also need to
+        // do this on a timer so that the modal window doesn't block the
+        // network request.
+        let wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                           .getService(Components.interfaces.nsIWindowMediator);
+        let calWindow = wm.getMostRecentWindow("calendarMainWindow") ||
+                        wm.getMostRecentWindow("mail:3pane");
+
+        let timerCallback = {
+            thisProvider: this.thisProvider,
+            notify: function(timer) {
+                let params = { exceptionAdded: false,
+                               prefetchCert: true,
+                               location: targetSite };
+                calWindow.openDialog("chrome://pippki/content/exceptionDialog.xul",
+                                     "",
+                                     "chrome,centerscreen,modal",
+                                     params);
+                if (this.thisProvider.canRefresh &&
+                    params.exceptionAdded) {
+                    // Refresh the provider if the
+                    // exception certificate was added
+                    this.thisProvider.refresh();
+                }
+            }
+        };
+        let timer = Components.classes["@mozilla.org/timer;1"]
+                              .createInstance(Components.interfaces.nsITimer);
+        timer.initWithCallback(timerCallback,
+                               0,
+                               Components.interfaces.nsITimer.TYPE_ONE_SHOT);
+        return true;
+    }
+};
 
 function sogoWebDAV(url, target, data, synchronous) {
     this.url = url;
@@ -259,30 +391,162 @@ function sogoWebDAV(url, target, data, synchronous) {
 }
 
 sogoWebDAV.prototype = {
-    _sendHTTPRequest: function(method, parameters, headers) {
-        let xmlRequest = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
-                                   .createInstance(Components.interfaces.nsIXMLHttpRequest);
+    _makeURI: function _makeURI(url) {
+        var ioSvc = Components.classes["@mozilla.org/network/io-service;1"].
+            getService(Components.interfaces.nsIIOService);
+        return ioSvc.newURI(url, null, null);
+    },
 
-        xmlRequest.open(method, this.url, !this.synchronous);
+    /* The following method code comes as-is from Lightning (cal.InterfaceRequestor_getInterface): */
+    _getInterface: function sogoWebDAV_getInterface(aIID) {
+        // Support Auth Prompt Interfaces
+        if (aIID.equals(Components.interfaces.nsIAuthPrompt2)) {
+            return new _sogoWebDAVPrompt();
+        } else if (aIID.equals(Components.interfaces.nsIAuthPromptProvider) ||
+                   aIID.equals(Components.interfaces.nsIPrompt)) {
+            return Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                .getService(Components.interfaces.nsIWindowWatcher)
+                .getNewPrompter(null);
+        } else if (aIID.equals(Components.interfaces.nsIBadCertListener2)) {
+            return new _sogoWebDAVBadCertHandler(this);
+        }
+
+        try {
+            // Try to query the this object for the requested interface but don't
+            // throw if it fails since that borks the network code.
+            return this.QueryInterface(aIID);
+        } catch (e) {
+            dump("exception : " + e + "\n");
+            Components.returnCode = e;
+        }
+        return null;
+    },
+
+    _sendHTTPRequest: function(method, body, headers) {
+        let IOService = Components.classes["@mozilla.org/network/io-service;1"]
+                                  .getService(Components.interfaces.nsIIOService2);
+        let channel = IOService.newChannelFromURI(this._makeURI(this.url));
+        let httpChannel = channel.QueryInterface(Components.interfaces.nsIHttpChannel);
+        httpChannel.loadFlags |= Components.interfaces.nsIRequest.LOAD_BYPASS_CACHE;
+        httpChannel.notificationCallbacks = { getInterface: this._getInterface };
+        httpChannel.setRequestHeader("accept", "text/xml", false);
+        httpChannel.setRequestHeader("accept-charset", "utf-8,*;q=0.1", false);
         if (headers) {
             for (let header in headers) {
-                xmlRequest.setRequestHeader(header, String(headers[header]));
+                httpChannel.setRequestHeader(header, headers[header], true);
             }
         }
-        xmlRequest.url = this.url;
-        xmlRequest.client = this;
-        xmlRequest.method = method;
 
-        if (!this.synchronous) {
-            let thisRequest = xmlRequest;
-            xmlRequest.onreadystatechange = function() {
-                onXMLRequestReadyStateChange(thisRequest, false);
-            };
+        if (body) {
+            httpChannel = httpChannel.QueryInterface(Components.interfaces.nsIUploadChannel);
+            let converter = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
+                                      .createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
+            converter.charset = "UTF-8";
+            let stream = converter.convertToInputStream(body);
+            let contentType = headers["content-type"];
+            if (!contentType) {
+                contentType = "text/plain; charset=utf-8";
+            }
+            httpChannel.setUploadStream(stream, contentType, -1);
         }
 
-        xmlRequest.send(parameters);
+        /* If set too early, the method can change to "PUT" when initially set to "PROPFIND"... */
+        httpChannel.requestMethod = method;
+
         if (this.synchronous) {
-            onXMLRequestReadyStateChange(xmlRequest, true);
+            let inStream = httpChannel.open();
+            let byteStream = Components.classes["@mozilla.org/binaryinputstream;1"]
+                                       .createInstance(Components.interfaces.nsIBinaryInputStream);
+            byteStream.setInputStream(inStream);
+            let resultLength = inStream.available();
+            let result = byteStream.readBytes(inStream.available());
+            this._handleHTTPResponse(httpChannel, resultLength, result);
+        }
+        else {
+            let this_ = this;
+            let listener = {
+                onStreamComplete: function(aLoader, aContext, aStatus, aResultLength, aResult) {
+                    this_._handleHTTPResponse(httpChannel, aResultLength, aResult);
+                }
+            };
+            let loader = Components.classes["@mozilla.org/network/stream-loader;1"]
+                                   .createInstance(Components.interfaces.nsIStreamLoader);
+            loader.init(listener);
+            httpChannel.asyncOpen(loader, httpChannel);
+        }
+    },
+
+    _handleHTTPResponse: function(aChannel, aResultLength, aResult) {
+        let status;
+        try {
+            status = aChannel.responseStatus;
+            if (status == 0) {
+                status = 499;
+            }
+        }
+        catch(e) {
+            dump("sogoWebDAV: trapped exception: " + e + "\n");
+            status = 499;
+        }
+        try {
+            let headers = {};
+            let response = null;
+            if (status == 499) {
+                dump("xmlRequest: received status 499 for url: " + this.url + "; method: " + method + "\n");
+            }
+            else {
+                let visitor = {};
+                visitor.visitHeader = function(aHeader, aValue) {
+                    let key = aHeader.toLowerCase();
+                    let array = headers[key];
+                    if (!array) {
+                        array = [];
+                        headers[key] = array;
+                    }
+                    array.push(aValue.replace(/(^[ 	]+|[ 	]+$)/, "", "g"));
+                };
+                aChannel.visitResponseHeaders(visitor);
+                if (aResultLength > 0) {
+                    let responseText;
+                    if (typeof(aResult) == "string") {
+                        responseText = aResult;
+                    }
+                    else {
+                        let resultConverter = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
+                                                        .createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
+                        resultConverter.charset ="UTF-8";
+                        responseText = resultConverter.convertFromByteArray(aResult, aResultLength);
+                    }
+                    if (this.requestJSONResponse || this.requestXMLResponse) {
+                        let flatCType = (headers["content-type"] ? headers["content-type"][0] : "");
+
+                        if ((flatCType.indexOf("text/xml") == 0 || flatCType.indexOf("application/xml") == 0)
+                            && aResultLength > 0) {
+                            let xmlParser = Components.classes["@mozilla.org/xmlextras/domparser;1"]
+                                                      .createInstance(Components.interfaces.nsIDOMParser);
+                            let responseXML = xmlParser.parseFromString(responseText, "text/xml");
+                            if (this.requestJSONResponse) {
+                                let parser = new XMLToJSONParser(responseXML);
+                                response = parser;
+                            }
+                            else {
+                                response = responseXML;
+                            }
+                        }
+                    }
+                    else {
+                        response = responseText;
+                    }
+                }
+            }
+            if (this.target && this.target.onDAVQueryComplete) {
+                this.target.onDAVQueryComplete(status, response, headers, this.cbData);
+            }
+        }
+        catch(e) {
+            dump("CAlDAVAclManager.js: an exception occured\n" + e + "\n"
+                 + e.fileName + ":" + e.lineNumber + "\n"
+                 + "url: " + aChannel.url + "\n");
         }
     },
 

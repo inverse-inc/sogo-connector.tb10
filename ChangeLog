@@ -1,3 +1,8 @@
+2011-11-14  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* chrome/content/inverse-library/sogoWebDAV.js (sogoWebDAV): no
+	longer use xmlHttpRequest.
+
 2011-03-11  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* chrome/content/sogo-connector/general/vcards.utils.js
