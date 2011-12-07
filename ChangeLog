@@ -1,3 +1,9 @@
+2011-12-07  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* chrome/content/inverse-library/sogoWebDAV.js
+	(sogoWebDAV._getInterface): provide a stub for
+	Components.interfaces.nsIProgressEventSink.
+
 2011-11-14  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* chrome/content/inverse-library/sogoWebDAV.js (sogoWebDAV): no

@@ -398,17 +398,17 @@ sogoWebDAV.prototype = {
                 .getNewPrompter(null);
         } else if (aIID.equals(Components.interfaces.nsIBadCertListener2)) {
             return new _sogoWebDAVBadCertHandler(this);
+        } else if (aIID.equals(Components.interfaces.nsIProgressEventSink)) {
+            return { onProgress: function sogoWebDAV_onProgress(aRequest, aContext, aProgress, aProgressMax) {},
+                     onStatus: function sogoWebDAV_onStatus(aRequest, aContext, aStatus, aStatusArg) {} };
         }
 
-        try {
-            // Try to query the this object for the requested interface but don't
-            // throw if it fails since that borks the network code.
-            return this.QueryInterface(aIID);
-        } catch (e) {
-            dump("exception : " + e + "\n");
-            Components.returnCode = e;
-        }
-        return null;
+        dump("no interface in sogoWebDAV named " + aIID + "\n");
+
+        throw Components.results.NS_ERROR_NO_INTERFACE;
+
+//         Components.returnCode = Components.NS_ERROR_NO_INTERFACE;
+//         return null;
     },
 
     _sendHTTPRequest: function(method, body, headers) {
