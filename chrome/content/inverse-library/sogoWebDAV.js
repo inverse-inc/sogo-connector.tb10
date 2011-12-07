@@ -166,7 +166,6 @@ _sogoWebDAVPrompt.prototype = {
         let loginManager = Components.classes["@mozilla.org/login-manager;1"]
                                      .getService(Components.interfaces.nsILoginManager);
         let logins = loginManager.findLogins({}, aPasswordRealm.prePath, null, aPasswordRealm.realm);
-        dump("test1\n");
         if (logins.length) {
             username = logins[0].username;
             password = logins[0].password;
@@ -187,14 +186,12 @@ _sogoWebDAVPrompt.prototype = {
                 this.passwordManagerRemove(username,
                                            aPasswordRealm.prePath,
                                            aPasswordRealm.realm);
-                dump("test2\n");
                 return {found: false, username: username};
             }
             else {
                 this.mReturnedLogins[keyStr] = now;
             }
         }
-        dump("test3\n");
         return {found: found, username: username, password: password};
     },
 
@@ -236,19 +233,15 @@ _sogoWebDAVPrompt.prototype = {
         }
         hostRealm.passwordRealm = aChannel.URI.host + ":" + port + " (" + aAuthInfo.realm + ")";
 
-        dump("test4\n");
-
         let pw = this.getPasswordInfo(hostRealm);
         aAuthInfo.username = pw.username;
         if (pw && pw.found) {
             aAuthInfo.password = pw.password;
-            dump("test5\n");
             return true;
         } else {
             let prompter2 = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                                       .getService(Components.interfaces.nsIPromptFactory)
                                       .getPrompt(null, Components.interfaces.nsIAuthPrompt2);
-            dump("test6\n");
             return prompter2.promptAuth(aChannel, aLevel, aAuthInfo);
         }
     },
@@ -276,7 +269,6 @@ _sogoWebDAVPrompt.prototype = {
                                       aLevel,     // PRUint32
                                       aAuthInfo   // nsIAuthInformation
                                 ) {
-        dump("test7\n");
         let hostRealm = {};
         hostRealm.prePath = aChannel.URI.prePath;
         hostRealm.realm = aAuthInfo.realm;
@@ -294,12 +286,10 @@ _sogoWebDAVPrompt.prototype = {
         let pw = this.getPasswordInfo(hostRealm);
         aAuthInfo.username = pw.username;
         if (pw && pw.found) {
-        dump("test10\n");
             aAuthInfo.password = pw.password;
             // We cannot call the callback directly here so call it from a timer
             let timerCallback = {
                 notify: function(timer) {
-        dump("test8\n");
                     aCallback.onAuthAvailable(aContext, aAuthInfo);
                 }
             };
@@ -309,7 +299,6 @@ _sogoWebDAVPrompt.prototype = {
                                    0,
                                    Components.interfaces.nsITimer.TYPE_ONE_SHOT);
         } else {
-        dump("test9\n");
             let prompter2 = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                                       .getService(Components.interfaces.nsIPromptFactory)
                                       .getPrompt(null, Components.interfaces.nsIAuthPrompt2);
@@ -323,7 +312,7 @@ _sogoWebDAVPrompt.prototype = {
  * Bad Certificate Handler for Network Requests. Shows the Network Exception
  * Dialog if a certificate Problem occurs.
  */
-_sogoWebDAVBadCertHandler = function calBadCertHandler(thisProvider) {
+let _sogoWebDAVBadCertHandler = function calBadCertHandler(thisProvider) {
     this.thisProvider = thisProvider;
 };
 
