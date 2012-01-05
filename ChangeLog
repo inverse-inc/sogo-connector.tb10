@@ -1,3 +1,10 @@
+2012-01-05  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* chrome/content/inverse-library/sogoWebDAV.js:
+	(sogoWebDAV._sendHTTPRequest): ensure that all available bytes are
+	read into the "result" string, until inStream.available() returns
+	0. Otherwise we sometimes get an incomplete body.
+
 2011-12-07  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* chrome/content/inverse-library/sogoWebDAV.js

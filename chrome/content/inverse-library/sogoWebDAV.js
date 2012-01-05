@@ -447,8 +447,13 @@ sogoWebDAV.prototype = {
             let byteStream = Components.classes["@mozilla.org/binaryinputstream;1"]
                                        .createInstance(Components.interfaces.nsIBinaryInputStream);
             byteStream.setInputStream(inStream);
-            let resultLength = inStream.available();
-            let result = byteStream.readBytes(inStream.available());
+            let resultLength = 0;
+            let result = "";
+            let le;
+            while ((le = inStream.available()) {
+                resultLength += le;
+                result += byteStream.readBytes(le);
+            }
             this._handleHTTPResponse(httpChannel, resultLength, result);
         }
         else {
