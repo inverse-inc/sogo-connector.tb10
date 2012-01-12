@@ -450,7 +450,7 @@ sogoWebDAV.prototype = {
             let resultLength = 0;
             let result = "";
             let le;
-            while ((le = inStream.available()) {
+            while ((le = inStream.available())) {
                 resultLength += le;
                 result += byteStream.readBytes(le);
             }
