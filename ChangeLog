@@ -1,5 +1,9 @@
 2012-02-07  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* chrome/content/sogo-connector/addressbook/messenger.groupdav.overlay.js
+	(startFolderSync): the ab root is now accessed exclusively by the
+	ab manager service, modified function accordingly.
+
 	* chrome/content/sogo-connector/general/mozilla.utils.inverse.ca.js:
 	removed all logging methods, that have not been used for ages now.
 

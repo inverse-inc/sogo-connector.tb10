@@ -216,16 +216,13 @@ function _migrateOldCardDAVDirs(prefs, uniqueChildren) {
 }
 
 function startFolderSync() {
-    let rdfService = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-                               .getService(Components.interfaces.nsIRDFService);
-    let parentDir = rdfService.GetResource("moz-abdirectory://")
-                              .QueryInterface(Components.interfaces.nsIAbDirectory);
-    let children = parentDir.childNodes;
+    let abManager = Components.classes["@mozilla.org/abmanager;1"]
+                              .getService(Components.interfaces.nsIAbManager);
+    let children = abManager.directories;
     while (children.hasMoreElements()) {
-        let ab = children.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-        let realAB = ab.QueryInterface(Components.interfaces.nsIAbDirectory);
-        if (isGroupdavDirectory(ab.Value)) {
-            let synchronizer = new GroupDavSynchronizer(ab.Value, false);
+        let ab = children.getNext().QueryInterface(Components.interfaces.nsIAbDirectory);
+        if (isGroupdavDirectory(ab.URI)) {
+            let synchronizer = new GroupDavSynchronizer(ab.URI, false);
             synchronizer.start();
         }
     }
