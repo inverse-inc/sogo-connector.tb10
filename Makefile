@@ -24,10 +24,10 @@ MANIFEST: MANIFEST-pre
 	fi;
 
 MANIFEST-pre:
-	@echo chrome.manifest > $@
 	@echo install.rdf >> $@
 	@echo COPYING >> $@
 	@echo ChangeLog >> $@
+	@find . -type f -name "*.manifest" >> $@
 	@find . -type f -name "*.xul" >> $@
 	@find . -type f -name "*.xml" >> $@
 	@find . -type f -name "*.dtd" >> $@
