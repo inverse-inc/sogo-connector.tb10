@@ -949,7 +949,7 @@ function saveImportedPhoto(content, ext) {
     let file = photoFileFromName(photoName);
     /* 0700 is specified here because Thunderbird is too self-sufficient
      to respect the environment umask */
-    file.create(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0700);
+    file.create(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0x1c8 /* octal 0700 in hex */);
     let fileStream = Components.classes["@mozilla.org/network/file-output-stream;1"]
                                .createInstance(Components.interfaces.nsIFileOutputStream);
 
