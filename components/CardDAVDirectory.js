@@ -19,6 +19,9 @@
  * Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
+
 const gCardDavPrefix = "carddav";
 const gABPrefix = "moz-abdavdirectory://";
 
@@ -64,83 +67,8 @@ CardDAVDirectory.prototype = {
 
     mDirPrefId: null,
     mDescription: null,
-    mURI: null,
-
-    /* nsIRDFNode */
-    EqualsNode: function(uri) {
-        dump("CardDAVDirectory.js: EqualsNode\n");
-        throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-        return false;
-    },
-
-    /* nsIRDFResource */
-    get Value() {
-        // dump("CardDAVDirectory.js: Value (" + this.mValue + ")\n");
-        return this.mValue;
-    },
-
-    get ValueUTF8() {
-        // dump("CardDAVDirectory.js: ValueUTF8: " + this.mValue + "\n");
-        let conv = Components.classes["@mozilla.org/intl/utf8converterservice;1"]
-                             .createInstance(Components.interfaces.nsIUTF8ConverterService);
-        return conv.convertStringToUTF8(this.Value, "iso-8859-1", false);
-    },
-
-    Init: function(uri) {
-        // dump("CardDAVDirectory.js: Init: uri = " + uri + "\n");
-        // 	 dump("backtrace: " + backtrace() + "\n\n");
-        if (uri.indexOf(gABPrefix) == 0) {
-            let prefName = uri.substr(gABPrefix.length);
-            let quMark = uri.indexOf("?");
-            if (quMark > 1) {
-                this.mQuery = uri.substr(quMark);
-                prefName = prefName.substr(0, quMark - gABPrefix.length);
-            }
-            this.mValue = gABPrefix + prefName;
-            this.mDirPrefId = prefName;
-            this._load();
-        }
-        else
-            throw "unknown uri: " + uri;
-    },
-
-    _load: function() {
-        let prefName = this.mDirPrefId;
-        let service = Components.classes["@mozilla.org/preferences-service;1"]
-                                .getService(Components.interfaces.nsIPrefService);
-        try {
-            let branch = service.getBranch(prefName + ".");
-            this.mDescription = branch.getCharPref("description");
-            let uri = branch.getCharPref("uri");
-
-            /* migration code for old-style URI */
-            if (uri.indexOf("carddav://http") == 0) {
-                uri = "carddav" + uri.substr(14);
-                branch.setCharPref("uri", uri);
-            }
-
-            this.mURI = uri;
-        }
-        catch(e) {
-            dump("directory-properties: exception (new directory '" + prefName
-                 + "', URI '" + this.mValue + "' ?):" + e + "\n");
-        }
-    },
-
-    EqualsString: function(uri) {
-        dump("CardDAVDirectory.js: EqualsString\n");
-        return (this.mValue == uri);
-    },
-
-    GetDelegate: function(key, IID, result) {
-        dump("CardDAVDirectory.js: unimplemented 'GetDelegate'\n");
-        throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-    },
-
-    ReleaseDelegate: function(key) {
-        dump("CardDAVDirectory.js: unimplemented 'ReleaseDelegate'\n");
-        throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-    },
+    mURI: null, /* http uri of carddav ab */
+    mValue: null, /* internal tbird uri */
 
     /* nsIAbCollection (parent of nsIAbDirectory) */
     get readOnly() {
@@ -164,7 +92,7 @@ CardDAVDirectory.prototype = {
 	// an email. This can be very costly for slow networks. We might eventually add
 	// this back when we have proper caching in place.
 	return null;
-    	
+
     	let card = this.mCardCache[emailAddress];
         if (card) {
             if (!(card instanceof Components.interfaces.nsIAbCard)) {
@@ -210,9 +138,7 @@ CardDAVDirectory.prototype = {
     },
 
     /* nsIAbDirectory */
-    get propertiesChromeURI() {
-        return "chrome://sogo-connector/content/addressbook/preferences.addressbook.groupdav.xul";
-    },
+    propertiesChromeURI: "chrome://sogo-connector/content/addressbook/preferences.addressbook.groupdav.xul",
 
     get dirName() {
         let conv = Components.classes["@mozilla.org/intl/utf8converterservice;1"]
@@ -253,7 +179,7 @@ CardDAVDirectory.prototype = {
 
     get URI() {
         /* warning: this is now = this.Value and != this.mURI */
-        return this.Value;
+        return this.mValue;
     },
 
     get position() {
@@ -372,7 +298,53 @@ CardDAVDirectory.prototype = {
     },
 
     get isQuery() {
-        dump("CardDAVDirectory.js: unimplemented 'isQuery'\n");
+        return (this.mQuery && this.mQuery.length > 0);
+    },
+
+    init: function(uri) {
+        // dump("CardDAVDirectory.js: Init: uri = " + uri + "\n");
+        // 	 dump("backtrace: " + backtrace() + "\n\n");
+        if (uri.indexOf(gABPrefix) == 0) {
+            let prefName = uri.substr(gABPrefix.length);
+            let quMark = uri.indexOf("?");
+            if (quMark > 1) {
+                this.mQuery = uri.substr(quMark);
+                prefName = prefName.substr(0, quMark - gABPrefix.length);
+            }
+            this.mValue = gABPrefix + prefName;
+            this.mDirPrefId = prefName;
+            this._load();
+        }
+        else
+            throw "unknown uri: " + uri;
+    },
+
+    _load: function() {
+        let prefName = this.mDirPrefId;
+        let service = Components.classes["@mozilla.org/preferences-service;1"]
+                                .getService(Components.interfaces.nsIPrefService);
+        try {
+            let branch = service.getBranch(prefName + ".");
+            this.mDescription = branch.getCharPref("description");
+            let uri = branch.getCharPref("uri");
+
+            /* migration code for old-style URI */
+            if (uri.indexOf("carddav://http") == 0) {
+                uri = "carddav" + uri.substr(14);
+                branch.setCharPref("uri", uri);
+            }
+
+            this.mURI = uri;
+        }
+        catch(e) {
+            dump("directory-properties: exception (new directory '" + prefName
+                 + "', URI '" + this.mValue + "' ?):" + e + "\n");
+        }
+    },
+
+    deleteDirectory: function (directory) {
+        dump("CardDAVDirectory.js: unimplemented 'deleteDirectory'\n");
+        // dump("CardDAVDirectory.js: ============>CALLED deleteDirectory!!!\n");
         throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
     },
 
@@ -383,12 +355,6 @@ CardDAVDirectory.prototype = {
 
     hasDirectory: function(dir) {
         dump("CardDAVDirectory.js: unimplemented 'hasDirectory'\n");
-        throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-    },
-
-    deleteDirectory: function (directory) {
-        dump("CardDAVDirectory.js: unimplemented 'deleteDirectory'\n");
-        // dump("CardDAVDirectory.js: ============>CALLED deleteDirectory!!!\n");
         throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
     },
 
@@ -460,6 +426,12 @@ CardDAVDirectory.prototype = {
         dump("CardDAVDirectory.js: unimplemented 'editMailListToDatabase'\n");
         throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
     },
+
+    copyMailList: function(aSrcList) {
+        dump("CardDAVDirectory.js: unimplemented 'copyMailList'\n");
+        throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+    },
+
     createNewDirectory: function(aDirName, aURI, aType, aPrefName) {
         dump("CardDAVDirectory.js: unimplemented 'createNewDirectory'\n");
         throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
@@ -520,11 +492,9 @@ CardDAVDirectory.prototype = {
 
     /* nsISecurityCheckedComponent */
     canCreateWrapper: function(aIID) {
-        // dump("CardDAVDirectory.js: canCreateWrapper: aIID: " + aIID + "\n");
+        dump("CardDAVDirectory.js: canCreateWrapper: aIID: " + aIID + "\n");
 
-        return ((aIID.equals(Components.interfaces.nsIRDFResource)
-                 || aIID.equals(Components.interfaces.nsIRDFNode)
-                 || aIID.equals(Components.interfaces.nsIAbDirectory)
+        return ((aIID.equals(Components.interfaces.nsIAbDirectory)
                  || aIID.equals(Components.interfaces.nsISupports))
                 ? "AllAccess"
                 : "NoAccess");
@@ -548,9 +518,7 @@ CardDAVDirectory.prototype = {
     /* nsIClassInfo */
     getInterfaces: function(aCount) {
         // dump("CardDAVDirectory.js: getInterfaces\n");
-        let ifaces = [ Components.interfaces.nsIRDFResource,
-                       Components.interfaces.nsIRDFNode,
-                       Components.interfaces.nsIAbDirectory,
+        let ifaces = [ Components.interfaces.nsIAbDirectory,
                        Components.interfaces.nsISecurityCheckedComponent,
                        Components.interfaces.nsIClassInfo,
                        Components.interfaces.nsISupports ];
@@ -564,7 +532,7 @@ CardDAVDirectory.prototype = {
         return null;
     },
 
-    contractID: "@mozilla.org/rdf/resource-factory;1?name=moz-abdavdirectory",
+    contractID: "@mozilla.org/addressbook/directory;1?type=moz-abdavdirectory",
     classDescription: "Class description",
     classID: Components.ID("{2e3aa298-a1f9-4aef-9f80-ca430ce6e55b}"),
     implementationLanguage: Components.interfaces.nsIProgrammingLanguage.JAVASCRIPT,
@@ -572,13 +540,12 @@ CardDAVDirectory.prototype = {
 
     /* nsISupports */
     QueryInterface: function(aIID) {
-        if (!aIID.equals(Components.interfaces.nsIRDFResource)
-            && !aIID.equals(Components.interfaces.nsIRDFNode)
-            && !aIID.equals(Components.interfaces.nsIAbDirectory)
+        if (!aIID.equals(Components.interfaces.nsIAbDirectory)
             && !aIID.equals(Components.interfaces.nsISecurityCheckedComponent)
             && !aIID.equals(Components.interfaces.nsIClassInfo)
             && !aIID.equals(Components.interfaces.nsISupports)) {
             dump("CardDAVDirectory.js: NO INTERFACE: "  + aIID + "\n");
+            dump("  "  + backtrace() + "\n");
             throw Components.results.NS_ERROR_NO_INTERFACE;
         }
 
@@ -596,3 +563,9 @@ CardDAVDirectory.prototype = {
         return httpURL;
     }
 };
+
+/** Module Registration */
+function NSGetFactory(cid) {
+    dump("NSGetFactory\n");
+    return (XPCOMUtils.generateNSGetFactory([CardDAVDirectory]))(cid);
+}
