@@ -1,5 +1,11 @@
 2012-02-07  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* components/CardDAVDirectoryFactory.js,
+	components/ContextManager.js, components/NotificationManager.js,
+	components/SOGoFBURLFreeBusyProvider.js,
+	components/SyncProgressManager.js: updated to new module
+	registration API.
+
 	* components/CalDAVACLManager.js: restored CalDAVACLManager, now
 	in compliance with the calICalendarACLProvider interface from
 	Lightning.

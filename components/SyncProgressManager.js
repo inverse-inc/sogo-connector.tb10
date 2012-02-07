@@ -19,6 +19,9 @@
  * Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
+
 function SyncProgressManager() {
     this.addressbooks = {};
     this.nservice = Components.classes["@inverse.ca/notification-manager;1"]
@@ -29,6 +32,25 @@ function SyncProgressManager() {
 }
 
 SyncProgressManager.prototype = {
+    /* nsIClassInfo */
+    classID: Components.ID("{72d92fb6-f9e1-11dc-9794-00163e47dbb4}"),
+    contractID: "@inverse.ca/sync-progress-manager;1",
+    classDescription: "A global object that receives sync notifications for SOGo Connector",
+
+    getInterfaces: function cDACLM_getInterfaces(count) {
+        const ifaces = [Components.interfaces.inverseIJSSyncProgressManager,
+                        Components.interfaces.nsIClassInfo,
+                        Components.interfaces.nsISupports];
+        count.value = ifaces.length;
+        return ifaces;
+    },
+    getHelperForLanguage: function cDACLM_getHelperForLanguage(language) {
+        return null;
+    },
+    implementationLanguage: Components.interfaces.nsIProgrammingLanguage.JAVASCRIPT,
+    flags: 0,
+
+    /* */
     wrappedJSObject: null,
     addressbooks: null,
     nservice: null,
@@ -114,3 +136,8 @@ SyncProgressManager.prototype = {
         return this;
     }
 };
+
+/** Module Registration */
+function NSGetFactory(cid) {
+    return (XPCOMUtils.generateNSGetFactory([SyncProgressManager]))(cid);
+}

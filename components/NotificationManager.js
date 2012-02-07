@@ -19,12 +19,34 @@
  * Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
+
 function NotificationManager() {
     this.notifications = {};
     this.wrappedJSObject = this;
 }
 
 NotificationManager.prototype = {
+    /* nsIClassInfo */
+    classID: Components.ID("{c9a28da6-f9cd-11dc-9c23-00163e47dbb4}"),
+    contractID: "@inverse.ca/context-manager;1",
+    classDescription: "Global context manager",
+
+    getInterfaces: function cDACLM_getInterfaces(count) {
+        const ifaces = [Components.interfaces.inverseIJSNotificationManager,
+                        Components.interfaces.nsIClassInfo,
+                        Components.interfaces.nsISupports];
+        count.value = ifaces.length;
+        return ifaces;
+    },
+    getHelperForLanguage: function cDACLM_getHelperForLanguage(language) {
+        return null;
+    },
+    implementationLanguage: Components.interfaces.nsIProgrammingLanguage.JAVASCRIPT,
+    flags: 0,
+
+    /* Components.interfaces.inverseIJSNotificationManager */
     notifications: null,
     wrappedJSObject: null,
 
@@ -72,3 +94,8 @@ NotificationManager.prototype = {
         return this;
     }
 };
+
+/** Module Registration */
+function NSGetFactory(cid) {
+    return (XPCOMUtils.generateNSGetFactory([NotificationManager]))(cid);
+}
