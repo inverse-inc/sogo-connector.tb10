@@ -1,5 +1,9 @@
 2012-02-07  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* components/CardDAVDirectory.js: declare class using the
+	new-style API. Removed the nsIRDFResource interface, updated
+	missing (and equivalent) methods from nsIAbDirectory.
+
 	* chrome/content/sogo-connector/addressbook/messenger.groupdav.overlay.js
 	(startFolderSync): the ab root is now accessed exclusively by the
 	ab manager service, modified function accordingly.
