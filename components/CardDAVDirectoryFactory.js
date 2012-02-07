@@ -85,6 +85,5 @@ CardDAVDirectoryFactory.prototype = {
 
 /** Module Registration */
 function NSGetFactory(cid) {
-    dump("NSGetFactory; cid: " + cid + "\n");
     return (XPCOMUtils.generateNSGetFactory([CardDAVDirectoryFactory]))(cid);
 }

@@ -492,8 +492,6 @@ CardDAVDirectory.prototype = {
 
     /* nsISecurityCheckedComponent */
     canCreateWrapper: function(aIID) {
-        dump("CardDAVDirectory.js: canCreateWrapper: aIID: " + aIID + "\n");
-
         return ((aIID.equals(Components.interfaces.nsIAbDirectory)
                  || aIID.equals(Components.interfaces.nsISupports))
                 ? "AllAccess"
@@ -545,7 +543,6 @@ CardDAVDirectory.prototype = {
             && !aIID.equals(Components.interfaces.nsIClassInfo)
             && !aIID.equals(Components.interfaces.nsISupports)) {
             dump("CardDAVDirectory.js: NO INTERFACE: "  + aIID + "\n");
-            dump("  "  + backtrace() + "\n");
             throw Components.results.NS_ERROR_NO_INTERFACE;
         }
 
@@ -566,6 +563,5 @@ CardDAVDirectory.prototype = {
 
 /** Module Registration */
 function NSGetFactory(cid) {
-    dump("NSGetFactory\n");
     return (XPCOMUtils.generateNSGetFactory([CardDAVDirectory]))(cid);
 }
