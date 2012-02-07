@@ -1,3 +1,21 @@
+2012-02-07  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* chrome/content/sogo-connector/addressbook/contactspanel-overlay.js,
+	chrome/content/sogo-connector/addressbook/contactspanel-overlay.xul,
+	chrome/content/sogo-connector/addressbook/messengercompose-overlay.xul,
+	chrome/content/sogo-connector/calendar/calendar-event-dialog-attendees.xml,
+	chrome/content/sogo-connector/calendar/calendar-event-dialog-attendees.xul,
+	chrome/content/sogo-connector/calendar/calendar-event-dialog.css,
+	chrome/content/sogo-connector/calendar/calendar-event-dialog.js,
+	chrome/content/sogo-connector/calendar/calendar-event-dialog.xul,
+	chrome/skin/classic/sogo-connector/calendar/calendar-event-dialog.css,
+	components/cardDAVAutocompleteSession.xpt,
+	components/componentRegistry.js,
+	components/nsISOGoConnectorACSessionWrapper.xpt,
+	js/CardDAVAutoCompleteSession.js,
+	js/SOGoConnectorACSessionWrapper.js,
+	js/SOGoConnectorAutocompleteSearch.js: removed obsolete modules.
+
 2012-01-05  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* chrome/content/inverse-library/sogoWebDAV.js:

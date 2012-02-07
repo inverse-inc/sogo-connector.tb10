@@ -1,8 +1,0 @@
-<?xml version="1.0"?>
-
-<?xml-stylesheet
-  href="chrome://sogo-connector/content/calendar/calendar-event-dialog.css" ?>
-
-<overlay id="inverseCalendarEventDialogAttendeesOverlay"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-</overlay>
