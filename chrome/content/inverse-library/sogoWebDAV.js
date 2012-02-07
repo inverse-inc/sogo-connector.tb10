@@ -538,7 +538,7 @@ sogoWebDAV.prototype = {
             }
         }
         catch(e) {
-            dump("CAlDAVAclManager.js: an exception occured\n" + e + "\n"
+            dump("sogoWebDAV.js: an exception occured\n" + e + "\n"
                  + e.fileName + ":" + e.lineNumber + "\n"
                  + "url: " + aChannel.url + "\n");
         }
