@@ -1,5 +1,9 @@
 2012-02-07  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* components/CalDAVACLManager.js: restored CalDAVACLManager, now
+	in compliance with the calICalendarACLProvider interface from
+	Lightning.
+
 	* chrome/content/sogo-connector/addressbook/contactspanel-overlay.js,
 	chrome/content/sogo-connector/addressbook/contactspanel-overlay.xul,
 	chrome/content/sogo-connector/addressbook/messengercompose-overlay.xul,
