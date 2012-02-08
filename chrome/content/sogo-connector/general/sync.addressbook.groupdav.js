@@ -382,32 +382,69 @@ GroupDavSynchronizer.prototype = {
             this.checkCallback();
         }
     },
+    _setCardETagAndLocation: function(card, key, etag, location) {
+        // let mdbCard = card.QueryInterface(Components.interfaces.nsIAbMDBCard);
+        let oldKey = card.getProperty(kNameKey, "");
+        let isNew = (oldKey == "");
+        if (isNew) {
+            if (location && location.length) {
+                let parts = location[0].split("/");
+                dump("  replaced old card key: " + key + "\n");
+                key = parts[parts.length-1];
+            }
+            dump("  new card uploaded with key: " + key + "\n");
+            card.setProperty(kNameKey, String(key));
+        }
+        else {
+            dump("  updated card with key: " + key + "\n");
+        }
+        dump("  uploaded card has etag: " + etag + "\n");
+        card.setProperty(kETagKey, "" + String(etag));
+        this.gAddressBook.modifyCard(card);
+    },
+
+    _fetchCardETag: function(url) {
+        let etag = null;
+
+        let target = {
+            onDAVQueryComplete: function(status, response, headers, data) {
+                if (status > 199 && status < 400) {
+                    let responses = response["multistatus"][0]["response"];
+                    for each (let response in responses) {
+                        let href = response["href"][0];
+                        let propstats = response["propstat"];
+                        for each (let propstat in propstats) {
+                            if (propstat["status"][0].indexOf("HTTP/1.1 200") == 0) {
+                                let prop = propstat["prop"][0];
+                                if (prop["getetag"] && prop["getetag"].length > 0) {
+                                    etag = prop["getetag"][0];
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+        let request = new sogoWebDAV(url, target, null, true);
+        request.requestJSONResponse = true;
+        request.propfind(["DAV: getetag"], false);
+
+        return etag;
+    },
+
     onCardUploadComplete: function(status, data, key, card, headers) {
         // dump("status: " + status + "; data: " + data + "; key: " + key
         //      + "; card: " + card + "; headers: " + headers + "\n");
         let cardURL = this.gURL + key;
         if (status > 199 && status < 400) {
             let etag = headers["etag"];
+            if (!etag || !etag.length) {
+                dump("No etag returned vcard at " + cardURL + ", explicit fetch...\n");
+                etag = this._fetchCardETag(cardURL);
+            }
+
             if (etag && etag.length) {
-                // let mdbCard = card.QueryInterface(Components.interfaces.nsIAbMDBCard);
-                let oldKey = card.getProperty(kNameKey, "");
-                let isNew = (oldKey == "");
-                if (isNew) {
-                    let location = headers["location"];
-                    if (location && location.length) {
-                        let parts = location[0].split("/");
-                        dump("  replaced old card key: " + key + "\n");
-                        key = parts[parts.length-1];
-                    }
-                    dump("  new card uploaded with key: " + key + "\n");
-                    card.setProperty(kNameKey, String(key));
-                }
-                else {
-                    dump("  updated card with key: " + key + "\n");
-                }
-                dump("  uploaded card has etag: " + etag + "\n");
-                card.setProperty(kETagKey, "" + String(etag));
-                this.gAddressBook.modifyCard(card);
+                this._setCardETagAndLocation(card, key, etag, headers["location"]);
             }
             else
                 dump("No etag returned for vcard uploaded at " + cardURL + ", ignored\n");
