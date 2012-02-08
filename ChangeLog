@@ -3,6 +3,8 @@
 	* chrome/content/sogo-connector/general/sync.addressbook.groupdav.js
 	(onCardUploadComplete): when the etag is not returned with the PUT
 	response, we fetch it explicitly with a PROPFIND.
+	(onServerSyncQueryComplete): added support for new-style webdav
+	sync.
 
 2012-02-07  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 

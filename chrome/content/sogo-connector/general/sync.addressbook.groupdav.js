@@ -866,16 +866,26 @@ GroupDavSynchronizer.prototype = {
                 let reportedKeys = {};
                 this.newWebdavSyncToken
                     = jsonResponse["multistatus"][0]["sync-token"][0];
-                let responses = jsonResponse["multistatus"][0]["sync-response"];
+                let responses = jsonResponse["multistatus"][0]["response"];
+                if (!responses) { /* old-style webdav-sync */
+                    responses = jsonResponse["multistatus"][0]["sync-response"];
+                }
                 for each (let response in responses) {
                     let href = response["href"][0];
                     let keyArray = href.split("/");
                     let key = keyArray[keyArray.length - 1];
 
-                    let itemStatus = response["status"][0].substr(9, 3);
-                    if (itemStatus == "200" || itemStatus == "201") {
-                        let propstats = response["propstat"];
-                        for each (let propstat in propstats) {
+                    let propstats = response["propstat"];
+                    for each (let propstat in propstats) {
+                        let statusTag = propstat["status"];
+                        let itemStatus;
+                        if (statusTag) {
+                            itemStatus = statusTag[0].substr(9, 3);
+                        }
+                        if (!itemStatus) {
+                            itemStatus = response["status"][0].substr(9, 3);
+                        }
+                        if (itemStatus == "200" || itemStatus == "201") {
                             let propStatus = propstat["status"][0].substr(9, 3);
                             if (propStatus == "200") {
                                 let prop = propstat["prop"][0];
@@ -948,11 +958,11 @@ GroupDavSynchronizer.prototype = {
                                 }
                             }
                         }
-                    }
-                    else if (itemStatus == "404") {
-                        if (this.localCardPointerHash[key]
-                            || this.localListPointerHash[key])
-                            this.serverDeletes.push(key);
+                        else if (itemStatus == "404") {
+                            if (this.localCardPointerHash[key]
+                                || this.localListPointerHash[key])
+                                this.serverDeletes.push(key);
+                        }
                     }
                 }
 
