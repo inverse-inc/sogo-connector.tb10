@@ -1,5 +1,8 @@
 2012-02-07  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* chrome/content/sogo-connector/calendar/creation-overlay.js:
+	removed obsolete overlay.
+
 	* components/CardDAVDirectory.js: declare class using the
 	new-style API. Removed the nsIRDFResource interface, updated
 	missing (and equivalent) methods from nsIAbDirectory.
