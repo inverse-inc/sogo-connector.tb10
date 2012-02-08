@@ -1,5 +1,8 @@
 2012-02-08  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* chrome/content/sogo-connector/addressbook/addressbook.groupdav.overlay.js
+	(abDirTreeObserver.SCOnDrop): adapted to new addressbook view API.
+
 	* chrome/content/sogo-connector/general/sync.addressbook.groupdav.js
 	(onCardUploadComplete): when the etag is not returned with the PUT
 	response, we fetch it explicitly with a PROPFIND.

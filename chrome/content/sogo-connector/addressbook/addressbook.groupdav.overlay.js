@@ -165,9 +165,7 @@ abDirTreeObserver.SCOnDrop = function(row, or) {
         /* Here, we don't seem to have the choice but to use the RDF
          interface to discover the target directory. */
         let sourceDirectory = gAbView.directory;
-        let aDirTree = document.getElementById("dirTree");
-        let targetResource = aDirTree.builderView.getResourceAtIndex(row)
-                                     .QueryInterface(Components.interfaces.nsIAbDirectory);
+        let targetResource = gDirectoryTreeView.getDirectoryAtIndex(row);
         let targetURI = targetResource.URI;
 
         // dump("source dir: " + sourceDirectory + "\n");
