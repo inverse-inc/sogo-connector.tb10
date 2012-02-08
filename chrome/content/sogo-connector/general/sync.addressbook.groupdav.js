@@ -444,7 +444,11 @@ GroupDavSynchronizer.prototype = {
             }
 
             if (etag && etag.length) {
-                this._setCardETagAndLocation(card, key, etag, headers["location"]);
+                let location = null;
+                if ("location" in headers) {
+                    location = headers["location"];
+                }
+                this._setCardETagAndLocation(card, key, etag, location);
             }
             else
                 dump("No etag returned for vcard uploaded at " + cardURL + ", ignored\n");
