@@ -1,3 +1,11 @@
+2012-02-09  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* components/CalDAVACLManager.js (CalDAVAclCalendarEntry.refresh):
+	nullify all address and identity array to make sure they are
+	properly refreshed.
+	(CalDAVACLManager._queryCalendarEntry): pass this.wrappedJSObject
+	to generated entries.
+
 2012-02-08  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* chrome/content/sogo-connector/addressbook/addressbook.groupdav.overlay.js

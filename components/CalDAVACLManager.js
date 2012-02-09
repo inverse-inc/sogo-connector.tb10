@@ -312,7 +312,14 @@ CalDAVACLOfflineManager.prototype = {
             if (entry.hasAccessControl) {
                 // dump("has access control...\n");
                 params.user_privileges = this._serializeStringArray(entry.userPrivileges);
-                params.user_addresses = entry.userAddresses.join("\u001A");
+                if (entry.userAddresses) {
+                    params.user_addresses = entry.userAddresses.join("\u001A");
+                }
+                else {
+                    dump("[warning] CalDAVACLManager.js: no user addresses provided\n");
+                    dump("  STACK: " + cal.STACK() + "\n");
+                    params.user_addresses = "";
+                }
                 params.user_principals = this._serializeStringArray(entry.userPrincipals);
                 params.user_identities = this._serializeIdentities(entry.userIdentities);
                 params.owner_addresses = this._serializeStringArray(entry.ownerAddresses);
@@ -407,8 +414,9 @@ CalDAVACLOfflineManager.prototype = {
     },
 
     dropCalendarEntry: function CalDAVACLOfflineManager_dropCalendarEntry(url) {
+        // dump("dropCalendarEntry: " + url + "\n");
         this.mDeleteItemEntriesLike(url + "%");
-        this.mDeleteCalendarEntry(url);;
+        this.mDeleteCalendarEntry(url);
     }
 };
 
@@ -712,6 +720,10 @@ CalDAVACLManager.prototype = {
         }
         else {
             if (data.method) {
+                // dump("data.method: " + data.method  + "\n");
+                // if (data.who) {
+                //     dump("  data.who: " + data.who  + "\n");
+                // }
                 let method = null;
                 if (typeof(data.method) == "string") {
                     let strMethods = {
@@ -754,7 +766,7 @@ CalDAVACLManager.prototype = {
             onOperationComplete: function cDACLM__queryCalendarEntry_oL_onOperationComplete(opCalendar, opStatus, opEntry) {
                 if (Components.isSuccessCode(opStatus)) {
                     // dump("acl-manager: received calendar entry from db\n");
-                    opEntry.aclManager = this_;
+                    opEntry.aclManager = this_.wrappedJSObject;
                     this_._notifyListenerSuccess(listener, opCalendar, opEntry);
                 }
                 else {
@@ -940,11 +952,13 @@ CalDAVACLManager.prototype = {
 
             let addresses = entry[addressesKey];
             if (!addresses) {
+                // dump("new addresses\n");
                 addresses = [];
                 entry[addressesKey] = addresses;
             }
             for (let address in addressValues) {
                 if (addresses.indexOf(address) == -1) {
+                    // dump("added address '" + address + "'\n");
                     addresses.push(address);
                 }
             }
@@ -953,6 +967,7 @@ CalDAVACLManager.prototype = {
             // dump("  type: " + data.who + "\n");
             let identities = entry[identitiesKey];
             if (!identities) {
+                // dump("new identities\n");
                 identities = [];
                 entry[identitiesKey] = identities;
             }
@@ -1286,7 +1301,7 @@ CalDAVACLManager.prototype = {
             }
         };
 
-        this_._queryOnlineCalendarEntry(calEntry, listener, true);
+        this._queryOnlineCalendarEntry(calEntry, listener, true);
     },
 
     /* nsISupports */
@@ -1296,7 +1311,9 @@ CalDAVACLManager.prototype = {
 };
 
 function CalDAVAclCalendarEntry(calendar, manager) {
-    this.aclManager = manager;
+    if (manager) {
+        this.aclManager = manager.wrappedJSObject;
+    }
     this.calendar = calendar;
     this.uri = calendar.uri;
     this.entries = {};
@@ -1317,13 +1334,14 @@ CalDAVAclCalendarEntry.prototype = {
     ownerPrincipal: null,
     userIdentities: null,
     ownerIdentities: null,
+    nbrAddressSets: null,
 
     get userIsOwner() {
         let result = false;
 
         if (this.hasAccessControl) {
             let i = 0;
-            while (!result && typeof(this.userPrincipals) != "undefined" && i < this.userPrincipals.length) {
+            while (!result && typeof(this.userPrincipals) != "undefined" && this.userPrincipals && i < this.userPrincipals.length) {
                 //                 dump("user: " + this.userPrincipals[i] + "\n");
                 if (this.userPrincipals[i] == this.ownerPrincipal)
                     result = true;
@@ -1334,24 +1352,33 @@ CalDAVAclCalendarEntry.prototype = {
         else
             result = true;
 
+        // dump("userIsOwner: " + result + "\n");
+
         return result;
     },
     get userCanAddItems() {
         // dump("has access control: " + this.hasAccessControl + "\n");
         // dump("indexof bind: "
         //      + this.userPrivileges.indexOf("{DAV:}bind") + "\n");
-        return (this.userIsOwner
-                || (this.userPrivileges.indexOf("{DAV:}bind")
-                    > -1));
+        let result = (this.userIsOwner
+                      || (this.userPrivileges.indexOf("{DAV:}bind")
+                          > -1));
+        // dump("userCanAddItems: " + result + "\n");
+        // dump("  userPrivileges: " + this.userPrivileges + "\n");
+
+        return result;
     },
     get userCanDeleteItems() {
         // dump("has access control: " + this.hasAccessControl + "\n");
         // if (this.userPrivileges)
         // dump("indexof unbind: "
         //      + this.userPrivileges.indexOf("{DAV:}unbind") + "\n");
-        return (this.userIsOwner
-                || (this.userPrivileges.indexOf("{DAV:}unbind")
-                    > -1));
+        let result = (this.userIsOwner
+                      || (this.userPrivileges.indexOf("{DAV:}unbind")
+                          > -1));
+        // dump("userCanDeleteItems: " + result + "\n");
+
+        return result;
     },
 
     _getEntries: function _getEntries(entries, outCount) {
@@ -1375,6 +1402,14 @@ CalDAVAclCalendarEntry.prototype = {
     refresh: function refresh() {
         this.entries = {};
         this.userPrivileges = [];
+        this.userAddresses = null;
+        this.userPrincipals = null;
+        this.userIdentities = null;
+        this.ownerAddresses = null;
+        this.ownerPrincipal = null;
+        this.ownerIdentities = null;
+        this.nbrAddressSets = 0;
+
         this.aclManager.refreshCalendarEntry(this);
     },
 
