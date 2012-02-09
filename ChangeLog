@@ -1,5 +1,8 @@
 2012-02-09  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* chrome/content/sogo-connector/general/sync.addressbook.groupdav.js:
+	fixed old-/new-style webdav sync.
+
 	* components/CalDAVACLManager.js (CalDAVAclCalendarEntry.refresh):
 	nullify all address and identity array to make sure they are
 	properly refreshed.
@@ -14,8 +17,6 @@
 	* chrome/content/sogo-connector/general/sync.addressbook.groupdav.js
 	(onCardUploadComplete): when the etag is not returned with the PUT
 	response, we fetch it explicitly with a PROPFIND.
-	(onServerSyncQueryComplete): added support for new-style webdav
-	sync.
 
 2012-02-07  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 

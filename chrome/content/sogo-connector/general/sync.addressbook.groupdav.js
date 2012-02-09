@@ -860,101 +860,156 @@ GroupDavSynchronizer.prototype = {
         //     dump("onServerSyncQueryComplete\n");
         this.pendingOperations = 0;
 
+/*
+ *
+ * old webdav-sync response:
+
+delete:
+<?xml version="1.0" encoding="utf-8"?>
+<D:multistatus xmlns:D="DAV:">
+  <D:sync-response>
+    <D:href>/SOGo/dav/wsourdeau/Contacts/personal/28C3-4F340280-7-74097C00.vcf</D:href>
+    <D:status>HTTP/1.1 404 Not Found</D:status>
+  </D:sync-response>
+  <D:sync-response>
+    <D:href>/SOGo/dav/wsourdeau/Contacts/personal/28C3-4F340280-9-74097C00.vcf</D:href>
+    <D:status>HTTP/1.1 404 Not Found</D:status>
+  </D:sync-response>
+  <D:sync-token>1328808591</D:sync-token>
+</D:multistatus>
+
+update:
+<?xml version="1.0" encoding="utf-8"?>
+<D:multistatus xmlns:D="DAV:">
+  <D:sync-response>
+    <D:href>/SOGo/dav/wsourdeau/Contacts/personal/28C3-4F341700-B-74097C00.vcf</D:href>
+    <D:status>HTTP/1.1 200 OK</D:status>
+    <D:propstat>
+      <D:prop>
+        <D:getcontenttype>text/x-vcard</D:getcontenttype>
+        <D:getetag>&quot;gcs00000001&quot;</D:getetag>
+      </D:prop>
+      <D:status>HTTP/1.1 200 OK</D:status>
+    </D:propstat>
+  </D:sync-response>
+  <D:sync-token>1328814961</D:sync-token>
+</D:multistatus>
+
+new:
+<?xml version="1.0" encoding="utf-8"?>
+<D:multistatus xmlns:D="DAV:">
+  <D:sync-response>
+    <D:href>/SOGo/dav/wsourdeau/Contacts/personal/28C3-4F341B80-F-74097C00.vcf</D:href>
+    <D:status>HTTP/1.1 201 Created</D:status>
+    <D:propstat>
+      <D:prop>
+        <D:getcontenttype>text/x-vcard</D:getcontenttype>
+        <D:getetag>&quot;gcs00000000&quot;</D:getetag>
+      </D:prop>
+      <D:status>HTTP/1.1 200 OK</D:status>
+    </D:propstat>
+  </D:sync-response>
+  <D:sync-token>1328814996</D:sync-token>
+</D:multistatus>
+
+*/
+
+
         if (jsonResponse) {
             if (status > 199 && status < 400) {
+
+                let this_ = this;
+
+                /* code common between old and new webdav sync impl */
+                function handleAddOrModify(key, itemStatus, propstat) {
+                    let prop = propstat["prop"][0];
+                    let contType = prop["getcontenttype"][0];
+                    if (contType == "text/x-vcard"
+                        || contType == "text/vcard"
+                        || contType == "text/x-vlist") {
+                        reportedKeys[key] = true;
+                        let version = prop["getetag"][0];
+                        let itemDict = { etag: version, type: contType };
+                        dump("  item: " + key
+                             + "; etag: " + version
+                             + "; type: " + contType
+                             + "; status: " + itemStatus
+                             + "\n");
+                        if (itemStatus == "201") {
+                            /* we won't download "new" cards if we already have them,
+                             otherwise we will end up with duplicated instances. */
+                            if (!(this_.localCardPointerHash[key]
+                                  || this_.localListPointerHash[key])) {
+                                //                         dump("adopting: " + key + "\n");
+                                this_.serverDownloads[key] = itemDict;
+                                this_.serverDownloadsCount++;
+                            }
+                            else {
+                                let localVersion = this_.localCardVersionHash[key];
+                                if (!localVersion)
+                                    localVersion = this_.localListVersionHash[key];
+                                if (!localVersion || localVersion != version) {
+                                    dump("  new card/list " + key
+                                         + " declared as new"
+                                         + " from server, with a local copy but"
+                                         + " with a different version.");
+                                    this_.serverDownloads[key] = itemDict;
+                                    this_.serverDownloadsCount++;
+                                }
+                                else
+                                    dump("skipped " + key + "\n");
+                            }
+                        }
+                        else {
+                            let localVersion = this_.localCardVersionHash[key];
+                            if (!localVersion)
+                                localVersion = this_.localListVersionHash[key];
+                            if (localVersion) {
+                                /* If the local version already matches the server
+                                 version, we skip its update. */
+                                dump("  local version: " + localVersion
+                                     + "\n");
+                                if (localVersion != "-1" && localVersion != version) {
+                                    dump("  added to downloads\n");
+                                    this_.serverDownloads[key] = itemDict;
+                                    this_.serverDownloadsCount++;
+                                }
+                                else
+                                    dump("  skipped\n");
+                            }
+                            else {
+                                /* If the local version of the card doesn't even
+                                 exist, which should never happen, we download the card
+                                 anew. */
+                                this_.serverDownloads[key] = itemDict;
+                                this_.serverDownloadsCount++;
+                                dump("[sogo-connector] a card considered updated"
+                                     + " was not found locally.\n");
+                            }
+                        }
+                    }
+                    else
+                        dump("unknown content-type: " + contType + "(ignored)\n");
+                }
+
                 let completeSync = (this.webdavSyncToken.length == 0);
                 let reportedKeys = {};
                 this.newWebdavSyncToken
                     = jsonResponse["multistatus"][0]["sync-token"][0];
-                let responses = jsonResponse["multistatus"][0]["response"];
-                if (!responses) { /* old-style webdav-sync */
-                    responses = jsonResponse["multistatus"][0]["sync-response"];
-                }
-                for each (let response in responses) {
-                    let href = response["href"][0];
-                    let keyArray = href.split("/");
-                    let key = keyArray[keyArray.length - 1];
+                let responses = jsonResponse["multistatus"][0]["sync-response"];
+                if (responses) { /* old webdav sync */
+                    for each (let response in responses) {
+                        let href = response["href"][0];
+                        let keyArray = href.split("/");
+                        let key = keyArray[keyArray.length - 1];
 
-                    let propstats = response["propstat"];
-                    for each (let propstat in propstats) {
-                        let statusTag = propstat["status"];
-                        let itemStatus;
-                        if (statusTag) {
-                            itemStatus = statusTag[0].substr(9, 3);
-                        }
-                        if (!itemStatus) {
-                            itemStatus = response["status"][0].substr(9, 3);
-                        }
+                        let itemStatus = response["status"][0].substr(9, 3);
                         if (itemStatus == "200" || itemStatus == "201") {
-                            let propStatus = propstat["status"][0].substr(9, 3);
-                            if (propStatus == "200") {
-                                let prop = propstat["prop"][0];
-                                if (href != this.gURL) {
-                                    let contType = prop["getcontenttype"][0];
-                                    if (contType == "text/x-vcard"
-                                        || contType == "text/vcard"
-                                        || contType == "text/x-vlist") {
-                                        reportedKeys[key] = true;
-                                        let version = prop["getetag"][0];
-                                        let itemDict = { etag: version, type: contType };
-                                        dump("  item: " + key
-                                             + "; etag: " + version
-                                             + "; type: " + contType + "\n");
-                                        if (itemStatus == "201") {
-                                            /* we won't download "new" cards if we already have them,
-                                             otherwise we will end up with duplicated instances. */
-                                            if (!(this.localCardPointerHash[key]
-                                                  || this.localListPointerHash[key])) {
-                                                //                         dump("adopting: " + key + "\n");
-                                                this.serverDownloads[key] = itemDict;
-                                                this.serverDownloadsCount++;
-                                            }
-                                            else {
-                                                let localVersion = this.localCardVersionHash[key];
-                                                if (!localVersion)
-                                                    localVersion = this.localListVersionHash[key];
-                                                if (!localVersion || localVersion != version) {
-                                                    dump("  new card/list " + key
-                                                         + " declared as new"
-                                                         + " from server, with a local copy but"
-                                                         + " with a different version.");
-                                                    this.serverDownloads[key] = itemDict;
-                                                    this.serverDownloadsCount++;
-                                                }
-                                                else
-                                                    dump("skipped " + key + "\n");
-                                            }
-                                        }
-                                        else {
-                                            let localVersion = this.localCardVersionHash[key];
-                                            if (!localVersion)
-                                                localVersion = this.localListVersionHash[key];
-                                            if (localVersion) {
-                                                /* If the local version already matches the server
-                                                 version, we skip its update. */
-                                                dump("  local version: " + localVersion
-                                                     + "\n");
-                                                if (localVersion != "-1" && localVersion != version) {
-                                                    dump("  added to downloads\n");
-                                                    this.serverDownloads[key] = itemDict;
-                                                    this.serverDownloadsCount++;
-                                                }
-                                                else
-                                                    dump("  skipped\n");
-                                            }
-                                            else {
-                                                /* If the local version of the card doesn't even
-                                                 exist, which should never happen, we download the card
-                                                 anew. */
-                                                this.serverDownloads[key] = itemDict;
-                                                this.serverDownloadsCount++;
-                                                dump("[sogo-connector] a card considered updated"
-                                                     + " was not found locally.\n");
-                                            }
-                                        }
-                                    }
-                                    else
-                                        dump("unknown content-type: " + contType + "(ignored)\n");
+                            let propstats = response["propstat"];
+                            for each (let propstat in propstats) {
+                                let propStatus = propstat["status"][0].substr(9, 3);
+                                if (propStatus == "200" && href != this.gURL) {
+                                    handleAddOrModify(key, itemStatus, propstat);
                                 }
                             }
                         }
@@ -962,6 +1017,41 @@ GroupDavSynchronizer.prototype = {
                             if (this.localCardPointerHash[key]
                                 || this.localListPointerHash[key])
                                 this.serverDeletes.push(key);
+                        }
+                    }
+                }
+                else { /* new webdav sync */
+                    responses = jsonResponse["multistatus"][0]["response"];
+                    for each (let response in responses) {
+                        let href = response["href"][0];
+                        let keyArray = href.split("/");
+                        let key = keyArray[keyArray.length - 1];
+
+                        let propstats = response["propstat"];
+                        if (propstats) {
+                            for each (let propstat in propstats) {
+                                let statusTag = propstat["status"];
+                                let itemStatus  = statusTag[0].substr(9, 3);
+                                if ((itemStatus == "200"
+                                     || itemStatus == "201")
+                                    && href != this.gURL) {
+                                    handleAddOrModify(key, itemStatus, propstat);
+                                }
+                            }
+                        }
+                        else { /* 404 responses are now supposed to occur only
+                                when no propfind is present. Yet, the "status"
+                                seems not mandatory so we play it safe
+                                here. */
+                            let status = response["status"];
+                            if (status && status.length > 0) {
+                                let itemStatus = response["status"][0].substr(9, 3);
+                                if (itemStatus == "404") {
+                                    if (this.localCardPointerHash[key]
+                                        || this.localListPointerHash[key])
+                                        this.serverDeletes.push(key);
+                                }
+                            }
                         }
                     }
                 }
@@ -1168,8 +1258,10 @@ GroupDavSynchronizer.prototype = {
                 let groupdavPrefService = this.prefService();
                 if (this.newCTag)
                     groupdavPrefService.setCTag(this.newCTag);
-                if (this.newWebdavSyncToken)
+                if (this.newWebdavSyncToken) {
+                    dump("saving new sync token: " + this.newWebdavSyncToken + "\n");
                     groupdavPrefService.setWebdavSyncToken(this.newWebdavSyncToken);
+                }
             }
             this.checkCallback();
         }
