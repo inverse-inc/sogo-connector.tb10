@@ -1,5 +1,9 @@
 2012-02-09  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* components/CalDAVACLManager.js (CalDAVAclCalendarEntry.refresh):
+	hackishly flush our calendar item caches, in order to make sure no
+	item ACL entry remains active.
+
 	* chrome/content/sogo-connector/general/sync.addressbook.groupdav.js:
 	fixed old-/new-style webdav sync.
 

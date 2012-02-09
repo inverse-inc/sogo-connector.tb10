@@ -1410,6 +1410,33 @@ CalDAVAclCalendarEntry.prototype = {
         this.ownerIdentities = null;
         this.nbrAddressSets = 0;
 
+        /* we need to flush the item cache from the storage provider caches otherwise getItems will return items with an obsolete ACL entry */
+        let jsCalendar = this.calendar.wrappedJSObject;
+        let parentCalendar = jsCalendar.superCalendar.wrappedJSObject;
+        if (parentCalendar.mUncachedCalendar) { /* using calStorageCalendar */
+            let storageCalendar = parentCalendar.mCachedCalendar.wrappedJSObject;
+            if (storageCalendar.mItemCache) {
+                storageCalendar.mItemCache = {};
+                dump("emptied cache from storage calendar\n");
+            }
+            if (storageCalendar.mRecEventCache) {
+                storageCalendar.mRecEventCache = {};
+            }
+            if (storageCalendar.mRecTodoCache) {
+                storageCalendar.mRecTodoCache = {};
+            }
+        }
+        else { /* using calMemoryCalendar */
+            let offlineStorage = jsCalendar.mOfflineStorage;
+            if (offlineStorage) {
+                offlineStorage = offlineStorage.wrappedJSObject;
+                if (offlineStorage.mItems)  {
+                    offlineStorage.mItems = {};
+                    dump("emptied cache from memory calendar\n");
+                }
+            }
+        }
+
         this.aclManager.refreshCalendarEntry(this);
     },
 
