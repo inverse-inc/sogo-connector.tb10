@@ -19,6 +19,8 @@
  * Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+let kPhotoImageCache = "SOGoImageCache";
+
 function jsInclude(files, target) {
     let loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
                            .getService(Components.interfaces.mozIJSSubScriptLoader);
@@ -448,6 +450,12 @@ let _insertCardMethods = {
         props["Notes"] = values.join(";");
     },
     photo: function(props, parameters, values) {
+        /* "PhotoName" is used for the image displayed in the card view, by
+         picking the corresponding file from the image cache. "PhotoURI" is
+         the original filename of the image and is used to display the image
+         in the card edition window and to (re)attach the image file to the
+         card being editted.
+         */
         if (values.length > 0) {
             if (parameters["value"] && parameters["value"] == "uri") {
                 props["PhotoType"] = "web";
@@ -455,12 +463,12 @@ let _insertCardMethods = {
                 props["PhotoName"] = "(void)";
             }
             else {
-                let photoName = importPhoto(parameters["type"],
+                let photoFile = importPhoto(parameters["type"],
                                             values[0]);
-                if (photoName) {
+                if (photoFile) {
                     props["PhotoType"] = "file";
-                    props["PhotoURI"] = "(void)";
-                    props["PhotoName"] = photoName;
+                    props["PhotoURI"] = "file://" + photoFile.path;
+                    props["PhotoName"] = photoFile.leafName;
                 }
             }
         }
@@ -785,20 +793,19 @@ function card2vcard(card) {
      *   - PhotoURI : uri (file:// or http://)
      */
 
+    let photoUri = card.getProperty("PhotoURI", null);
     let photoType = card.getProperty("PhotoType", "file");
     if (photoType == "web") {
-        let photoUri = card.getProperty("PhotoURI", null);
         if (photoUri) {
             vCard += foldedLine("PHOTO;VALUE=uri:"
                                 + escapedForCard(photoUri)) + "\r\n";
         }
     }
-    else { /* always "file" */
-        let name = card.getProperty("PhotoName", null);
-        if (name) {
-            let photoType = deducePhotoTypeFromExt(name);
+    else if (photoType == "file") { /* always "file" */
+        if (photoUri) {
+            let photoType = deducePhotoTypeFromExt(photoUri);
             if (photoType) {
-                let content = photoContent(name);
+                let content = photoContent(photoUri);
                 if (content) {
                     vCard += foldedLine("PHOTO;ENCODING=b;TYPE=" + photoType
                                         + ":" + btoa(content)) + "\r\n";
@@ -858,20 +865,30 @@ function deducePhotoTypeFromExt(photoName) {
     return type;
 }
 
-function photoFileFromName(photoName) {
+function photoFileFromName(photoName, inSOGoCache) {
     let file = Components.classes["@mozilla.org/file/directory_service;1"]
                          .getService(Components.interfaces.nsIProperties)
-                         .get("ProfD", Components.interfaces.nsIFile);
-    file.append("Photos");
-    file.append(photoName);
+                         .get("ProfD", Components.interfaces.nsILocalFile);
+    file.append(inSOGoCache ? kPhotoImageCache : "Photos");
+    if (photoName) {
+        file.append(photoName);
+    }
 
     return file;
 }
 
-function photoContent(photoName) {
+function photoContent(uri) {
     let content = null;
 
-    let file = photoFileFromName(photoName);
+    /* warning: this might not work on windows, due to the accessing of files via uris */
+
+    let file = Components.classes["@mozilla.org/file/local;1"]
+                         .createInstance(Components.interfaces.nsILocalFile);
+    if (uri.indexOf("file://") == 0) {
+        uri = uri.substr(7);
+    }
+    file.initWithPath(uri);
+
     let rd;
     try {
         /* If the file does not exists, the following does not return but
@@ -889,7 +906,7 @@ function photoContent(photoName) {
                                    .createInstance(Components.interfaces.nsIBinaryInputStream);
         byteStream.setInputStream(fileStream);
         content = byteStream.readBytes(byteStream.available());
-        dump("vcards.utils.js: content of file '" + photoName + "' read successfully\n");
+        dump("vcards.utils.js: content of file '" + uri + "' read successfully\n");
         byteStream.close();
         fileStream.close();
     }
@@ -901,12 +918,12 @@ function photoContent(photoName) {
 }
 
 function importPhoto(photoType, content) {
-    let photoName = null;
+    let photoFile = null;
 
     if (content && content.length > 0) {
         let ext = deducePhotoExtFromTypes(photoType);
         if (ext) {
-            photoName = saveImportedPhoto(content, ext);
+            photoFile = saveImportedPhoto(content, ext);
         }
         else {
             dump("vcards.utils: no extension returned for photo file\n");
@@ -916,7 +933,7 @@ function importPhoto(photoType, content) {
         dump("vcards.utils: no content provided\n");
     }
 
-    return photoName;
+    return photoFile;
 }
 
 function deducePhotoExtFromTypes(photoTypes) {
@@ -946,35 +963,62 @@ function deducePhotoExtFromTypes(photoTypes) {
 function saveImportedPhoto(content, ext) {
     let photoName = (new UUID()) + "." + ext;
 
-    let file = photoFileFromName(photoName);
-    /* 0700 is specified here because Thunderbird is too self-sufficient
-     to respect the environment umask */
-    file.create(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0x1c8 /* octal 0700 in hex */);
-    let fileStream = Components.classes["@mozilla.org/network/file-output-stream;1"]
-                               .createInstance(Components.interfaces.nsIFileOutputStream);
-
-    try {
-      fileStream.init(file, -1, -1, false);
-    }
-    catch(e) {
-      dump("photoName: " + photoName + "\n");
-      dump("file: " + file + "\n");
-      return null;
+    /* ensure the kPhotoImageCache exists */
+    let dir = photoFileFromName(null, true);
+    if (!dir.exists()) {
+        dir.create(Components.interfaces.nsIFile.DIRECTORY_TYPE,
+                   parseInt("0700", 8));
     }
 
-    let byteStream = Components.classes["@mozilla.org/binaryoutputstream;1"]
-                               .createInstance(Components.interfaces.nsIBinaryOutputStream);
-    byteStream.setOutputStream(fileStream);
-    byteStream.writeBytes(content, content.length);
-    dump("vcards.utils.js: content of file '" + photoName + "' written successfully\n");
-    byteStream.close();
-    fileStream.close();
+    /* we create a copy in the regular cache for display in the card view and
+     in the SOGo cache as a separate file which will not be destroyed by a
+     further save operation */
+    let lastFile = null;
+    for each (let bool in [false, true]) {
+        let file = photoFileFromName(photoName, bool);
+        /* 0700 is specified here because Thunderbird is too self-sufficient
+         to respect the environment umask */
+        file.create(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0x1c8 /* octal 0700 in hex */);
+        let fileStream = Components.classes["@mozilla.org/network/file-output-stream;1"]
+                                   .createInstance(Components.interfaces.nsIFileOutputStream);
 
-    return photoName;
+        try {
+            fileStream.init(file, -1, -1, false);
+        }
+        catch(e) {
+            dump("photoName: " + photoName + "\n");
+            dump("file: " + file + "\n");
+            return null;
+        }
+
+        let byteStream = Components.classes["@mozilla.org/binaryoutputstream;1"]
+                                   .createInstance(Components.interfaces.nsIBinaryOutputStream);
+        byteStream.setOutputStream(fileStream);
+        byteStream.writeBytes(content, content.length);
+        dump("vcards.utils.js: content of file '" + photoName + "' written successfully\n");
+        byteStream.close();
+        fileStream.close();
+
+        lastFile = file;
+    }
+
+    return lastFile;
 }
 
-function deletePhotoFile(photoName) {
-    let file = photoFileFromName(photoName);
+function urlIsInSOGoImageCache(url) {
+    /* warning: this might not work on windows, due to the accessing of files via uris */
+
+    let dir = photoFileFromName(false, true);
+    if (url.indexOf("file://") > -1) {
+        url = url.substr(7);
+    }
+    return (url.indexOf(dir.path) > -1);
+}
+
+function deletePhotoFile(photoName, inSOGoCache) {
+    /* warning: this might not work on windows, due to the accessing of files via uris */
+
+    let file = photoFileFromName(photoName, inSOGoCache);
     try {
         file.remove(false);
     }

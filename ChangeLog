@@ -1,3 +1,12 @@
+2012-02-10  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
+
+	* chrome/content/sogo-connector/general/vcards.utils.js
+	(saveImportedPhoto): photo files are now saved twice: in the
+	thunderbird photo cache and in another directory. This is to
+	prevent Thunderbird from displaying an empty picture when editing
+	a card and to prevent it from deleting the cache file when in it
+	is used as an alternative url.
+
 2012-02-09  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
 	* components/CalDAVACLManager.js (CalDAVAclCalendarEntry.refresh):

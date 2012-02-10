@@ -485,8 +485,7 @@ GroupDavSynchronizer.prototype = {
         }
 
         // dump("importCard\n");
-        let card = importFromVcard(data// , vcardFieldsArray
-                                  );
+        let card = importFromVcard(data);
         card.setProperty(kNameKey, String(key));
         card.setProperty(kETagKey,
                          String(this.serverDownloads[key].etag));
@@ -499,15 +498,25 @@ GroupDavSynchronizer.prototype = {
             /* we must delete the previous photo file to avoid duplicating it
              with another name */
             let oldCard = this.localCardPointerHash[key];
-
-            let oldPhotoName = oldCard.getProperty("PhotoName", null);
-            let newPhotoName = card.getProperty("PhotoName", null);
-            if (oldPhotoName && oldPhotoName != newPhotoName) {
-                deletePhotoFile(oldPhotoName);
-                oldCard.deleteProperty("PhotoURI");
-                /* TODO: BUG: we should load the photo into the cache when it has
-                 been imported with a URL value. */
+            /* we reset photo properties */
+            let photoName = oldCard.getProperty("PhotoName", "");
+            if (photoName != "") {
+                deletePhotoFile(photoName, false);
+                oldCard.deleteProperty("PhotoName");
             }
+            let photoURL = oldCard.getProperty("PhotoURI", "");
+            if (photoURL != "") {
+                /* warning: this might not work on windows, due to the accessing of files via uris */
+                if (urlIsInSOGoImageCache(photoURL)) {
+                    let parts = photoURL.split("/");
+                    let lastPart = parts[parts.length-1];
+                    if (lastPart != "") {
+                        deletePhotoFile(lastPart, true);
+                    }
+                }
+                oldCard.deleteProperty("PhotoURI");
+            }
+            oldCard.setProperty("PhotoType", "generic");
 
             /* FIXME: there is a thunderbird bug here which prevent the properties from actually be deleted... */
             let allOldCardProperties = oldCard.properties;
