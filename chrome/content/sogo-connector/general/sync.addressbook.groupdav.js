@@ -1086,7 +1086,7 @@ new:
                     && jsonResponse["error"] && jsonResponse["error"].length) {
                     let davError = jsonResponse["error"][0];
                     if (davError["valid-sync-token"].length) {
-                        let syncError = true;
+                        syncError = true;
                     }
                 }
                 if (status == 403 && syncError) {
