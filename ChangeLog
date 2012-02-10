@@ -1,5 +1,9 @@
 2012-02-10  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* components/CalDAVACLManager.js (_queryCalendarEntry): use
+	"this_" instead of "this" as acl as "manager" argument, since
+	"this" is actually the listener object being used.
+
 	* chrome/content/sogo-connector/general/vcards.utils.js
 	(saveImportedPhoto): photo files are now saved twice: in the
 	thunderbird photo cache and in another directory. This is to

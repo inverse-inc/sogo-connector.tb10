@@ -779,7 +779,7 @@ CalDAVACLManager.prototype = {
                     }
                     else {
                         // dump("acl-manager: we did not receive calendar entry from db -> online query\n");
-                        let entry = new CalDAVAclCalendarEntry(calendar, this);
+                        let entry = new CalDAVAclCalendarEntry(calendar, this_);
                         this_._queryOnlineCalendarEntry(entry, listener, false);
                     }
                 }
