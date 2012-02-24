@@ -231,7 +231,7 @@ GroupDavSynchronizer.prototype = {
                     }
                 }
                 else {
-                    dump("  list '" + list.dirName + "' will be added\n");
+                    dump("  list '" + list.displayName + "' will be added\n");
                     let key = new UUID() + ".vlf";
                     this.localListUploads[key] = list;
                     uploads++;
