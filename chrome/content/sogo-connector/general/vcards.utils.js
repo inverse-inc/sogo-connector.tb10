@@ -880,14 +880,10 @@ function photoFileFromName(photoName, inSOGoCache) {
 function photoContent(uri) {
     let content = null;
 
-    /* warning: this might not work on windows, due to the accessing of files via uris */
-
-    let file = Components.classes["@mozilla.org/file/local;1"]
-                         .createInstance(Components.interfaces.nsILocalFile);
-    if (uri.indexOf("file://") == 0) {
-        uri = uri.substr(7);
-    }
-    file.initWithPath(uri);
+    let ios = Components.classes["@mozilla.org/network/io-service;1"]
+                        .getService(Components.interfaces.nsIIOService);
+    let fileURL = ios.newURI(uri, null, null);
+    let file = fileURL.QueryInterface(Components.interfaces.nsIFileURL).file;
 
     let rd;
     try {
