@@ -1,6 +1,6 @@
 <!ENTITY calendar.preferences.general.classification.caption
-"Default item classifications">
+"Standardklassifikation für Einträge">
 <!ENTITY calendar.preferences.general.default-events-classification.label
-"Events classification:">
+"Terminklassifikation:">
 <!ENTITY calendar.preferences.general.default-todos-classification.label
-"Tasks classification:">
+"Aufgabenklassifikation:">

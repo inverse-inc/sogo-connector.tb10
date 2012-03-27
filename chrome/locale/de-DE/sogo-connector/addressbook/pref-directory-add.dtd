@@ -23,11 +23,11 @@
 -->
 
 <!ENTITY newDirectoryTitle.label          "Remote-Adressbuch Einstellungen">
-<!ENTITY groupdavName.label               "Verbindungs-Name: ">
+<!ENTITY groupdavName.label               "Verbindungsname: ">
 <!ENTITY groupdavName.accesskey           "n">
 <!ENTITY groupdavURL.label                "URL: ">
 <!ENTITY groupdavURL.accesskey            "l">
-<!ENTITY groupdavHostname.label           "host: ">
+<!ENTITY groupdavHostname.label           "Host: ">
 <!ENTITY groupdavHostname.accesskey       "h">
 <!ENTITY groupdavSecure.label             "Sichere Verbindung verwenden (SSL)">
 <!ENTITY groupdavSecure.accesskey         "S">
@@ -38,7 +38,7 @@
 <!ENTITY groupdavPassword.label            "Passwort:">
 <!ENTITY groupdavPassword.accesskey       "p">
 
-<!ENTITY groupDavServerType.label         "GroupDAV Server Typus:">
+<!ENTITY groupDavServerType.label         "GroupDAV Server Typ:">
 <!ENTITY groupDavServerType.accesskey     "G">
 
 

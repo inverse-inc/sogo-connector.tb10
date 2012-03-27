@@ -25,12 +25,12 @@
 
 <!ENTITY GroupDavSync.label                      		"Synchronisieren">
 <!ENTITY GroupDavSync.accesskey                  		"S">
-<!ENTITY GroupDavSync.tooltip                      	"Karten mit dem Server synchronisieren">
+<!ENTITY GroupDavSync.tooltip                      	"Adresskarten mit dem Server synchronisieren">
 
 <!ENTITY GroupDavConf.label                      		"Konfigurieren">
 <!ENTITY GroupDavConf.accesskey                  		"K">
 
 <!ENTITY addressbook.synchronize.label	"Synchronisierung:">
 
-<!ENTITY SearchCriteriaButton.label "Criteria">
-<!ENTITY SearchCategory.label "Category">
+<!ENTITY SearchCriteriaButton.label "Suchkriterium">
+<!ENTITY SearchCategory.label "Suchkategorie">
