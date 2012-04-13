@@ -20,17 +20,17 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA	
 -->
 
-<!ENTITY newGroupDavCmd.label                      	"Remote-Adressbuch">
-<!ENTITY newGroupDavCmd.accesskey                  	"R">
+<!ENTITY newGroupDavCmd.label                      	"Vzdálená složka kontaktů">
+<!ENTITY newGroupDavCmd.accesskey                  	"V">
 
-<!ENTITY GroupDavSync.label                      		"Synchronisieren">
+<!ENTITY GroupDavSync.label                      		"Synchronizovat">
 <!ENTITY GroupDavSync.accesskey                  		"S">
-<!ENTITY GroupDavSync.tooltip                      	"Adresskarten mit dem Server synchronisieren">
+<!ENTITY GroupDavSync.tooltip                      	"Synchronizovat kontakty se serverem">
 
-<!ENTITY GroupDavConf.label                      		"Konfigurieren">
+<!ENTITY GroupDavConf.label                      		"Konfigurovat">
 <!ENTITY GroupDavConf.accesskey                  		"K">
 
-<!ENTITY addressbook.synchronize.label	"Synchronisierung:">
+<!ENTITY addressbook.synchronize.label	"Synchronizace:">
 
-<!ENTITY SearchCriteriaButton.label "Suchkriterium">
-<!ENTITY SearchCategory.label "Suchkategorie">
+<!ENTITY SearchCriteriaButton.label "Kritérium">
+<!ENTITY SearchCategory.label "Kategorie">
