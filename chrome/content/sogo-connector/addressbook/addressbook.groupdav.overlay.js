@@ -40,7 +40,6 @@ function jsInclude(files, target) {
 jsInclude(["chrome://inverse-library/content/sogoWebDAV.js",
            "chrome://sogo-connector/content/addressbook/categories.js",
            "chrome://sogo-connector/content/addressbook/folder-handling.js",
-           "chrome://sogo-connector/content/common/common-dav.js",
            "chrome://sogo-connector/content/general/mozilla.utils.inverse.ca.js",
            "chrome://sogo-connector/content/general/sync.addressbook.groupdav.js",
            "chrome://sogo-connector/content/general/preference.service.addressbook.groupdav.js"]);

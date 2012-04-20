@@ -43,7 +43,35 @@ function jsInclude(files, target) {
 jsInclude(["chrome://inverse-library/content/simpleLdapQuery.js",
            "chrome://sogo-connector/content/general/webdav.inverse.ca.js",
            "chrome://sogo-connector/content/common/common-dav.js",
-           "chrome://sogo-connector/content/general/mozilla.utils.inverse.ca.js"]);
+           "chrome://sogo-connector/content/general/mozilla.utils.inverse.ca.js",
+           "chrome://sogo-connector/content/general/preference.service.addressbook.groupdav.js"]);
+
+let autoCompleteDirectoryPreferencesPrefix = "ldap_2.autoComplete.";
+
+function getAutoCompleteCardDAVUri(){
+    let result = null;
+    let prefsService = Components.classes["@mozilla.org/preferences;1"]
+                                 .getService(Components.interfaces.nsIPref);
+
+    // 	dump("prefix: " + autoCompleteDirectoryPreferencesPrefix + "\n");
+    let directoryServerPrefix = prefsService.GetCharPref(autoCompleteDirectoryPreferencesPrefix + "directoryServer");
+    if (directoryServerPrefix
+        && directoryServerPrefix.length > 0)
+        result = "moz-abdavdirectory://" + directoryServerPrefix;
+
+    return result;
+}
+
+function isAutoCompleteDirectoryServerCardDAV() {
+    let result = false;
+
+    let uri = getAutoCompleteCardDAVUri(autoCompleteDirectoryPreferencesPrefix);
+    // dump("uri: " + uri + "\n");
+    if (uri)
+        result = isCardDavDirectory(uri);
+
+    return result;
+}
 
 function SOGoFBURLFreeBusyProvider() {
     this.rdfService = Components.classes["@mozilla.org/rdf/rdf-service;1"]
