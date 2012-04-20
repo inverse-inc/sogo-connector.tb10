@@ -1,5 +1,8 @@
 2012-04-20  Wolfgang Sourdeau  <wsourdeau@inverse.ca>
 
+	* components/SOGoConnectorAutocompleteSearch.js: restored and
+	slightly adapted component for TB 10.
+
 	* chrome/content/sogo-connector/common/common-dav.js: removed
 	obsolete module.
 
