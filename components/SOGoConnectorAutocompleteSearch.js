@@ -393,10 +393,6 @@ SOGoConnectorAutocompleteSearch.prototype = {
                 if (!commentColumn || commentColumn.length == 0) {
                     commentColumn = "none";
                 }
-                else {
-                    commentColumn = (commentColumn[0].toUpperCase()
-                                     + commentColumn.substr(1).toLowerCase());
-                }
             } catch(e) {
                 commentColumn = "none";
             }
