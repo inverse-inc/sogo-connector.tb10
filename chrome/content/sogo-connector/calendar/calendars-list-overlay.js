@@ -1,3 +1,6 @@
+let iCc = Components.classes;
+let iCi = Components.interfaces;
+
 function reinitCalendarCache(aCalendar) {
     let superCalendar = aCalendar.superCalendar.wrappedJSObject;
     if (superCalendar && superCalendar.mCachedCalendar) {
