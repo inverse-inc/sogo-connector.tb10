@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 
-<?xml-stylesheet href="chrome://sogo-connector/skin/preferences/preferences.css"?>
-
 <!DOCTYPE overlay [
     <!ENTITY % SCPreferencesDTD SYSTEM "chrome://sogo-connector/locale/preferences/preferences.dtd">
     %SCPreferencesDTD;
 ]>
+
+<?xml-stylesheet href="chrome://sogo-connector/skin/preferences/preferences.css"?>
 
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <prefwindow id="MailPreferences">
