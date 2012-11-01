@@ -544,11 +544,14 @@ function _SCDeleteListAsDirectory(directory, selectedDir) {
 function SCAbConfirmDeleteDirectory(selectedDir) {
     let confirmDeleteMessage;
 
+    let prefService = (Components.classes["@mozilla.org/preferences-service;1"]
+                                 .getService(Components.interfaces.nsIPrefBranch));
+
     // Check if this address book is being used for collection
-    if (gPrefs.getCharPref("mail.collect_addressbook") == selectedDir
-        && (gPrefs.getBoolPref("mail.collect_email_address_outgoing")
-            || gPrefs.getBoolPref("mail.collect_email_address_incoming")
-            || gPrefs.getBoolPref("mail.collect_email_address_newsgroup"))) {
+    if (prefService.getCharPref("mail.collect_addressbook") == selectedDir
+        && (prefService.getBoolPref("mail.collect_email_address_outgoing")
+            || prefService.getBoolPref("mail.collect_email_address_incoming")
+            || prefService.getBoolPref("mail.collect_email_address_newsgroup"))) {
         let brandShortName = document.getElementById("bundle_brand").getString("brandShortName");
         confirmDeleteMessage = gAddressBookBundle.getFormattedString("confirmDeleteCollectionAddressbook",
                                                                      [brandShortName]);
@@ -798,11 +801,13 @@ function SCOnCategoriesContextMenuItemCommand(event) {
 
 function SCSetSearchCriteria(menuitem) {
     let criteria = menuitem.getAttribute("sc-search-criteria");
+    let prefService = (Components.classes["@mozilla.org/preferences-service;1"]
+                                 .getService(Components.interfaces.nsIPrefBranch));
     if (criteria.length > 0) {
         gQueryURIFormat = "?(or(" + criteria + ",c,@V))"; // the "or" is important here
     }
     else {
-        let nameOrEMailSearch = gPrefs.getComplexValue("mail.addr_book.quicksearchquery.format",
+        let nameOrEMailSearch = prefService.getComplexValue("mail.addr_book.quicksearchquery.format",
                                                        Components.interfaces.nsIPrefLocalizedString).data;
         gQueryURIFormat = nameOrEMailSearch;
     }
