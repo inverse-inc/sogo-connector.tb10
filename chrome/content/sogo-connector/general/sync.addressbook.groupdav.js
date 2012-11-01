@@ -468,8 +468,17 @@ GroupDavSynchronizer.prototype = {
     },
     commitPreferences: function() {
         let prefService = (Components.classes["@mozilla.org/preferences-service;1"]
-                                     .getService(Components.interfaces.nsIPrefBranch));
+                                     .getService(Components.interfaces.nsIPrefService));
         prefService.savePrefFile(null);
+    },
+    _cardHasProperty: function(card, propName) {
+        try {
+            card.getPropertyAsAString(propName);
+            return true;
+        }
+        catch(e) {
+            return false;
+        }
     },
     importCard: function(key, data) {
         // let vcardFieldsArray = {};  //To handle fbURL from SOGo(freebusy) and vcards fields that have no equivalent in Thunderbird.
@@ -525,6 +534,15 @@ GroupDavSynchronizer.prototype = {
                 let propName = String(prop.name);
                 if (propName.indexOf("unprocessed:") == 0) {
                     oldCard.deleteProperty(propName);
+                }
+                if (!this._cardHasProperty(card, propName)
+                    && (propName != "DbRowID")
+                    && (propName != "RecordKey")
+                    && (propName != "LastModifiedDate")
+                    && (propName != "PopularityIndex")
+                    && (propName != "PreferMailFormat")
+                    && (propName != "AllowRemoteContent")) {
+                    oldCard.setPropertyAsAString(propName, "");
                 }
             }
             this.gAddressBook.modifyCard(oldCard);
