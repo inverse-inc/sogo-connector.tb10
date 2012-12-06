@@ -2,7 +2,6 @@
 	To package the extension 
 =====================================================
 edit <em:version> in install.rdf
-modify VERSION in Makefile 
 run make
 
 ========================================================
