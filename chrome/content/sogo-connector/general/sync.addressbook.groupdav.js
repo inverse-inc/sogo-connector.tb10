@@ -517,7 +517,13 @@ GroupDavSynchronizer.prototype = {
             if (photoURL != "") {
                 /* warning: this might not work on windows, due to the accessing of files via uris */
                 if (urlIsInSOGoImageCache(photoURL)) {
-                    let parts = photoURL.split("/");
+                    var appInfo = Components.classes["@mozilla.org/xre/app-info;1"].getService(Components.interfaces.nsIXULRuntime);
+                    let parts;
+                    if (appInfo.OS == "WINNT"){
+                        parts = photoURL.split("\\");
+                    } else {
+                        parts = photoURL.split("/");
+                    }
                     let lastPart = parts[parts.length-1];
                     if (lastPart != "") {
                         deletePhotoFile(lastPart, true);
